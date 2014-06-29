@@ -76,12 +76,17 @@ private[rho] trait RouteExecutable[T <: HList] {
   private[rho] def path: PathRule[_ <: HList]
   
   private[rho] def validators: HeaderRule[_ <: HList]
-  
-  final def |>[F, O, R](f: F)(implicit hf: HListToFunc[T,O,F], srvc: CompileService[R]): R =
+
+  /** Compiles a HTTP request definition into an action */
+  final def !>[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F], srvc: CompileService[R]): R =
+    compile(f)(hf, srvc)
+
+  /** Compiles a HTTP request definition into an action */
+  final def compile[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F], srvc: CompileService[R]): R =
     srvc.compile(makeAction(f, hf))
-  
-  final def runWith[F, O, R](f: F)(implicit hf: HListToFunc[T,O,F]): Request=>Option[Task[Response]] =
-    |>(f)(hf, RouteExecutor)
+
+  final def runWith[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F]): Request => Option[Task[Response]] =
+    compile(f)(hf, RouteExecutor)
 }
 
 private[rho] trait HeaderAppendable[T1 <: HList] extends MetaDataSyntax {
