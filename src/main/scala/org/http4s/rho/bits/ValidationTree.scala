@@ -3,12 +3,15 @@ package bits
 
 import scala.language.existentials
 
-import shapeless.HList
-import org.http4s.rho.HeaderRule
+import bits.HeaderAST.HeaderRule
 import org.http4s.{Response, Request}
+
+import scala.annotation.tailrec
+
+import shapeless.HList
+
 import scalaz.concurrent.Task
 import scalaz.{\/-, -\/, \/}
-import scala.annotation.tailrec
 
 /**
  * Created by Bryce Anderson on 5/3/14.
@@ -56,7 +59,7 @@ private[rho] trait ValidationTree {
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
-  protected def makeLeaf[T <: HList, F, O](action: CoolAction[T, F, O]): Leaf = {
+  protected def makeLeaf[T <: HList, F, O](action: RhoAction[T, F, O]): Leaf = {
     action.router match {
       case Router(method, _, vals) =>
         SingleLeaf(vals, None, (req, pathstack) =>

@@ -1,13 +1,15 @@
 package org.http4s
 package rho
 
+import bits.PathAST._
+import bits.HeaderAST._
+
 import shapeless.{::, HList}
 import scalaz.concurrent.Task
 import shapeless.ops.hlist.Prepend
 
 import scala.language.existentials
 import org.http4s.rho.bits.HListToFunc
-import org.http4s.Header.`Content-Type`
 
 /**
  * Created by Bryce Anderson on 4/29/14.
@@ -30,8 +32,8 @@ case class Router[T1 <: HList](method: Method,
   override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): Router[prep1.Out] =
     Router(method, path, And(validators,v))
 
-  override def makeAction[F,O](f: F, hf: HListToFunc[T1,O,F]): CoolAction[T1, F, O] =
-    new CoolAction(this, f, hf)
+  override def makeAction[F,O](f: F, hf: HListToFunc[T1,O,F]): RhoAction[T1, F, O] =
+    new RhoAction(this, f, hf)
 
   def decoding[R](decoder: Decoder[R]): CodecRouter[T1,R] = CodecRouter(this, decoder)
 
@@ -45,8 +47,8 @@ case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])e
   override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
 
-  override def makeAction[F,O](f: F, hf: HListToFunc[R::T1,O,F]): CoolAction[R::T1, F, O] =
-    new CoolAction(this, f, hf)
+  override def makeAction[F,O](f: F, hf: HListToFunc[R::T1,O,F]): RhoAction[R::T1, F, O] =
+    new RhoAction(this, f, hf)
 
   private[rho] override def path: PathRule[_ <: HList] = router.path
 
@@ -69,7 +71,7 @@ case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])e
 private[rho] trait RouteExecutable[T <: HList] {
   def method: Method
   
-  def makeAction[F, O](f: F, hf: HListToFunc[T,O,F]): CoolAction[T, F, O]
+  def makeAction[F, O](f: F, hf: HListToFunc[T,O,F]): RhoAction[T, F, O]
   
   private[rho] def path: PathRule[_ <: HList]
   

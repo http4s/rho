@@ -3,14 +3,18 @@ package bits
 
 import scala.language.existentials
 
+import PathAST._
+
+import org.http4s.Request
+import org.http4s.Response
+
+import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
+
 import shapeless.HList
-import org.http4s.rho._
-import org.http4s.{Request}
+
 import scalaz.{\/-, -\/, \/}
 import scalaz.concurrent.Task
-import scala.annotation.tailrec
-import org.http4s.Response
-import scala.collection.mutable.ListBuffer
 
 /**
  * Created by Bryce Anderson on 5/3/14.

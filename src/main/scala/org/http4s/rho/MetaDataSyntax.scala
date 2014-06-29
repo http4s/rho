@@ -1,5 +1,7 @@
 package org.http4s.rho
 
+import bits.PathAST._
+
 /**
  * Created by Bryce Anderson on 5/9/14.
  */

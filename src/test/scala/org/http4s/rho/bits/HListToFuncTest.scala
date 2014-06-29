@@ -4,7 +4,7 @@ package bits
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 import org.http4s._
-import org.http4s.rho.CoolService
+import org.http4s.rho.RhoService
 import org.http4s.Status._
 
 /**
@@ -20,7 +20,7 @@ class HListToFuncTest extends Specification {
 
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h:_*))
 
-  val service = new CoolService {
+  val service = new RhoService {
     GET / "route1" |> { () => Ok("foo") }
     GET / "route2" |> { () => "foo" }
   }

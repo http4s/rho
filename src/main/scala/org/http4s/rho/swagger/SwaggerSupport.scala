@@ -1,7 +1,7 @@
 package org.http4s.rho
 package swagger
 
-import org.http4s.rho.CoolService
+import org.http4s.rho.RhoService
 import shapeless.HList
 import org.http4s._
 
@@ -10,12 +10,12 @@ import org.json4s.jackson.JsonMethods._
 import JsonDSL._
 import org.http4s.Header.`Content-Type`
 import scodec.bits.ByteVector
-import org.http4s.rho.CoolAction
+import org.http4s.rho.RhoAction
 
 /**
  * Created by Bryce Anderson on 5/9/14.
  */
-trait SwaggerSupport extends CoolService {
+trait SwaggerSupport extends RhoService {
 
   def apiVersion: String = "1.0"
   def apiInfo: ApiInfo = ApiInfo("None", "none", "none", "none", "none", "none")
@@ -44,7 +44,7 @@ trait SwaggerSupport extends CoolService {
     }
   }
 
-  override protected def append[T <: HList, F, O](action: CoolAction[T, F, O]): Unit = {
+  override protected def append[T <: HList, F, O](action: RhoAction[T, F, O]): Unit = {
     super.append(action)
     swagger.register(action)
   }

@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import bits.HeaderAST.And
+
 import org.specs2.mutable._
 import shapeless.HNil
 import scalaz.concurrent.Task
@@ -8,7 +10,6 @@ import scodec.bits.ByteVector
 import Status._
 
 import scalaz.-\/
-import org.http4s.Response
 import scalaz.\/-
 
 /**

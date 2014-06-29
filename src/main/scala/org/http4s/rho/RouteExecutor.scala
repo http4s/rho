@@ -1,15 +1,18 @@
 package org.http4s
 package rho
 
+import bits.PathAST._
+import bits.HeaderAST._
+
+import org.http4s.Status.BadRequest
+import org.http4s.rho.bits._
+
 import shapeless.{HNil, HList, ::}
 
 import scalaz.concurrent.Task
 import scalaz.{-\/, \/-, \/}
 
 import Decoder._
-
-import org.http4s.Status.BadRequest
-import org.http4s.rho.bits.HListToFunc
 
 /**
  * Created by Bryce Anderson on 4/27/14.
@@ -127,9 +130,9 @@ private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[
 
   ///////////////////// Route execution bits //////////////////////////////////////
 
-  override def compile[T <: HList, F, O](action: CoolAction[T, F, O]): Result = action match {
-    case CoolAction(r@ Router(_,_,_), f, hf) => compileRouter(r, f, hf)
-    case CoolAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
+  override def compile[T <: HList, F, O](action: RhoAction[T, F, O]): Result = action match {
+    case RhoAction(r@ Router(_,_,_), f, hf) => compileRouter(r, f, hf)
+    case RhoAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
   }
 
   protected def compileRouter[T <: HList, F, O](r: Router[T], f: F, hf: HListToFunc[T, O, F]): Result = {

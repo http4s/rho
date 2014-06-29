@@ -1,28 +1,34 @@
 package org.http4s
 package rho
 
-import scalaz.concurrent.Task
-import shapeless.{HNil, HList}
-import scalaz.{-\/, \/-, \/}
+import bits.PathAST._
+import bits.HeaderAST.HeaderRule
+
 import org.http4s.rho.bits.HListToFunc
+
 import scala.collection.mutable
+
+import shapeless.{HNil, HList}
+
+import scalaz.concurrent.Task
+import scalaz.{-\/, \/-, \/}
 
 /**
 * Created by Bryce Anderson on 4/30/14.
 */
-trait CoolService extends HttpService with ExecutableCompiler with bits.PathTree {
+trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree {
 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
 
   implicit protected def compilerSrvc = new CompileService[Unit] {
-    override def compile[T <: HList, F, O](action: CoolAction[T, F, O]): Unit = append(action)
+    override def compile[T <: HList, F, O](action: RhoAction[T, F, O]): Unit = append(action)
   }
 
   private def missingMethod = sys.error("Somehow an unknown Method type was found!")
 
   private def getMethod(method: Method) = methods.get(method).getOrElse(missingMethod)
 
-  protected def append[T <: HList, F, O](action: CoolAction[T, F, O]): Unit = {
+  protected def append[T <: HList, F, O](action: RhoAction[T, F, O]): Unit = {
     val m = action.router.method
     val newLeaf = makeLeaf(action)
     val newNode = methods.get(m).getOrElse(HeadNode()).append(action.router.path, newLeaf)
@@ -54,7 +60,7 @@ trait CoolService extends HttpService with ExecutableCompiler with bits.PathTree
   override def toString(): String = s"CoolService($methods)"
 }
 
-case class CoolAction[T <: HList, F, O](private[rho] val router: RouteExecutable[T],
+case class RhoAction[T <: HList, F, O](private[rho] val router: RouteExecutable[T],
                                 private[rho] val f: F,
                                 private[rho] val hf: HListToFunc[T, O, F]) {
   final def method: Method = router.method

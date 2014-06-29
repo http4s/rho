@@ -2,8 +2,11 @@ package org.http4s
 
 import scala.language.existentials
 
+import rho.bits.PathAST._
+import rho.bits.HeaderAST._
+
 import shapeless.{HNil, ::}
-import org.http4s.rho.bits.{QueryParser, StringParser}
+import org.http4s.rho.bits._
 
 /**
  * Created by Bryce Anderson on 4/28/14.

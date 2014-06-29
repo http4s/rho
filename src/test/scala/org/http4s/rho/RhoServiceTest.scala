@@ -8,7 +8,7 @@ import scodec.bits.ByteVector
 /**
  * Created by Bryce Anderson on 5/3/14.
  */
-class CoolServiceTest extends Specification {
+class RhoServiceTest extends Specification {
 
   def getBody(b: HttpBody): String = {
     new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
@@ -22,7 +22,7 @@ class CoolServiceTest extends Specification {
 
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h:_*))
 
-  val service = new CoolService {
+  val service = new RhoService {
     GET / "hello" |> { () => "route1" }
 
     GET / 'hello |> { hello: String => "route2" }

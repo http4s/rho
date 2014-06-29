@@ -9,6 +9,9 @@ package swagger
   *   https://github.com/wordnik/swagger-spec/blob/master/versions/1.2.md
   */
 
+import bits.PathAST._
+import bits.HeaderAST._
+
 import java.util.{Date => JDate}
 import org.json4s._
 import org.joda.time._
@@ -52,7 +55,7 @@ trait SwaggerEngine[T <: SwaggerApi[_]] {
 //               protocols: List[String],
 //               authorizations: List[String])
 
-  def register(action: CoolAction[_ <: HList,_,_])
+  def register(action: RhoAction[_ <: HList,_,_])
 
 }
 
@@ -212,7 +215,7 @@ class Swagger(val swaggerVersion: String,
 //               protocols: List[String],
 //               authorizations: List[String]) = {
 
-  def register(action: CoolAction[_ <: HList,_,_]) {
+  def register(action: RhoAction[_ <: HList,_,_]) {
 //    logger.debug("registering swagger api with: { name: %s, resourcePath: %s, description: %s, servlet: %s }" format (name, resourcePath, description, s.getClass))
 //
 //    val endpoints: List[Endpoint] = s.endpoints(resourcePath) collect { case m: Endpoint => m }

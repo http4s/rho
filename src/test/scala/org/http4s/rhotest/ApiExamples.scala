@@ -18,7 +18,7 @@ class ApiExamples extends Specification {
   "mock api" should {
     "Make it easy to compose routes" in {
 
-      new CoolService {
+      new RhoService {
         // the path can be built up in multiple steps and the parts reused
         val path = POST / "hello"
         val path2 = path / 'world +? query[Int]("fav") // the symbol 'world just says 'capture a String'
