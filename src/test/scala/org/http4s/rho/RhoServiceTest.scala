@@ -20,7 +20,7 @@ class RhoServiceTest extends Specification {
     getBody(service(r).run.body)
   }
 
-  def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h:_*))
+  def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
 
   val service = new RhoService {
     GET / "hello" !> { () => "route1" }
@@ -31,12 +31,14 @@ class RhoServiceTest extends Specification {
 
     GET / "hello" / "headers" +? query[Int]("foo") !> { foo: Int => "route" + foo }
 
+    GET / "hello" / "default" / "parameter" +? query[Int]("some", 23) !> { s: Int => "some:" + s }
+
     // Routes that will have different headers/query string requirements should work together
     GET / "hello" / "compete" +? query[Int]("foo") !> { foo: Int => "route" + foo }
 
     GET / "hello" / "compete" +? query[String]("foo") !> { foo: String => "route6_" + foo }
 
-    GET / "hello" / "compete" !> { () => "route7"}
+    GET / "hello" / "compete" !> { () => "route7" }
 
     GET / "variadic" / * !> { tail: Seq[String] => "route8_" + tail.mkString("/") }
 
@@ -83,13 +85,28 @@ class RhoServiceTest extends Specification {
       checkError(req) should_== "Invalid Number Format: bar"
     }
 
+    "Execute a route with a query to override parameter default" in {
+      val req = Get("/hello/default/parameter?some=42")
+      checkOk(req) should_== "some:42"
+    }
+
+    "Execute a route with a query with default parameter" in {
+      val req = Get("/hello/default/parameter")
+      checkOk(req) should_== "some:23"
+    }
+
+    "Fail a route with an invalid parameter type" in {
+      val req = Get("/hello/default/parameter?some=a")
+      checkError(req) should_== "Invalid Number Format: a"
+    }
+
     "Execute a route with a competing query" in {
       val req1 = Get("/hello/compete?foo=5")
       val req2 = Get("/hello/compete?foo=bar")
       val req3 = Get("/hello/compete")
-      (checkOk(req1) should_== "route5")      and
-      (checkOk(req2) should_== "route6_bar")  and
-      (checkOk(req3) should_== "route7")
+      (checkOk(req1) should_== "route5") and
+        (checkOk(req2) should_== "route6_bar") and
+        (checkOk(req3) should_== "route7")
     }
 
     "Execute a variadic route" in {
@@ -97,32 +114,32 @@ class RhoServiceTest extends Specification {
       val req2 = Get("/variadic/one")
       val req3 = Get("/variadic/one/two")
 
-      (checkOk(req1) should_== "route8_")          and
-      (checkOk(req2) should_== "route8_one")       and
-      (checkOk(req3) should_== "route8_one/two")
+      (checkOk(req1) should_== "route8_") and
+        (checkOk(req2) should_== "route8_one") and
+        (checkOk(req3) should_== "route8_one/two")
     }
 
     "Perform path 'or' logic" in {
       val req1 = Get("/or1")
       val req2 = Get("/or2")
       (checkOk(req1) should_== "route9") and
-      (checkOk(req2) should_== "route9")
+        (checkOk(req2) should_== "route9")
     }
 
     "Work with options" in {
       val req1 = Get("/options")
       val req2 = Get("/options?foo=bar")
       (checkOk(req1) should_== "None") and
-      (checkOk(req2) should_== "bar")
+        (checkOk(req2) should_== "bar")
     }
 
     "Work with collections" in {
       val req1 = Get("/seq")
       val req2 = Get("/seq?foo=bar")
       val req3 = Get("/seq?foo=1&foo=2")
-      (checkOk(req1) should_== "")    and
-      (checkOk(req2) should_== "bar") and
-      (checkOk(req3) should_== "1 2")
+      (checkOk(req1) should_== "") and
+        (checkOk(req2) should_== "bar") and
+        (checkOk(req3) should_== "1 2")
     }
 
     "Provide the request if desired" in {

@@ -1,8 +1,8 @@
 package org.http4s.rho.bits
 
-import org.http4s.{Header, HeaderKey}
+import org.http4s.{ Header, HeaderKey }
 import shapeless.ops.hlist.Prepend
-import shapeless.{::, HList, HNil}
+import shapeless.{ ::, HList, HNil }
 
 import scala.language.existentials
 
@@ -45,7 +45,7 @@ object HeaderAST {
 
   private[rho] case class HeaderMapper[H <: HeaderKey.Extractable, R](key: H, f: H#HeaderT => R) extends HeaderRule[R :: HNil]
 
-  private[rho] case class QueryRule[T](name: String, p: QueryParser[T])(implicit val m: Manifest[T]) extends HeaderRule[T :: HNil]
+  private[rho] case class QueryRule[T](name: String, p: QueryParser[T], default: Option[T])(implicit val m: Manifest[T]) extends HeaderRule[T :: HNil]
 
   private[rho] object EmptyHeaderRule extends HeaderRule[HNil]
 
