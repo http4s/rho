@@ -22,7 +22,7 @@ object HeaderAST {
 
   /* this exists only to force method consistency on the Route and HeaderRules,
    not to play a role in the type tree */
-  private[rho] trait HeaderRuleSyntax[T <: HList] {
+  trait HeaderRuleSyntax[T <: HList] {
 
     def or(v: HeaderRule[T]): HeaderRuleSyntax[T]
 
@@ -35,18 +35,18 @@ object HeaderAST {
 
   ///////////////// Header and body AST ///////////////////////
 
-  private[rho] case class And[T <: HList, T2 <: HList, T3 <: HList](a: HeaderRule[T2], b: HeaderRule[T3]) extends HeaderRule[T]
+  case class And[T <: HList, T2 <: HList, T3 <: HList](a: HeaderRule[T2], b: HeaderRule[T3]) extends HeaderRule[T]
 
-  private[rho] case class Or[T <: HList](a: HeaderRule[T], b: HeaderRule[T]) extends HeaderRule[T]
+  case class Or[T <: HList](a: HeaderRule[T], b: HeaderRule[T]) extends HeaderRule[T]
 
-  private[rho] case class HeaderRequire[H <: HeaderKey.Extractable](key: H, f: H#HeaderT => Boolean) extends HeaderRule[HNil]
+  case class HeaderRequire[H <: HeaderKey.Extractable](key: H, f: H#HeaderT => Boolean) extends HeaderRule[HNil]
 
-  private[rho] case class HeaderCapture[T <: Header](key: HeaderKey.Extractable) extends HeaderRule[T :: HNil]
+  case class HeaderCapture[T <: Header](key: HeaderKey.Extractable) extends HeaderRule[T :: HNil]
 
-  private[rho] case class HeaderMapper[H <: HeaderKey.Extractable, R](key: H, f: H#HeaderT => R) extends HeaderRule[R :: HNil]
+  case class HeaderMapper[H <: HeaderKey.Extractable, R](key: H, f: H#HeaderT => R) extends HeaderRule[R :: HNil]
 
-  private[rho] case class QueryRule[T](name: String, p: QueryParser[T])(implicit val m: Manifest[T]) extends HeaderRule[T :: HNil]
+  case class QueryRule[T](name: String, p: QueryParser[T])(implicit val m: Manifest[T]) extends HeaderRule[T :: HNil]
 
-  private[rho] object EmptyHeaderRule extends HeaderRule[HNil]
+  object EmptyHeaderRule extends HeaderRule[HNil]
 
 }

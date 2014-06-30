@@ -15,7 +15,7 @@ import scala.reflect.Manifest
 object PathAST {
 
   /** The root type of the parser AST */
-  private[rho] sealed trait PathRule[T <: HList] {
+  sealed trait PathRule[T <: HList] {
     def documentation: Option[String] = None
   }
 
@@ -38,13 +38,13 @@ object PathAST {
       PathAnd(this, t)
   }
 
-  private[rho] case class PathAnd[T <: HList](p1: PathRule[_ <: HList], p2: PathRule[_ <: HList]) extends CombinablePathRule[T]
+  case class PathAnd[T <: HList](p1: PathRule[_ <: HList], p2: PathRule[_ <: HList]) extends CombinablePathRule[T]
 
-  private[rho] case class PathOr[T <: HList](p1: PathRule[T], p2: PathRule[T]) extends CombinablePathRule[T]
+  case class PathOr[T <: HList](p1: PathRule[T], p2: PathRule[T]) extends CombinablePathRule[T]
 
-  private[rho] case class PathMatch(s: String, override val documentation: Option[String] = None) extends CombinablePathRule[HNil]
+  case class PathMatch(s: String, override val documentation: Option[String] = None) extends CombinablePathRule[HNil]
 
-  private[rho] case class PathCapture[T](parser: StringParser[T],
+  case class PathCapture[T](parser: StringParser[T],
                                          override val documentation: Option[String] = None)
                                         (implicit val m: Manifest[T]) extends CombinablePathRule[T :: HNil]
 
@@ -53,7 +53,7 @@ object PathAST {
   // TODO: can I make this a case object?
   case class CaptureTail(override val documentation: Option[String] = None) extends PathRule[List[String] :: HNil]
 
-  private[rho] case object PathEmpty extends PathRule[HNil]
+  case object PathEmpty extends PathRule[HNil]
 
   trait MetaData extends PathRule[HNil]
 
