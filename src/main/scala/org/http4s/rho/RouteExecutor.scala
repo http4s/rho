@@ -21,8 +21,6 @@ import Decoder._
 trait ExecutableCompiler {
   def missingHeader(key: HeaderKey): String = s"Missing header: ${key.name}"
 
-  def missingQuery(key: String): String = s"Missing query param: $key"
-
   def invalidHeader(h: Header): String = s"Invalid header: $h"
 
   def onBadRequest(reason: String): Task[Response] = BadRequest(reason)
@@ -52,7 +50,8 @@ trait ExecutableCompiler {
       case None => -\/(missingHeader(key))
     }
 
-    case QueryRule(name, parser, default) => parser.collect(name, req).map(_ :: stack)
+    case QueryRule(name, parser, default) =>
+      parser.collect(name, req.multiParams, default).map(_ :: stack)
 
     case EmptyHeaderRule => \/-(stack)
   }
