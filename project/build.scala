@@ -34,10 +34,10 @@ object Dependencies {
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"          % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze"        % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"      % http4sVersion
-  lazy val config              = "com.typesafe"                % "config"              % "1.0.0"
-  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"     % "1.0.9"
+  lazy val config              = "com.typesafe"                % "config"              % "1.2.1"
+  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"     % "1.1.2"
   lazy val scalaloggingSlf4j   = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
-  lazy val specs2              = "org.specs2"                 %% "specs2"              % "2.3.11"
+  lazy val specs2              = "org.specs2"                 %% "specs2"              % "2.3.12"
 
   lazy val swaggerDeps = Seq(
     "org.json4s" %% "json4s-jackson" % "3.2.10",
