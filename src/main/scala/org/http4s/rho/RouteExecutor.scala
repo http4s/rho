@@ -3,6 +3,7 @@ package rho
 
 import bits.PathAST._
 import bits.HeaderAST._
+import bits.QueryAST._
 
 import org.http4s.Status.BadRequest
 import org.http4s.rho.bits._
@@ -14,9 +15,6 @@ import scalaz.{-\/, \/-, \/}
 
 import Decoder._
 
-/**
- * Created by Bryce Anderson on 4/27/14.
- */
 
 
 trait ExecutableCompiler {
@@ -34,9 +32,9 @@ trait ExecutableCompiler {
 
   /** The untyped guts of ensureValidHeaders and friends */
   protected def runValidation(req: Request, v: HeaderRule[_ <: HList], stack: HList): \/[String,HList] = v match {
-    case And(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
+    case HeaderAnd(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
 
-    case Or(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
+    case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
 
     case HeaderCapture(key) => req.headers.get(key) match {
       case Some(h) => \/-(h::stack)
@@ -53,9 +51,17 @@ trait ExecutableCompiler {
       case None => -\/(missingHeader(key))
     }
 
-    case QueryRule(name, parser) => parser.collect(name, req).map(_::stack)
-
     case EmptyHeaderRule => \/-(stack)
+  }
+
+  protected def runQuery(req: Request, v: QueryRule[_ <: HList], stack: HList): String\/HList = v match {
+    case QueryAnd(a, b) => runQuery(req, a, stack).flatMap(runQuery(req, b, _))
+
+    case QueryOr(a, b) => runQuery(req, a, stack).orElse(runQuery(req, b, stack))
+
+    case QueryCapture(name, parser) => parser.collect(name, req).map(_ :: stack)
+
+    case EmptyQuery => \/-(stack)
   }
 
   /** Runs the URL and pushes values to the HList stack */
@@ -131,14 +137,14 @@ private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[
   ///////////////////// Route execution bits //////////////////////////////////////
 
   override def compile[T <: HList, F, O](action: RhoAction[T, F, O]): Result = action match {
-    case RhoAction(r@ Router(_,_,_), f, hf) => compileRouter(r, f, hf)
+    case RhoAction(r@ Router(_,_,_,_), f, hf) => compileRouter(r, f, hf)
     case RhoAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
   }
 
   protected def compileRouter[T <: HList, F, O](r: Router[T], f: F, hf: HListToFunc[T, O, F]): Result = {
     val readyf = hf.conv(f)
     val ff: Result = { req =>
-       pathAndValidate[T](req, r.path, r.validators).map(_ match {
+       pathAndValidate[T](req, r.path, r.query, r.validators).map(_ match {
            case \/-(stack) => readyf(req,stack)
            case -\/(s) => onBadRequest(s)
        })
@@ -154,12 +160,12 @@ private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[
         val mediaReq = r.decoder.consumes.map { mediaType =>
           HeaderRequire(Header.`Content-Type`, { h: Header.`Content-Type`.HeaderT => h.mediaType == mediaType })
         }
-        And(r.router.validators, mediaReq.tail.foldLeft(mediaReq.head:HeaderRule[HNil])(Or(_, _)))
+        HeaderAnd(r.router.validators, mediaReq.tail.foldLeft(mediaReq.head:HeaderRule[HNil])(HeaderOr(_, _)))
       }
       else r.router.validators
     }
     val ff: Result = { req =>
-      pathAndValidate[T](req, r.router.path, allvals).map(_ match {
+      pathAndValidate[T](req, r.router.path, r.router.query, allvals).map(_ match {
         case \/-(stack) => r.decoder.decode(req).flatMap(_ match {
             case \/-(r) => actionf(req,r::stack)
             case -\/(e) => onBadRequest(s"Error decoding body: $e")
@@ -171,9 +177,20 @@ private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[
     ff
   }
 
-  private def pathAndValidate[T <: HList](req: Request, path: PathRule[_ <: HList], v: HeaderRule[_ <: HList]): Option[\/[String, T]] = {
+  private def pathAndValidate[T <: HList](req: Request,
+                                          path: PathRule[_ <: HList],
+                                          query: QueryRule[_ <: HList],
+                                          v: HeaderRule[_ <: HList]): Option[\/[String, T]] =
+  {
     val p = parsePath(req.requestUri.path)
-    runPath(req, path, p).map(_.flatMap(runValidation(req, v, _))).asInstanceOf[Option[\/[String, T]]]
+
+    runPath(req, path, p).map { r =>
+      for {
+        i <- r
+        j <- runQuery(req, query, i)
+        k <- runValidation(req, v, j)
+      } yield k
+    }.asInstanceOf[Option[\/[String, T]]]
   }
 
   /** Walks the validation tree */

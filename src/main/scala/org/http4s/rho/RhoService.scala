@@ -61,8 +61,8 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
 }
 
 case class RhoAction[T <: HList, F, O](private[rho] val router: RouteExecutable[T],
-                                private[rho] val f: F,
-                                private[rho] val hf: HListToFunc[T, O, F]) {
+                                       private[rho] val f: F,
+                                       private[rho] val hf: HListToFunc[T, O, F]) {
   final def method: Method = router.method
   final def path: PathRule[_ <: HList] = router.path
   final def validators: HeaderRule[_ <: HList] = router.validators

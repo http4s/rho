@@ -3,6 +3,7 @@ package rho
 
 import bits.PathAST._
 import bits.HeaderAST._
+import bits.QueryAST.QueryRule
 
 import shapeless.{::, HList}
 import scalaz.concurrent.Task
@@ -11,9 +12,6 @@ import shapeless.ops.hlist.Prepend
 import scala.language.existentials
 import org.http4s.rho.bits.HListToFunc
 
-/**
- * Created by Bryce Anderson on 4/29/14.
- */
 
 /** Provides the operations for generating a router
   *
@@ -24,13 +22,14 @@ import org.http4s.rho.bits.HListToFunc
   */
 case class Router[T1 <: HList](method: Method,
                                private[rho] val path: PathRule[_ <: HList],
+                               private[rho] val query: QueryRule[_ <: HList],
                                validators: HeaderRule[_ <: HList])
                 extends RouteExecutable[T1] with HeaderAppendable[T1] {
 
   type Self = Router[T1]
 
   override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): Router[prep1.Out] =
-    Router(method, path, And(validators,v))
+    Router(method, path, query, HeaderAnd(validators,v))
 
   override def makeAction[F,O](f: F, hf: HListToFunc[T1,O,F]): RhoAction[T1, F, O] =
     new RhoAction(this, f, hf)
@@ -61,7 +60,7 @@ case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])e
       val mt = requireThat(Header.`Content-Type`){ h: Header.`Content-Type`.HeaderT =>
         decoder.consumes.find(_ == h.mediaType).isDefined
       }
-      And(router.validators, mt)
+      HeaderAnd(router.validators, mt)
     } else router.validators
   }
 

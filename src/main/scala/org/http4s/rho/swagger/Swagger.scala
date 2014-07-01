@@ -268,9 +268,9 @@ class Swagger(val swaggerVersion: String,
 
   private def getHeaderRules(rules: List[HeaderRule[_ <: HList]], op: Operation): List[Operation] = rules match {
     case head::rules => head match {
-      case And(a, b) => getHeaderRules(a::b::rules, op)
+      case HeaderAnd(a, b) => getHeaderRules(a::b::rules, op)
 
-      case Or(a, b) => getHeaderRules(a::rules, op):::getHeaderRules(b::rules, op)
+      case HeaderOr(a, b) => getHeaderRules(a::rules, op):::getHeaderRules(b::rules, op)
 
       case HeaderCapture(key) =>
         val p = Parameter(key.name.toString, DataType.Void, paramType = ParamType.Header)
@@ -280,9 +280,9 @@ class Swagger(val swaggerVersion: String,
 
       case HeaderMapper(key, _) => getHeaderRules(HeaderCapture(key)::rules, op)
 
-      case r@ QueryRule(name, parser) =>
-        val p = Parameter(name, DataType.fromManifest(r.m), paramType = ParamType.Query)
-        getHeaderRules(rules, op.copy(parameters = op.parameters :+ p))
+//      case r@ QueryRule(name, parser) =>
+//        val p = Parameter(name, DataType.fromManifest(r.m), paramType = ParamType.Query)
+//        getHeaderRules(rules, op.copy(parameters = op.parameters :+ p))
 
       case EmptyHeaderRule => getHeaderRules(rules, op)
     }

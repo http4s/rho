@@ -11,11 +11,11 @@ object HeaderAST {
 
   sealed trait HeaderRule[T <: HList] extends HeaderRuleSyntax[T] {
 
-    final def or(v: HeaderRule[T]): HeaderRule[T] = Or(this, v)
+    final def or(v: HeaderRule[T]): HeaderRule[T] = HeaderOr(this, v)
 
     final def ||(v: HeaderRule[T]): HeaderRule[T] = or(v)
 
-    final def and[T1 <: HList](v: HeaderRule[T1])(implicit prepend: Prepend[T, T1]): HeaderRule[prepend.Out] = And(this, v)
+    final def and[T1 <: HList](v: HeaderRule[T1])(implicit prepend: Prepend[T, T1]): HeaderRule[prepend.Out] = HeaderAnd(this, v)
 
     final def &&[T1 <: HList](v: HeaderRule[T1])(implicit prepend: Prepend[T, T1]): HeaderRule[prepend.Out] = and(v)
   }
@@ -35,17 +35,15 @@ object HeaderAST {
 
   ///////////////// Header and body AST ///////////////////////
 
-  case class And[T <: HList, T2 <: HList, T3 <: HList](a: HeaderRule[T2], b: HeaderRule[T3]) extends HeaderRule[T]
-
-  case class Or[T <: HList](a: HeaderRule[T], b: HeaderRule[T]) extends HeaderRule[T]
-
   case class HeaderRequire[H <: HeaderKey.Extractable](key: H, f: H#HeaderT => Boolean) extends HeaderRule[HNil]
 
   case class HeaderCapture[T <: Header](key: HeaderKey.Extractable) extends HeaderRule[T :: HNil]
 
   case class HeaderMapper[H <: HeaderKey.Extractable, R](key: H, f: H#HeaderT => R) extends HeaderRule[R :: HNil]
 
-  case class QueryRule[T](name: String, p: QueryParser[T])(implicit val m: Manifest[T]) extends HeaderRule[T :: HNil]
+  case class HeaderAnd[T <: HList, T2 <: HList, T3 <: HList](a: HeaderRule[T2], b: HeaderRule[T3]) extends HeaderRule[T]
+
+  case class HeaderOr[T <: HList](a: HeaderRule[T], b: HeaderRule[T]) extends HeaderRule[T]
 
   object EmptyHeaderRule extends HeaderRule[HNil]
 
