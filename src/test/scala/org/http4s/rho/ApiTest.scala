@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import bits.HeaderAST.And
+import bits.HeaderAST.HeaderAnd
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -12,9 +12,6 @@ import Status._
 import scalaz.-\/
 import scalaz.\/-
 
-/**
- * Created by Bryce Anderson on 4/26/14.
- */
 class ApiTest extends Specification {
 
 
@@ -33,7 +30,7 @@ class ApiTest extends Specification {
 
   "RhoDsl bits" should {
     "Combine validators" in {
-      RequireETag && RequireNonZeroLen should_== And(RequireETag, RequireNonZeroLen)
+      RequireETag && RequireNonZeroLen should_== HeaderAnd(RequireETag, RequireNonZeroLen)
     }
 
     "Fail on a bad request" in {
@@ -142,9 +139,7 @@ class ApiTest extends Specification {
       val path = POST / "hello" +? query[Int]("jimbo")
       val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").get)
 
-      val route = path runWith { i: Int =>
-        Ok("stuff").withHeaders(Header.ETag((i + 1).toString))
-      }
+      val route = path runWith { i: Int => Ok("stuff").withHeaders(Header.ETag((i + 1).toString)) }
 
       fetch(route(req)) should_== "33"
 

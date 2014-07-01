@@ -38,6 +38,15 @@ class RhoServiceTest extends Specification {
 
     GET / "hello" / "compete" !> { () => "route7"}
 
+    // Testing query params
+    (GET / "query" / "twoparams" +? query[Int]("foo") & query[String]("bar")) !> { (foo: Int, bar: String) =>
+      "twoparams" + foo + bar
+    }
+
+    (GET / "query" / "twoparams2" +? query[Int]("foo") & query[Option[String]]("bar")) !> { (foo: Int, bar: Option[String]) =>
+      "twoparams2_" + foo + bar.getOrElse("cat")
+    }
+
     GET / "variadic" / * !> { tail: Seq[String] => "route8_" + tail.mkString("/") }
 
     val or = "or1" || "or2"
@@ -83,6 +92,17 @@ class RhoServiceTest extends Specification {
       checkError(req) should_== "Invalid Number Format: bar"
     }
 
+    "Execute a route with multiple query with parameters" in {
+      "query" / "twoparams"
+      val req = Get("/query/twoparams?foo=5&bar=cat")
+      checkOk(req) should_== "twoparams5cat"
+    }
+
+    "Execute a route with multiple query with parameters, one optional" in {
+      "query" / "twoparams"
+      val req = Get("/query/twoparams2?foo=5")
+      checkOk(req) should_== "twoparams2_5cat"
+    }
     "Execute a route with a competing query" in {
       val req1 = Get("/hello/compete?foo=5")
       val req2 = Get("/hello/compete?foo=bar")
