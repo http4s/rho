@@ -77,7 +77,7 @@ private[rho] trait RouteExecutable[T <: HList] {
   private[rho] def validators: HeaderRule[_ <: HList]
 
   /** Compiles a HTTP request definition into an action */
-  final def !>[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F], srvc: CompileService[R]): R =
+  final def |>>[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F], srvc: CompileService[R]): R =
     compile(f)(hf, srvc)
 
   /** Compiles a HTTP request definition into an action */
