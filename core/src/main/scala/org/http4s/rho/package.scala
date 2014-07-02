@@ -25,16 +25,17 @@ package object rho {
 
   implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, PathEmpty)
 
-  implicit def pathMatch(s: String): CombinablePathRule[HNil] = PathMatch(s)
+  implicit def pathMatch(s: String): PathRule[HNil] = PathMatch(s)
 
-  implicit def pathMatch(s: Symbol): CombinablePathRule[String::HNil] =
-    PathCapture(StringParser.strParser, Some(s"Param name: ${s.name}"))
+  implicit def pathMatch(s: Symbol): PathRule[String::HNil] =
+    PathAST.MetaCons(PathCapture(StringParser.strParser), TextMeta(s"Param name: ${s.name}"))
 
   def query[T](key: String)(implicit parser: QueryParser[T], m: Manifest[T]) = QueryCapture[T](key, parser)
 
-  def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]) = PathCapture(parser, None)
+  def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]) = PathCapture(parser)
 
-  def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]) = PathCapture(parser, Some(id))
+  def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]) =
+    PathAST.MetaCons(PathCapture(parser), TextMeta(s"Param name: $id"))
 
   def * = CaptureTail()
 

@@ -5,6 +5,7 @@ import scala.language.existentials
 
 import PathAST._
 
+
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
@@ -40,25 +41,27 @@ trait PathTree extends ValidationTree {
 
         case PathOr(p1, p2) => append(p1::tail, action).append(p2::tail, action)
 
-        case PathMatch(s: String, doc) =>
-          paths.collectFirst { case n@MatchNode(s1,_,_,_,_) if s == s1 => n } match {
+        case MetaCons(r, _) => append(r::tail, action)  // dump metadata
+
+        case PathMatch(s: String) =>
+          paths.collectFirst { case n@MatchNode(s1,_,_,_) if s == s1 => n } match {
             case Some(n) => replaceNode(n, n.append(tail, action))
-            case None    => addNode(MatchNode(s,doc).append(tail, action))
+            case None    => addNode(MatchNode(s).append(tail, action))
           }
 
-        case PathCapture(p, doc) =>
-          paths.collectFirst{ case n@ CaptureNode(p1,_,_,_,_) if p1 eq p => n } match {
+        case PathCapture(p) =>
+          paths.collectFirst{ case n@ CaptureNode(p1,_,_,_) if p1 eq p => n } match {
             case Some(w) => replaceNode(w, w.append(tail, action))
-            case None    => addNode(CaptureNode(p,doc).append(tail, action))
+            case None    => addNode(CaptureNode(p).append(tail, action))
           }
 
-        case CaptureTail(doc) =>
+        case CaptureTail() =>
           val v = if (variadic != null) variadic ++ action else action
           clone(paths, v, end)
 
         case PathEmpty => append(tail, action)
 
-        case _: MetaData => append(tail, action)
+        case _: Metadata => append(tail, action)
       }
 
       case Nil =>  // this is the end of the stack
@@ -112,7 +115,6 @@ trait PathTree extends ValidationTree {
   }
 
   final private case class CaptureNode(parser: StringParser[_],
-                                       doc: Option[String],
                                        paths: List[Node] = Nil,
                                        variadic: Leaf = null,
                                        end: Leaf = null
@@ -158,7 +160,7 @@ trait PathTree extends ValidationTree {
     }
   }
 
-  final private case class MatchNode(name: String, doc: Option[String],
+  final private case class MatchNode(name: String,
                                      paths: List[Node] = Nil,
                                      variadic: Leaf = null,
                                      end: Leaf = null) extends Node {
@@ -176,5 +178,4 @@ trait PathTree extends ValidationTree {
 
     override protected def matchString(s: String, h: HList): HList = if (s == name) h else null
   }
-
 }
