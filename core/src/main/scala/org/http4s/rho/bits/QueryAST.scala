@@ -17,7 +17,7 @@ object QueryAST {
     final def &&[T1 <: HList](v: QueryRule[T1])(implicit prepend: Prepend[T, T1]): QueryRule[prepend.Out] = and(v)
   }
 
-  case class QueryCapture[T](name: String, p: QueryParser[T])(implicit val m: Manifest[T]) extends QueryRule[T :: HNil]
+  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T])(implicit val m: Manifest[T]) extends QueryRule[T :: HNil]
 
   case class QueryAnd[T <: HList, T2 <: HList, T3 <: HList](a: QueryRule[T2], b: QueryRule[T3]) extends QueryRule[T]
 

@@ -8,24 +8,27 @@ import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 
 trait QueryParser[A] {
-  def collect(name: String, req: Request): String\/A
+  import QueryParser.Params
+  def collect(name: String, params: Params, default: Option[A]): String\/A
 }
 
 object QueryParser {
+  type Params = Map[String, Seq[String]]
 
   implicit def optionParse[A](implicit p: StringParser[A]) = new QueryParser[Option[A]] {
-    override def collect(name: String, req: Request): \/[String, Option[A]] = {
-      req.params.get(name) match {
-        case Some(v) => p.parse(v).map(Some(_))
-        case None => \/-(None)
+    override def collect(name: String, params: Params, default: Option[Option[A]]): \/[String, Option[A]] = {
+      params.get(name) match {
+        case Some(Seq(v, _*)) => p.parse(v).map(Some(_))
+        case Some(Seq())      => -\/(s"Param $name has key but not value")
+        case None             => \/-(default.getOrElse(None))
       }
     }
   }
 
   implicit def multipleParse[A, B[_]](implicit p: StringParser[A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[B[A]] {
-    override def collect(name: String, req: Request): \/[String, B[A]] = {
+    override def collect(name: String, params: Params, default: Option[B[A]]): \/[String, B[A]] = {
       val b = cbf()
-      req.multiParams.get(name) match {
+      params.get(name) match {
         case Some(v) =>
           val it = v.iterator
           @tailrec
@@ -38,16 +41,19 @@ object QueryParser {
             } else \/-(b.result)
           }; go()
 
-        case None => \/-(b.result)
+        case None => \/-(default.getOrElse(b.result))
       }
     }
   }
 
   implicit def standardCollector[A](implicit p: StringParser[A]) = new QueryParser[A] {
-    override def collect(name: String, req: Request): \/[String, A] = {
-      req.params.get(name) match {
-        case Some(s) => p.parse(s)
-        case None    => -\/(s"Missing query param: $name")
+    override def collect(name: String, params: Params, default: Option[A]): \/[String, A] = {
+      params.get(name) match {
+        case Some(Seq(s, _*)) => p.parse(s)
+        case _                => default match {
+          case Some(v) => \/-(v)
+          case None    => -\/(s"Missing query param: $name")
+        }
       }
     }
   }

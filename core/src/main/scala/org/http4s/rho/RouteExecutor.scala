@@ -66,7 +66,7 @@ trait ExecutableCompiler {
 
       case QueryOr(a, b) => runQuery(req, a, stack).orElse(runQuery(req, b, stack))
 
-      case QueryCapture(name, parser) => parser.collect(name, req).map(_ :: stack)
+      case QueryCapture(name, parser, default) => parser.collect(name, req.multiParams, default).map(_ :: stack)
 
       case MetaCons(r, _) => runQuery(req, r, stack)
 

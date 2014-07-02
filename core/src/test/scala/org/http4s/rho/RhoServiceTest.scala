@@ -27,6 +27,8 @@ class RhoServiceTest extends Specification {
 
     GET / "hello" / "headers" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
 
+    GET / "hello" / "default" / "parameter" +? query[Int]("some", 23) |>> { s: Int => "some:" + s }
+
     // Routes that will have different headers/query string requirements should work together
     GET / "hello" / "compete" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
 
@@ -99,6 +101,22 @@ class RhoServiceTest extends Specification {
       val req = Get("/query/twoparams2?foo=5")
       checkOk(req) should_== "twoparams2_5cat"
     }
+
+    "Execute a route with a query to override parameter default" in {
+      val req = Get("/hello/default/parameter?some=42")
+      checkOk(req) should_== "some:42"
+    }
+
+    "Execute a route with a query with default parameter" in {
+      val req = Get("/hello/default/parameter")
+      checkOk(req) should_== "some:23"
+    }
+
+    "Fail a route with an invalid parameter type" in {
+      val req = Get("/hello/default/parameter?some=a")
+      checkError(req) should_== "Invalid Number Format: a"
+    }
+
     "Execute a route with a competing query" in {
       val req1 = Get("/hello/compete?foo=5")
       val req2 = Get("/hello/compete?foo=bar")
