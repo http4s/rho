@@ -1,16 +1,9 @@
-package org.http4s.rho.bits
+package org.http4s
+package rho.bits
 
-import shapeless.{HList, HNil}
+import shapeless.{HList, HNil, ::}
 import scalaz.concurrent.Task
-import org.http4s._
-import org.http4s.Response
-import scala.Some
-import shapeless.::
-import org.http4s.Header.`Content-Type`
 
-/**
- * Created by Bryce Anderson on 4/27/14.
- */
 
 /////////////////// Helpers for turning a function of may params to a function of a HList
 

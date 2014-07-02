@@ -3,19 +3,15 @@ package rho
 
 import bits.PathAST._
 import bits.HeaderAST.HeaderRule
-
-import org.http4s.rho.bits.HListToFunc
+import bits.HListToFunc
 
 import scala.collection.mutable
 
 import shapeless.{HNil, HList}
 
 import scalaz.concurrent.Task
-import scalaz.{-\/, \/-, \/}
+import scalaz.{-\/, \/-}
 
-/**
-* Created by Bryce Anderson on 4/30/14.
-*/
 trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree {
 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
@@ -57,7 +53,7 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
     }
   }
 
-  override def toString(): String = s"CoolService($methods)"
+  override def toString(): String = s"RhoService($methods)"
 }
 
 case class RhoAction[T <: HList, F, O](private[rho] val router: RouteExecutable[T],

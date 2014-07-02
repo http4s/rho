@@ -7,9 +7,6 @@ import Status.Ok
 import org.http4s.rho._
 import scalaz.concurrent.Task
 
-/**
- * Created by Bryce Anderson on 4/29/14.
- */
 
 class ApiExamples extends Specification {
 

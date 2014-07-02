@@ -1,10 +1,7 @@
-package org.http4s.rho.bits
+package org.http4s
+package rho.bits
 
 import scalaz.{-\/, \/-, \/}
-
-/**
- * Created by Bryce Anderson on 4/27/14.
- */
 
 trait StringParser[T] {
   def parse(s: String): \/[String, T]

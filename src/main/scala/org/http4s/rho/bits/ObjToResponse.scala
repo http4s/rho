@@ -1,13 +1,8 @@
-package org.http4s.rho.bits
+package org.http4s
+package rho.bits
 
 import scalaz.concurrent.Task
-import org.http4s._
-import scala.Some
-import org.http4s.Response
 
-/**
- * Created by Bryce Anderson on 5/4/14.
- */
 
 trait ObjToResponse[O] {
   def apply(o: O): Task[Response]

@@ -1,20 +1,17 @@
-package org.http4s.rho
+package org.http4s
+package rho
 
 import scala.language.existentials
 
-import org.http4s.rho.bits.QueryAST.{QueryRule, EmptyQuery}
+import bits.QueryAST.{QueryRule, EmptyQuery}
 import bits.PathAST._
 import bits.HeaderAST._
+import bits._
 
 import shapeless.{::, HList}
 import shapeless.ops.hlist.Prepend
-import org.http4s.Method
-import org.http4s.rho.bits._
 
-/**
- * Created by Bryce Anderson on 4/28/14.
- *
- * The goal of a PathBuilder is to allow the composition of what is typically on the status line
+/** The goal of a PathBuilder is to allow the composition of what is typically on the status line
  * of a HTTP request. That includes the request method, path, and query params.
  */
 

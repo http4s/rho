@@ -1,13 +1,12 @@
-package org.http4s.rho.bits
+package org.http4s
+package rho.bits
+
+import scala.language.higherKinds
 
 import scalaz.{-\/, \/-, \/}
-import org.http4s.Request
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 
-/**
- * Created by Bryce Anderson on 5/4/14.
- */
 trait QueryParser[A] {
   def collect(name: String, req: Request): String\/A
 }

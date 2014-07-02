@@ -1,20 +1,17 @@
-package org.http4s.rho
+package org.http4s
+package rho
 package swagger
 
-import org.http4s.rho.RhoService
+import Header.`Content-Type`
+
 import shapeless.HList
-import org.http4s._
 
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import JsonDSL._
-import org.http4s.Header.`Content-Type`
-import scodec.bits.ByteVector
-import org.http4s.rho.RhoAction
 
-/**
- * Created by Bryce Anderson on 5/9/14.
- */
+import scodec.bits.ByteVector
+
 trait SwaggerSupport extends RhoService {
 
   def apiVersion: String = "1.0"

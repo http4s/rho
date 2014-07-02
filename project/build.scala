@@ -4,9 +4,12 @@ import Keys._
 object MyBuild extends Build {
   import Dependencies._
 
+  lazy val compileFlags = Seq("-feature")
+
   lazy val buildSettings = Defaults.defaultSettings ++
      Seq(
         scalaVersion := "2.11.1",
+        scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
         fork in run := true,

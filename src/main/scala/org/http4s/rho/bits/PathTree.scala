@@ -1,12 +1,9 @@
-package org.http4s.rho
-package bits
+package org.http4s
+package rho.bits
 
 import scala.language.existentials
 
 import PathAST._
-
-import org.http4s.Request
-import org.http4s.Response
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
@@ -16,9 +13,6 @@ import shapeless.HList
 import scalaz.{\/-, -\/, \/}
 import scalaz.concurrent.Task
 
-/**
- * Created by Bryce Anderson on 5/3/14.
- */
 trait PathTree extends ValidationTree {
 
   protected sealed abstract class Node {

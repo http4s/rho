@@ -1,15 +1,12 @@
-package org.http4s.rho
+package org.http4s
+package rho
 package bits
+
+import Status._
 
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
-import org.http4s._
-import org.http4s.rho.RhoService
-import org.http4s.Status._
 
-/**
- * Created by Bryce Anderson on 5/4/14.
- */
 class HListToFuncTest extends Specification {
 
   def getBody(b: HttpBody): String = {

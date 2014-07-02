@@ -1,6 +1,6 @@
-package org.http4s.rho.bits
+package org.http4s
+package rho.bits
 
-import org.http4s.{Header, HeaderKey}
 import shapeless.ops.hlist.Prepend
 import shapeless.{::, HList, HNil}
 

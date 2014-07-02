@@ -1,10 +1,8 @@
-package org.http4s.rho
+package org.http4s
+package rho
 
 import shapeless.HList
 
-/**
- * Created by Bryce Anderson on 5/4/14.
- */
 trait CompileService[A] {
   def compile[T <: HList, F, O](action: RhoAction[T, F, O]): A
 }

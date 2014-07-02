@@ -1,6 +1,7 @@
 package org.http4s
 
 import scala.language.existentials
+import scala.language.implicitConversions
 
 import rho.bits.PathAST._
 import rho.bits.HeaderAST._

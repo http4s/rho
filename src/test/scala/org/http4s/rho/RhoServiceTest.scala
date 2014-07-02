@@ -2,12 +2,8 @@ package org.http4s
 package rho
 
 import org.specs2.mutable.Specification
-import Status._
 import scodec.bits.ByteVector
 
-/**
- * Created by Bryce Anderson on 5/3/14.
- */
 class RhoServiceTest extends Specification {
 
   def getBody(b: HttpBody): String = {
@@ -61,7 +57,7 @@ class RhoServiceTest extends Specification {
     GET / "withreq" +? query[String]("foo") !> { (req: Request, foo: String) => s"req $foo" }
   }
 
-  "CoolService" should {
+  "RhoService" should {
     "Execute a route with no params" in {
       val req = Get("/hello")
       checkOk(req) should_== "route1"

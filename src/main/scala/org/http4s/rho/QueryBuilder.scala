@@ -1,10 +1,13 @@
-package org.http4s.rho
+package org.http4s
+package rho
 
-import org.http4s.Method
+import scala.language.existentials
+
 import bits.HListToFunc
-import org.http4s.rho.bits.PathAST.{PathAnd, MetaData, PathRule}
+import bits.PathAST._
 import bits.QueryAST._
-import org.http4s.rho.bits.HeaderAST.{HeaderRule, EmptyHeaderRule}
+import bits.HeaderAST._
+
 import shapeless.ops.hlist.Prepend
 
 import shapeless.{::, HList}

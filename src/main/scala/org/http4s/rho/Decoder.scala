@@ -1,13 +1,10 @@
 package org.http4s
 package rho
 
-import scalaz.concurrent.Task
-import shapeless.HNil
-import scalaz.{-\/, \/-, \/}
+import scala.language.implicitConversions
 
-/**
- * Created by Bryce Anderson on 4/27/14.
- */
+import scalaz.concurrent.Task
+import scalaz.{-\/, \/-, \/}
 
 sealed trait Decoder[T] {
 

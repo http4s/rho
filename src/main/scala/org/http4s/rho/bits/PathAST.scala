@@ -1,14 +1,13 @@
-package org.http4s.rho
-package bits
+package org.http4s
+package rho.bits
+
+import scala.language.existentials
 
 import shapeless.ops.hlist.Prepend
 import shapeless.{::, HNil, HList}
 
 import scala.reflect.Manifest
 
-/**
- * Created by Bryce Anderson on 6/29/14.
- */
 
 /** Actual elements which build up the AST */
 

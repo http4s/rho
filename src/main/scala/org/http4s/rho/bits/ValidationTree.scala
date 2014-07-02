@@ -1,11 +1,11 @@
-package org.http4s.rho
+package org.http4s
+package rho
 package bits
 
 import scala.language.existentials
 
 import QueryAST.QueryRule
 import HeaderAST.HeaderRule
-import org.http4s.{Response, Request}
 
 import scala.annotation.tailrec
 

@@ -1,10 +1,8 @@
-package org.http4s.rho
+package org.http4s
+package rho
 
 import bits.PathAST._
 
-/**
- * Created by Bryce Anderson on 5/9/14.
- */
 trait MetaDataSyntax {
   type Self
 

@@ -1,4 +1,5 @@
-package org.http4s.rho.bits
+package org.http4s
+package rho.bits
 
 import shapeless.{HNil, ::, HList}
 import shapeless.ops.hlist.Prepend
