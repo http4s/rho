@@ -4,13 +4,14 @@ package rho
 import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST.QueryRule
+import bits.HeaderAST.MetaCons
 
 import shapeless.{::, HList}
 import scalaz.concurrent.Task
 import shapeless.ops.hlist.Prepend
 
 import scala.language.existentials
-import org.http4s.rho.bits.HListToFunc
+import org.http4s.rho.bits.{Metadata, MetaDataSyntax, HListToFunc}
 
 
 /** Provides the operations for generating a router
@@ -24,7 +25,10 @@ case class Router[T1 <: HList](method: Method,
                                private[rho] val path: PathRule[_ <: HList],
                                private[rho] val query: QueryRule[_ <: HList],
                                validators: HeaderRule[_ <: HList])
-                extends RouteExecutable[T1] with HeaderAppendable[T1] {
+                       extends RouteExecutable[T1]
+                          with HeaderAppendable[T1]
+                          with MetaDataSyntax
+{
 
   type Self = Router[T1]
 
@@ -36,12 +40,19 @@ case class Router[T1 <: HList](method: Method,
 
   def decoding[R](decoder: Decoder[R]): CodecRouter[T1,R] = CodecRouter(this, decoder)
 
-  override protected def addMetaData(data: MetaData): Router[T1] = copy(path = PathAnd(path, data))
+  override def addMetaData(data: Metadata): Router[T1] =
+    Router(method, path, query, MetaCons(validators, data))
 }
 
-case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])extends HeaderAppendable[T1] with RouteExecutable[R::T1] {
-
+case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])
+           extends HeaderAppendable[T1]
+           with RouteExecutable[R::T1]
+           with MetaDataSyntax
+{
   type Self = CodecRouter[T1, R]
+
+  override def addMetaData(data: Metadata): CodecRouter[T1, R] =
+    CodecRouter(router.addMetaData(data), decoder)
 
   override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
@@ -63,8 +74,6 @@ case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])e
       HeaderAnd(router.validators, mt)
     } else router.validators
   }
-
-  override protected def addMetaData(data: MetaData): CodecRouter[T1, R] = copy(router.copy(path = PathAnd(router.path, data)))
 }
 
 private[rho] trait RouteExecutable[T <: HList] {
@@ -88,7 +97,8 @@ private[rho] trait RouteExecutable[T <: HList] {
     compile(f)(hf, RouteExecutor)
 }
 
-private[rho] trait HeaderAppendable[T1 <: HList] extends MetaDataSyntax {
+private[rho] trait HeaderAppendable[T1 <: HList] {
   type Self <: HeaderAppendable[T1]
+
   def >>>[T2 <: HList](v: HeaderRule[T2])(implicit prep1: Prepend[T2, T1]): HeaderAppendable[prep1.Out]
 }

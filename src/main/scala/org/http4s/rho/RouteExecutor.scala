@@ -31,37 +31,47 @@ trait ExecutableCompiler {
   //////////////////////// Stuff for executing the route //////////////////////////////////////
 
   /** The untyped guts of ensureValidHeaders and friends */
-  protected def runValidation(req: Request, v: HeaderRule[_ <: HList], stack: HList): \/[String,HList] = v match {
-    case HeaderAnd(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
+  protected def runValidation(req: Request, v: HeaderRule[_ <: HList], stack: HList): \/[String,HList] = {
+    import bits.HeaderAST.MetaCons
+    v match {
+      case HeaderAnd(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
 
-    case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
+      case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
 
-    case HeaderCapture(key) => req.headers.get(key) match {
-      case Some(h) => \/-(h::stack)
-      case None => -\/(missingHeader(key))
+      case HeaderCapture(key) => req.headers.get(key) match {
+        case Some(h) => \/-(h::stack)
+        case None => -\/(missingHeader(key))
+      }
+
+      case HeaderRequire(key, f) => req.headers.get(key) match {
+        case Some(h) => if (f(h)) \/-(stack) else -\/(invalidHeader(h))
+        case None => -\/(missingHeader(key))
+      }
+
+      case HeaderMapper(key, f) => req.headers.get(key) match {
+        case Some(h) => \/-(f(h)::stack)
+        case None => -\/(missingHeader(key))
+      }
+
+      case MetaCons(r, _) => runValidation(req, r, stack)
+
+      case EmptyHeaderRule => \/-(stack)
     }
-
-    case HeaderRequire(key, f) => req.headers.get(key) match {
-      case Some(h) => if (f(h)) \/-(stack) else -\/(invalidHeader(h))
-      case None => -\/(missingHeader(key))
-    }
-
-    case HeaderMapper(key, f) => req.headers.get(key) match {
-      case Some(h) => \/-(f(h)::stack)
-      case None => -\/(missingHeader(key))
-    }
-
-    case EmptyHeaderRule => \/-(stack)
   }
 
-  protected def runQuery(req: Request, v: QueryRule[_ <: HList], stack: HList): String\/HList = v match {
-    case QueryAnd(a, b) => runQuery(req, a, stack).flatMap(runQuery(req, b, _))
+  protected def runQuery(req: Request, v: QueryRule[_ <: HList], stack: HList): String\/HList = {
+    import QueryAST.MetaCons
+    v match {
+      case QueryAnd(a, b) => runQuery(req, a, stack).flatMap(runQuery(req, b, _))
 
-    case QueryOr(a, b) => runQuery(req, a, stack).orElse(runQuery(req, b, stack))
+      case QueryOr(a, b) => runQuery(req, a, stack).orElse(runQuery(req, b, stack))
 
-    case QueryCapture(name, parser) => parser.collect(name, req).map(_ :: stack)
+      case QueryCapture(name, parser) => parser.collect(name, req).map(_ :: stack)
 
-    case EmptyQuery => \/-(stack)
+      case MetaCons(r, _) => runQuery(req, r, stack)
+
+      case EmptyQuery => \/-(stack)
+    }
   }
 
   /** Runs the URL and pushes values to the HList stack */
@@ -76,43 +86,46 @@ trait ExecutableCompiler {
     }
 
     // WARNING: returns null if not matched but no nulls should escape the runPath method
-    def go(v: PathRule[_ <: HList], stack: HList): \/[String,HList] = v match {
-      case PathAnd(a, b) =>
-        val v = go(a, stack)
-        if (v == null) null
-        else if (!currentPath.isEmpty    ||
-          b.isInstanceOf[PathAnd[_]]     ||
-          b.isInstanceOf[CaptureTail]) v.flatMap(go(b, _))
-        else null
+    def go(v: PathRule[_ <: HList], stack: HList): \/[String,HList] = {
+      import PathAST.MetaCons
+      v match {
+        case PathAnd(a, b) =>
+          val v = go(a, stack)
+          if (v == null) null
+          else if (!currentPath.isEmpty    ||
+            b.isInstanceOf[PathAnd[_]]     ||
+            b.isInstanceOf[CaptureTail]) v.flatMap(go(b, _))
+          else null
 
-      case PathOr(a, b) =>
-        val oldPath = currentPath
-        val v = go(a, stack)
-        if (v != null) v
-        else {
-          currentPath = oldPath // reset the path stack
-          go(b, stack)
-        }
+        case PathOr(a, b) =>
+          val oldPath = currentPath
+          val v = go(a, stack)
+          if (v != null) v
+          else {
+            currentPath = oldPath // reset the path stack
+            go(b, stack)
+          }
 
-      case PathCapture(f, _) => f.parse(pop).map{ i => i::stack}
+        case PathCapture(f) => f.parse(pop).map{ i => i::stack}
 
-      case PathMatch(s, _) =>
-        if (pop == s) \/-(stack)
-        else null
+        case PathMatch(s) =>
+          if (pop == s) \/-(stack)
+          else null
 
-      case PathEmpty => // Needs to be the empty path
-        if (currentPath.head.length == 0) {
-          pop
-          \/-(stack)
-        }
-        else null
+        case PathEmpty => // Needs to be the empty path
+          if (currentPath.head.length == 0) {
+            pop
+            \/-(stack)
+          }
+          else null
 
-      case CaptureTail(_) =>
-        val p = currentPath
-        currentPath = Nil
-        \/-(p::stack)
+        case CaptureTail() =>
+          val p = currentPath
+          currentPath = Nil
+          \/-(p::stack)
 
-      case _: MetaData => \/-(stack)
+        case MetaCons(r, _) => go(r, stack)
+      }
     }
 
     if (!path.isEmpty) {

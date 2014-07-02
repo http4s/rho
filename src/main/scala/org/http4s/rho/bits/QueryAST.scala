@@ -23,5 +23,7 @@ object QueryAST {
 
   case class QueryOr[T <: HList](a: QueryRule[T], b: QueryRule[T]) extends QueryRule[T]
 
+  case class MetaCons[T <: HList](query: QueryRule[T], meta: Metadata) extends QueryRule[T]
+
   case object EmptyQuery extends QueryRule[HNil]
 }

@@ -45,6 +45,8 @@ object HeaderAST {
 
   case class HeaderOr[T <: HList](a: HeaderRule[T], b: HeaderRule[T]) extends HeaderRule[T]
 
+  case class MetaCons[T <: HList](a: HeaderRule[T], meta: Metadata) extends HeaderRule[T]
+
   object EmptyHeaderRule extends HeaderRule[HNil]
 
 }

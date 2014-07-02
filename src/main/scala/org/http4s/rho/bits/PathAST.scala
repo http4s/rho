@@ -14,48 +14,40 @@ import scala.reflect.Manifest
 object PathAST {
 
   /** The root type of the parser AST */
-  sealed trait PathRule[T <: HList] {
-    def documentation: Option[String] = None
-  }
-
-  sealed trait CombinablePathRule[T <: HList] extends PathRule[T] {
+  sealed trait PathRule[T <: HList] extends {
     /** These methods differ in their return type */
-    def and[T2 <: HList](p2: CombinablePathRule[T2])(implicit prep: Prepend[T2, T]): CombinablePathRule[prep.Out] =
+    def and[T2 <: HList](p2: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] =
       PathAnd(this, p2)
 
-    def &&[T2 <: HList](p2: CombinablePathRule[T2])(implicit prep: Prepend[T2, T]): CombinablePathRule[prep.Out] = and(p2)
+    def &&[T2 <: HList](p2: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] = and(p2)
 
-    def or(p2: CombinablePathRule[T]): CombinablePathRule[T] = PathOr(this, p2)
+    def or(p2: PathRule[T]): PathRule[T] = PathOr(this, p2)
 
-    def ||(p2: CombinablePathRule[T]): CombinablePathRule[T] = or(p2)
+    def ||(p2: PathRule[T]): PathRule[T] = or(p2)
 
-    def /(s: String): CombinablePathRule[T] = PathAnd(this, PathMatch(s))
+    def /(s: String): PathRule[T] = PathAnd(this, PathMatch(s))
 
-    def /(s: Symbol): CombinablePathRule[String :: T] = PathAnd(this, PathCapture(StringParser.strParser))
+    def /(s: Symbol): PathRule[String :: T] = PathAnd(this, PathCapture(StringParser.strParser))
 
-    def /[T2 <: HList](t: CombinablePathRule[T2])(implicit prep: Prepend[T2, T]): CombinablePathRule[prep.Out] =
+    def /[T2 <: HList](t: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] =
       PathAnd(this, t)
   }
 
-  case class PathAnd[T <: HList](p1: PathRule[_ <: HList], p2: PathRule[_ <: HList]) extends CombinablePathRule[T]
+  case class PathAnd[T <: HList](p1: PathRule[_ <: HList], p2: PathRule[_ <: HList]) extends PathRule[T]
 
-  case class PathOr[T <: HList](p1: PathRule[T], p2: PathRule[T]) extends CombinablePathRule[T]
+  case class PathOr[T <: HList](p1: PathRule[T], p2: PathRule[T]) extends PathRule[T]
 
-  case class PathMatch(s: String, override val documentation: Option[String] = None) extends CombinablePathRule[HNil]
+  case class PathMatch(s: String) extends PathRule[HNil]
 
-  case class PathCapture[T](parser: StringParser[T],
-                                         override val documentation: Option[String] = None)
-                                        (implicit val m: Manifest[T]) extends CombinablePathRule[T :: HNil]
+  case class PathCapture[T](parser: StringParser[T])
+                           (implicit val m: Manifest[T]) extends PathRule[T :: HNil]
 
   // These don't fit the  operations of CombinablePathSyntax because they may
   // result in a change of the type of PathBulder
   // TODO: can I make this a case object?
-  case class CaptureTail(override val documentation: Option[String] = None) extends PathRule[List[String] :: HNil]
+  case class CaptureTail() extends PathRule[List[String] :: HNil]
 
   case object PathEmpty extends PathRule[HNil]
 
-  trait MetaData extends PathRule[HNil]
-
-  case class PathDescription(desc: String) extends MetaData
-
+  case class MetaCons[T <: HList](path: PathRule[T], meta: Metadata) extends PathRule[T]
 }
