@@ -4,28 +4,41 @@ import Keys._
 object MyBuild extends Build {
   import Dependencies._
 
+
+  lazy val rho = project
+                  .in(file("."))
+                  .settings(buildSettings: _*)
+                  .aggregate(core)
+   
+  lazy val core = project
+                    .in(file("core"))
+                    .settings(buildSettings: _*)
+
+  lazy val swagger = project
+                      .in(file("swagger"))
+                      .settings(buildSettings:+ swaggerDeps : _*)
+
+  
+
   lazy val compileFlags = Seq("-feature")
+
+  lazy val rhoVersion = "0.1.0-SNAPSHOT"
 
   lazy val buildSettings = Defaults.defaultSettings ++
      Seq(
         scalaVersion := "2.11.1",
         scalacOptions ++= compileFlags,
+        version := rhoVersion,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
         fork in run := true,
         libraryDependencies ++= Seq(
           http4sCore,
-          http4sDSL,
-          http4sBlaze,
           specs2 % "test"
-        ) ++ swaggerDeps
+        )
     )
 
-  lazy val myProject = Project(
-    id = "http4s-rho",
-    base = file("."),
-    settings = buildSettings ++ Seq(version := "0.1.0-SNAPSHOT")
-  )
+  
 
 }
 
@@ -42,7 +55,7 @@ object Dependencies {
   lazy val scalaloggingSlf4j   = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
   lazy val specs2              = "org.specs2"                 %% "specs2"              % "2.3.12"
 
-  lazy val swaggerDeps = Seq(
+  lazy val swaggerDeps = libraryDependencies ++= Seq(
     "org.json4s" %% "json4s-jackson" % "3.2.10",
     "org.json4s" %% "json4s-ext"     % "3.2.10"
   )
