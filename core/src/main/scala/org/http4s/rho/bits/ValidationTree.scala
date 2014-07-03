@@ -29,7 +29,6 @@ private[rho] trait ValidationTree {
 
   protected trait Leaf {
     def attempt(req: Request, stack: HList): Result
-    def document: String = ???  // TODO: How will docs work?
 
     final def ++(l: Leaf): Leaf = (this, l) match {
       case (s1@ SingleLeaf(_,_,_,_), s2@ SingleLeaf(_,_,_,_)) => ListLeaf(s1::s2::Nil)
@@ -61,7 +60,7 @@ private[rho] trait ValidationTree {
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////
-  protected def makeLeaf[T <: HList, F, O](action: RhoAction[T, F, O]): Leaf = {
+  protected def makeLeaf[T <: HList, F, O](action: RhoAction[T, F]): Leaf = {
     action.router match {
       case Router(method, _, query, vals) =>
         SingleLeaf(query, vals, None, (req, pathstack) => {

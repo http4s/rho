@@ -34,10 +34,10 @@ case class Router[T1 <: HList](method: Method,
   override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): Router[prep1.Out] =
     Router(method, path, query, HeaderAnd(validators,v))
 
-  override def makeAction[F,O](f: F, hf: HListToFunc[T1,O,F]): RhoAction[T1, F, O] =
+  override def makeAction[F](f: F, hf: HListToFunc[T1, F]): RhoAction[T1, F] =
     new RhoAction(this, f, hf)
 
-  def decoding[R](decoder: Decoder[R]): CodecRouter[T1,R] = CodecRouter(this, decoder)
+  def decoding[R](decoder: Decoder[R]): CodecRouter[T1, R] = CodecRouter(this, decoder)
 
   override def addMetaData(data: Metadata): Router[T1] =
     Router(method, path, query, MetaCons(validators, data))
@@ -56,7 +56,7 @@ case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])
   override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
 
-  override def makeAction[F,O](f: F, hf: HListToFunc[R::T1,O,F]): RhoAction[R::T1, F, O] =
+  override def makeAction[F](f: F, hf: HListToFunc[R::T1, F]): RhoAction[R::T1, F] =
     new RhoAction(this, f, hf)
 
   private[rho] override def path: PathRule[_ <: HList] = router.path
@@ -77,21 +77,21 @@ case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])
 
 private[rho] trait RouteExecutable[T <: HList] {
   def method: Method
-  
-  def makeAction[F, O](f: F, hf: HListToFunc[T,O,F]): RhoAction[T, F, O]
-  
+
   private[rho] def path: PathRule[_ <: HList]
-  
+//
   private[rho] def validators: HeaderRule[_ <: HList]
 
+  def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F]
+
   /** Compiles a HTTP request definition into an action */
-  final def |>>[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F], srvc: CompileService[R]): R =
+  final def |>>[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[R]): R =
     compile(f)(hf, srvc)
 
   /** Compiles a HTTP request definition into an action */
-  final def compile[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F], srvc: CompileService[R]): R =
+  final def compile[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[R]): R =
     srvc.compile(makeAction(f, hf))
 
-  final def runWith[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F]): Request => Option[Task[Response]] =
+  final def runWith[F, O, R](f: F)(implicit hf: HListToFunc[T, F]): Request => Option[Task[Response]] =
     compile(f)(hf, RouteExecutor)
 }

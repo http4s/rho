@@ -8,45 +8,49 @@ import scalaz.concurrent.Task
 /////////////////// Helpers for turning a function of may params to a function of a HList
 // The library https://github.com/sbt/sbt-boilerplate may be useful for final generation
 
-trait HListToFunc[T <: HList, O, -F] {
+/** Maps an F to the HList T
+  * @tparam T
+  * @tparam F
+  */
+trait HListToFunc[T <: HList, -F] {
   def conv(f: F): (Request,T) => Task[Response]
   def encodings: Seq[MediaType] = Nil
-  def manifest: Option[Manifest[O]]
+  def manifest: Option[Manifest[_]]
 }
 
 object HListToFunc {
 
-  implicit def wReqFun0[O](implicit o: ObjToResponse[O]) = new HListToFunc[HNil, O, (Request) => O] {
+  implicit def wReqFun0[O](implicit o: ObjToResponse[O]) = new HListToFunc[HNil, (Request) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (Request) => O): (Request, HNil) => Task[Response] = (req, _) => o(f(req))
   }
 
-  implicit def fun0[O](implicit o: ObjToResponse[O]) = new HListToFunc[HNil, O, () => O] {
+  implicit def fun0[O](implicit o: ObjToResponse[O]) = new HListToFunc[HNil, () => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: () => O): (Request, HNil) => Task[Response] = (_,_) => o(f())
   }
 
-  implicit def fun1[T1, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::HNil, O, T1 => O] {
+  implicit def fun1[T1, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::HNil, T1 => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (T1) => O): (Request,T1::HNil) => Task[Response] = (_,h) => o(f(h.head))
   }
 
-  implicit def wReqfun1[T1, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::HNil, O, (Request,T1) => O] {
+  implicit def wReqfun1[T1, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::HNil, (Request,T1) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (Request,T1) => O): (Request,T1::HNil) => Task[Response] = (req,h) => o(f(req,h.head))
   }
 
-  implicit def fun2[T1, T2, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::T2::HNil, O, (T2, T1) => O] {
+  implicit def fun2[T1, T2, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::T2::HNil, (T2, T1) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (T2, T1) => O): (Request,T1::T2::HNil) => Task[Response] = { (_,h) => o(f(h.tail.head,h.head)) }
   }
 
-  implicit def wReqfun2[T1, T2, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::T2::HNil, O, (Request, T2, T1) => O] {
+  implicit def wReqfun2[T1, T2, O](implicit o: ObjToResponse[O]) = new HListToFunc[T1::T2::HNil, (Request, T2, T1) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (Request, T2, T1) => O): (Request,T1::T2::HNil) => Task[Response] = { (req,h) =>
@@ -54,7 +58,7 @@ object HListToFunc {
     }
   }
 
-  implicit def fun3[T1, T2, T3, O](implicit o: ObjToResponse[O]) = new HListToFunc[T3::T2::T1::HNil, O, (T1, T2, T3) => O] {
+  implicit def fun3[T1, T2, T3, O](implicit o: ObjToResponse[O]) = new HListToFunc[T3::T2::T1::HNil, (T1, T2, T3) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (T1, T2, T3) => O): (Request,T3::T2::T1::HNil) => Task[Response] = { (_,h3) =>
@@ -66,7 +70,7 @@ object HListToFunc {
     }
   }
 
-  implicit def wReqfun3[T1, T2, T3, O](implicit o: ObjToResponse[O]) = new HListToFunc[T3::T2::T1::HNil, O, (Request, T1, T2, T3) => O] {
+  implicit def wReqfun3[T1, T2, T3, O](implicit o: ObjToResponse[O]) = new HListToFunc[T3::T2::T1::HNil, (Request, T1, T2, T3) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (Request, T1, T2, T3) => O): (Request,T3::T2::T1::HNil) => Task[Response] = { (req,h3) =>
@@ -78,7 +82,7 @@ object HListToFunc {
     }
   }
 
-  implicit def fun4[T1, T2, T3, T4, O](implicit o: ObjToResponse[O]) = new HListToFunc[T4::T3::T2::T1::HNil, O, (T1, T2, T3, T4) => O] {
+  implicit def fun4[T1, T2, T3, T4, O](implicit o: ObjToResponse[O]) = new HListToFunc[T4::T3::T2::T1::HNil, (T1, T2, T3, T4) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (T1, T2, T3, T4) => O): (Request,T4::T3::T2::T1::HNil) => Task[Response] = { (_,h4) =>
@@ -92,7 +96,7 @@ object HListToFunc {
     }
   }
 
-  implicit def wReqfun4[T1, T2, T3, T4, O](implicit o: ObjToResponse[O]) = new HListToFunc[T4::T3::T2::T1::HNil, O, (Request, T1, T2, T3, T4) => O] {
+  implicit def wReqfun4[T1, T2, T3, T4, O](implicit o: ObjToResponse[O]) = new HListToFunc[T4::T3::T2::T1::HNil, (Request, T1, T2, T3, T4) => O] {
     override def encodings: Seq[MediaType] = o.mediaTypes
     override def manifest: Option[Manifest[O]] = o.manifest
     override def conv(f: (Request, T1, T2, T3, T4) => O): (Request,T4::T3::T2::T1::HNil) => Task[Response] = { (req,h4) =>

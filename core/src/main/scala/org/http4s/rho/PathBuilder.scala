@@ -55,6 +55,6 @@ final class PathBuilder[T <: HList](val method: Method, private[rho] val path: P
 
   def decoding[R](dec: Decoder[R]): CodecRouter[T, R] = CodecRouter(toAction, dec)
 
-  def makeAction[F, O](f: F, hf: HListToFunc[T,O,F]): RhoAction[T, F, O] =
+  override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(Router(method, path, EmptyQuery, EmptyHeaderRule), f, hf)
 }

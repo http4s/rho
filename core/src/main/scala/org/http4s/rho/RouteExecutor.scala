@@ -149,12 +149,12 @@ private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[
 
   ///////////////////// Route execution bits //////////////////////////////////////
 
-  override def compile[T <: HList, F, O](action: RhoAction[T, F, O]): Result = action match {
+  override def compile[T <: HList, F](action: RhoAction[T, F]): Result = action match {
     case RhoAction(r@ Router(_,_,_,_), f, hf) => compileRouter(r, f, hf)
     case RhoAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
   }
 
-  protected def compileRouter[T <: HList, F, O](r: Router[T], f: F, hf: HListToFunc[T, O, F]): Result = {
+  protected def compileRouter[T <: HList, F](r: Router[T], f: F, hf: HListToFunc[T, F]): Result = {
     val readyf = hf.conv(f)
     val ff: Result = { req =>
        pathAndValidate[T](req, r.path, r.query, r.validators).map(_ match {
@@ -166,7 +166,7 @@ private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[
     ff
   }
   
-  protected def compileCodecRouter[T <: HList, F, O, R](r: CodecRouter[T, R], f: F, hf: HListToFunc[R::T, O, F]): Result = {
+  protected def compileCodecRouter[T <: HList, F, R](r: CodecRouter[T, R], f: F, hf: HListToFunc[R::T, F]): Result = {
     val actionf = hf.conv(f)
     val allvals = {
       if (!r.decoder.force) {

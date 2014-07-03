@@ -23,7 +23,7 @@ case class QueryBuilder[T <: HList](method: Method,
 {
   override type Self = QueryBuilder[T]
 
-  override def makeAction[F, O](f: F, hf: HListToFunc[T, O, F]): RhoAction[T, F, O] =
+  override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     RhoAction(Router(method, path, query, validators), f, hf)
 
   override def >>>[T1 <: HList](v: HeaderRule[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =

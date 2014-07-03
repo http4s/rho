@@ -17,17 +17,18 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
 
   implicit protected def compilerSrvc = new CompileService[Unit] {
-    override def compile[T <: HList, F, O](action: RhoAction[T, F, O]): Unit = append(action)
+    override def compile[T <: HList, F](action: RhoAction[T, F]): Unit = append(action)
   }
+
 
   private def missingMethod = sys.error("Somehow an unknown Method type was found!")
 
   private def getMethod(method: Method) = methods.get(method).getOrElse(missingMethod)
 
-  protected def append[T <: HList, F, O](action: RhoAction[T, F, O]): Unit = {
-    val m = action.router.method
+  protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
+    val m = action.method
     val newLeaf = makeLeaf(action)
-    val newNode = methods.get(m).getOrElse(HeadNode()).append(action.router.path, newLeaf)
+    val newNode = methods.get(m).getOrElse(HeadNode()).append(action.path, newLeaf)
     methods(m) = newNode
   }
 
