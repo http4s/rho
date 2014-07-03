@@ -9,8 +9,8 @@ import scalaz.concurrent.Task
 // The library https://github.com/sbt/sbt-boilerplate may be useful for final generation
 
 /** Maps an F to the HList T
-  * @tparam T
-  * @tparam F
+  * @tparam T HList type of the incoming values
+  * @tparam F type of element onto which T will be mapped
   */
 trait HListToFunc[T <: HList, -F] {
   def conv(f: F): (Request,T) => Task[Response]

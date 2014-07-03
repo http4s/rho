@@ -4,5 +4,5 @@ package rho
 import shapeless.HList
 
 trait CompileService[F, A] {
-  def compile[T <: HList](action: RhoAction[T, F]): A
+  def compile(action: RhoAction[_ <: HList, F]): A
 }

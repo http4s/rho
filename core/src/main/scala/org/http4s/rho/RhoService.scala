@@ -1,10 +1,6 @@
 package org.http4s
 package rho
 
-import bits.PathAST._
-import bits.HeaderAST.HeaderRule
-import bits.HListToFunc
-
 import scala.collection.mutable
 
 import shapeless.{HNil, HList}
@@ -17,7 +13,7 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
 
   implicit protected def compilerSrvc[F] = new CompileService[F, F] {
-    override def compile[T <: HList](action: RhoAction[T, F]): F = {
+    override def compile(action: RhoAction[_ <: HList, F]): F = {
       append(action)
       action.f
     }

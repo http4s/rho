@@ -18,52 +18,52 @@ import shapeless.ops.hlist.Prepend
   * @param method request methods to match
   * @param path path matching stack
   * @param validators header validation stack
-  * @tparam T1 cumulative type of the required method for executing the router
+  * @tparam T cumulative type of the required method for executing the router
   */
-case class Router[T1 <: HList](method: Method,
+case class Router[T <: HList](method: Method,
                                private[rho] val path: PathRule[_ <: HList],
                                private[rho] val query: QueryRule[_ <: HList],
                                validators: HeaderRule[_ <: HList])
-                       extends RouteExecutable[T1]
-                          with HeaderAppendable[T1]
+                       extends RouteExecutable[T]
+                          with HeaderAppendable[T]
                           with MetaDataSyntax
 {
 
-  type Self = Router[T1]
+  type Self = Router[T]
 
-  override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): Router[prep1.Out] =
+  override def >>>[T2 <: HList](v: HeaderRule[T2])(implicit prep1: Prepend[T2, T]): Router[prep1.Out] =
     Router(method, path, query, HeaderAnd(validators,v))
 
-  override def makeAction[F](f: F, hf: HListToFunc[T1, F]): RhoAction[T1, F] =
+  override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(this, f, hf)
 
-  def decoding[R](decoder: Decoder[R]): CodecRouter[T1, R] = CodecRouter(this, decoder)
+  def decoding[R](decoder: Decoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
 
-  override def addMetaData(data: Metadata): Router[T1] =
+  override def addMetaData(data: Metadata): Router[T] =
     Router(method, path, query, MetaCons(validators, data))
 }
 
-case class CodecRouter[T1 <: HList, R](router: Router[T1], decoder: Decoder[R])
-           extends HeaderAppendable[T1]
-           with RouteExecutable[R::T1]
+case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
+           extends HeaderAppendable[T]
+           with RouteExecutable[R::T]
            with MetaDataSyntax
 {
-  type Self = CodecRouter[T1, R]
+  type Self = CodecRouter[T, R]
 
-  override def addMetaData(data: Metadata): CodecRouter[T1, R] =
+  override def addMetaData(data: Metadata): CodecRouter[T, R] =
     CodecRouter(router.addMetaData(data), decoder)
 
-  override def >>>[T3 <: HList](v: HeaderRule[T3])(implicit prep1: Prepend[T3, T1]): CodecRouter[prep1.Out,R] =
+  override def >>>[T2 <: HList](v: HeaderRule[T2])(implicit prep1: Prepend[T2, T]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
 
-  override def makeAction[F](f: F, hf: HListToFunc[R::T1, F]): RhoAction[R::T1, F] =
+  override def makeAction[F](f: F, hf: HListToFunc[R::T, F]): RhoAction[R::T, F] =
     new RhoAction(this, f, hf)
 
   private[rho] override def path: PathRule[_ <: HList] = router.path
 
   override def method: Method = router.method
 
-  def decoding(decoder2: Decoder[R]): CodecRouter[T1, R] = CodecRouter(router, decoder.or(decoder2))
+  def decoding(decoder2: Decoder[R]): CodecRouter[T, R] = CodecRouter(router, decoder.or(decoder2))
 
   override private[rho] val validators: HeaderRule[_ <: HList] = {
     if (!decoder.consumes.isEmpty) {

@@ -148,8 +148,8 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
 
   ///////////////////// Route execution bits //////////////////////////////////////
 
-  override def compile[T <: HList](action: RhoAction[T, F]): Result = action match {
-    case RhoAction(r@ Router(_,_,_,_), f, hf) => compileRouter(r, f, hf)
+  override def compile(action: RhoAction[_ <: HList, F]): Result = action match {
+    case RhoAction(r@ Router(_,_,_,_), f, hf)  => compileRouter(r, f, hf)
     case RhoAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
   }
 
