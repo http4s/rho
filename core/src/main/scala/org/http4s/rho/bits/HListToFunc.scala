@@ -6,6 +6,7 @@ import scalaz.concurrent.Task
 
 
 /////////////////// Helpers for turning a function of may params to a function of a HList
+// The library https://github.com/sbt/sbt-boilerplate may be useful for final generation
 
 trait HListToFunc[T <: HList, O, -F] {
   def conv(f: F): (Request,T) => Task[Response]

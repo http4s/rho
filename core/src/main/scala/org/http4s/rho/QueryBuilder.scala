@@ -3,7 +3,7 @@ package rho
 
 import scala.language.existentials
 
-import org.http4s.rho.bits.{MetaDataSyntax, Metadata, HListToFunc}
+import org.http4s.rho.bits.{MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable}
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._

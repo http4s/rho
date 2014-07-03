@@ -1,18 +1,17 @@
 package org.http4s
 package rho
 
+import scala.language.existentials
+
 import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST.QueryRule
 import bits.HeaderAST.MetaCons
+import org.http4s.rho.bits.{HeaderAppendable, Metadata, MetaDataSyntax, HListToFunc}
 
 import shapeless.{::, HList}
 import scalaz.concurrent.Task
 import shapeless.ops.hlist.Prepend
-
-import scala.language.existentials
-import org.http4s.rho.bits.{Metadata, MetaDataSyntax, HListToFunc}
-
 
 /** Provides the operations for generating a router
   *
@@ -95,10 +94,4 @@ private[rho] trait RouteExecutable[T <: HList] {
 
   final def runWith[F, O, R](f: F)(implicit hf: HListToFunc[T, O, F]): Request => Option[Task[Response]] =
     compile(f)(hf, RouteExecutor)
-}
-
-private[rho] trait HeaderAppendable[T1 <: HList] {
-  type Self <: HeaderAppendable[T1]
-
-  def >>>[T2 <: HList](v: HeaderRule[T2])(implicit prep1: Prepend[T2, T1]): HeaderAppendable[prep1.Out]
 }
