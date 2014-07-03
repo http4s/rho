@@ -34,5 +34,5 @@ case class QueryBuilder[T <: HList](method: Method,
   def &[T1 <: HList](rule: QueryRule[T1])(implicit prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, path, QueryAnd(query, rule))
 
-  override private[rho] def validators: HeaderRule[_ <: HList] = EmptyHeaderRule
+  override def validators: HeaderRule[_ <: HList] = EmptyHeaderRule
 }

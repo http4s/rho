@@ -8,9 +8,7 @@ import bits.PathAST.PathRule
 import shapeless.HList
 
 
-case class RhoAction[T <: HList, F](private[rho] val router: RouteExecutable[T],
-                                       private[rho] val f: F,
-                                       private[rho] val hf: HListToFunc[T, F]) {
+case class RhoAction[T <: HList, F](router: RouteExecutable[T], f: F, hf: HListToFunc[T, F]) {
   final def method: Method = router.method
   final def path: PathRule[_ <: HList] = router.path
   final def validators: HeaderRule[_ <: HList] = router.validators

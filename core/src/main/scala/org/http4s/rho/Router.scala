@@ -21,8 +21,8 @@ import shapeless.ops.hlist.Prepend
   * @tparam T cumulative type of the required method for executing the router
   */
 case class Router[T <: HList](method: Method,
-                               private[rho] val path: PathRule[_ <: HList],
-                               private[rho] val query: QueryRule[_ <: HList],
+                               val path: PathRule[_ <: HList],
+                               val query: QueryRule[_ <: HList],
                                validators: HeaderRule[_ <: HList])
                        extends RouteExecutable[T]
                           with HeaderAppendable[T]
@@ -59,13 +59,13 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
   override def makeAction[F](f: F, hf: HListToFunc[R::T, F]): RhoAction[R::T, F] =
     new RhoAction(this, f, hf)
 
-  private[rho] override def path: PathRule[_ <: HList] = router.path
+  override def path: PathRule[_ <: HList] = router.path
 
   override def method: Method = router.method
 
   def decoding(decoder2: Decoder[R]): CodecRouter[T, R] = CodecRouter(router, decoder.or(decoder2))
 
-  override private[rho] val validators: HeaderRule[_ <: HList] = {
+  override val validators: HeaderRule[_ <: HList] = {
     if (!decoder.consumes.isEmpty) {
       val mt = requireThat(Header.`Content-Type`){ h: Header.`Content-Type`.HeaderT =>
         decoder.consumes.find(_ == h.mediaType).isDefined
@@ -78,9 +78,9 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
 private[rho] trait RouteExecutable[T <: HList] {
   def method: Method
 
-  private[rho] def path: PathRule[_ <: HList]
-//
-  private[rho] def validators: HeaderRule[_ <: HList]
+  def path: PathRule[_ <: HList]
+
+  def validators: HeaderRule[_ <: HList]
 
   def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F]
 

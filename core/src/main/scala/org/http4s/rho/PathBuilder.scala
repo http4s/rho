@@ -17,14 +17,14 @@ import shapeless.ops.hlist.Prepend
  */
 
 /** Fully functional path building */
-final class PathBuilder[T <: HList](val method: Method, private[rho] val path: PathRule[T])
+final class PathBuilder[T <: HList](val method: Method, val path: PathRule[T])
                   extends HeaderAppendable[T]
                      with RouteExecutable[T]
                      with MetaDataSyntax
 {
   type Self = PathBuilder[T]
 
-  override private[rho] def validators: HeaderRule[_ <: HList] = EmptyHeaderRule
+  override def validators: HeaderRule[_ <: HList] = EmptyHeaderRule
 
   def +?[T1 <: HList](q: QueryRule[T1])(implicit prep: Prepend[T1,T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, path, q)
