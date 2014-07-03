@@ -35,31 +35,31 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
-      RouteExecutor.ensureValidHeaders(RequireETag && RequireNonZeroLen,badreq) should_== -\/(s"Missing header: ${etag.name}")
+      new RouteExecutor().ensureValidHeaders(RequireETag && RequireNonZeroLen,badreq) should_== -\/(s"Missing header: ${etag.name}")
     }
 
     "Match captureless route" in {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      RouteExecutor.ensureValidHeaders(c,req) should_== \/-(HNil)
+      new RouteExecutor().ensureValidHeaders(c,req) should_== \/-(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(Header.`Content-Length`) && RequireETag
-        RouteExecutor.ensureValidHeaders(c2,req) should_== \/-(lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c2,req) should_== \/-(lenheader::HNil)
       }, {
         val c3 = capture(Header.`Content-Length`) && capture(Header.ETag)
-        RouteExecutor.ensureValidHeaders(c3,req) should_== \/-(etag::lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c3,req) should_== \/-(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = requireMap(Header.`Content-Length`)(_.length)
-      RouteExecutor.ensureValidHeaders(c,req) should_== \/-(4::HNil)
+      new RouteExecutor().ensureValidHeaders(c,req) should_== \/-(4::HNil)
     }
 
     "Run || routes" in {

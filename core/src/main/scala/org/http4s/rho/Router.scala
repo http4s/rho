@@ -85,13 +85,13 @@ private[rho] trait RouteExecutable[T <: HList] {
   def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F]
 
   /** Compiles a HTTP request definition into an action */
-  final def |>>[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[R]): R =
+  final def |>>[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[F, R]): R =
     compile(f)(hf, srvc)
 
   /** Compiles a HTTP request definition into an action */
-  final def compile[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[R]): R =
+  final def compile[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[F, R]): R =
     srvc.compile(makeAction(f, hf))
 
   final def runWith[F, O, R](f: F)(implicit hf: HListToFunc[T, F]): Request => Option[Task[Response]] =
-    compile(f)(hf, RouteExecutor)
+    compile(f)(hf, new RouteExecutor)
 }

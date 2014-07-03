@@ -3,6 +3,6 @@ package rho
 
 import shapeless.HList
 
-trait CompileService[A] {
-  def compile[T <: HList, F](action: RhoAction[T, F]): A
+trait CompileService[F, A] {
+  def compile[T <: HList](action: RhoAction[T, F]): A
 }

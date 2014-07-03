@@ -141,15 +141,14 @@ trait ExecutableCompiler {
 
 }
 
-object RouteExecutor extends RouteExecutor
+private[rho] class RouteExecutor[F] extends ExecutableCompiler
+                                       with CompileService[F, Request=>Option[Task[Response]]] {
 
-private[rho] trait RouteExecutor extends ExecutableCompiler with CompileService[Request=>Option[Task[Response]]] {
-  
   private type Result = Request => Option[Task[Response]]
 
   ///////////////////// Route execution bits //////////////////////////////////////
 
-  override def compile[T <: HList, F](action: RhoAction[T, F]): Result = action match {
+  override def compile[T <: HList](action: RhoAction[T, F]): Result = action match {
     case RhoAction(r@ Router(_,_,_,_), f, hf) => compileRouter(r, f, hf)
     case RhoAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
   }

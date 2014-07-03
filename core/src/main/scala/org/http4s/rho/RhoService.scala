@@ -16,8 +16,11 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
 
-  implicit protected def compilerSrvc = new CompileService[Unit] {
-    override def compile[T <: HList, F](action: RhoAction[T, F]): Unit = append(action)
+  implicit protected def compilerSrvc[F] = new CompileService[F, F] {
+    override def compile[T <: HList](action: RhoAction[T, F]): F = {
+      append(action)
+      action.f
+    }
   }
 
 

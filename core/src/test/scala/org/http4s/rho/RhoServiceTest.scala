@@ -25,7 +25,10 @@ class RhoServiceTest extends Specification {
 
     GET / "hello" / "world" |>> { () => "route3" }
 
-    GET / "hello" / "headers" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
+    // keep the function for 'reverse routing'
+    val reverseQuery = GET / "hello" / "headers" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
+
+    GET / "hello" / "reverse" |>> { () => "reverse: " + reverseQuery(0)}
 
     GET / "hello" / "default" / "parameter" +? query[Int]("some", 23) |>> { s: Int => "some:" + s }
 
@@ -78,6 +81,11 @@ class RhoServiceTest extends Specification {
     "Execute a route with a query" in {
       val req = Get("/hello/headers?foo=4")
       checkOk(req) should_== "route4"
+    }
+
+    "Provide 'reverse routing' characteristics" in {
+      val req = Get("/hello/reverse")
+      checkOk(req) should_== "reverse: route0"
     }
 
     "Fail a route with a missing query" in {
