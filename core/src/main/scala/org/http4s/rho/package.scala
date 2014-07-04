@@ -22,6 +22,8 @@ package object rho {
   val TRACE = Method.Trace
   val CONNECT = Method.Connect
   val PATCH = Method.Patch
+  
+  def ROOT = PathEmpty
 
   implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, PathEmpty)
 

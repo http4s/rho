@@ -108,6 +108,8 @@ trait ExecutableCompiler {
 
         case PathCapture(f) => f.parse(pop).map{ i => i::stack}
 
+        case PathMatch("") => \/-(stack)    // "" is consider a NOOP
+
         case PathMatch(s) =>
           if (pop == s) \/-(stack)
           else null

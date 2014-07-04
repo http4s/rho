@@ -19,6 +19,8 @@ class RhoServiceTest extends Specification {
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
 
   val service = new RhoService {
+    GET +? query("foo", "bar") |>> { foo: String => "Root " + foo }
+
     GET / "hello" |>> { () => "route1" }
 
     GET / 'hello |>> { hello: String => "route2" }
@@ -63,6 +65,22 @@ class RhoServiceTest extends Specification {
   }
 
   "RhoService" should {
+
+    "Get ROOT ('/')" in {
+      val req1 = Request(GET, Uri(path = "/"))
+      val req2 = Request(GET, Uri.fromString("/?foo=biz").get)
+      (checkOk(req1) should_== "Root bar") and
+        (checkOk(req2) should_== "Root biz")
+    }
+
+    "Consider PathMatch(\"\") a NOOP" in {
+      val service = new RhoService {
+        GET / "foo" / "" |>> { () => "bar" }
+      }
+      val req = Request(GET, Uri(path = "/foo"))
+      getBody(service(req).run.body) should_== "bar"
+    }
+
     "Execute a route with no params" in {
       val req = Get("/hello")
       checkOk(req) should_== "route1"

@@ -41,9 +41,11 @@ trait PathTree extends ValidationTree {
 
         case PathOr(p1, p2) => append(p1::tail, action).append(p2::tail, action)
 
-        case MetaCons(r, _) => append(r::tail, action)  // dump metadata
+        case MetaCons(r, _) => append(r::tail, action)  // discard metadata
 
-        case PathMatch(s: String) =>
+        case PathMatch("") => append(tail, action)      // "" is a NOOP
+
+        case PathMatch(s) =>
           paths.collectFirst { case n@MatchNode(s1,_,_,_) if s == s1 => n } match {
             case Some(n) => replaceNode(n, n.append(tail, action))
             case None    => addNode(MatchNode(s).append(tail, action))
@@ -60,8 +62,6 @@ trait PathTree extends ValidationTree {
           clone(paths, v, end)
 
         case PathEmpty => append(tail, action)
-
-        case _: Metadata => append(tail, action)
       }
 
       case Nil =>  // this is the end of the stack
@@ -73,7 +73,7 @@ trait PathTree extends ValidationTree {
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    final def walk(req: Request, path: List[String], stack: HList): String\/(() => Task[Response]) = {
+    def walk(req: Request, path: List[String], stack: HList): String\/(() => Task[Response]) = {
       val h = matchString(path.head, stack)
       if (h != null) {
         if (path.tail.isEmpty) {
@@ -120,6 +120,7 @@ trait PathTree extends ValidationTree {
                                        end: Leaf = null
                                        ) extends Node {
 
+
     override protected def replaceNode(o: Node, n: Node): CaptureNode = copy(paths = replace(o, n))
 
     override protected def addNode(n: Node): CaptureNode = n match {
@@ -142,6 +143,30 @@ trait PathTree extends ValidationTree {
   protected case class HeadNode(paths: List[Node] = Nil,
                                 variadic: Leaf = null,
                                 end: Leaf = null) extends Node {
+
+    override def walk(req: Request, path: List[String], stack: HList): \/[String, () => Task[Response]] = {
+      if (path.isEmpty) {
+        if (end != null) end.attempt(req, stack)
+        else if (variadic != null) variadic.attempt(req, Nil::stack)
+        else null
+      }
+      else {
+        @tailrec               // error may be null
+        def go(nodes: List[Node], error: -\/[String]): String\/(()=>Task[Response]) = {
+          if (nodes.isEmpty) error
+          else nodes.head.walk(req, path, stack) match {
+            case null => go(nodes.tail, error)
+            case r@ \/-(_) => r
+            case e@ -\/(_) => go(nodes.tail, if (error != null) error else e)
+          }
+        }
+
+        val routeMatch = go(paths, null)
+        if (routeMatch != null) routeMatch
+        else if(variadic != null) variadic.attempt(req, path.tail::stack)
+        else null
+      }
+    }
 
     override protected def replaceNode(o: Node, n: Node): HeadNode = copy(paths = replace(o, n))
 

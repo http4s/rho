@@ -19,7 +19,6 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
     }
   }
 
-
   private def missingMethod = sys.error("Somehow an unknown Method type was found!")
 
   private def getMethod(method: Method) = methods.get(method).getOrElse(missingMethod)
@@ -32,11 +31,14 @@ trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree 
   }
 
   private def getResult(req: Request): Option[()=>Task[Response]] = {
-    val path = req.requestUri.path.split("/").toList
+    val path = req.requestUri.path.split("/").toList match {
+      case ""::xs => xs
+      case xs     => xs
+    }
     getMethod(req.requestMethod).walk(req, path, HNil) match {
       case null => None
       case \/-(t) => Some(t)
-      case -\/(s) => Some(()=>onBadRequest(s))
+      case -\/(s) => Some(() => onBadRequest(s))
     }
   }
 

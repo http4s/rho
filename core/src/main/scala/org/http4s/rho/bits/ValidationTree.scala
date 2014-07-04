@@ -32,9 +32,9 @@ private[rho] trait ValidationTree {
 
     final def ++(l: Leaf): Leaf = (this, l) match {
       case (s1@ SingleLeaf(_,_,_,_), s2@ SingleLeaf(_,_,_,_)) => ListLeaf(s1::s2::Nil)
-      case (s1@ SingleLeaf(_,_,_,_), ListLeaf(l))           => ListLeaf(s1::l)
-      case (ListLeaf(l), s2@ SingleLeaf(_,_,_,_))           => ListLeaf(l:+s2)
-      case (ListLeaf(l1), ListLeaf(l2))                   => ListLeaf(l1:::l2)
+      case (s1@ SingleLeaf(_,_,_,_), ListLeaf(l))             => ListLeaf(s1::l)
+      case (ListLeaf(l), s2@ SingleLeaf(_,_,_,_))             => ListLeaf(l:+s2)
+      case (ListLeaf(l1), ListLeaf(l2))                       => ListLeaf(l1:::l2)
     }
   }
 

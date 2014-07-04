@@ -31,11 +31,10 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule[T])
 
   def /(t: CaptureTail) : Router[List[String]::T] = new Router(method, PathAnd(path,t), EmptyQuery, EmptyHeaderRule)
 
-  def /(s: String): PathBuilder[T] =
-    new PathBuilder(method, PathAnd(path,PathMatch(s)))
+  def /(s: String): PathBuilder[T] = new PathBuilder(method, PathAnd(path, PathMatch(s)))
 
   def /(s: Symbol): PathBuilder[String::T] =
-    new PathBuilder(method, PathAnd(path,PathCapture(StringParser.strParser)))
+    new PathBuilder(method, PathAnd(path, MetaCons(PathCapture(StringParser.strParser), TextMeta(s.name))))
 
   def /[T2 <: HList](t: PathRule[T2])(implicit prep: Prepend[T2, T]) : PathBuilder[prep.Out] =
     new PathBuilder(method, PathAnd(path,t))
