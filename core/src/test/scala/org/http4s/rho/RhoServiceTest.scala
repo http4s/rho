@@ -189,6 +189,21 @@ class RhoServiceTest extends Specification {
       val req = Get("/withreq?foo=bar")
       checkOk(req) should_== "req bar"
     }
+
+    ////////////////////////////////////////////////////
+    "Handle errors in the route actions" in {
+      val service = new RhoService {
+        GET / "error" |>> { () => throw new Error("an error") }
+      }
+      val req = Request(GET, Uri(path = "/error"))
+      service(req).run.status must equalTo(Status.InternalServerError)
+    }
+
+    "throw a MatchError on apply for missing route" in {
+      val service = new RhoService { }
+      val req = Request(GET, Uri(path = "/missing"))
+      service(req).run must throwA[MatchError]
+    }
   }
 
 }

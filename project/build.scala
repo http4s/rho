@@ -34,6 +34,7 @@ object MyBuild extends Build {
         fork in run := true,
         libraryDependencies ++= Seq(
           http4sCore,
+          logbackClassic % "test",
           specs2 % "test"
         )
     )
