@@ -1,6 +1,5 @@
 package org.http4s
 
-import scala.language.existentials
 import scala.language.implicitConversions
 
 import rho.bits.PathAST._
@@ -27,37 +26,44 @@ package object rho {
 
   implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, PathEmpty)
 
-  implicit def pathMatch(s: String): PathRule[HNil] = PathMatch(s)
+  implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
 
-  implicit def pathMatch(s: Symbol): PathRule[String::HNil] =
-    PathAST.MetaCons(PathCapture(StringParser.strParser), TextMeta(s"Param name: ${s.name}"))
+  implicit def pathMatch(s: Symbol): TypedPath[String::HNil] = {
+    val capture = PathCapture(StringParser.strParser, strMan)
+    TypedPath(PathAST.MetaCons(capture, TextMeta(s"Param name: ${s.name}")))
+  }
 
-  def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: Manifest[T]): QueryCapture[T] =
+  def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: Manifest[T]): TypedQuery[T::HNil] =
     query(key, Some(default))
 
-  def query[T](key: String, default: Option[T] = None)(implicit parser: QueryParser[T], m: Manifest[T]): QueryCapture[T] =
-    QueryCapture(key, parser, default)
+  def query[T](key: String, default: Option[T] = None)
+                    (implicit parser: QueryParser[T], m: Manifest[T]): TypedQuery[T::HNil] =
+    TypedQuery(QueryCapture(key, parser, default, m))
 
-  def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]) = PathCapture(parser)
+  def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]): TypedPath[T::HNil] =
+    TypedPath(PathCapture(parser, m))
 
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]) =
-    PathAST.MetaCons(PathCapture(parser), TextMeta(s"Param name: $id"))
+    PathAST.MetaCons(PathCapture(parser, strMan), TextMeta(s"Param name: $id"))
 
   def * = CaptureTail()
 
   /////////////////////////////// Header helpers //////////////////////////////////////
 
   /* Checks that the header exists */
-  def require(header: HeaderKey.Extractable): HeaderRule[HNil] = requireThat(header)(_ => true)
+  def require(header: HeaderKey.Extractable): TypedHeader[HNil] = requireThat(header)(_ => true)
 
   /* Check that the header exists and satisfies the condition */
-  def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean = { _: H#HeaderT => true }): HeaderRule[HNil] =
-    HeaderRequire[H](header, f)
+  def requireThat[H <: HeaderKey.Extractable](header: H)
+                        (f: H#HeaderT => Boolean = { _: H#HeaderT => true }): TypedHeader[HNil] =
+    TypedHeader(HeaderRequire(header, f))
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */
-  def capture[H <: HeaderKey.Extractable](key: H): HeaderRule[H#HeaderT :: HNil] =
-    HeaderCapture[H#HeaderT](key)
+  def capture[H <: HeaderKey.Extractable](key: H): TypedHeader[H#HeaderT :: HNil] =
+    TypedHeader(HeaderCapture[H#HeaderT](key))
 
-  def requireMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): HeaderRule[R :: HNil] =
-    HeaderMapper[H, R](key, f)
+  def requireMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
+    TypedHeader(HeaderMapper[H, R](key, f))
+
+  private val strMan = implicitly[Manifest[String]]
 }

@@ -2,8 +2,6 @@ package org.http4s
 package rho
 package bits
 
-import scala.language.existentials
-
 import QueryAST.QueryRule
 import HeaderAST.HeaderRule
 
@@ -16,10 +14,10 @@ import scalaz.{\/-, -\/, \/}
 
 
 private[bits] object TempTools extends ExecutableCompiler {
-  override def runValidation(req: Request, v: HeaderRule[_ <: HList], stack: HList): \/[String, HList] =
+  override def runValidation(req: Request, v: HeaderRule, stack: HList): \/[String, HList] =
     super.runValidation(req, v, stack)
 
-  override def runQuery(req: Request, v: QueryRule[_ <: HList], stack: HList): \/[String, HList] =
+  override def runQuery(req: Request, v: QueryRule, stack: HList): \/[String, HList] =
     super.runQuery(req, v, stack)
 }
 
@@ -38,8 +36,8 @@ private[rho] trait ValidationTree {
     }
   }
 
-  final private case class SingleLeaf(query: QueryRule[_ <: HList],
-                                      vals: HeaderRule[_ <: HList],       // TODO: For documentation purposes
+  final private case class SingleLeaf(query: QueryRule,
+                                      vals: HeaderRule,       // TODO: For documentation purposes
                                       codec: Option[Decoder[_]],  // For documentation purposes
                                       f: (Request, HList) => Result) extends Leaf {
     override def attempt(req: Request, stack: HList): Result = f(req,stack)
