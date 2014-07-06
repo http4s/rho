@@ -8,7 +8,7 @@ object MyBuild extends Build {
   lazy val rho = project
                   .in(file("."))
                   .settings(buildSettings: _*)
-                  .aggregate(core)
+                  .aggregate(core, swagger)
    
   lazy val core = project
                     .in(file("core"))
@@ -17,6 +17,7 @@ object MyBuild extends Build {
   lazy val swagger = project
                       .in(file("swagger"))
                       .settings(buildSettings:+ swaggerDeps : _*)
+                      .dependsOn(core)
 
   
 
@@ -26,7 +27,7 @@ object MyBuild extends Build {
 
   lazy val buildSettings = Defaults.defaultSettings ++
      Seq(
-        scalaVersion := "2.11.1",
+        scalaVersion := "2.10.4",
         scalacOptions ++= compileFlags,
         version := rhoVersion,
         resolvers += Resolver.sonatypeRepo("snapshots"),
@@ -57,8 +58,9 @@ object Dependencies {
   lazy val specs2              = "org.specs2"                 %% "specs2"              % "2.3.12"
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
-    "org.json4s" %% "json4s-jackson" % "3.2.10",
-    "org.json4s" %% "json4s-ext"     % "3.2.10"
+    "com.wordnik" %% "swagger-core"     % "1.3.6"
+    //"org.json4s"  %% "json4s-jackson" % "3.2.10",
+    //"org.json4s"  %% "json4s-ext"     % "3.2.10"
   )
   
 }

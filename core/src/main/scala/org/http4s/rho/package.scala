@@ -30,7 +30,7 @@ package object rho {
   implicit def pathMatch(s: String): PathRule[HNil] = PathMatch(s)
 
   implicit def pathMatch(s: Symbol): PathRule[String::HNil] =
-    PathAST.MetaCons(PathCapture(StringParser.strParser), TextMeta(s"Param name: ${s.name}"))
+    PathCapture(s.name, StringParser.strParser)
 
   def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: Manifest[T]): QueryCapture[T] =
     query(key, Some(default))
@@ -38,10 +38,8 @@ package object rho {
   def query[T](key: String, default: Option[T] = None)(implicit parser: QueryParser[T], m: Manifest[T]): QueryCapture[T] =
     QueryCapture(key, parser, default)
 
-  def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]) = PathCapture(parser)
-
-  def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]) =
-    PathAST.MetaCons(PathCapture(parser), TextMeta(s"Param name: $id"))
+  def pathVar[T](id: String = "unnamed")(implicit parser: StringParser[T], m: Manifest[T]) =
+    PathCapture(id, parser)
 
   def * = CaptureTail()
 

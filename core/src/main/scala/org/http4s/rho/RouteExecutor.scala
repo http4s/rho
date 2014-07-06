@@ -106,7 +106,7 @@ trait ExecutableCompiler {
             go(b, stack)
           }
 
-        case PathCapture(f) => f.parse(pop).map{ i => i::stack}
+        case PathCapture(_, f) => f.parse(pop).map{ i => i::stack}
 
         case PathMatch("") => \/-(stack)    // "" is consider a NOOP
 

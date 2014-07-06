@@ -27,7 +27,7 @@ object PathAST {
 
     def /(s: String): PathRule[T] = PathAnd(this, PathMatch(s))
 
-    def /(s: Symbol): PathRule[String :: T] = PathAnd(this, PathCapture(StringParser.strParser))
+    def /(s: Symbol): PathRule[String :: T] = PathAnd(this, PathCapture(s.name, StringParser.strParser))
 
     def /[T2 <: HList](t: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] =
       PathAnd(this, t)
@@ -39,7 +39,7 @@ object PathAST {
 
   case class PathMatch(s: String) extends PathRule[HNil]
 
-  case class PathCapture[T](parser: StringParser[T])
+  case class PathCapture[T](name: String, parser: StringParser[T])
                            (implicit val m: Manifest[T]) extends PathRule[T :: HNil]
 
   // These don't fit the  operations of CombinablePathSyntax because they may
