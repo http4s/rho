@@ -8,7 +8,7 @@ object MyBuild extends Build {
   lazy val rho = project
                   .in(file("."))
                   .settings(buildSettings: _*)
-                  .aggregate(core)
+                  .aggregate(core, swagger)
    
   lazy val core = project
                     .in(file("core"))
@@ -17,6 +17,7 @@ object MyBuild extends Build {
   lazy val swagger = project
                       .in(file("swagger"))
                       .settings(buildSettings:+ swaggerDeps : _*)
+                      .dependsOn(core)
 
   
 
