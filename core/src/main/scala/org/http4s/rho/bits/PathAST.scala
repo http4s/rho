@@ -13,41 +13,43 @@ import scala.reflect.Manifest
 
 object PathAST {
 
-  /** The root type of the parser AST */
-  sealed trait PathRule[T <: HList] extends {
+  case class TypedPath[T <: HList](rule: PathRule) {
     /** These methods differ in their return type */
-    def and[T2 <: HList](p2: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] =
-      PathAnd(this, p2)
+    def and[T2 <: HList](p2: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
+      TypedPath(PathAnd(this.rule, p2.rule))
 
-    def &&[T2 <: HList](p2: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] = and(p2)
+    def &&[T2 <: HList](p2: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] = and(p2)
 
-    def or(p2: PathRule[T]): PathRule[T] = PathOr(this, p2)
+    def or(p2: TypedPath[T]): TypedPath[T] = TypedPath(PathOr(this.rule, p2.rule))
 
-    def ||(p2: PathRule[T]): PathRule[T] = or(p2)
+    def ||(p2: TypedPath[T]): TypedPath[T] = or(p2)
 
-    def /(s: String): PathRule[T] = PathAnd(this, PathMatch(s))
+    def /(s: String): TypedPath[T] = TypedPath(PathAnd(this.rule, PathMatch(s)))
 
-    def /(s: Symbol): PathRule[String :: T] = PathAnd(this, PathCapture(s.name, StringParser.strParser))
+    def /(s: Symbol): TypedPath[String :: T] =
+      TypedPath(PathAnd(this.rule, PathCapture(s.name, StringParser.strParser, implicitly[Manifest[String]])))
 
-    def /[T2 <: HList](t: PathRule[T2])(implicit prep: Prepend[T2, T]): PathRule[prep.Out] =
-      PathAnd(this, t)
+    def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
+      TypedPath(PathAnd(this.rule, t.rule))
   }
 
-  case class PathAnd[T <: HList](p1: PathRule[_ <: HList], p2: PathRule[_ <: HList]) extends PathRule[T]
+  /** The root type of the parser AST */
+  sealed trait PathRule
 
-  case class PathOr[T <: HList](p1: PathRule[T], p2: PathRule[T]) extends PathRule[T]
+  case class PathAnd(p1: PathRule, p2: PathRule) extends PathRule
 
-  case class PathMatch(s: String) extends PathRule[HNil]
+  case class PathOr(p1: PathRule, p2: PathRule) extends PathRule
 
-  case class PathCapture[T](name: String, parser: StringParser[T])
-                           (implicit val m: Manifest[T]) extends PathRule[T :: HNil]
+  case class PathMatch(s: String) extends PathRule
+
+  case class PathCapture(name: String, parser: StringParser[_], m: Manifest[_]) extends PathRule
 
   // These don't fit the  operations of CombinablePathSyntax because they may
   // result in a change of the type of PathBulder
   // TODO: can I make this a case object?
-  case class CaptureTail() extends PathRule[List[String] :: HNil]
+  case class CaptureTail() extends PathRule
 
-  case object PathEmpty extends PathRule[HNil]
+  case object PathEmpty extends PathRule
 
-  case class MetaCons[T <: HList](path: PathRule[T], meta: Metadata) extends PathRule[T]
+  case class MetaCons(path: PathRule, meta: Metadata) extends PathRule
 }

@@ -42,8 +42,8 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
 
   override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
     super.append(action)
-    val (path, apis) = actionToApiListing(action)
-    apis.foreach(swagger.register(path, _))
+    val apis = actionToApiListing(action)
+    apis.foreach(_.apis.foreach(desc => ))//swagger.register(, _))
   }
 
   protected def docToJson(doc: Api): JValue = Extraction.decompose(doc)

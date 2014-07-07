@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import bits.HeaderAST.HeaderAnd
+import org.http4s.rho.bits.HeaderAST.{TypedHeader, HeaderAnd}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -30,36 +30,37 @@ class ApiTest extends Specification {
 
   "RhoDsl bits" should {
     "Combine validators" in {
-      RequireETag && RequireNonZeroLen should_== HeaderAnd(RequireETag, RequireNonZeroLen)
+      RequireETag && RequireNonZeroLen should_== TypedHeader(HeaderAnd(RequireETag.rule, RequireNonZeroLen.rule))
     }
 
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
-      new RouteExecutor().ensureValidHeaders(RequireETag && RequireNonZeroLen,badreq) should_== -\/(s"Missing header: ${etag.name}")
+      new RouteExecutor().ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq) should_==
+                -\/(s"Missing header: ${etag.name}")
     }
 
     "Match captureless route" in {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      new RouteExecutor().ensureValidHeaders(c,req) should_== \/-(HNil)
+      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== \/-(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(Header.`Content-Length`) && RequireETag
-        new RouteExecutor().ensureValidHeaders(c2,req) should_== \/-(lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c2.rule, req) should_== \/-(lenheader::HNil)
       }, {
         val c3 = capture(Header.`Content-Length`) && capture(Header.ETag)
-        new RouteExecutor().ensureValidHeaders(c3,req) should_== \/-(etag::lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c3.rule, req) should_== \/-(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = requireMap(Header.`Content-Length`)(_.length)
-      new RouteExecutor().ensureValidHeaders(c,req) should_== \/-(4::HNil)
+      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== \/-(4::HNil)
     }
 
     "Run || routes" in {

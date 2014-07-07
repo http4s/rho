@@ -67,51 +67,35 @@ trait ApiBuilder { self: RhoService =>
 
   def baseOp = Operation("GET", "", "", "", "", 0)
 
-  protected def actionToApiListing(action: RhoAction[_, _]): (String, Seq[ApiListing]) = {
-    val path = new StringBuilder
-
+  protected def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
 
     ???
   }
 
-  case class Route(path: List[PathRule[_ <: HList]],
-                   query: List[QueryRule[_ <: HList]],
-                   headers: List[HeaderRule[_ <: HList]]) {
-    def withPath(path: List[PathRule[_ <: HList]]): Route = this.copy(path = path)
-    def withQuery(query: List[QueryRule[_ <: HList]]): Route = this.copy(query = query)
-    def withHeaders(headers: List[HeaderRule[_ <: HList]]): Route = this.copy(headers = headers)
-  }
-
-  private def buildApi(base: ApiListing): List[ApiListing] = ???
-
-  private def getDescriptions(route: Route): List[ApiDescription] = {
-
-    // This is to deal with variance problems and destructuring
-    def pathMeta(path: PathRule[_ <: HList]): Boolean = path match {
-      case CaptureTail() | PathCapture(_,_) => false
-      case _                                => true
-    }
-
-    def go(stack: List[PathRule[_ <: HList]], desc: ApiDescription): List[ApiDescription] = stack match {
+  private def getDescriptions(path: PathRule, query: QueryRule, headers: HeaderRule): List[ApiDescription] = {
+    def go(stack: List[PathRule], desc: ApiDescription): List[ApiDescription] = stack match {
       case PathAnd(a, b)::xs           => go(a::b::xs, desc)
       case PathOr(a, b)::xs            => go(a::xs, desc):::go(b::xs, desc)
       case PathMatch(s)::xs            => go(xs, desc.copy(path = desc.path + "/" + s))
 
-      case stack @ (CaptureTail() | PathCapture(_, _))::_ =>
-        getOperations(route.withPath(stack)).map{ case (path, op) =>
+      case stack @ (CaptureTail() | PathCapture(_, _, _))::_ =>
+        getOperations(stack, query).map{ case (path, op) =>
+          desc.copy(desc.path + path, operations = List(op))
+        }
+
+      case stack @ MetaCons(CaptureTail() | PathCapture(_, _, _), meta)::_ =>
+        val op = getMeta(meta).fold(baseOp){ meta => baseOp.copy(summary = meta) }
+        getOperations(stack, query, Some(op)).map { case (path, op) =>
           desc.copy(desc.path + path, operations = List(op))
         }
 
       case stack @ MetaCons(a, meta)::xs =>
-        if (pathMeta(a)) getMeta(meta) match {
+        getMeta(meta) match {
           case m @ Some(meta) => desc.description match {
             case Some(d) => go(a::xs, desc.copy(description = Some(desc + "\n" + d)))
             case None       => go(a::xs, desc.copy(description = m))
           }         // need to see if we are working on Parameters
           case None       => go(a::xs, desc)
-        }
-        else getOperations(route.withPath(stack)).map{ case (path, op) =>
-          desc.copy(desc.path + path, operations = List(op))
         }
 
       case PathEmpty::Nil => List(desc.copy(operations = baseOp::Nil))
@@ -121,15 +105,18 @@ trait ApiBuilder { self: RhoService =>
       case Nil => Nil
     }
 
-    go(route.path, ApiDescription("", None))
+    go(path::Nil, ApiDescription("", None))
+      .map(runHeaders(headers, _))            // Add any info in the headers
   }
 
-  def getOperations(route: Route): List[(String, Operation)] = {
-    def go(stack: List[PathRule[_ <: HList]], path: String, op: Operation): List[(String, Operation)] = stack match {
+  def getOperations(stack: List[PathRule], query: QueryRule, op: Option[Operation] = None): List[(String, Operation)] = {
+    def go(stack: List[PathRule], path: String, op: Operation): List[(String, Operation)] = stack match {
       case PathOr(a, b)::xs     => go(a::xs, path, op):::go(b::xs, path, op)
       case PathAnd (a, b) :: xs => go(a::b::xs, path, op)
+      case PathMatch(s)::xs     => go(xs, path + "/" + s, op)
+      case PathEmpty::xs        => go(xs, path, op)   // Shouldn't get one of these...
 
-      case PathCapture (id, parser) :: xs =>
+      case PathCapture (id, parser, _) :: xs =>
         val p = Parameter (id, None, None, true, false,
         parser.manifest.map (_.runtimeClass.getName).getOrElse ("none"),
         AnyAllowableValues, "path", None)
@@ -138,53 +125,28 @@ trait ApiBuilder { self: RhoService =>
       case CaptureTail()::xs =>
         val p = Parameter ("variadic", None, None, false, true,
                            "array", AnyAllowableValues, "path", None)
-        val _op = runQuery(route.query, op.copy(parameters = op.parameters:+p))
+        val _op = runQuery(query, op.copy(parameters = op.parameters:+p))
         val _path = path + "/..."
         List(_path -> _op)
 
+      case MetaCons(rule, meta)::xs =>
+        getMeta(meta) match {
+          case Some(meta) => go(rule::xs, path, op.copy(notes = op.notes + "\n" + meta))
+          case None       => go(rule::xs, path, op)
+        }
+
+      case Nil => List(path -> runQuery(query, op))
     }
-    go(route.path, "", baseOp)
+    go(stack, "", op.getOrElse(baseOp))
   }
 
-  def runQuery(query: List[QueryRule[_ <: HList]], op: Operation): Operation = ???
+  def runQuery(query: QueryRule, op: Operation): Operation = ???
 
-//  private def getPathOps(path: List[PathRule[_ <: HList]],
-//                         query: QueryRule[_ <: HList],
-//                         headers: HeaderRule[_ <: HList],
-//                         base: Operation): List[Operation] = {
-//    path match {
-//      case PathAnd(a, b)::xs  => getPathOps(a::b::xs, query, headers, base)
-//
-//      case PathOr(a, b)::xs   => getPathOps(a::xs, query, headers, base):::getPathOps(b::xs, query, headers, base)
-//
-//      case PathCapture(id, parser)::xs =>
-//        val p = Parameter(id, None, None, true, false,
-//          parser.manifest.map(_.runtimeClass.getName).getOrElse("none"),
-//          AnyAllowableValues, "path", None)
-//
-//        getPathOps(xs, query, headers, base.copy(parameters = base.parameters:+ p))
-//
-//      case MetaCons(a, meta)::xs =>
-//        getMeta(meta) match {
-//          case Some(meta) => getPathOps(xs, query, headers, base.copy(notes = base.notes + "\n" + meta))
-//          case None       => getPathOps(xs, query, headers, base)
-//        }
-//
-//      case CaptureTail()::xs =>
-//        if (!xs.isEmpty) logger.warn(s"Invalid path structure: CaptureTail followed by $xs")
-//        val p = Parameter("variadic", None, None, false, true,
-//          "array", AnyAllowableValues, "path", None)
-//        List(base.copy(parameters = base.parameters :+ p))
-//
-//      case PathEmpty::xs => getPathOps(xs, query, headers, base)  // This is not expected
-//
-//      case PathMatch(s)::xs => ??? // this is a strange structure
-//    }
-//  }
+  private def runHeaders(rule: HeaderRule, desc: ApiDescription): ApiDescription = ???
 
-  private def produces(rule: HeaderRule[_]): List[String] = ???
+  private def produces(rule: HeaderRule): List[String] = ???
 
-  private def consumes(rule: HeaderRule[_]): List[String] = ???
+  private def consumes(rule: HeaderRule): List[String] = ???
 }
 
 

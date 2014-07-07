@@ -7,23 +7,26 @@ import shapeless.ops.hlist.Prepend
 
 object QueryAST {
 
-  sealed trait QueryRule[T <: HList] {
-    final def or(v: QueryRule[T]): QueryRule[T] = QueryOr(this, v)
+  case class TypedQuery[T <: HList](rule: QueryRule) {
+    final def or(v: TypedQuery[T]): TypedQuery[T] = TypedQuery(QueryOr(this.rule, v.rule))
 
-    final def ||(v: QueryRule[T]): QueryRule[T] = or(v)
+    final def ||(v: TypedQuery[T]): TypedQuery[T] = or(v)
 
-    final def and[T1 <: HList](v: QueryRule[T1])(implicit prepend: Prepend[T, T1]): QueryRule[prepend.Out] = QueryAnd(this, v)
+    final def and[T1 <: HList](v: TypedQuery[T1])(implicit prepend: Prepend[T, T1]): TypedQuery[prepend.Out] =
+      TypedQuery(QueryAnd(this.rule, v.rule))
 
-    final def &&[T1 <: HList](v: QueryRule[T1])(implicit prepend: Prepend[T, T1]): QueryRule[prepend.Out] = and(v)
+    final def &&[T1 <: HList](v: TypedQuery[T1])(implicit prepend: Prepend[T, T1]): TypedQuery[prepend.Out] = and(v)
   }
 
-  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T])(implicit val m: Manifest[T]) extends QueryRule[T :: HNil]
+  sealed trait QueryRule
 
-  case class QueryAnd[T <: HList, T2 <: HList, T3 <: HList](a: QueryRule[T2], b: QueryRule[T3]) extends QueryRule[T]
+  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T], m: Manifest[T]) extends QueryRule
 
-  case class QueryOr[T <: HList](a: QueryRule[T], b: QueryRule[T]) extends QueryRule[T]
+  case class QueryAnd(a: QueryRule, b: QueryRule) extends QueryRule
 
-  case class MetaCons[T <: HList](query: QueryRule[T], meta: Metadata) extends QueryRule[T]
+  case class QueryOr(a: QueryRule, b: QueryRule) extends QueryRule
 
-  case object EmptyQuery extends QueryRule[HNil]
+  case class MetaCons(query: QueryRule, meta: Metadata) extends QueryRule
+
+  case object EmptyQuery extends QueryRule
 }

@@ -33,9 +33,9 @@ trait PathTree extends ValidationTree {
     protected def matchString(s: String, stack: HList): HList
 
     // Appends the action to the tree by walking the PathRule stack, returning a new Node structure
-    final def append(tail: PathRule[_ <: HList], action: Leaf): Node = append(tail::Nil, action)
+    final def append(tail: PathRule, action: Leaf): Node = append(tail::Nil, action)
 
-    final private[Node] def append(tail: List[PathRule[_ <: HList]], action: Leaf): Node = tail match {
+    final private[Node] def append(tail: List[PathRule], action: Leaf): Node = tail match {
       case h::tail => h match {
         case PathAnd(p1, p2) => append(p1::p2::tail, action)
 
@@ -51,7 +51,7 @@ trait PathTree extends ValidationTree {
             case None    => addNode(MatchNode(s).append(tail, action))
           }
 
-        case PathCapture(_, p) =>
+        case PathCapture(_, p, _) =>
           paths.collectFirst{ case n@ CaptureNode(p1,_,_,_) if p1 eq p => n } match {
             case Some(w) => replaceNode(w, w.append(tail, action))
             case None    => addNode(CaptureNode(p).append(tail, action))
