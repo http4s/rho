@@ -33,7 +33,7 @@ package object rho {
 
   implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] = {
     val capture = PathCapture(StringParser.strParser, stringTag)
-    TypedPath(PathAST.MetaCons(capture, TextMeta(s"Param name: ${s.name}")))
+    TypedPath(PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}")))
   }
 
   def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
@@ -43,10 +43,10 @@ package object rho {
     TypedQuery(QueryCapture(key, parser, default, m))
 
   def pathVar[T](implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    TypedPath(PathCapture(parser, m))
+    pathVar("unknown")(parser, m)
 
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    TypedPath(PathAST.MetaCons(PathCapture(parser, stringTag), TextMeta(s"Param name: $id")))
+    TypedPath(PathAST.MetaCons(PathCapture(parser, stringTag), TextMeta(id, s"Param name: $id")))
 
   def * = CaptureTail()
 

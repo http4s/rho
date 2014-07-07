@@ -21,6 +21,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
                   extends HeaderAppendable[T]
                      with RouteExecutable[T]
                      with MetaDataSyntax
+                     with UriConvertible
 {
   type Self = PathBuilder[T]
 
@@ -37,7 +38,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /(s: Symbol): PathBuilder[String::T] = {
     val capture = PathCapture(StringParser.strParser, implicitly[TypeTag[String]])
-    new PathBuilder(method, PathAnd(path, MetaCons(capture, TextMeta(s.name))))
+    new PathBuilder(method, PathAnd(path, MetaCons(capture, TextMeta(s.name, s"Path name: ${s.name}"))))
   }
 
   def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]) : PathBuilder[prep.Out] =
@@ -61,4 +62,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(Router(method, path, EmptyQuery, EmptyHeaderRule), f, hf)
+
+  override def asUriTemplate = UriTemplate(path = UriConverter.createPath(path))
+
 }
