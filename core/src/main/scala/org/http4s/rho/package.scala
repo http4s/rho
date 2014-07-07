@@ -43,8 +43,8 @@ package object rho {
   def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]): TypedPath[T::HNil] =
     TypedPath(PathCapture(parser, m))
 
-  def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]) =
-    PathAST.MetaCons(PathCapture(parser, strMan), TextMeta(s"Param name: $id"))
+  def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]): TypedPath[T::HNil] =
+    TypedPath(PathAST.MetaCons(PathCapture(parser, strMan), TextMeta(s"Param name: $id")))
 
   def * = CaptureTail()
 

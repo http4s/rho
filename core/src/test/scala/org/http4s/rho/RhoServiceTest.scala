@@ -30,7 +30,7 @@ class RhoServiceTest extends Specification {
     // keep the function for 'reverse routing'
     val reverseQuery = GET / "hello" / "headers" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
 
-    GET / "hello" / "reverse" |>> { () => "reverse: " + reverseQuery(0)}
+    GET / "hello" / "reverse" |>> { () => "reverse: " + reverseQuery(0) }
 
     GET / "hello" / "default" / "parameter" +? query[Int]("some", 23) |>> { s: Int => "some:" + s }
 
@@ -54,6 +54,8 @@ class RhoServiceTest extends Specification {
 
     val or = "or1" || "or2"
     GET / or |>> { () => "route9" }
+
+    GET / "orders" / pathVar[Int]("id") |>> { id: Int => id }
 
     GET / "options" +? query[Option[String]]("foo") |>> { os: Option[String] => os.getOrElse("None") }
 
@@ -200,7 +202,7 @@ class RhoServiceTest extends Specification {
     }
 
     "throw a MatchError on apply for missing route" in {
-      val service = new RhoService { }
+      val service = new RhoService {}
       val req = Request(GET, Uri(path = "/missing"))
       service(req).run must throwA[MatchError]
     }
