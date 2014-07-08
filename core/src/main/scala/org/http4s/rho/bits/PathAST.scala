@@ -53,8 +53,6 @@ object PathAST {
 
   case class PathCapture(parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
-  // These don't fit the  operations of CombinablePathSyntax because they may
-  // result in a change of the type of PathBulder
   // TODO: can I make this a case object?
   case class CaptureTail() extends PathRule
 
