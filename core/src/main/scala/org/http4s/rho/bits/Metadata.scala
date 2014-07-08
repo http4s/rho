@@ -1,18 +1,16 @@
 package org.http4s
 package rho.bits
 
-
 trait Metadata
 
-case class TextMeta(msg: String) extends Metadata
-
+case class TextMeta(id: String, msg: String) extends Metadata
 
 trait MetaDataSyntax {
   type Self
 
   def addMetaData(data: Metadata): Self
 
-  final def ^(desc: String): Self = description(desc)
+  final def ^(id: String, desc: String): Self = description(id, desc)
 
-  final def description(desc: String) = addMetaData(TextMeta(desc))
+  final def description(id: String, desc: String) = addMetaData(TextMeta(id, desc))
 }

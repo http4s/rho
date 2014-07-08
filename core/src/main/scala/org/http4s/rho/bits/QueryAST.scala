@@ -1,14 +1,15 @@
 package org.http4s
 package rho.bits
 
+import org.http4s.rho.UriConvertible
+
+import scala.reflect.runtime.universe.TypeTag
 import shapeless.HList
 import shapeless.ops.hlist.Prepend
 
-import scala.reflect.runtime.universe.TypeTag
-
 object QueryAST {
 
-  case class TypedQuery[T <: HList](rule: QueryRule) {
+  case class TypedQuery[T <: HList](rule: QueryRule) extends UriConvertible {
     final def or(v: TypedQuery[T]): TypedQuery[T] = TypedQuery(QueryOr(this.rule, v.rule))
 
     final def ||(v: TypedQuery[T]): TypedQuery[T] = or(v)
@@ -17,6 +18,8 @@ object QueryAST {
       TypedQuery(QueryAnd(this.rule, v.rule))
 
     final def &&[T1 <: HList](v: TypedQuery[T1])(implicit prepend: Prepend[T, T1]): TypedQuery[prepend.Out] = and(v)
+
+    override def asUriTemplate = for (q <- UriConverter.createQuery(rule)) yield UriTemplate(query = Some(q))
   }
 
   sealed trait QueryRule
