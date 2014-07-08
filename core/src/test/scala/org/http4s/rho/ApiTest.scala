@@ -77,6 +77,19 @@ class ApiTest extends Specification {
     }
   }
 
+  "RequestLineBuilder" should {
+    "be made from TypedPath and TypedQuery" in {
+      val path = pathMatch("foo")
+      val q = query[Int]("bar")
+      path +? q should_== RequestLineBuilder(path.rule, q.rule)
+    }
+
+    "append to a TypedPath" in {
+      val requestLine = pathMatch("foo") +? query[Int]("bar")
+      (pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[_]] should_== true
+    }
+  }
+
   "PathValidator" should {
     import Status._
 

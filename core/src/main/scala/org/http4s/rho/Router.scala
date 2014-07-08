@@ -75,7 +75,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
   }
 }
 
-private[rho] trait RouteExecutable[T <: HList] {
+private[rho] trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
   def method: Method
 
   def path: PathRule

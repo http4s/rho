@@ -2,7 +2,7 @@ package org.http4s
 package rho
 
 
-import org.http4s.rho.bits.{MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable}
+import bits.{MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable}
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._
@@ -17,8 +17,8 @@ case class QueryBuilder[T <: HList](method: Method,
                         path: PathRule,
                         query: QueryRule)
       extends RouteExecutable[T]
-      with HeaderAppendable[T]
-      with MetaDataSyntax
+         with HeaderAppendable[T]
+         with MetaDataSyntax
 {
   override type Self = QueryBuilder[T]
 

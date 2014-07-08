@@ -1,6 +1,9 @@
 package org.http4s
 package rho.bits
 
+import org.http4s.rho.RequestLineBuilder
+import org.http4s.rho.bits.QueryAST.TypedQuery
+
 import scala.language.existentials
 
 import shapeless.ops.hlist.Prepend
@@ -31,6 +34,12 @@ object PathAST {
 
     def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, t.rule))
+
+    def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T, T2]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(PathAnd(this.rule, t.path), t.query)
+
+    def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1,T]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(rule, q.rule)
   }
 
   /** The root type of the parser AST */
