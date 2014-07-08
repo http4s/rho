@@ -40,7 +40,7 @@ object PathAST {
     def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, t.rule))
 
-    override def asUriTemplate = UriTemplate(path = UriConverter.createPath(rule))
+    override def asUriTemplate = for (p <- UriConverter.createPath(rule)) yield UriTemplate(path = p)
   }
 
   /** The root type of the parser AST */

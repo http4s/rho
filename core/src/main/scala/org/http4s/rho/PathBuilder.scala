@@ -63,6 +63,6 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(Router(method, path, EmptyQuery, EmptyHeaderRule), f, hf)
 
-  override def asUriTemplate = UriTemplate(path = UriConverter.createPath(path))
+  override def asUriTemplate = for (p <- UriConverter.createPath(path)) yield UriTemplate(path = p)
 
 }

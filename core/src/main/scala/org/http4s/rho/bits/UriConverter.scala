@@ -6,10 +6,13 @@ import org.http4s.UriTemplate.Query
 import PathAST.PathRule
 import QueryAST.QueryRule
 
+import scala.util.Success
+import scala.util.Try
+
 /** Helps to convert different parts of a route into an `UriTemplate` */
 object UriConverter {
 
-  def createPath(rule: PathRule): Path = {
+  def createPath(rule: PathRule): Try[Path] = {
     import PathAST._
     import org.http4s.UriTemplate.PathElm
     import org.http4s.UriTemplate.PathExp
@@ -23,10 +26,10 @@ object UriConverter {
       case MetaCons(path, TextMeta(id, desc)) => PathExp(id) :: acc
       case MetaCons(path, meta) => acc
     }
-    go(rule, Nil)
+    Success(go(rule, Nil))
   }
 
-  def createQuery(rule: QueryRule): Query = {
+  def createQuery(rule: QueryRule): Try[Query] = {
     import QueryAST._
     import org.http4s.UriTemplate.ParamExp
     def go(r: QueryRule, acc: Query): Query = r match {
@@ -36,7 +39,7 @@ object UriConverter {
       case QueryOr(a, b) => go(a, acc)
       case EmptyQuery => acc
     }
-    go(rule, Nil)
+    Success(go(rule, Nil))
   }
 
 }

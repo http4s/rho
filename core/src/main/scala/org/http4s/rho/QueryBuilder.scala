@@ -35,8 +35,9 @@ case class QueryBuilder[T <: HList](method: Method,
   override def validators: HeaderRule = EmptyHeaderRule
 
   override def asUriTemplate =
-    UriTemplate(
-      path = UriConverter.createPath(path),
-      query = Some(UriConverter.createQuery(query)))
+    for {
+      p <- UriConverter.createPath(path)
+      q <- UriConverter.createQuery(query)
+    } yield UriTemplate(path = p, query = Some(q))
 
 }

@@ -19,7 +19,7 @@ object QueryAST {
 
     final def &&[T1 <: HList](v: TypedQuery[T1])(implicit prepend: Prepend[T, T1]): TypedQuery[prepend.Out] = and(v)
 
-    override def asUriTemplate = UriTemplate(query = Some(UriConverter.createQuery(rule)))
+    override def asUriTemplate = for (q <- UriConverter.createQuery(rule)) yield UriTemplate(query = Some(q))
   }
 
   sealed trait QueryRule
