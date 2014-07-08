@@ -9,6 +9,7 @@ import rho.bits.QueryAST._
 import shapeless.{ HNil, :: }
 import org.http4s.rho.bits._
 
+import scala.reflect.runtime.universe.TypeTag
 
 package object rho {
 
@@ -29,22 +30,22 @@ package object rho {
   implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
 
   implicit def pathMatch(s: Symbol): TypedPath[String::HNil] = {
-    val capture = PathCapture(StringParser.strParser, strMan)
+    val capture = PathCapture(StringParser.strParser, strTag)
     TypedPath(PathAST.MetaCons(capture, TextMeta(s"Param name: ${s.name}")))
   }
 
-  def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: Manifest[T]): TypedQuery[T::HNil] =
+  def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T::HNil] =
     query(key, Some(default))
 
   def query[T](key: String, default: Option[T] = None)
-                    (implicit parser: QueryParser[T], m: Manifest[T]): TypedQuery[T::HNil] =
+                    (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T::HNil] =
     TypedQuery(QueryCapture(key, parser, default, m))
 
-  def pathVar[T](implicit parser: StringParser[T], m: Manifest[T]): TypedPath[T::HNil] =
+  def pathVar[T](implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T::HNil] =
     TypedPath(PathCapture(parser, m))
 
-  def pathVar[T](id: String)(implicit parser: StringParser[T], m: Manifest[T]): TypedPath[T::HNil] =
-    TypedPath(PathAST.MetaCons(PathCapture(parser, strMan), TextMeta(s"Param name: $id")))
+  def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T::HNil] =
+    TypedPath(PathAST.MetaCons(PathCapture(parser, strTag), TextMeta(s"Param name: $id")))
 
   def * = CaptureTail()
 
@@ -65,5 +66,5 @@ package object rho {
   def requireMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
     TypedHeader(HeaderMapper[H, R](key, f))
 
-  private val strMan = implicitly[Manifest[String]]
+  private val strTag = implicitly[TypeTag[String]]
 }

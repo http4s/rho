@@ -1,9 +1,10 @@
 package org.http4s
 package rho.bits
 
-import shapeless.{HNil, ::, HList}
+import shapeless.HList
 import shapeless.ops.hlist.Prepend
 
+import scala.reflect.runtime.universe.TypeTag
 
 object QueryAST {
 
@@ -20,7 +21,7 @@ object QueryAST {
 
   sealed trait QueryRule
 
-  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T], m: Manifest[T]) extends QueryRule
+  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T], m: TypeTag[T]) extends QueryRule
 
   case class QueryAnd(a: QueryRule, b: QueryRule) extends QueryRule
 

@@ -10,6 +10,8 @@ import PathAST.MetaCons
 import shapeless.{HNil, ::, HList}
 import shapeless.ops.hlist.Prepend
 
+import scala.reflect.runtime.universe.TypeTag
+
 /** The goal of a PathBuilder is to allow the composition of what is typically on the status line
  * of a HTTP request. That includes the request method, path, and query params.
  */
@@ -34,7 +36,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   def /(s: String): PathBuilder[T] = new PathBuilder(method, PathAnd(path, PathMatch(s)))
 
   def /(s: Symbol): PathBuilder[String::T] = {
-    val capture = PathCapture(StringParser.strParser, implicitly[Manifest[String]])
+    val capture = PathCapture(StringParser.strParser, implicitly[TypeTag[String]])
     new PathBuilder(method, PathAnd(path, MetaCons(capture, TextMeta(s.name))))
   }
 

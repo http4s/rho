@@ -1,13 +1,14 @@
 package org.http4s
 package rho.bits
 
+import scala.reflect.runtime.universe.TypeTag
 import scalaz.concurrent.Task
 
 
 trait ObjToResponse[O] {
   def apply(o: O): Task[Response]
   def mediaTypes: Seq[MediaType]
-  def manifest: Option[Manifest[O]]
+  def typeTag: Option[TypeTag[O]]
 }
 
 object ObjToResponse {
@@ -15,12 +16,12 @@ object ObjToResponse {
     override def mediaTypes = Nil
     override def apply(o: Task[Response]): Task[Response] = o
 
-    override def manifest: Option[Manifest[Task[Response]]] = None
+    override def typeTag: Option[TypeTag[Task[Response]]] = None
   }
 
-  implicit def writableResponse[O](implicit w: Writable[O], m: Manifest[O]) = new ObjToResponse[O] {
+  implicit def writableResponse[O](implicit w: Writable[O], m: TypeTag[O]) = new ObjToResponse[O] {
 
-    override def manifest: Some[Manifest[O]] = Some(m)
+    override def typeTag: Option[TypeTag[O]] = Some(m)
 
     override def mediaTypes: Seq[MediaType] = w.contentType.mediaType::Nil
 

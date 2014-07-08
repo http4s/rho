@@ -4,9 +4,9 @@ package rho.bits
 import scala.language.existentials
 
 import shapeless.ops.hlist.Prepend
-import shapeless.{::, HNil, HList}
+import shapeless.{::, HList}
 
-import scala.reflect.Manifest
+import scala.reflect.runtime.universe.TypeTag
 
 
 /** Actual elements which build up the AST */
@@ -27,7 +27,7 @@ object PathAST {
     def /(s: String): TypedPath[T] = TypedPath(PathAnd(this.rule, PathMatch(s)))
 
     def /(s: Symbol): TypedPath[String :: T] =
-      TypedPath(PathAnd(this.rule, PathCapture(StringParser.strParser, implicitly[Manifest[String]])))
+      TypedPath(PathAnd(this.rule, PathCapture(StringParser.strParser, implicitly[TypeTag[String]])))
 
     def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, t.rule))
@@ -42,7 +42,7 @@ object PathAST {
 
   case class PathMatch(s: String) extends PathRule
 
-  case class PathCapture(parser: StringParser[_], m: Manifest[_]) extends PathRule
+  case class PathCapture(parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
   // These don't fit the  operations of CombinablePathSyntax because they may
   // result in a change of the type of PathBulder
