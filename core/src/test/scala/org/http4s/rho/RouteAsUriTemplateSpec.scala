@@ -59,15 +59,31 @@ class RouteAsUriTemplateSpec extends Specification {
   }
 
   "RequestLineBuilder as UriTemplate" should {
+    "convert to /hello{/world}" in {
+      val requestLine = "hello" / pathVar[String]("world")
+      val p = List(PathElm("hello"), PathExp("world"))
+      requestLine.asUriTemplate.get must equalTo(UriTemplate(path = p))
+    }
+    "convert to /hello{/world}/test" in {
+      val requestLine = "hello" / pathVar[String]("world") / "user"
+      val p = List(PathElm("hello"), PathExp("world"), PathElm("user"))
+      requestLine.asUriTemplate.get must equalTo(UriTemplate(path = p))
+    }
     "convert to /hello{?world}" in {
       val requestLine = "hello" +? query[Int]("world")
       val p = List(PathElm("hello"))
       val q = Some(List(ParamExp("world")))
       requestLine.asUriTemplate.get must equalTo(UriTemplate(path = p, query = q))
     }
-    "convert to /hello/world{?start}{&start}" in {
+    "convert to /hello/world{?start}{&limit}" in {
       val requestLine = "hello" / "world" +? query[Int]("start") & query[Int]("limit")
       val p = List(PathElm("hello"), PathElm("world"))
+      val q = Some(List(ParamExp("start"), ParamExp("limit")))
+      requestLine.asUriTemplate.get must equalTo(UriTemplate(path = p, query = q))
+    }
+    "convert to /hello{/world}{?start}{&limit}" in {
+      val requestLine = "hello" / pathVar[String]("world") +? query[Int]("start") & query[Int]("limit")
+      val p = List(PathElm("hello"), PathExp("world"))
       val q = Some(List(ParamExp("start"), ParamExp("limit")))
       requestLine.asUriTemplate.get must equalTo(UriTemplate(path = p, query = q))
     }
