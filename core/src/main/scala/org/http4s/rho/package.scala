@@ -34,10 +34,16 @@ package object rho {
     TypedPath(PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}")))
   }
 
-  def query[T](key: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    query(key, Some(default))
+  /**
+   * Defines a parameter in query string that should be bound to a route definition
+   */
+  def param[T](key: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    param(key, Some(default))
 
-  def query[T](key: String, default: Option[T] = None)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  /**
+   * Defines a parameter in query string that should be bound to a route definition
+   */
+  def param[T](key: String, default: Option[T] = None)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     TypedQuery(QueryCapture(key, parser, default, m))
 
   def pathVar[T](implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =

@@ -19,7 +19,7 @@ class RhoServiceTest extends Specification {
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
 
   val service = new RhoService {
-    GET +? query("foo", "bar") |>> { foo: String => "Root " + foo }
+    GET +? param("foo", "bar") |>> { foo: String => "Root " + foo }
 
     GET / "hello" |>> { () => "route1" }
 
@@ -28,25 +28,25 @@ class RhoServiceTest extends Specification {
     GET / "hello" / "world" |>> { () => "route3" }
 
     // keep the function for 'reverse routing'
-    val reverseQuery = GET / "hello" / "headers" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
+    val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => "route" + foo }
 
     GET / "hello" / "reverse" |>> { () => "reverse: " + reverseQuery(0) }
 
-    GET / "hello" / "default" / "parameter" +? query[Int]("some", 23) |>> { s: Int => "some:" + s }
+    GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => "some:" + s }
 
     // Routes that will have different headers/query string requirements should work together
-    GET / "hello" / "compete" +? query[Int]("foo") |>> { foo: Int => "route" + foo }
+    GET / "hello" / "compete" +? param[Int]("foo") |>> { foo: Int => "route" + foo }
 
-    GET / "hello" / "compete" +? query[String]("foo") |>> { foo: String => "route6_" + foo }
+    GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => "route6_" + foo }
 
     GET / "hello" / "compete" |>> { () => "route7" }
 
     // Testing query params
-    GET / "query" / "twoparams" +? query[Int]("foo") & query[String]("bar") |>> { (foo: Int, bar: String) =>
+    GET / "query" / "twoparams" +? param[Int]("foo") & param[String]("bar") |>> { (foo: Int, bar: String) =>
       "twoparams" + foo + bar
     }
 
-    GET / "query" / "twoparams2" +? query[Int]("foo") & query[Option[String]]("bar") |>> { (foo: Int, bar: Option[String]) =>
+    GET / "query" / "twoparams2" +? param[Int]("foo") & param[Option[String]]("bar") |>> { (foo: Int, bar: Option[String]) =>
       "twoparams2_" + foo + bar.getOrElse("cat")
     }
 
@@ -57,13 +57,13 @@ class RhoServiceTest extends Specification {
 
     GET / "orders" / pathVar[Int]("id") |>> { id: Int => id }
 
-    GET / "options" +? query[Option[String]]("foo") |>> { os: Option[String] => os.getOrElse("None") }
+    GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => os.getOrElse("None") }
 
-    GET / "seq" +? query[Seq[String]]("foo") |>> { os: Seq[String] => os.mkString(" ") }
+    GET / "seq" +? param[Seq[String]]("foo") |>> { os: Seq[String] => os.mkString(" ") }
 
-    GET / "seq" +? query[Seq[Int]]("foo") |>> { os: Seq[Int] => os.mkString(" ") }
+    GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => os.mkString(" ") }
 
-    GET / "withreq" +? query[String]("foo") |>> { (req: Request, foo: String) => s"req $foo" }
+    GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => s"req $foo" }
   }
 
   "RhoService" should {

@@ -18,13 +18,13 @@ class ApiExamples extends Specification {
       new RhoService {
         // the path can be built up in multiple steps and the parts reused
         val path = POST / "hello"
-        val path2 = path / 'world +? query[Int]("fav") // the symbol 'world just says 'capture a String'
+        val path2 = path / 'world +? param[Int]("fav") // the symbol 'world just says 'capture a String'
         path |>> { () => Ok("Empty") } // use the |>> operator to turn a Router into an Action
         path2 |>> { (world: String, fav: Int) => Ok(s"Received $fav, $world") }
         path2 |>> (foo(_, _))
 
         // It can also be made all at once
-        val path3 = POST / "hello" / pathVar[Int] +? query[Int]("fav")
+        val path3 = POST / "hello" / pathVar[Int] +? param[Int]("fav")
         path3 |>> {
           (i1: Int, i2: Int) => Ok(s"Sum of the number is ${i1 + i2}")
         }
@@ -69,7 +69,7 @@ class ApiExamples extends Specification {
         val v6 = requireMap(Header.`Content-Length`)(_.length)
         val v7 = requireMap(Header.ETag)(_ => -1)
 
-        GET / (path6 || path7) +? query[String]("foo") >>> (v6 || v7) |>> {
+        GET / (path6 || path7) +? param[String]("foo") >>> (v6 || v7) |>> {
           (i: Int, foo: String, v: Int) =>
             Ok(s"Received $i, $foo, $v")
         }
