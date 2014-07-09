@@ -46,9 +46,15 @@ package object rho {
   def param[T](key: String, default: Option[T] = None)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     TypedQuery(QueryCapture(key, parser, default, m))
 
+  /**
+   * Defines a path variable of a URI that should be bound to a route definition
+   */
   def pathVar[T](implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
     pathVar("unknown")(parser, m)
 
+  /**
+   * Defines a path variable of a URI that should be bound to a route definition
+   */
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
     TypedPath(PathAST.MetaCons(PathCapture(parser, stringTag), TextMeta(id, s"Param name: $id")))
 
