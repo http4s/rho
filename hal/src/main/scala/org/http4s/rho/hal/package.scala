@@ -14,7 +14,7 @@ package object hal {
 
   type Links = List[LinkObjectDef]
 
-  sealed abstract class Entry[+A]
+  sealed trait Entry[+A]
   final case class Single[+A](x: A) extends Entry[A]
   final case class Many[+A](xs: List[A] = Nil) extends Entry[A]
   object Many {
