@@ -49,7 +49,7 @@ object ResourceObjectSerializer {
   private[hal] def serializeEmbeddedDef(embeddedDef: (String, Entry[ResourceObject[_]]))(implicit jsonFormats: Formats): Option[JField] =
     serializeSingleOrMany(embeddedDef)(ResourceObjectSerializer.serialize)
 
-  private[hal] def serializeLinkDef(linkDef: (String, Entry[LinkObject])): Option[JField] =
+  private[hal] def serializeLinkDef(linkDef: (String, Entry[LinkObjectLike])): Option[JField] =
     serializeSingleOrMany(linkDef)(LinkObjectSerializer.serialize)
 
   private[hal] def serializeLinks(links: Links): Option[JField] = {

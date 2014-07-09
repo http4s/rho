@@ -154,7 +154,7 @@ object ResourceObjectSpec extends Specification {
         "self" -> Single(LinkObject("/orders")),
         "curies" -> Many(LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true))),
         "next" -> Single(LinkObject("/orders?page=2")),
-        "ea:find" -> Single(LinkObject("/orders{?id}", Some(true))),
+        "ea:find" -> Single(LinkObject("/orders{?id}", templated = Some(true))),
         "ea:admin" -> Many(LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate")))),
 
       embedded = Vector(
