@@ -30,6 +30,6 @@ package org.http4s.rho.hal
  *
  */
 case class ResourceObject[T](
-  links: Links = Vector.empty,
-  embedded: Embedded = Vector.empty,
+  links: Links = Nil,
+  embedded: Embedded = Nil,
   content: Option[T] = None)
