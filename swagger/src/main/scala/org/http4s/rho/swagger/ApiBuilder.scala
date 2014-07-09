@@ -7,7 +7,7 @@ import com.wordnik.swagger.model._
 import bits.HeaderAST.HeaderRule
 import bits.Metadata
 import bits.PathAST._
-import org.http4s.rho.bits.QueryAST.QueryRule
+import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
 
 import shapeless.HList
 
@@ -114,7 +114,7 @@ trait ApiBuilder { self: RhoService =>
       case PathOr(a, b)::xs     => go(a::xs, path, op):::go(b::xs, path, op)
       case PathAnd (a, b) :: xs => go(a::b::xs, path, op)
       case PathMatch(s)::xs     => go(xs, path + "/" + s, op)
-      case PathEmpty::xs        => go(xs, path, op)   // Shouldn't get one of these...
+      case PathEmpty::xs        => go(xs, path, op)
 
       case PathCapture (id, parser, _) :: xs =>
         val p = Parameter (id, None, None, true, false,
@@ -123,11 +123,10 @@ trait ApiBuilder { self: RhoService =>
         go(xs, path + s"/{$id}", op.copy(parameters = op.parameters:+p))
 
       case CaptureTail()::xs =>
-        val p = Parameter ("variadic", None, None, false, true,
-                           "array", AnyAllowableValues, "path", None)
-        val _op = runQuery(query, op.copy(parameters = op.parameters:+p))
+        val ps = Parameter ("variadic", None, None, false, true, "array",
+                           AnyAllowableValues, "path", None)::analyzeQuery(query)
         val _path = path + "/..."
-        List(_path -> _op)
+        List(path -> op.copy(parameters = op.parameters:::ps))
 
       case MetaCons(rule, meta)::xs =>
         getMeta(meta) match {
@@ -135,18 +134,48 @@ trait ApiBuilder { self: RhoService =>
           case None       => go(rule::xs, path, op)
         }
 
-      case Nil => List(path -> runQuery(query, op))
+      case Nil =>
+        val qs = analyzeQuery(query)
+        List(path -> op.copy(parameters = op.parameters:::qs))
     }
     go(stack, "", op.getOrElse(baseOp))
   }
 
-  def runQuery(query: QueryRule, op: Operation): Operation = ???
+  def analyzeQuery(query: QueryRule): List[Parameter] = {
+    import bits.QueryAST._
+    def go(stack: List[QueryRule]): List[Parameter] = stack match {
+      case QueryAnd(a, b)::xs => go(a::b::xs)
+
+      case QueryOr(a, b)::xs  =>
+        go(a::xs):::go(b::xs).map(_.copy(required = false))
+
+      case (q @ QueryCapture(_, _, _, _))::xs => gatherParam(q)::go(xs)
+
+      case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs =>
+        getMeta(meta).fold(go(q::xs)){ s =>
+          gatherParam(q).copy(description = Some(s))::go(xs)
+        }
+
+      case EmptyQuery::xs => go(xs)
+
+      case Nil => Nil
+    }
+
+    go(query::Nil)
+  }
+
+  private def gatherParam(rule: QueryCapture[_]): Parameter = {
+    Parameter(rule.name, None, rule.default.map(_.toString), rule.default.isEmpty,
+      false, getType(rule.m), paramType = "query")
+  }
 
   private def runHeaders(rule: HeaderRule, desc: ApiDescription): ApiDescription = ???
 
   private def produces(rule: HeaderRule): List[String] = ???
 
   private def consumes(rule: HeaderRule): List[String] = ???
+
+  private def getType(m: Manifest[_]): String = ???
 }
 
 
