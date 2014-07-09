@@ -1,6 +1,9 @@
 package org.http4s
 package rho.bits
 
+import rho.RequestLineBuilder
+import rho.bits.QueryAST.TypedQuery
+
 import scala.language.existentials
 
 import shapeless.ops.hlist.Prepend
@@ -8,12 +11,7 @@ import shapeless.{ ::, HList }
 
 import scala.reflect.runtime.universe.TypeTag
 
-import org.http4s.UriTemplate
-import org.http4s.UriTemplate._
 import org.http4s.rho.UriConvertible
-
-import shapeless.ops.hlist.Prepend
-import shapeless.{ ::, HNil, HList }
 
 /** Actual elements which build up the AST */
 
@@ -40,6 +38,12 @@ object PathAST {
     def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, t.rule))
 
+    def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T, T2]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(PathAnd(this.rule, t.path), t.query)
+
+    def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1,T]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(rule, q.rule)
+
     override def asUriTemplate = for (p <- UriConverter.createPath(rule)) yield UriTemplate(path = p)
   }
 
@@ -54,8 +58,6 @@ object PathAST {
 
   case class PathCapture(parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
-  // These don't fit the  operations of CombinablePathSyntax because they may
-  // result in a change of the type of PathBulder
   // TODO: can I make this a case object?
   case class CaptureTail() extends PathRule
 

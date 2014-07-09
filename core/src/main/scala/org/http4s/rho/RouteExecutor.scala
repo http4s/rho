@@ -205,10 +205,10 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
         j <- runQuery(req, query, i)
         k <- runValidation(req, v, j)
       } yield k
-    }.asInstanceOf[Option[\/[String, HList]]]
+    }
   }
 
   /** Walks the validation tree */
   def ensureValidHeaders(v: HeaderRule, req: Request): \/[String, HList] =
-    runValidation(req, v, HNil).asInstanceOf[\/[String,HList]]
+    runValidation(req, v, HNil)
 }

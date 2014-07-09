@@ -1,8 +1,7 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.{ MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable, UriConverter }
-
+import bits.{MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable, UriConverter }
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._

@@ -47,6 +47,9 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   def /[T2 <: HList](t: PathBuilder[T2])(implicit prep: Prepend[T2, T]) : PathBuilder[prep.Out] =
     new PathBuilder(method, PathAnd(path, t.path))
 
+  def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T2, T]): QueryBuilder[prep.Out] =
+    QueryBuilder(method, PathAnd(path, t.path), t.query)
+
   override def addMetaData(data: Metadata): PathBuilder[T] =
     new PathBuilder[T](method, MetaCons(path, data))
 
