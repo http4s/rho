@@ -25,8 +25,6 @@ package object rho {
 
   private val stringTag = implicitly[TypeTag[String]]
 
-  def ROOT = PathEmpty
-
   implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, PathEmpty)
 
   implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
