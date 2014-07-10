@@ -20,10 +20,4 @@ case class RequestLineBuilder[T <: HList](path: PathRule, query: QueryRule)
 
   def &[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
     RequestLineBuilder(path, QueryAnd(query, q.rule))
-
-  override def asUriTemplate =
-    for {
-      p <- UriConverter.createPath(path)
-      q <- UriConverter.createQuery(query)
-    } yield UriTemplate(path = p, query = Some(q))
 }
