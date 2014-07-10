@@ -80,12 +80,12 @@ class ApiTest extends Specification {
   "RequestLineBuilder" should {
     "be made from TypedPath and TypedQuery" in {
       val path = pathMatch("foo")
-      val q = query[Int]("bar")
+      val q = param[Int]("bar")
       path +? q should_== RequestLineBuilder(path.rule, q.rule)
     }
 
     "append to a TypedPath" in {
-      val requestLine = pathMatch("foo") +? query[Int]("bar")
+      val requestLine = pathMatch("foo") +? param[Int]("bar")
       (pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[_]] should_== true
     }
   }
@@ -150,7 +150,7 @@ class ApiTest extends Specification {
     import Status._
 
     "get a query string" in {
-      val path = POST / "hello" +? query[Int]("jimbo")
+      val path = POST / "hello" +? param[Int]("jimbo")
       val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").get)
 
       val route = path runWith { i: Int => Ok("stuff").withHeaders(Header.ETag((i + 1).toString)) }
@@ -200,7 +200,7 @@ class ApiTest extends Specification {
     import Decoder._
     import scalaz.stream.Process
 
-    val path = POST / "hello" / 'world +? query[Int]("fav")
+    val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
                       capture(Header.ETag)
 
@@ -224,7 +224,7 @@ class ApiTest extends Specification {
     import Decoder._
     import scalaz.stream.Process
 
-    val path = POST / "hello" / 'world +? query[Int]("fav")
+    val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
 
 

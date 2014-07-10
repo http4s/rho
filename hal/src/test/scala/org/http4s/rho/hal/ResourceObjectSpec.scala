@@ -20,7 +20,7 @@ object ResourceObjectSpec extends Specification {
     }
     "with one link only" in {
       val resObj = ResourceObject(
-        Vector("self" ->
+        List("self" ->
           Single(LinkObject("/some/path"))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("_links" ->
@@ -29,7 +29,7 @@ object ResourceObjectSpec extends Specification {
     }
     "with two links only" in {
       val resObj = ResourceObject(
-        Vector("self" ->
+        List("self" ->
           Many(
             LinkObject("/some/path/1"),
             LinkObject("/some/path/2"))))
@@ -42,8 +42,8 @@ object ResourceObjectSpec extends Specification {
     }
     "with one embedded only" in {
       val resObj = ResourceObject(
-        Vector.empty,
-        Vector("text" -> Single(ResourceObject(content = Some("some content")))))
+        Nil,
+        List("text" -> Single(ResourceObject(content = Some("some content")))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("_embedded" ->
           ("text" ->
@@ -51,8 +51,8 @@ object ResourceObjectSpec extends Specification {
     }
     "with two embedded only" in {
       val resObj = ResourceObject(
-        Vector.empty,
-        Vector("texts" ->
+        Nil,
+        List("texts" ->
           Many(
             ResourceObject(content = Some("/some/path/1")),
             ResourceObject(content = Some("/some/path/2")))))
@@ -72,11 +72,11 @@ object ResourceObjectSpec extends Specification {
       val resObj = ResourceObject(
         content = Some(user1),
         links =
-          Vector("self" ->
+          List("self" ->
             Single(
               LinkObject("/users/1"))),
         embedded =
-          Vector("groups" ->
+          List("groups" ->
             Many(
               ResourceObject(content = Some("/groups/1")),
               ResourceObject(content = Some("/groups/2")))))
@@ -91,10 +91,10 @@ object ResourceObjectSpec extends Specification {
       val resObj = ResourceObject(
         content = Some("some content"),
         links =
-          Vector("self" ->
+          List("self" ->
             Single(LinkObject("/some/path"))),
         embedded =
-          Vector("text" ->
+          List("text" ->
             Single(ResourceObject(content = Some("some other content")))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("some content")
@@ -150,31 +150,31 @@ object ResourceObjectSpec extends Specification {
     // our data structure
     val halDocument = ResourceObject(
 
-      links = Vector(
+      links = List(
         "self" -> Single(LinkObject("/orders")),
         "curies" -> Many(LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true))),
         "next" -> Single(LinkObject("/orders?page=2")),
-        "ea:find" -> Single(LinkObject("/orders{?id}", Some(true))),
+        "ea:find" -> Single(LinkObject("/orders{?id}", templated = Some(true))),
         "ea:admin" -> Many(LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate")))),
 
-      embedded = Vector(
+      embedded = List(
         "ea:order" ->
           Many(
             ResourceObject[Map[String, Any]](
-              Vector(
+              List(
                 "self" -> Single(LinkObject("/orders/123")),
                 "ea:basket" -> Single(LinkObject("/baskets/98712")),
                 "ea:customer" -> Single(LinkObject("/customers/7809"))),
-              Vector.empty,
+              Nil,
               Some(Map("total" -> 30.00,
                 "currency" -> "USD",
                 "status" -> "shipped"))),
             ResourceObject[Map[String, Any]](
-              Vector(
+              List(
                 "self" -> Single(LinkObject("/orders/124")),
                 "ea:basket" -> Single(LinkObject("/baskets/97213")),
                 "ea:customer" -> Single(LinkObject("/customers/12369"))),
-              Vector.empty,
+              Nil,
               Some(Map("total" -> 20.00,
                 "currency" -> "USD",
                 "status" -> "processing"))))),
