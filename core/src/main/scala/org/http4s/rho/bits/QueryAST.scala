@@ -22,9 +22,9 @@ object QueryAST {
     /**
      * Resolves names of query parameters to capture
      */
-    lazy val names: List[String] = collectNames(rule)
+    val names: List[String] = collectNames(rule)
 
-    override def asUriTemplate = for (q <- UriConverter.createQuery(rule)) yield UriTemplate(query = Some(q))
+    override val asUriTemplate = for (q <- UriConverter.createQuery(rule)) yield UriTemplate(query = Some(q))
   }
 
   sealed trait QueryRule
