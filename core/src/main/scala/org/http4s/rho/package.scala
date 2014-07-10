@@ -58,6 +58,14 @@ package object rho {
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
     TypedPath(PathAST.MetaCons(PathCapture(parser, stringTag), TextMeta(id, s"Param name: $id")))
 
+  /**
+   * Helper to be able to define a path with one level only.
+   * {{{
+   * val hello = Root / "hello"
+   * }}}
+   */
+  def root(): TypedPath[HNil] = TypedPath(PathEmpty)
+
   def * = CaptureTail()
 
   /////////////////////////////// Header helpers //////////////////////////////////////
