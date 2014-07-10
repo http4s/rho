@@ -16,30 +16,34 @@ object UriConverter {
     import PathAST._
     import org.http4s.UriTemplate.PathElm
     import org.http4s.UriTemplate.PathExp
-    def go(r: PathRule, acc: Path): Path = r match {
-      case PathAnd(p1, p2) => go(p1, acc) ++ go(p2, acc)
-      case PathOr(p1, p2) => go(p1, acc)
-      case PathMatch(s) => PathElm(s) :: acc
-      case PathCapture(parser, m) => acc
-      case CaptureTail() => acc
-      case PathEmpty => acc
-      case MetaCons(path, TextMeta(id, desc)) => PathExp(id) :: acc
-      case MetaCons(path, meta) => acc
+    @scala.annotation.tailrec
+    def go(r: List[PathRule], acc: Path): Path = r match {
+      case Nil => acc
+      case PathAnd(a, b) :: rs => go(a :: b :: rs, acc)
+      case PathOr(a, b) :: rs => go(a :: rs, acc) // we decided to take the first root
+      case PathMatch(s) :: rs => go(rs, PathElm(s) :: acc)
+      case PathCapture(parser, m) :: rs => go(rs, acc)
+      case CaptureTail() :: rs => go(rs, acc)
+      case PathEmpty :: rs => go(rs, acc)
+      case MetaCons(path, TextMeta(id, desc)) :: rs => go(rs, PathExp(id) :: acc)
+      case MetaCons(path, meta) :: rs => go(rs, acc)
     }
-    Success(go(rule, Nil))
+    Success(go(List(rule), Nil).reverse)
   }
 
   def createQuery(rule: QueryRule): Try[Query] = {
     import QueryAST._
     import org.http4s.UriTemplate.ParamExp
-    def go(r: QueryRule, acc: Query): Query = r match {
-      case MetaCons(query, meta) => acc
-      case QueryAnd(a, b) => go(a, acc) ++ go(b, acc)
-      case QueryCapture(name, p, default, m) => ParamExp(name) :: acc
-      case QueryOr(a, b) => go(a, acc)
-      case EmptyQuery => acc
+    @scala.annotation.tailrec
+    def go(r: List[QueryRule], acc: Query): Query = r match {
+      case Nil => acc
+      case MetaCons(query, meta) :: rs => go(rs, acc)
+      case QueryAnd(a, b) :: rs => go(a :: b :: rs, acc)
+      case QueryCapture(name, p, default, m) :: rs => go(rs, ParamExp(name) :: acc)
+      case QueryOr(a, b) :: rs => go(a :: rs, acc) // we decided to take the first root
+      case EmptyQuery :: rs => go(rs, acc)
     }
-    Success(go(rule, Nil))
+    Success(go(List(rule), Nil).reverse)
   }
 
 }
