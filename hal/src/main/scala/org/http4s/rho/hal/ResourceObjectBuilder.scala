@@ -1,11 +1,10 @@
 package org.http4s.rho.hal
 
 import scala.collection.mutable.LinkedHashMap
-
 import org.http4s.Uri
 import org.http4s.UriTemplate
 
-class HalDocBuilder[T] {
+class ResourceObjectBuilder[T] {
   private val _links = LinkedHashMap[String, Entry[LinkObjectLike]]()
   private val _embedded = LinkedHashMap[String, Entry[ResourceObject[_]]]()
   private var content: Option[T] = None
@@ -22,6 +21,14 @@ class HalDocBuilder[T] {
    */
   def link(name: String, href: String, templated: Option[Boolean] = None): this.type =
     link(name, LinkObject(href, templated = templated))
+
+  /**
+   * Creates a single link object with a given `href` and the specified `name`
+   * to this document builder. In case the same `name` already exists the link
+   * object will be overwritten.
+   */
+  def link(name: String, href: String, title: String): this.type =
+    link(name, LinkObject(href, title = Some(title)))
 
   /**
    * Creates a single link object with a given [[Uri]] as `href` and the
