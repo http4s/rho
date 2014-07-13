@@ -1,0 +1,331 @@
+package org.http4s
+package rho
+
+import org.specs2.mutable.Specification
+import scodec.bits.ByteVector
+
+class ParamDefaultValueSpec extends Specification {
+
+  def getBody(b: HttpBody): String = {
+    new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
+  }
+
+  def checkError(r: Request): String = {
+    getBody(service(r).run.body)
+  }
+
+  val service = new RhoService {
+    GET / "test1" +? param[String]("param1") |>> { param1: String => "test1:" + param1 }
+
+    GET / "test2" +? param("param1", "default1") |>> { param1: String => "test2:" + param1 }
+
+    GET / "test3" +? param[Int]("param1", 1) |>> { param1: Int => "test3:" + param1 }
+
+    GET / "test4" +? param[Option[String]]("param1") |>> { os: Option[String] => "test4:" + os.getOrElse("") }
+
+    GET / "test5" +? param[Option[Int]]("param1", Some(100)) |>> { os: Option[Int] => "test5:" + os.getOrElse("") }
+
+    GET / "test6" +? param[Option[String]]("param1", Some("default1")) |>> { os: Option[String] => "test6:" + os.getOrElse("") }
+
+    GET / "test7" +? param[Seq[String]]("param1", Seq("a", "b")) |>> { os: Seq[String] => "test7:" + os.mkString(",") }
+
+    GET / "test8" +? param[Seq[Int]]("param1", Seq(3, 5, 8)) |>> { os: Seq[Int] => "test8:" + os.mkString(",") }
+
+    // with specific validation
+
+    GET / "test9" +? param("param1", "default1", (p: String) => p == "test") |>> { param1: String => "test9:" + param1 }
+
+    GET / "test10" +? param[Int]("param1", 1, (p: Int) => p == 50) |>> { param1: Int => "test10:" + param1 }
+
+    GET / "test11" +? param[Option[Int]]("param1", Some(100), (p: Option[Int]) => p == Some(50)) |>> { os: Option[Int] => "test11:" + os.getOrElse("") }
+
+    GET / "test12" +? param[Option[String]]("param1", Some("default1"), (p: Option[String]) => p == Some("test")) |>> { os: Option[String] => "test12:" + os.getOrElse("") }
+
+    GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => p == Seq("c", "d")) |>> { os: Seq[String] => "test13:" + os.mkString(",") }
+
+    GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p == Seq(8, 13)) |>> { os: Seq[Int] => "test14:" + os.mkString(",") }
+  }
+
+  def body(r: Request): String = getBody(service(r).run.body)
+  def requestGet(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
+  def status(r: Request): Status = service(r).run.status
+
+  "GET /test1" should {
+    val default = "test1:default1"
+    "map parameter with default value" in {
+      body(requestGet("/test1")) must be equalTo "Missing query param: param1"
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test1?param1=")) must be equalTo "test1:"
+    }
+    "map parameter with value" in {
+      body(requestGet("/test1?param1=value1")) must be equalTo "test1:value1"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test1?param1")) must be equalTo "Value of query parameter 'param1' missing"
+    }
+  }
+
+  "GET /test2" should {
+    val default = "test2:default1"
+    "map parameter with default value" in {
+      body(requestGet("/test2")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test2?param1=")) must be equalTo "test2:"
+    }
+    "map parameter with value" in {
+      body(requestGet("/test2?param1=value1")) must be equalTo "test2:value1"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test2?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test3" should {
+    val default = "test3:1"
+    "map parameter with default value" in {
+      body(requestGet("/test3")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test3?param1=")) must be equalTo "Invalid Number Format: "
+    }
+    "map parameter with numeric value" in {
+      body(requestGet("/test3?param1=12345")) must be equalTo "test3:12345"
+    }
+    "map parameter with non-numeric value" in {
+      body(requestGet("/test3?param1=value1")) must be equalTo "Invalid Number Format: value1"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test3?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test4" should {
+    val default = "test4:"
+    "map parameter with default value" in {
+      body(requestGet("/test4")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test4?param1=")) must be equalTo "test4:"
+    }
+    "map parameter with value" in {
+      body(requestGet("/test4?param1=value1")) must be equalTo "test4:value1"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test4?param1")) must be equalTo "test4:"
+    }
+  }
+
+  "GET /test5" should {
+    val default = "test5:100"
+    "map parameter with default value" in {
+      body(requestGet("/test5")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test5?param1=")) must be equalTo default
+    }
+    "map parameter with numeric value" in {
+      body(requestGet("/test5?param1=12345")) must be equalTo "test5:12345"
+    }
+    "map parameter with non-numeric value" in {
+      body(requestGet("/test5?param1=value1")) must be equalTo default
+    }
+    "map parameter without value" in {
+      body(requestGet("/test5?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test6" should {
+    val default = "test6:default1"
+    "map parameter with default value" in {
+      body(requestGet("/test6")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test6?param1=")) must be equalTo "test6:"
+    }
+    "map parameter with value" in {
+      body(requestGet("/test6?param1=test12345")) must be equalTo "test6:test12345"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test6?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test7" should {
+    val default = "test7:a,b"
+    "map parameter with default value" in {
+      body(requestGet("/test7")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test7?param1=")) must be equalTo "test7:"
+    }
+    "map parameter with one value" in {
+      body(requestGet("/test7?param1=test12345")) must be equalTo "test7:test12345"
+    }
+    "map parameter with many values" in {
+      body(requestGet("/test7?param1=test123&param1=test456&param1=test889")) must be equalTo "test7:test123,test456,test889"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test7?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test8" should {
+    val default = "test8:3,5,8"
+    "map parameter with default value" in {
+      body(requestGet("/test8")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test8?param1=")) must be equalTo "Invalid Number Format: "
+    }
+    "map parameter with one numeric value" in {
+      body(requestGet("/test8?param1=12345")) must be equalTo "test8:12345"
+    }
+    "map parameter with one non-numeric value" in {
+      body(requestGet("/test8?param1=test")) must be equalTo "Invalid Number Format: test"
+    }
+    "map parameter with many numeric values" in {
+      body(requestGet("/test8?param1=123&param1=456&param1=789")) must be equalTo "test8:123,456,789"
+    }
+    "map parameter with many non-numeric values" in {
+      body(requestGet("/test8?param1=abc&param1=def")) must be equalTo "Invalid Number Format: abc"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test8?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test9" should {
+    val default = "test9:default1"
+    "map parameter with default value" in {
+      body(requestGet("/test9")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test9?param1=")) must be equalTo default
+    }
+    "map parameter with invalid value" in {
+      body(requestGet("/test9?param1=value1")) must be equalTo default
+    }
+    "map parameter with valid value" in {
+      body(requestGet("/test9?param1=test")) must be equalTo "test9:test"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test9?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test10" should {
+    val default = "test10:1"
+    "map parameter with default value" in {
+      body(requestGet("/test10")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test10?param1=")) must be equalTo "Invalid Number Format: "
+    }
+    "map parameter with invalid numeric value" in {
+      body(requestGet("/test10?param1=12345")) must be equalTo default
+    }
+    "map parameter with non-numeric value" in {
+      body(requestGet("/test10?param1=value1")) must be equalTo "Invalid Number Format: value1"
+    }
+    "map parameter with valid numeric value" in {
+      body(requestGet("/test10?param1=50")) must be equalTo "test10:50"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test10?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test11" should {
+    val default = "test11:100"
+    "map parameter with default value" in {
+      body(requestGet("/test11")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test11?param1=")) must be equalTo default
+    }
+    "map parameter with invalid numeric value" in {
+      body(requestGet("/test11?param1=12345")) must be equalTo default
+    }
+    "map parameter with non-numeric value" in {
+      body(requestGet("/test11?param1=value1")) must be equalTo default
+    }
+    "map parameter with valid numeric value" in {
+      body(requestGet("/test11?param1=50")) must be equalTo "test11:50"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test11?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test12" should {
+    val default = "test12:default1"
+    "map parameter with default value" in {
+      body(requestGet("/test12")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test12?param1=")) must be equalTo default
+    }
+    "map parameter with invalid value" in {
+      body(requestGet("/test12?param1=test12345")) must be equalTo default
+    }
+    "map parameter with valid value" in {
+      body(requestGet("/test12?param1=test")) must be equalTo "test12:test"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test12?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test13" should {
+    val default = "test13:a,b"
+    "map parameter with default value" in {
+      body(requestGet("/test13")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test13?param1=")) must be equalTo default
+    }
+    "map parameter with one invalid value" in {
+      body(requestGet("/test13?param1=test12345")) must be equalTo default
+    }
+    "map parameter with many invalid values" in {
+      body(requestGet("/test13?param1=test123&param1=test456&param1=test889")) must be equalTo default
+    }
+    "map parameter with many valid values" in {
+      body(requestGet("/test13?param1=c&param1=d")) must be equalTo "test13:c,d"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test13?param1")) must be equalTo default
+    }
+  }
+
+  "GET /test14" should {
+    val default = "test14:3,5,8"
+    "map parameter with default value" in {
+      body(requestGet("/test14")) must be equalTo default
+    }
+    "map parameter with empty value" in {
+      body(requestGet("/test14?param1=")) must be equalTo "Invalid Number Format: "
+    }
+    "map parameter with one invalid numeric value" in {
+      body(requestGet("/test14?param1=12345")) must be equalTo default
+    }
+    "map parameter with one non-numeric value" in {
+      body(requestGet("/test14?param1=test")) must be equalTo "Invalid Number Format: test"
+    }
+    "map parameter with many numeric values" in {
+      body(requestGet("/test14?param1=123&param1=456&param1=789")) must be equalTo default
+    }
+    "map parameter with many non-numeric values" in {
+      body(requestGet("/test14?param1=abc&param1=def")) must be equalTo "Invalid Number Format: abc"
+    }
+    "map parameter with many valid numeric values" in {
+      body(requestGet("/test14?param1=8&param1=13")) must be equalTo "test14:8,13"
+    }
+    "map parameter without value" in {
+      body(requestGet("/test14?param1")) must be equalTo default
+    }
+  }
+
+}

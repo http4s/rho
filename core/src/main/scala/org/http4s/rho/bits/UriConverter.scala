@@ -39,7 +39,7 @@ object UriConverter {
       case Nil => acc
       case MetaCons(query, meta) :: rs => go(rs, acc)
       case QueryAnd(a, b) :: rs => go(a :: b :: rs, acc)
-      case QueryCapture(name, p, default, m) :: rs => go(rs, ParamExp(name) :: acc)
+      case QueryCapture(name, p, default, accept, m) :: rs => go(rs, ParamExp(name) :: acc)
       case QueryOr(a, b) :: rs => go(a :: rs, acc) // we decided to take the first root
       case EmptyQuery :: rs => go(rs, acc)
     }
