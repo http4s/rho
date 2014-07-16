@@ -31,7 +31,7 @@ trait ExecutableCompiler {
   //////////////////////// Stuff for executing the route //////////////////////////////////////
 
   /** The untyped guts of ensureValidHeaders and friends */
-  protected def runValidation(req: Request, v: HeaderRule, stack: HList): \/[String,HList] = {
+  protected def runValidation(req: Request, v: HeaderRule, stack: HList): ParserResult[HList] = {
     import bits.HeaderAST.MetaCons
     v match {
       case HeaderAnd(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
@@ -39,43 +39,43 @@ trait ExecutableCompiler {
       case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
 
       case HeaderCapture(key) => req.headers.get(key) match {
-        case Some(h) => \/-(h::stack)
-        case None => -\/(missingHeader(key))
+        case Some(h) => ParserSuccess(h::stack)
+        case None => ValidationFailure(missingHeader(key))
       }
 
       case HeaderRequire(key, f) => req.headers.get(key) match {
-        case Some(h) => if (f(h)) \/-(stack) else -\/(invalidHeader(h))
-        case None => -\/(missingHeader(key))
+        case Some(h) => if (f(h)) ParserSuccess(stack) else ValidationFailure(invalidHeader(h))
+        case None => ValidationFailure(missingHeader(key))
       }
 
       case HeaderMapper(key, f) => req.headers.get(key) match {
-        case Some(h) => \/-(f(h)::stack)
-        case None => -\/(missingHeader(key))
+        case Some(h) => ParserSuccess(f(h)::stack)
+        case None => ValidationFailure(missingHeader(key))
       }
 
       case MetaCons(r, _) => runValidation(req, r, stack)
 
-      case EmptyHeaderRule => \/-(stack)
+      case EmptyHeaderRule => ParserSuccess(stack)
     }
   }
 
-  protected def runQuery(req: Request, v: QueryRule, stack: HList): String\/HList = {
+  protected def runQuery(req: Request, v: QueryRule, stack: HList): ParserResult[HList] = {
     import QueryAST.MetaCons
     v match {
       case QueryAnd(a, b) => runQuery(req, a, stack).flatMap(runQuery(req, b, _))
 
       case QueryOr(a, b) => runQuery(req, a, stack).orElse(runQuery(req, b, stack))
 
-      case QueryCapture(name, parser, default, validate, _) => parser.collect(name, req.multiParams, default, validate).map(_ :: stack)
+      case QueryCapture(name, parser, default, _) => parser.collect(name, req.multiParams, default).map(_ :: stack)
 
       case MetaCons(r, _) => runQuery(req, r, stack)
 
-      case EmptyQuery => \/-(stack)
+      case EmptyQuery => ParserSuccess(stack)
     }
   }
 
   /** Runs the URL and pushes values to the HList stack */
-  protected def runPath(req: Request, v: PathRule, path: List[String]): Option[\/[String, HList]] = {
+  protected def runPath(req: Request, v: PathRule, path: List[String]): Option[ParserResult[HList]] = {
 
     // setup a stack for the path
     var currentPath = path
@@ -86,7 +86,7 @@ trait ExecutableCompiler {
     }
 
     // WARNING: returns null if not matched but no nulls should escape the runPath method
-    def go(v: PathRule, stack: HList): \/[String,HList] = {
+    def go(v: PathRule, stack: HList): ParserResult[HList] = {
       import PathAST.MetaCons
       v match {
         case PathAnd(a, b) =>
@@ -108,23 +108,23 @@ trait ExecutableCompiler {
 
         case PathCapture(f, _) => f.parse(pop).map{ i => i::stack}
 
-        case PathMatch("") => \/-(stack)    // "" is consider a NOOP
+        case PathMatch("") => ParserSuccess(stack)    // "" is consider a NOOP
 
         case PathMatch(s) =>
-          if (pop == s) \/-(stack)
+          if (pop == s) ParserSuccess(stack)
           else null
 
         case PathEmpty => // Needs to be the empty path
           if (currentPath.head.length == 0) {
             pop
-            \/-(stack)
+            ParserSuccess(stack)
           }
           else null
 
         case CaptureTail() =>
           val p = currentPath
           currentPath = Nil
-          \/-(p::stack)
+          ParserSuccess(p::stack)
 
         case MetaCons(r, _) => go(r, stack)
       }
@@ -134,8 +134,8 @@ trait ExecutableCompiler {
       val r = go(v, HNil)
       if (currentPath.isEmpty) r match {
         case null => None
-        case r@ \/-(_) => Some(r.asInstanceOf[\/[String,HList]])
-        case r@ -\/(_) => Some(r)
+//        case r@ ParserSuccess(_) => Some(r)
+        case r => Some(r)
       } else None
     }
     else None
@@ -159,8 +159,9 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
     val readyf = hf.conv(f)
     val ff: Result = { req =>
        pathAndValidate(req, r.path, r.query, r.validators).map(_ match {
-           case \/-(stack) => readyf(req, stack.asInstanceOf[T])
-           case -\/(s) => onBadRequest(s)
+           case ParserSuccess(stack) => readyf(req, stack.asInstanceOf[T])
+           case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
+           case ParserFailure(s)     => onBadRequest(s)
        })
     }
 
@@ -181,11 +182,14 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
     }
     val ff: Result = { req =>
       pathAndValidate(req, r.router.path, r.router.query, allvals).map(_ match {
-        case \/-(stack) => r.decoder.decode(req).flatMap(_ match {
-            case \/-(r) => actionf(req,r::stack.asInstanceOf[T])
-            case -\/(e) => onBadRequest(s"Error decoding body: $e")
+        case ParserSuccess(stack) => r.decoder.decode(req).flatMap(_ match {
+            case ParserSuccess(r)     => actionf(req,r::stack.asInstanceOf[T])
+            case ParserFailure(e)     => onBadRequest(s"Error decoding body: $e")
+            case ValidationFailure(e) => onBadRequest(s"Error decoding body: $e")
           })
-        case -\/(s) => onBadRequest(s)
+
+        case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
+        case ParserFailure(s)     => onBadRequest(s)
       })
     }
 
@@ -195,7 +199,7 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
   private def pathAndValidate(req: Request,
                              path: PathRule,
                             query: QueryRule,
-                                v: HeaderRule): Option[\/[String, HList]] =
+                                v: HeaderRule): Option[ParserResult[HList]] =
   {
     val p = parsePath(req.requestUri.path)
 
@@ -209,6 +213,6 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
   }
 
   /** Walks the validation tree */
-  def ensureValidHeaders(v: HeaderRule, req: Request): \/[String, HList] =
+  def ensureValidHeaders(v: HeaderRule, req: Request): ParserResult[HList] =
     runValidation(req, v, HNil)
 }

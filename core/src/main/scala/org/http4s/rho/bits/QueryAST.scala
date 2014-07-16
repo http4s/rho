@@ -29,7 +29,7 @@ object QueryAST {
 
   sealed trait QueryRule
 
-  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T], validate: T => Boolean, m: TypeTag[T]) extends QueryRule
+  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T], m: TypeTag[T]) extends QueryRule
 
   case class QueryAnd(a: QueryRule, b: QueryRule) extends QueryRule
 
@@ -45,7 +45,7 @@ object QueryAST {
       case Nil => acc
       case MetaCons(query, _) :: rs => go(rs, acc)
       case QueryAnd(a, b) :: rs => go(a :: b :: rs, acc)
-      case QueryCapture(name, _, _, _, _) :: rs => go(rs, name :: acc)
+      case QueryCapture(name, _, _, _) :: rs => go(rs, name :: acc)
       case QueryOr(a, _) :: rs => go(a :: rs, acc)
       case EmptyQuery :: rs => go(rs, acc)
     }

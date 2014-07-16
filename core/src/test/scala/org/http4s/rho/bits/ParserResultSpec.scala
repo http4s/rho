@@ -8,7 +8,7 @@ class ParserResultSpec extends Specification {
   "ParserResult" should {
 
     "map a Success" in {
-      ParseSuccess(3).map(_.toString) should_== ParseSuccess("3")
+      ParserSuccess(3).map(_.toString) should_== ParserSuccess("3")
     }
 
     "map a ValidationFailure" in {
@@ -17,38 +17,38 @@ class ParserResultSpec extends Specification {
     }
 
     "map a ParseFailure" in {
-      val result: ParserResult[Int] = ParseFailure("foo")
+      val result: ParserResult[Int] = ParserFailure("foo")
       result.map(_.toString) should_== result
     }
 
     "flatMap a Success" in {
-      ParseSuccess(3).flatMap(i => ParseSuccess(i.toString)) should_== ParseSuccess("3")
+      ParserSuccess(3).flatMap(i => ParserSuccess(i.toString)) should_== ParserSuccess("3")
     }
 
     "flatMap a ValidationFailure" in {
       val result: ParserResult[Int] = ValidationFailure("foo")
-      result.flatMap(i => ParseSuccess(i.toString)) should_== result
+      result.flatMap(i => ParserSuccess(i.toString)) should_== result
     }
 
     "flatMap a ParseFailure" in {
-      val result: ParserResult[Int] = ParseFailure("foo")
-      result.flatMap(i => ParseSuccess(i.toString)) should_== result
+      val result: ParserResult[Int] = ParserFailure("foo")
+      result.flatMap(i => ParserSuccess(i.toString)) should_== result
     }
 
     "work in a for comprehensions" in {
-      val a = ParseSuccess("foo")
-      val b = ParseSuccess("bar")
+      val a = ParserSuccess("foo")
+      val b = ParserSuccess("bar")
       val result = for {
         foo <- a
         bar <- b
       } yield (foo + bar)
 
-      result should_== ParseSuccess("foobar")
+      result should_== ParserSuccess("foobar")
     }
 
     "work in a failing for comprehensions" in {
-      val a: ParserResult[String] = ParseFailure("boo")
-      val b: ParserResult[String] = ParseSuccess("bar")
+      val a: ParserResult[String] = ParserFailure("boo")
+      val b: ParserResult[String] = ParserSuccess("bar")
       val result1 = for {
         foo <- a
         bar <- b
@@ -59,8 +59,8 @@ class ParserResultSpec extends Specification {
         foo <- a
       } yield (foo + bar)
 
-      (result1 should_== ParseFailure("boo")) and
-      (result2 should_== ParseFailure("boo"))
+      (result1 should_== ParserFailure("boo")) and
+      (result2 should_== ParserFailure("boo"))
     }
   }
 

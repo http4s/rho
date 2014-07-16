@@ -10,20 +10,19 @@ import scala.annotation.tailrec
 import shapeless.HList
 
 import scalaz.concurrent.Task
-import scalaz.{\/-, -\/, \/}
 
 
 private[bits] object TempTools extends ExecutableCompiler {
-  override def runValidation(req: Request, v: HeaderRule, stack: HList): \/[String, HList] =
+  override def runValidation(req: Request, v: HeaderRule, stack: HList): ParserResult[HList] =
     super.runValidation(req, v, stack)
 
-  override def runQuery(req: Request, v: QueryRule, stack: HList): \/[String, HList] =
+  override def runQuery(req: Request, v: QueryRule, stack: HList): ParserResult[HList] =
     super.runQuery(req, v, stack)
 }
 
 private[rho] trait ValidationTree {
 
-  private type Result = String\/(()=>Task[Response])
+  private type Result = ParserResult[()=>Task[Response]]
 
   protected trait Leaf {
     def attempt(req: Request, stack: HList): Result
@@ -47,10 +46,12 @@ private[rho] trait ValidationTree {
   final private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
     override def attempt(req: Request, stack: HList): Result = {
       @tailrec
-      def go(l: List[SingleLeaf], error: -\/[String]): Result = if (!l.isEmpty) {
+      def go(l: List[SingleLeaf], error: ParserResult[Nothing]): Result = if (!l.isEmpty) {
         l.head.attempt(req, stack) match {
-          case e@ -\/(_) => go(l.tail, if (error != null) error else e)
-          case r@ \/-(_) => r
+          case r@ ParserSuccess(_)      => r
+          case e @ ParserFailure(_)     => go(l.tail, if (error != null) error else e)
+          case e @ ValidationFailure(_) => go(l.tail, if (error != null) error else e)
+
         }
       } else error
       go(leaves, null)
@@ -77,8 +78,9 @@ private[rho] trait ValidationTree {
                 j <- TempTools.runValidation(req, c.validators, i)
               } yield (() => {
                 parser.decode(req).flatMap {
-                  case \/-(r) => actionf(req, (r :: pathstack).asInstanceOf[T])
-                  case -\/(e) => TempTools.onBadRequest(s"Decoding error: $e")
+                  case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T])
+                  case ParserFailure(e)     => TempTools.onBadRequest(s"Decoding error: $e")
+                  case ValidationFailure(e) => TempTools.onBadRequest(s"Validation failure: $e")
                 }
               })
         })

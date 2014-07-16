@@ -39,7 +39,7 @@ package object rho {
    * @param name name of the parameter in query
    */
   def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    TypedQuery(QueryCapture(name, parser, default = None, (_: T) => true, m))
+    TypedQuery(QueryCapture(name, parser, default = None, m))
 
   /**
    * Defines a parameter in query string that should be bound to a route definition.
@@ -48,7 +48,7 @@ package object rho {
    * @param validate predicate to determine if a parameter is valid
    */
   def param[T](name: String, default: T, validate: T => Boolean = (_: T) => true)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    TypedQuery(QueryCapture(name, parser, default = Some(default), validate, m))
+    TypedQuery(QueryCapture(name, new ValidatingParser(parser, validate), default = Some(default), m))
 
   /**
    * Defines a path variable of a URI that should be bound to a route definition

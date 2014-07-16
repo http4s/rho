@@ -2,13 +2,13 @@ package org.http4s
 package rho
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import org.http4s.rho.bits.{ValidationFailure, ParserFailure, ParserSuccess}
 
 import scala.collection.mutable
 
 import shapeless.{HNil, HList}
 
 import scalaz.concurrent.Task
-import scalaz.{-\/, \/-}
 
 trait RhoService extends server.HttpService with ExecutableCompiler with bits.PathTree with LazyLogging {
 
@@ -51,8 +51,9 @@ trait RhoService extends server.HttpService with ExecutableCompiler with bits.Pa
     }
     methods.get(req.requestMethod).flatMap(_.walk(req, path, HNil) match {
       case null => None
-      case \/-(t) => Some(t)
-      case -\/(s) => Some(() => onBadRequest(s))
+      case ParserSuccess(t)     => Some(t)
+      case ParserFailure(s)     => Some(() => onBadRequest(s))
+      case ValidationFailure(s) => Some(() => onBadRequest(s))
     })
   }
 

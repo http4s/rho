@@ -1,14 +1,16 @@
 package org.http4s
 package rho
 
+import org.http4s.rho.bits.{ParserFailure, ParserResult, ParserSuccess}
+
 import scala.language.implicitConversions
+import scalaz.{-\/, \/-}
 
 import scalaz.concurrent.Task
-import scalaz.{-\/, \/-, \/}
 
 sealed trait Decoder[T] {
 
-  def decode(req: Request): Task[String\/T]
+  def decode(req: Request): Task[ParserResult[T]]
   def consumes: Seq[MediaType]
   def force: Boolean
   def or(other: Decoder[T]): Decoder[T] = Decoder.OrDec(this, other)
@@ -28,7 +30,7 @@ sealed trait Decoder[T] {
 
 object Decoder {
 
-  private type Result[T] = Task[String\/T]
+  private type Result[T] = Task[ParserResult[T]]
 
 
   private case class BasicDecoder[T](decoder: Request => Result[T], consumes: Seq[MediaType], force: Boolean) extends Decoder[T] {
@@ -46,17 +48,20 @@ object Decoder {
       else if (c2.checkMediaType(req)) c2.decode(req)
       else if (c1.force) c1.decode(req)
       else if (c2.force) c2.decode(req)
-      else Task.now(-\/(s"No suitable codec found. Supported media types: ${consumes.mkString(", ")}"))
+      else Task.now(ParserFailure(s"No suitable codec found. Supported media types: ${consumes.mkString(", ")}"))
     }
   }
 
   implicit val strDec: Decoder[String] = {
-    val dec: Request => Result[String] = _.body.runLog.map(vs => \/-(new String(vs.reduce(_ ++ _).toArray)))
+    val dec: Request => Result[String] = _.body.runLog.map(vs => ParserSuccess(new String(vs.reduce(_ ++ _).toArray)))
     BasicDecoder(dec, MediaType.`text/plain`::Nil, true)
   }
 
   implicit def reqDecoder[T](f: Request => Task[T], mediaType: Seq[MediaType] = Nil, force: Boolean = true): Decoder[T] =
-    BasicDecoder(f.andThen(_.attempt.map(_.leftMap(t => t.getMessage))), mediaType, force)
+    BasicDecoder(f.andThen(_.attempt.map(_ match {
+      case \/-(r) => ParserSuccess(r)
+      case -\/(e) => ParserFailure(s"Decoder failure: $e")
+    })), mediaType, force)
 
   implicit def bodyDecoder[T](f: HttpBody => Task[T]): Decoder[T] = reqDecoder(r => f(r.body))
 
