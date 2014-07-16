@@ -43,10 +43,10 @@ object QueryAST {
     @scala.annotation.tailrec
     def go(r: List[QueryRule], acc: List[String]): List[String] = r match {
       case Nil => acc
-      case MetaCons(query, meta) :: rs => go(rs, acc)
+      case MetaCons(query, _) :: rs => go(rs, acc)
       case QueryAnd(a, b) :: rs => go(a :: b :: rs, acc)
-      case QueryCapture(name, p, default, accept, m) :: rs => go(rs, name :: acc)
-      case QueryOr(a, b) :: rs => go(a :: rs, acc)
+      case QueryCapture(name, _, _, _, _) :: rs => go(rs, name :: acc)
+      case QueryOr(a, _) :: rs => go(a :: rs, acc)
       case EmptyQuery :: rs => go(rs, acc)
     }
     go(List(rule), Nil).reverse
