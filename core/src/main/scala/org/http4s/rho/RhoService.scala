@@ -10,7 +10,7 @@ import shapeless.{HNil, HList}
 import scalaz.concurrent.Task
 import scalaz.{-\/, \/-}
 
-trait RhoService extends HttpService with ExecutableCompiler with bits.PathTree with LazyLogging {
+trait RhoService extends server.HttpService with ExecutableCompiler with bits.PathTree with LazyLogging {
 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
 

@@ -64,6 +64,9 @@ class RhoServiceTest extends Specification {
     GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => os.mkString(" ") }
 
     GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => s"req $foo" }
+
+    val rootSome = root / "some"
+    GET / rootSome |>> { () => "root to some" }
   }
 
   "RhoService" should {
@@ -190,6 +193,11 @@ class RhoServiceTest extends Specification {
     "Provide the request if desired" in {
       val req = Get("/withreq?foo=bar")
       checkOk(req) should_== "req bar"
+    }
+
+    "Level one path definition to /some" in {
+      val req1 = Request(GET, Uri(path = "/some"))
+      checkOk(req1) should_== "root to some"
     }
 
     ////////////////////////////////////////////////////

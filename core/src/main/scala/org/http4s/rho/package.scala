@@ -35,16 +35,20 @@ package object rho {
   }
 
   /**
-   * Defines a parameter in query string that should be bound to a route definition
+   * Defines a parameter in query string that should be bound to a route definition.
+   * @param name name of the parameter in query
    */
-  def param[T](key: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    param(key, Some(default))
+  def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    TypedQuery(QueryCapture(name, parser, default = None, (_: T) => true, m))
 
   /**
-   * Defines a parameter in query string that should be bound to a route definition
+   * Defines a parameter in query string that should be bound to a route definition.
+   * @param name name of the parameter in query
+   * @param default value that should be used if no or an invalid parameter is available
+   * @param validate predicate to determine if a parameter is valid
    */
-  def param[T](key: String, default: Option[T] = None)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    TypedQuery(QueryCapture(key, parser, default, m))
+  def param[T](name: String, default: T, validate: T => Boolean = (_: T) => true)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    TypedQuery(QueryCapture(name, parser, default = Some(default), validate, m))
 
   /**
    * Defines a path variable of a URI that should be bound to a route definition
@@ -57,6 +61,14 @@ package object rho {
    */
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
     TypedPath(PathAST.MetaCons(PathCapture(parser, stringTag), TextMeta(id, s"Param name: $id")))
+
+  /**
+   * Helper to be able to define a path with one level only.
+   * {{{
+   * val hello = Root / "hello"
+   * }}}
+   */
+  def root(): TypedPath[HNil] = TypedPath(PathEmpty)
 
   def * = CaptureTail()
 

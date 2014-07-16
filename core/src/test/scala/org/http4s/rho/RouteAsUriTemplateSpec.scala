@@ -123,17 +123,4 @@ class RouteAsUriTemplateSpec extends Specification {
     }
   }
 
-  "TypedQuery as UriTemplate" should {
-    "convert to {?world}" in {
-      val route = param[Int]("world")
-      val q = Some(List(ParamExp("world")))
-      route.asUriTemplate.get must equalTo(UriTemplate(query = q))
-    }
-    "convert to {?start}{&start}" in {
-      val route = param[Int]("start") && param[Int]("limit")
-      val q = Some(List(ParamExp("start"), ParamExp("limit")))
-      route.asUriTemplate.get must equalTo(UriTemplate(query = q))
-    }
-  }
-
 }

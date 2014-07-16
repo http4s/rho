@@ -37,7 +37,7 @@ object MyBuild extends Build {
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
         fork in run := true,
         libraryDependencies ++= Seq(
-          http4sCore,
+          http4sServer,
           logbackClassic % "test",
           specs2 % "test"
         )
@@ -46,9 +46,10 @@ object MyBuild extends Build {
 }
 
 object Dependencies {
-  lazy val http4sVersion = "0.2.0-SNAPSHOT"
+  lazy val http4sVersion = "0.3.0-SNAPSHOT"
 
-  lazy val http4sCore          = "org.http4s"                 %% "http4s-core"         % http4sVersion
+//  lazy val http4sCore          = "org.http4s"                 %% "http4s-core"         % http4sVersion
+  lazy val http4sServer        = "org.http4s"                 %% "http4s-server"       % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"          % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze"        % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"      % http4sVersion

@@ -9,53 +9,88 @@ import scala.collection.generic.CanBuildFrom
 
 trait QueryParser[A] {
   import QueryParser.Params
-  def collect(name: String, params: Params, default: Option[A]): String\/A
+  def collect(name: String, params: Params, default: Option[A], accept: A => Boolean): String\/A
 }
 
 object QueryParser {
   type Params = Map[String, Seq[String]]
 
   implicit def optionParse[A](implicit p: StringParser[A]) = new QueryParser[Option[A]] {
-    override def collect(name: String, params: Params, default: Option[Option[A]]): \/[String, Option[A]] = {
+    override def collect(name: String, params: Params, default: Option[Option[A]], validate: Option[A] => Boolean): \/[String, Option[A]] = {
+      val defaultValue = default.getOrElse(None)
       params.get(name) match {
-        case Some(Seq(v, _*)) => p.parse(v).map(Some(_))
-        case Some(Seq())      => -\/(s"Param $name has key but not value")
-        case None             => \/-(default.getOrElse(None))
+        case Some(Seq(value, _*)) =>
+          p.parse(value) match {
+            case unparsable @ -\/(_) => default match {
+              case Some(defaultValue) => \/-(defaultValue)
+              case None => \/-(None)
+            }
+            case parsed @ \/-(value) =>
+              if (validate(Some(value))) \/-(Some(value))
+              else default match {
+                case Some(defaultValue) => \/-(defaultValue)
+                case None => \/-(None)
+              }
+          }
+        case Some(Seq()) => \/-(default.getOrElse(None))
+        case None => \/-(default.getOrElse(None))
       }
     }
   }
 
   implicit def multipleParse[A, B[_]](implicit p: StringParser[A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[B[A]] {
-    override def collect(name: String, params: Params, default: Option[B[A]]): \/[String, B[A]] = {
+    override def collect(name: String, params: Params, default: Option[B[A]], validate: B[A] => Boolean): \/[String, B[A]] = {
       val b = cbf()
       params.get(name) match {
-        case Some(v) =>
-          val it = v.iterator
+        case None => \/-(default.getOrElse(b.result))
+        case Some(Seq()) => \/-(default.getOrElse(b.result))
+        case Some(values) =>
+          val it = values.iterator
           @tailrec
           def go(): \/[String, B[A]] = {
             if (it.hasNext) {
               p.parse(it.next()) match {
-                case \/-(v)    => b += v; go()
-                case e@ -\/(_) => e
+                case unparsable @ -\/(_) => unparsable
+                case parsed @ \/-(value) =>
+                  b += value
+                  go()
               }
-            } else \/-(b.result)
+            } else default match {
+              case None => \/-(b.result)
+              case Some(defaultValues) =>
+                val parsedValues = b.result
+                if (validate(parsedValues)) \/-(parsedValues)
+                else \/-(defaultValues)
+            }
           }; go()
-
-        case None => \/-(default.getOrElse(b.result))
       }
     }
   }
 
   implicit def standardCollector[A](implicit p: StringParser[A]) = new QueryParser[A] {
-    override def collect(name: String, params: Params, default: Option[A]): \/[String, A] = {
+    override def collect(name: String, params: Params, default: Option[A], validate: A => Boolean): \/[String, A] = {
       params.get(name) match {
-        case Some(Seq(s, _*)) => p.parse(s)
-        case _                => default match {
-          case Some(v) => \/-(v)
-          case None    => -\/(s"Missing query param: $name")
+        case Some(Seq(value, _*)) =>
+          p.parse(value) match {
+            case unparsable @ -\/(_) => unparsable
+            case parsed @ \/-(value) =>
+              default match {
+                case None => parsed
+                case Some(defaultValue) =>
+                  if (validate(value)) parsed
+                  else \/-(defaultValue)
+              }
+          }
+        case Some(Seq()) => default match {
+          case Some(defaultValue) => \/-(defaultValue)
+          case None => -\/(s"Value of query parameter '$name' missing")
+        }
+        case None => default match {
+          case Some(defaultValue) => \/-(defaultValue)
+          case None => -\/(s"Missing query param: $name")
         }
       }
     }
   }
-  
+
 }
