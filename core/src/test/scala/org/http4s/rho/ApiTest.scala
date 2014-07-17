@@ -2,6 +2,7 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits.HeaderAST.{TypedHeader, HeaderAnd}
+import org.http4s.rho.bits.{ParserSuccess, ValidationFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -9,8 +10,6 @@ import scalaz.concurrent.Task
 import scodec.bits.ByteVector
 import Status._
 
-import scalaz.-\/
-import scalaz.\/-
 
 class ApiTest extends Specification {
 
@@ -36,31 +35,31 @@ class ApiTest extends Specification {
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
       new RouteExecutor().ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq) should_==
-                -\/(s"Missing header: ${etag.name}")
+                ValidationFailure(s"Missing header: ${etag.name}")
     }
 
     "Match captureless route" in {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== \/-(HNil)
+      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(Header.`Content-Length`) && RequireETag
-        new RouteExecutor().ensureValidHeaders(c2.rule, req) should_== \/-(lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
       }, {
         val c3 = capture(Header.`Content-Length`) && capture(Header.ETag)
-        new RouteExecutor().ensureValidHeaders(c3.rule, req) should_== \/-(etag::lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = requireMap(Header.`Content-Length`)(_.length)
-      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== \/-(4::HNil)
+      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
     }
 
     "Run || routes" in {
@@ -74,6 +73,19 @@ class ApiTest extends Specification {
 
       val req2 = Request(requestUri = Uri.fromString("/three/four").get)
       fetch(f(req2)) should_== "four"
+    }
+  }
+
+  "RequestLineBuilder" should {
+    "be made from TypedPath and TypedQuery" in {
+      val path = pathMatch("foo")
+      val q = param[Int]("bar")
+      path +? q should_== RequestLineBuilder(path.rule, q.rule)
+    }
+
+    "append to a TypedPath" in {
+      val requestLine = pathMatch("foo") +? param[Int]("bar")
+      (pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[_]] should_== true
     }
   }
 
@@ -137,7 +149,7 @@ class ApiTest extends Specification {
     import Status._
 
     "get a query string" in {
-      val path = POST / "hello" +? query[Int]("jimbo")
+      val path = POST / "hello" +? param[Int]("jimbo")
       val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").get)
 
       val route = path runWith { i: Int => Ok("stuff").withHeaders(Header.ETag((i + 1).toString)) }
@@ -187,7 +199,7 @@ class ApiTest extends Specification {
     import Decoder._
     import scalaz.stream.Process
 
-    val path = POST / "hello" / 'world +? query[Int]("fav")
+    val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
                       capture(Header.ETag)
 
@@ -211,7 +223,7 @@ class ApiTest extends Specification {
     import Decoder._
     import scalaz.stream.Process
 
-    val path = POST / "hello" / 'world +? query[Int]("fav")
+    val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
 
 

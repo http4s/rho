@@ -1,19 +1,23 @@
 package org.http4s
 package rho.bits
 
+import rho.RequestLineBuilder
+import rho.bits.QueryAST.TypedQuery
+
 import scala.language.existentials
 
 import shapeless.ops.hlist.Prepend
-import shapeless.{::, HNil, HList}
+import shapeless.{ ::, HList }
 
-import scala.reflect.Manifest
+import scala.reflect.runtime.universe.TypeTag
 
+import org.http4s.rho.UriConvertible
 
 /** Actual elements which build up the AST */
 
 object PathAST {
 
-  case class TypedPath[T <: HList](rule: PathRule) {
+  case class TypedPath[T <: HList](rule: PathRule) extends UriConvertible {
     /** These methods differ in their return type */
     def and[T2 <: HList](p2: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, p2.rule))
@@ -26,11 +30,21 @@ object PathAST {
 
     def /(s: String): TypedPath[T] = TypedPath(PathAnd(this.rule, PathMatch(s)))
 
-    def /(s: Symbol): TypedPath[String :: T] =
-      TypedPath(PathAnd(this.rule, PathCapture(s.name, StringParser.strParser, implicitly[Manifest[String]])))
+    def /(s: Symbol): TypedPath[String :: T] = {
+      val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
+      TypedPath(PathAnd(this.rule, PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}"))))
+    }
 
     def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, t.rule))
+
+    def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T, T2]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(PathAnd(this.rule, t.path), t.query)
+
+    def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(rule, q.rule)
+
+    override val asUriTemplate = for (p <- UriConverter.createPath(rule)) yield UriTemplate(path = p)
   }
 
   /** The root type of the parser AST */
@@ -42,14 +56,13 @@ object PathAST {
 
   case class PathMatch(s: String) extends PathRule
 
-  case class PathCapture(name: String, parser: StringParser[_], m: Manifest[_]) extends PathRule
+  case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
-  // These don't fit the  operations of CombinablePathSyntax because they may
-  // result in a change of the type of PathBulder
   // TODO: can I make this a case object?
   case class CaptureTail() extends PathRule
 
   case object PathEmpty extends PathRule
 
   case class MetaCons(path: PathRule, meta: Metadata) extends PathRule
+
 }

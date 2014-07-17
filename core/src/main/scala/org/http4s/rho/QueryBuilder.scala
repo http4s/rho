@@ -1,25 +1,22 @@
 package org.http4s
 package rho
 
-
-import org.http4s.rho.bits.{MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable}
+import bits.{ MetaDataSyntax, Metadata, HListToFunc, HeaderAppendable, UriConverter }
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._
 import bits.QueryAST.MetaCons
 
 import shapeless.ops.hlist.Prepend
-
-import shapeless.{::, HList}
-
+import shapeless.{ ::, HList }
 
 case class QueryBuilder[T <: HList](method: Method,
-                        path: PathRule,
-                        query: QueryRule)
-      extends RouteExecutable[T]
-      with HeaderAppendable[T]
-      with MetaDataSyntax
-{
+  path: PathRule,
+  query: QueryRule)
+  extends RouteExecutable[T]
+  with HeaderAppendable[T]
+  with MetaDataSyntax
+  with UriConvertible {
   override type Self = QueryBuilder[T]
 
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
@@ -34,4 +31,10 @@ case class QueryBuilder[T <: HList](method: Method,
     QueryBuilder(method, path, QueryAnd(query, q.rule))
 
   override def validators: HeaderRule = EmptyHeaderRule
+
+  override val asUriTemplate =
+    for {
+      p <- UriConverter.createPath(path)
+      q <- UriConverter.createQuery(query)
+    } yield UriTemplate(path = p, query = Some(q))
 }

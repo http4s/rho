@@ -11,7 +11,6 @@ import scala.collection.mutable.ListBuffer
 
 import shapeless.HList
 
-import scalaz.{\/-, -\/, \/}
 import scalaz.concurrent.Task
 
 trait PathTree extends ValidationTree {
@@ -73,7 +72,7 @@ trait PathTree extends ValidationTree {
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    def walk(req: Request, path: List[String], stack: HList): String\/(() => Task[Response]) = {
+    def walk(req: Request, path: List[String], stack: HList): ParserResult[() => Task[Response]] = {
       val h = matchString(path.head, stack)
       if (h != null) {
         if (path.tail.isEmpty) {
@@ -83,12 +82,13 @@ trait PathTree extends ValidationTree {
         }
         else {
           @tailrec               // error may be null
-          def go(nodes: List[Node], error: -\/[String]): String\/(()=>Task[Response]) = {
+          def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[()=>Task[Response]] = {
             if (nodes.isEmpty) error
             else nodes.head.walk(req, path.tail, h) match {
               case null => go(nodes.tail, error)
-              case r@ \/-(_) => r
-              case e@ -\/(_) => go(nodes.tail, if (error != null) error else e)
+              case r@ ParserSuccess(_)     => r
+              case e@ ParserFailure(_)     => go(nodes.tail, if (error != null) error else e)
+              case e@ ValidationFailure(_) => go(nodes.tail, if (error != null) error else e)
             }
           }
 
@@ -134,7 +134,7 @@ trait PathTree extends ValidationTree {
 
     override protected def matchString(s: String, h: HList): HList = {
       parser.parse(s) match {
-        case \/-(v) => v::h
+        case ParserSuccess(v) => v::h
         case _ => null
       }
     }
@@ -144,7 +144,7 @@ trait PathTree extends ValidationTree {
                                 variadic: Leaf = null,
                                 end: Leaf = null) extends Node {
 
-    override def walk(req: Request, path: List[String], stack: HList): \/[String, () => Task[Response]] = {
+    override def walk(req: Request, path: List[String], stack: HList): ParserResult[() => Task[Response]] = {
       if (path.isEmpty) {
         if (end != null) end.attempt(req, stack)
         else if (variadic != null) variadic.attempt(req, Nil::stack)
@@ -152,12 +152,13 @@ trait PathTree extends ValidationTree {
       }
       else {
         @tailrec               // error may be null
-        def go(nodes: List[Node], error: -\/[String]): String\/(()=>Task[Response]) = {
+        def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[()=>Task[Response]] = {
           if (nodes.isEmpty) error
           else nodes.head.walk(req, path, stack) match {
             case null => go(nodes.tail, error)
-            case r@ \/-(_) => r
-            case e@ -\/(_) => go(nodes.tail, if (error != null) error else e)
+            case r@ ParserSuccess(_)     => r
+            case e@ ParserFailure(_)     => go(nodes.tail, if (error != null) error else e)
+            case e@ ValidationFailure(_) => go(nodes.tail, if (error != null) error else e)
           }
         }
 

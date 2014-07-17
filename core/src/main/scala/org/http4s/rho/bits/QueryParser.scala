@@ -1,61 +1,86 @@
 package org.http4s
 package rho.bits
 
+import org.http4s.rho.bits.QueryParser.Params
+
 import scala.language.higherKinds
 
-import scalaz.{-\/, \/-, \/}
+import scalaz.{-\/, \/-}
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 
 trait QueryParser[A] {
   import QueryParser.Params
-  def collect(name: String, params: Params, default: Option[A]): String\/A
+  def collect(name: String, params: Params, default: Option[A]): ParserResult[A]
+}
+
+final class ValidatingParser[A](parent: QueryParser[A], validate: A => Boolean) extends QueryParser[A] {
+  override def collect(name: String, params: Params, default: Option[A]): ParserResult[A] = {
+    val result = parent.collect(name, params, default)
+    result.flatMap{ r =>
+      if (validate(r)) result
+      else ValidationFailure("Invalid parameter: \"" + r + '"')
+    }
+  }
 }
 
 object QueryParser {
   type Params = Map[String, Seq[String]]
 
   implicit def optionParse[A](implicit p: StringParser[A]) = new QueryParser[Option[A]] {
-    override def collect(name: String, params: Params, default: Option[Option[A]]): \/[String, Option[A]] = {
+    override def collect(name: String, params: Params, default: Option[Option[A]]): ParserResult[Option[A]] = {
+      val defaultValue = default.getOrElse(None)
       params.get(name) match {
-        case Some(Seq(v, _*)) => p.parse(v).map(Some(_))
-        case Some(Seq())      => -\/(s"Param $name has key but not value")
-        case None             => \/-(default.getOrElse(None))
+        case Some(Seq(value, _*)) =>
+          p.parse(value) match {
+            case ParserSuccess(value) => ParserSuccess(Some(value))
+            case other => other.asInstanceOf[ParserResult[Option[A]]]
+          }
+        case _ => ParserSuccess(default.getOrElse(None))
       }
     }
   }
 
   implicit def multipleParse[A, B[_]](implicit p: StringParser[A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[B[A]] {
-    override def collect(name: String, params: Params, default: Option[B[A]]): \/[String, B[A]] = {
+    override def collect(name: String, params: Params, default: Option[B[A]]): ParserResult[B[A]] = {
       val b = cbf()
       params.get(name) match {
-        case Some(v) =>
-          val it = v.iterator
+        case None => ParserSuccess(default.getOrElse(b.result))
+        case Some(Seq()) => ParserSuccess(default.getOrElse(b.result))
+        case Some(values) =>
+          val it = values.iterator
           @tailrec
-          def go(): \/[String, B[A]] = {
+          def go(): ParserResult[B[A]] = {
             if (it.hasNext) {
               p.parse(it.next()) match {
-                case \/-(v)    => b += v; go()
-                case e@ -\/(_) => e
-              }
-            } else \/-(b.result)
-          }; go()
+                case ParserSuccess(value) =>
+                  b += value
+                  go()
 
-        case None => \/-(default.getOrElse(b.result))
+                case other => other.asInstanceOf[ParserResult[B[A]]]
+              }
+            }
+            else ParserSuccess(b.result())
+          }; go()
       }
     }
   }
 
   implicit def standardCollector[A](implicit p: StringParser[A]) = new QueryParser[A] {
-    override def collect(name: String, params: Params, default: Option[A]): \/[String, A] = {
+    override def collect(name: String, params: Params, default: Option[A]): ParserResult[A] = {
       params.get(name) match {
-        case Some(Seq(s, _*)) => p.parse(s)
-        case _                => default match {
-          case Some(v) => \/-(v)
-          case None    => -\/(s"Missing query param: $name")
+        case Some(Seq(value, _*)) => p.parse(value)
+
+        case Some(Seq()) => default match {
+          case Some(defaultValue) => ParserSuccess(defaultValue)
+          case None => ValidationFailure(s"Value of query parameter '$name' missing")
+        }
+        case None => default match {
+          case Some(defaultValue) => ParserSuccess(defaultValue)
+          case None => ValidationFailure(s"Missing query param: $name")
         }
       }
     }
   }
-  
+
 }

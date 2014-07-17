@@ -9,9 +9,7 @@ import bits.Metadata
 import bits.PathAST._
 import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
 
-import shapeless.HList
-
-import scala.collection.mutable.ListBuffer
+import scala.reflect.runtime.universe.TypeTag
 
 import SwaggerMeta._
 
@@ -118,7 +116,7 @@ trait ApiBuilder { self: RhoService =>
 
       case PathCapture (id, parser, _) :: xs =>
         val p = Parameter (id, None, None, true, false,
-        parser.manifest.map (_.runtimeClass.getName).getOrElse ("none"),
+        parser.typeTag.map (_.tpe.toString).getOrElse ("none"),
         AnyAllowableValues, "path", None)
         go(xs, path + s"/{$id}", op.copy(parameters = op.parameters:+p))
 
@@ -175,7 +173,7 @@ trait ApiBuilder { self: RhoService =>
 
   private def consumes(rule: HeaderRule): List[String] = ???
 
-  private def getType(m: Manifest[_]): String = ???
+  private def getType(m: TypeTag[_]): String = ???
 }
 
 
