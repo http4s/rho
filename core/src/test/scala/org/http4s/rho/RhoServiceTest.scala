@@ -118,7 +118,7 @@ class RhoServiceTest extends Specification {
 
     "Fail a route with an invalid query" in {
       val req = Get("/hello/headers?foo=bar")
-      checkError(req) should_== "Invalid Number Format: bar"
+      checkError(req) should_== "Invalid Number Format: \"bar\""
     }
 
     "Execute a route with multiple query with parameters" in {
@@ -145,7 +145,7 @@ class RhoServiceTest extends Specification {
 
     "Fail a route with an invalid parameter type" in {
       val req = Get("/hello/default/parameter?some=a")
-      checkError(req) should_== "Invalid Number Format: a"
+      checkError(req) should_== "Invalid Number Format: \"a\""
     }
 
     "Execute a route with a competing query" in {

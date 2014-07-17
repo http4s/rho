@@ -18,7 +18,7 @@ object StringParser {
     override val typeTag: Some[TypeTag[Int]] = Some(implicitly[TypeTag[Int]])
     override def parse(s: String): ParserResult[Int] =
       try ParserSuccess(s.toInt)
-      catch { case e: NumberFormatException => ParserFailure(s"Invalid Number Format: $s") }
+      catch { case e: NumberFormatException => ParserFailure("Invalid Number Format: \"" + s + '"') }
   }
 
   implicit val strParser = new StringParser[String] {

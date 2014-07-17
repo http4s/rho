@@ -2,6 +2,7 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits.HeaderAST.{TypedHeader, HeaderAnd}
+import org.http4s.rho.bits.{ParserSuccess, ValidationFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -9,8 +10,6 @@ import scalaz.concurrent.Task
 import scodec.bits.ByteVector
 import Status._
 
-import scalaz.-\/
-import scalaz.\/-
 
 class ApiTest extends Specification {
 
@@ -36,31 +35,31 @@ class ApiTest extends Specification {
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
       new RouteExecutor().ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq) should_==
-                -\/(s"Missing header: ${etag.name}")
+                ValidationFailure(s"Missing header: ${etag.name}")
     }
 
     "Match captureless route" in {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== \/-(HNil)
+      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(Header.`Content-Length`) && RequireETag
-        new RouteExecutor().ensureValidHeaders(c2.rule, req) should_== \/-(lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
       }, {
         val c3 = capture(Header.`Content-Length`) && capture(Header.ETag)
-        new RouteExecutor().ensureValidHeaders(c3.rule, req) should_== \/-(etag::lenheader::HNil)
+        new RouteExecutor().ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = requireMap(Header.`Content-Length`)(_.length)
-      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== \/-(4::HNil)
+      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
     }
 
     "Run || routes" in {

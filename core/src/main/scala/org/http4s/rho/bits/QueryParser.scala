@@ -19,7 +19,7 @@ final class ValidatingParser[A](parent: QueryParser[A], validate: A => Boolean) 
     val result = parent.collect(name, params, default)
     result.flatMap{ r =>
       if (validate(r)) result
-      else ValidationFailure(s"Invalid result: $r")
+      else ValidationFailure("Invalid parameter: \"" + r + '"')
     }
   }
 }
