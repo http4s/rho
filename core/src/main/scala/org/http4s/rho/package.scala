@@ -54,7 +54,7 @@ package object rho {
    * Defines a path variable of a URI that should be bound to a route definition
    */
   def pathVar[T](implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    pathVar(m.tpe.toString)(parser, m)
+    pathVar(m.tpe.toString.toLowerCase)(parser, m)
 
   /**
    * Defines a path variable of a URI that should be bound to a route definition
