@@ -13,8 +13,10 @@ import scala.reflect.runtime.universe.TypeTag
 
 import SwaggerMeta._
 
+import scala.util.Random
 
-trait ApiBuilder { self: RhoService =>
+
+trait ApiBuilder { self: RhoService with SwaggerSupport =>
 
   /* swagger-core models
   case class ApiListing (
@@ -63,14 +65,31 @@ trait ApiBuilder { self: RhoService =>
     paramAccess: Option[String] = None)
    */
 
-  def baseOp = Operation("GET", "", "", "", "", 0)
+  def baseOp = Operation("GET", "", "", "void", "foo" + Random.nextInt().toString, 0)
 
   protected def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
+    val p = produces(action.headers)
+    val c = consumes(action.headers)
 
-    ???
+    val descriptions = getDescriptions(action.path, action.query)
+      .map(runHeaders(action.headers, _))
+      .map{ desc =>
+          desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
+             op.copy(method = action.method.toString, produces = p, consumes = c)})
+      }
+
+//    println("-------------\n" + descriptions + "\n---------------")
+
+    val swaggerVersion = "1.2"
+    val basepath = "/"
+
+    descriptions.map { apidesc =>
+      val resourcepath = "/" + apidesc.path.split("/").find(!_.isEmpty).getOrElse("")
+      ApiListing(apiVersion, swaggerVersion, basepath, resourcepath, apis = List(apidesc))
+    }
   }
 
-  private def getDescriptions(path: PathRule, query: QueryRule, headers: HeaderRule): List[ApiDescription] = {
+  private def getDescriptions(path: PathRule, query: QueryRule): List[ApiDescription] = {
     def go(stack: List[PathRule], desc: ApiDescription): List[ApiDescription] = stack match {
       case PathAnd(a, b)::xs           => go(a::b::xs, desc)
       case PathOr(a, b)::xs            => go(a::xs, desc):::go(b::xs, desc)
@@ -100,11 +119,15 @@ trait ApiBuilder { self: RhoService =>
 
       case PathEmpty::xs  => go(xs, desc)
 
-      case Nil => Nil
+      case Nil =>
+        val ops = getOperations(Nil, query)
+        if (!ops.isEmpty) ops.map { case (path, op) =>
+          desc.copy(desc.path + path, operations = List(op))
+        }
+        else List(desc)
     }
 
     go(path::Nil, ApiDescription("", None))
-      .map(runHeaders(headers, _))            // Add any info in the headers
   }
 
   def getOperations(stack: List[PathRule], query: QueryRule, op: Option[Operation] = None): List[(String, Operation)] = {
@@ -115,16 +138,14 @@ trait ApiBuilder { self: RhoService =>
       case PathEmpty::xs        => go(xs, path, op)
 
       case PathCapture (id, parser, _) :: xs =>
-        val p = Parameter (id, None, None, true, false,
-        parser.typeTag.map (_.tpe.toString).getOrElse ("none"),
-        AnyAllowableValues, "path", None)
+        val tpe = parser.typeTag.map(getType).getOrElse("string")
+        val p = Parameter (id, None, None, true, false, tpe, AnyAllowableValues, "path", None)
         go(xs, path + s"/{$id}", op.copy(parameters = op.parameters:+p))
 
       case CaptureTail()::xs =>
-        val ps = Parameter ("variadic", None, None, false, true, "array",
-                           AnyAllowableValues, "path", None)::analyzeQuery(query)
-        val _path = path + "/..."
-        List(path -> op.copy(parameters = op.parameters:::ps))
+        if (!xs.isEmpty) logger.warn(s"Warning: path rule after tail capture: $xs")
+        val ps = Parameter ("tail...", None, None, false, true, "string", AnyAllowableValues, "path", None)
+        List(path + "/{tail...}" -> op.copy(parameters = op.parameters:::ps::analyzeQuery(query)))
 
       case MetaCons(rule, meta)::xs =>
         getMeta(meta) match {
@@ -167,19 +188,32 @@ trait ApiBuilder { self: RhoService =>
       false, getType(rule.m), paramType = "query")
   }
 
-  private def runHeaders(rule: HeaderRule, desc: ApiDescription): ApiDescription = ???
+  // Finds any parameters required for the routes and adds them to the descriptions
+  private def runHeaders(rule: HeaderRule, desc: ApiDescription): ApiDescription = {
+    logger.warn("'runHeaders' undefined")
+    desc
+  }
 
-  private def produces(rule: HeaderRule): List[String] = ???
+  private def produces(rule: HeaderRule): List[String] = {
+    logger.warn("'produces' undefined")
+    Nil
+  }
 
-  private def consumes(rule: HeaderRule): List[String] = ???
+  private def consumes(rule: HeaderRule): List[String] = {
+    logger.warn("'consumes' undefined")
+    Nil
+  }
 
-  private def getType(m: TypeTag[_]): String = ???
+  private def getType(m: TypeTag[_]): String = "string" // TODO: get right type
 }
 
 
 object SwaggerMeta {
 
-  def getMeta(meta: Metadata): Option[String] = ???
+  def getMeta(meta: Metadata): Option[String] = {
+    println("'getMeta' undefined")
+    None
+  }
 
   sealed trait SwaggerMeta extends Metadata
   case class ApiVersion(version: String) extends SwaggerMeta

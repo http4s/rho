@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import spray.revolver.RevolverPlugin._
 
 object MyBuild extends Build {
   import Dependencies._
@@ -23,6 +24,11 @@ object MyBuild extends Build {
                       .in(file("swagger"))
                       .settings(buildSettings:+ swaggerDeps : _*)
                       .dependsOn(core)
+
+  lazy val examples = project
+                        .in(file("examples"))
+                        .settings(buildSettings ++ Revolver.settings :+ exampleDeps :_*)
+                        .dependsOn(swagger, hal)
 
   lazy val compileFlags = Seq("-feature")
 
@@ -68,4 +74,5 @@ object Dependencies {
     "org.json4s" %% "json4s-ext"     % "3.2.10"
   )
 
+  lazy val exampleDeps = libraryDependencies += http4sBlaze
 }
