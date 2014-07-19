@@ -1,10 +1,10 @@
 package org.http4s.rho.swaggerdemo
 
 import org.http4s.Header.`Content-Type`
+import org.http4s.Header
 import org.http4s.blaze.BlazeServer
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
-
 
 case class JsonResult(name: String, number: Int)
 
@@ -22,7 +22,7 @@ object Main {
     println("Hello world!")
 
     val builder = BlazeServer.newBuilder
-    builder.mountService(MyService)
+    builder.mountService(MyService.andThen(_.addHeader(Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))))
            .withPort(8080)
            .build
            .run()
@@ -41,7 +41,7 @@ object JsonWritable {
 
   private implicit val formats = Serialization.formats(NoTypeHints)
 
-  implicit def jsonWritable[A <: AnyRef]: Writable[A] = new Writable[A] {
+  implicit def jsonWritable[A <: AnyRef with Product]: Writable[A] = new Writable[A] {
     override def contentType = `Content-Type`.`application/json`
 
     override def toBody(a: A): Task[(HttpBody, Option[Int])] = {

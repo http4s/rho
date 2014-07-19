@@ -25,16 +25,14 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
   GET / "api-info" |>> { () =>
     val json = swagger.resourceListing
     Status.Ok(compact(render(json)))
-      .withHeaders(Header.`Content-Type`(MediaType.`application/json`),
-        Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))
+      .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
   }
 
   GET / "api-info" / * |>> { params: Seq[String] =>
     swagger.getDoc(params) match {
       case Some(doc) =>
         Status.Ok(compact(render(doc)))
-          .withHeaders(Header.`Content-Type`(MediaType.`application/json`),
-                       Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))
+          .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
 
       case None => Status.NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
     }
