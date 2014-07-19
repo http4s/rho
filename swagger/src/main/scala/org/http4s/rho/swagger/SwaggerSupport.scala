@@ -30,8 +30,6 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
   }
 
   GET / "api-info" / * |>> { params: Seq[String] =>
-
-    println("----------------\nGetting " + params + "\n------------------" )
     swagger.getDoc(params) match {
       case Some(doc) =>
         Status.Ok(compact(render(doc)))
@@ -45,7 +43,6 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
   override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
     super.append(action)
     val apis = actionToApiListing(action)
-//    println("-------------------\n" + apis + "\n----------------------")
     apis.foreach { listing => swagger.register(listing.resourcePath, listing) }
   }
 

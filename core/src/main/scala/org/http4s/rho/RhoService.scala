@@ -38,7 +38,6 @@ trait RhoService extends server.HttpService with ExecutableCompiler with bits.Pa
     applyOrElse(req, (_:Request) => throw new MatchError(s"Route not defined at: ${req.requestUri}"))
 
   override def applyOrElse[A1 <: Request, B1 >: Task[Response]](x: A1, default: (A1) => B1): B1 = {
-    logger.info(s"Received request: $x")
     getResult(x) match {
       case Some(f) => attempt(f)
       case None => default(x)

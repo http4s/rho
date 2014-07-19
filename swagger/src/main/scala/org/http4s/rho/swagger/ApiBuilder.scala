@@ -4,7 +4,7 @@ package swagger
 
 import com.wordnik.swagger.model._
 
-import bits.HeaderAST.HeaderRule
+import org.http4s.rho.bits.HeaderAST.HeaderRule
 import bits.Metadata
 import bits.PathAST._
 import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
@@ -68,17 +68,15 @@ trait ApiBuilder { self: RhoService with SwaggerSupport =>
   def baseOp = Operation("GET", "", "", "void", "foo" + Random.nextInt().toString, 0)
 
   protected def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
-    val p = produces(action.headers)
-    val c = consumes(action.headers)
+    val consumes = action.decoders.map(_.value).toList
+    val produces = action.responseEncodings.map(_.value).toList
 
     val descriptions = getDescriptions(action.path, action.query)
-      .map(runHeaders(action.headers, _))
+      .flatMap(runHeaders(action.headers, _))
       .map{ desc =>
           desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
-             op.copy(method = action.method.toString, produces = p, consumes = c)})
+             op.copy(method = action.method.toString, produces = produces, consumes = consumes)})
       }
-
-//    println("-------------\n" + descriptions + "\n---------------")
 
     val swaggerVersion = "1.2"
     val basepath = "/"
@@ -164,9 +162,8 @@ trait ApiBuilder { self: RhoService with SwaggerSupport =>
     import bits.QueryAST._
     def go(stack: List[QueryRule]): List[Parameter] = stack match {
       case QueryAnd(a, b)::xs => go(a::b::xs)
-
-      case QueryOr(a, b)::xs  =>
-        go(a::xs):::go(b::xs).map(_.copy(required = false))
+      case EmptyQuery::xs => go(xs)
+      case QueryOr(a, b)::xs  => go(a::xs):::go(b::xs)
 
       case (q @ QueryCapture(_, _, _, _))::xs => gatherParam(q)::go(xs)
 
@@ -175,7 +172,7 @@ trait ApiBuilder { self: RhoService with SwaggerSupport =>
           gatherParam(q).copy(description = Some(s))::go(xs)
         }
 
-      case EmptyQuery::xs => go(xs)
+      case MetaCons(a, _)::xs => go(a::xs)
 
       case Nil => Nil
     }
@@ -189,19 +186,26 @@ trait ApiBuilder { self: RhoService with SwaggerSupport =>
   }
 
   // Finds any parameters required for the routes and adds them to the descriptions
-  private def runHeaders(rule: HeaderRule, desc: ApiDescription): ApiDescription = {
-    logger.warn("'runHeaders' undefined")
-    desc
-  }
+  private def runHeaders(rule: HeaderRule, desc: ApiDescription): Seq[ApiDescription] = {
+    import bits.HeaderAST._
 
-  private def produces(rule: HeaderRule): List[String] = {
-    logger.warn("'produces' undefined")
-    Nil
-  }
+    def addKey(key: HeaderKey.Extractable, desc: ApiDescription): ApiDescription = {
+      val p = Parameter(key.name.toString, None, None, true, false, "string", paramType = "header")
+      desc.copy(operations = desc.operations.map(op => op.copy(parameters = op.parameters:+p)))
+    }
 
-  private def consumes(rule: HeaderRule): List[String] = {
-    logger.warn("'consumes' undefined")
-    Nil
+    def go(stack: List[HeaderRule], desc: ApiDescription): List[ApiDescription] = stack match {
+      case HeaderAnd(a, b)::xs        => go(a::b::xs, desc)
+      case HeaderOr(a, b)::xs         => go(a::xs, desc):::go(b::xs, desc)
+      case MetaCons(a, _)::xs         => go(a::xs, desc)
+      case EmptyHeaderRule::xs        => go(xs, desc)
+      case HeaderCapture(key)::xs     => go(xs, addKey(key, desc))
+      case HeaderMapper(key, _)::xs   => go(xs, addKey(key, desc))
+      case HeaderRequire(key, _)::xs  => go(xs, addKey(key, desc))
+      case Nil                        => desc::Nil
+    }
+
+    go(rule::Nil, desc)
   }
 
   private def getType(m: TypeTag[_]): String = "string" // TODO: get right type

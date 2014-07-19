@@ -25,46 +25,27 @@ class Swagger(swaggerVersion: String, apiVersion: String, apiInfo: ApiInfo) {
   }
 
   private def mergeApis(a: ApiListing, b: ApiListing): ApiListing = {
-    println(s"WARNING: Not implemented. \n$a\n$b")
 
-//    case class ApiListing (
-//                            apiVersion: String,
-//                            swaggerVersion: String,
-//                            basePath: String,
-//                            resourcePath: String,
-//                            produces: List[String] = List.empty,
-//                            consumes: List[String] = List.empty,
-//                            protocols: List[String] = List.empty,
-//                            authorizations: List[Authorization] = List.empty,
-//                            apis: List[ApiDescription] = List(),--------
-//    models: Option[Map[String, Model]] = None, |
-//    description: Option[String] = None,        |
-//    position: Int = 0)
-
-    val models = (a.models, b.models) match {
+    def mergeOption[A](a: Option[A], b: Option[A])(merge: (A, A) => A): Option[A] = (a, b) match {
       case (a@ Some(_), None) => a
       case (None, b@ Some(_)) => b
-      case (Some(a), Some(b)) => Some(a ++ b)
+      case (Some(a), Some(b)) => Some(merge(a, b))
       case _ => None
     }
 
-    val description = (a.description, b.description) match {
-      case (a@ Some(_), None) => a
-      case (None, b@ Some(_)) => b
-      case (Some(a), Some(b)) => Some(a + "; " + b)
-      case _ => None
-    }
+    val models = mergeOption(a.models, b.models)(_ ++ _)
+    val description = mergeOption(a.description, b.description)(_ + "; " + _)
 
     ApiListing(
       a.apiVersion,
       a.swaggerVersion,
       a.basePath,
       a.resourcePath,
-      a.produces ++ b.produces,
-      a.consumes ++ b.consumes,
-      a.protocols ++ b.protocols,
-      a.authorizations:::b.authorizations,
-      a.apis:::b.apis,
+      a.produces ::: b.produces,
+      a.consumes ::: b.consumes,
+      a.protocols ::: b.protocols,
+      a.authorizations ::: b.authorizations,
+      a.apis ::: b.apis,
       models,
       description,
       a.position
@@ -81,7 +62,6 @@ class Swagger(swaggerVersion: String, apiVersion: String, apiInfo: ApiInfo) {
     val protocols = dontAddOnEmpty("protocols", doc.protocols)_
     val authorizations = dontAddOnEmpty("authorizations", doc.authorizations.map(_.`type`))_
     val jsonDoc = (consumes andThen produces andThen protocols andThen authorizations)(json)
-    //    println("The rendered json doc:\n" + jackson.prettyJson(jsonDoc))
     jsonDoc
   }
 

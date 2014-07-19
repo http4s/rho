@@ -29,10 +29,8 @@ package object rho {
 
   implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
 
-  implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] = {
-    val capture = PathCapture(s.name, StringParser.strParser, stringTag)
-    TypedPath(PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}")))
-  }
+  implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] =
+    TypedPath(PathCapture(s.name, StringParser.strParser, stringTag))
 
   /**
    * Defines a parameter in query string that should be bound to a route definition.
@@ -60,7 +58,7 @@ package object rho {
    * Defines a path variable of a URI that should be bound to a route definition
    */
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    TypedPath(PathAST.MetaCons(PathCapture(id, parser, stringTag), TextMeta(id, s"Param name: $id")))
+    TypedPath(PathCapture(id, parser, stringTag))
 
   /**
    * Helper to be able to define a path with one level only.
