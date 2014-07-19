@@ -26,7 +26,7 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
     val json = swagger.resourceListing
     Status.Ok(compact(render(json)))
       .withHeaders(Header.`Content-Type`(MediaType.`application/json`),
-        Header.Raw(Header.`Access-Control-Allow-Origin`name, "*"))
+        Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))
   }
 
   GET / "api-info" / * |>> { params: Seq[String] =>
@@ -34,7 +34,7 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
       case Some(doc) =>
         Status.Ok(compact(render(doc)))
           .withHeaders(Header.`Content-Type`(MediaType.`application/json`),
-                       Header.Raw(Header.`Access-Control-Allow-Origin`name, "*"))
+                       Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))
 
       case None => Status.NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
     }
@@ -48,7 +48,7 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
 
   protected def docToJson(doc: Api): JValue = Extraction.decompose(doc)
 
-  implicit val jsonWritable = new SimpleWritable[JValue] {
+  private implicit val jsonWritable = new SimpleWritable[JValue] {
     override def contentType: `Content-Type` = `Content-Type`(MediaType.`application/json`)
 
     override def asChunk(data: _root_.org.json4s.JValue): ByteVector =

@@ -7,7 +7,7 @@ import com.wordnik.swagger.model._
 import org.http4s.rho.bits.HeaderAST.HeaderRule
 import bits.Metadata
 import bits.PathAST._
-import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
+import bits.QueryAST.{QueryCapture, QueryRule}
 
 import scala.reflect.runtime.universe.TypeTag
 
@@ -73,10 +73,9 @@ trait ApiBuilder { self: RhoService with SwaggerSupport =>
 
     val descriptions = getDescriptions(action.path, action.query)
       .flatMap(runHeaders(action.headers, _))
-      .map{ desc =>
-          desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
-             op.copy(method = action.method.toString, produces = produces, consumes = consumes)})
-      }
+      .map( desc => desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
+           op.copy(method = action.method.toString, produces = produces, consumes = consumes)
+        }))
 
     val swaggerVersion = "1.2"
     val basepath = "/"
