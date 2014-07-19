@@ -83,7 +83,7 @@ package object rho {
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */
   def capture[H <: HeaderKey.Extractable](key: H): TypedHeader[H#HeaderT :: HNil] =
-    TypedHeader(HeaderCapture[H#HeaderT](key))
+    TypedHeader(HeaderCapture(key))
 
   def requireMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
     TypedHeader(HeaderMapper[H, R](key, f))

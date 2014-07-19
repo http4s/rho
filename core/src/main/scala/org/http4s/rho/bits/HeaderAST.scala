@@ -23,17 +23,17 @@ object HeaderAST {
 
   sealed trait HeaderRule
 
-  case class HeaderRequire[H <: HeaderKey.Extractable](key: H, f: H#HeaderT => Boolean) extends HeaderRule
+  case class HeaderRequire[T <: HeaderKey.Extractable](key: T, f: T#HeaderT => Boolean) extends HeaderRule
 
-  case class HeaderCapture[T <: Header](key: HeaderKey.Extractable) extends HeaderRule
+  case class HeaderMapper[T <: HeaderKey.Extractable, R](key: T, f: T#HeaderT => R) extends HeaderRule
 
-  case class HeaderMapper[H <: HeaderKey.Extractable, R](key: H, f: H#HeaderT => R) extends HeaderRule
+  case class HeaderCapture(key: HeaderKey.Extractable) extends HeaderRule
 
-  case class HeaderAnd[T <: HList, T2 <: HList, T3 <: HList](a: HeaderRule, b: HeaderRule) extends HeaderRule
+  case class HeaderAnd(a: HeaderRule, b: HeaderRule) extends HeaderRule
 
-  case class HeaderOr[T <: HList](a: HeaderRule, b: HeaderRule) extends HeaderRule
+  case class HeaderOr(a: HeaderRule, b: HeaderRule) extends HeaderRule
 
-  case class MetaCons[T <: HList](a: HeaderRule, meta: Metadata) extends HeaderRule
+  case class MetaCons(a: HeaderRule, meta: Metadata) extends HeaderRule
 
   object EmptyHeaderRule extends HeaderRule
 
