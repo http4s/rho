@@ -72,10 +72,19 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     val consumes = action.decoders.map(_.value).toList
     val produces = action.responseEncodings.map(_.value).toList
 
+    // Get the result types and models
+    val responseClass = action.responseType.map(TypeBuilder.DataType(_).name).getOrElse("void")
+    val models = action.responseType.map{ tag =>
+      TypeBuilder.collectModels(tag, Set.empty)
+        .map(model => model.id -> model)
+        .toMap
+    }
+
+    // Collect the descriptions
     val descriptions = getDescriptions(action.path, action.query)
       .flatMap(runHeaders(action.headers, _))
       .map( desc => desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
-           op.copy(method = action.method.toString, produces = produces, consumes = consumes)
+           op.copy(method = action.method.toString, responseClass = responseClass, produces = produces, consumes = consumes)
         }))
 
     val swaggerVersion = "1.2"
@@ -83,7 +92,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
 
     descriptions.map { apidesc =>
       val resourcepath = "/" + apidesc.path.split("/").find(!_.isEmpty).getOrElse("")
-      ApiListing(apiVersion, swaggerVersion, basepath, resourcepath, apis = List(apidesc))
+      ApiListing(apiVersion, swaggerVersion, basepath, resourcepath, models = models, apis = List(apidesc))
     }
   }
 
@@ -208,7 +217,8 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     go(rule::Nil, desc)
   }
 
-  private def getType(m: TypeTag[_]): String = "string" // TODO: get right type
+//  private def getType(m: TypeTag[_]): String = "string" // TODO: get right type
+private def getType(m: TypeTag[_]): String = TypeBuilder.DataType(m).name
 }
 
 
