@@ -13,23 +13,23 @@ import org.json4s.jackson.JsonMethods._
 
 import scodec.bits.ByteVector
 
-trait SwaggerSupport extends RhoService with ApiBuilder {
+trait SwaggerSupport extends RhoService {
+  implicit protected def jsonFormats: Formats = SwaggerSerializers.formats
 
   def apiVersion: String = "1.0.0"
   def apiInfo: ApiInfo = ApiInfo("None", "none", "none", "none", "none", "none")
 
-  implicit protected def jsonFormats: Formats = SwaggerSerializers.formats
-
-  private val swagger = new Swagger("1.2", apiVersion, apiInfo)
+  private val swaggerBuilder = new ApiBuilder(apiVersion)
+  private val swaggerStorage = new Swagger("1.2", apiVersion, apiInfo)
 
   GET / "api-info" |>> { () =>
-    val json = swagger.resourceListing
+    val json = swaggerStorage.resourceListing
     Status.Ok(compact(render(json)))
       .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
   }
 
   GET / "api-info" / * |>> { params: Seq[String] =>
-    swagger.getDoc(params) match {
+    swaggerStorage.getDoc(params) match {
       case Some(doc) =>
         Status.Ok(compact(render(doc)))
           .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
@@ -40,8 +40,8 @@ trait SwaggerSupport extends RhoService with ApiBuilder {
 
   override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
     super.append(action)
-    val apis = actionToApiListing(action)
-    apis.foreach { listing => swagger.register(listing.resourcePath, listing) }
+    val apis = swaggerBuilder.actionToApiListing(action)
+    apis.foreach { listing => swaggerStorage.register(listing.resourcePath, listing) }
   }
 
   protected def docToJson(doc: Api): JValue = Extraction.decompose(doc)

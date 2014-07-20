@@ -2,6 +2,7 @@ package org.http4s
 package rho
 package swagger
 
+import com.typesafe.scalalogging.slf4j.StrictLogging
 import com.wordnik.swagger.model._
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
@@ -16,7 +17,7 @@ import SwaggerMeta._
 import scala.util.Random
 
 
-trait ApiBuilder { self: RhoService with SwaggerSupport =>
+class ApiBuilder(apiVersion: String) extends StrictLogging {
 
   /* swagger-core models
   case class ApiListing (
@@ -67,7 +68,7 @@ trait ApiBuilder { self: RhoService with SwaggerSupport =>
 
   def baseOp = Operation("GET", "", "", "void", "foo" + Random.nextInt().toString, 0)
 
-  protected def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
+  def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
     val consumes = action.decoders.map(_.value).toList
     val produces = action.responseEncodings.map(_.value).toList
 
