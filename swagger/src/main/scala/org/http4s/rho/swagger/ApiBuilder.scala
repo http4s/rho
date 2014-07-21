@@ -76,7 +76,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     val responseClass = action.responseType.map(TypeBuilder.DataType(_).name).getOrElse("void")
     val models = action.responseType.map { tag =>
       TypeBuilder.collectModels(tag, Set.empty)
-        .map(model => model.qualifiedType -> model)
+        .map(model => model.id -> model)
         .toMap
     }
 
