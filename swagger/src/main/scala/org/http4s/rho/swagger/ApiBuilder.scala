@@ -66,7 +66,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     paramAccess: Option[String] = None)
    */
 
-  def baseOp = Operation("GET", "", "", "void", "foo" + Random.nextInt().toString, 0)
+  def baseOp = Operation("GET", "", "", "void", "temp- will replace", 0)
 
   def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
     val consumes = action.decoders.map(_.value).toList
@@ -74,17 +74,23 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
 
     // Get the result types and models
     val responseClass = action.responseType.map(TypeBuilder.DataType(_).name).getOrElse("void")
-    val models = action.responseType.map{ tag =>
+    val models = action.responseType.map { tag =>
       TypeBuilder.collectModels(tag, Set.empty)
-        .map(model => model.id -> model)
+        .map(model => model.qualifiedType -> model)
         .toMap
     }
+
+    println(models)
 
     // Collect the descriptions
     val descriptions = getDescriptions(action.path, action.query)
       .flatMap(runHeaders(action.headers, _))
       .map( desc => desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
-           op.copy(method = action.method.toString, responseClass = responseClass, produces = produces, consumes = consumes)
+           op.copy(method = action.method.toString,
+                   nickname = generateNickname(desc.path, action.method),
+                   responseClass = responseClass,
+                   produces = produces,
+                   consumes = consumes)
         }))
 
     val swaggerVersion = "1.2"
@@ -94,6 +100,14 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
       val resourcepath = "/" + apidesc.path.split("/").find(!_.isEmpty).getOrElse("")
       ApiListing(apiVersion, swaggerVersion, basepath, resourcepath, models = models, apis = List(apidesc))
     }
+  }
+
+  // Generate a nickname for a route. Its simple: 'methodPathStuff' ~ 'getFooBar'
+  private def generateNickname(path: String, method: Method): String = {
+    method.toString + path.split("/")
+                          .filter(s => !s.isEmpty && !(s.startsWith("{") && s.endsWith("}")))
+                          .map(_.capitalize)
+                          .mkString
   }
 
   private def getDescriptions(path: PathRule, query: QueryRule): List[ApiDescription] = {

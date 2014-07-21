@@ -1,3 +1,8 @@
+/*  This code was largely pillaged from worked by Wordnik, which is under an Apache 2.0 license.
+    https://github.com/swagger-api/swagger-scala.git
+    commit: 5746ffcc44a99dfaf25c41444559bb2bd197a33a
+ */
+
 package org.http4s.rho.swagger
 
 import java.util.Date
@@ -62,7 +67,7 @@ object TypeBuilder {
     //    if (descr.simpleName == "Pet") println("converting property: " + prop)
     val mp = ModelProperty(
       DataType.fromScalaType(if (prop.returnType.isOption) prop.returnType.typeArgs.head else prop.returnType).name,
-      "", // TODO: qualifiedName?
+      descr.fullName,
       if (position.isDefined && position.forall(_ >= 0)) position.get else ctorParam.map(_.argIndex).getOrElse(position.getOrElse(0)),
       required = required && !prop.returnType.isOption,
       description = description.flatMap(_.blankOption),
