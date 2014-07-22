@@ -23,7 +23,7 @@ object MyBuild extends Build {
   lazy val swagger = project
                       .in(file("swagger"))
                       .settings(buildSettings:+ swaggerDeps : _*)
-                      .dependsOn(core)
+                      .dependsOn(core % "compile->compile;test->test")
 
   lazy val examples = project
                         .in(file("examples"))

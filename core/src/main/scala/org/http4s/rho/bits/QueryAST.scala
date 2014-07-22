@@ -19,6 +19,8 @@ object QueryAST {
 
     final def &&[T1 <: HList](v: TypedQuery[T1])(implicit prepend: Prepend[T, T1]): TypedQuery[prepend.Out] = and(v)
 
+    final def &[T1 <: HList](v: TypedQuery[T1])(implicit prepend: Prepend[T, T1]): TypedQuery[prepend.Out] = and(v)
+
     /**
      * Resolves names of query parameters to capture
      */

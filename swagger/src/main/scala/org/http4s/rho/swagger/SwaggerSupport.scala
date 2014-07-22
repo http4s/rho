@@ -16,19 +16,20 @@ import scodec.bits.ByteVector
 trait SwaggerSupport extends RhoService {
   implicit protected def jsonFormats: Formats = SwaggerSerializers.formats
 
+  def apiPath = "api-info"
   def apiVersion: String = "1.0.0"
   def apiInfo: ApiInfo = ApiInfo("None", "none", "none", "none", "none", "none")
 
   private val swaggerBuilder = new ApiBuilder(apiVersion)
   private val swaggerStorage = new Swagger("1.2", apiVersion, apiInfo)
 
-  GET / "api-info" |>> { () =>
+  GET / apiPath |>> { () =>
     val json = swaggerStorage.resourceListing
     Status.Ok(compact(render(json)))
       .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
   }
 
-  GET / "api-info" / * |>> { params: Seq[String] =>
+  GET / apiPath / * |>> { params: Seq[String] =>
     swaggerStorage.getDoc(params) match {
       case Some(doc) =>
         Status.Ok(compact(render(doc)))

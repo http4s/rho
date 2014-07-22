@@ -12,10 +12,6 @@ import bits.QueryAST.{QueryCapture, QueryRule}
 
 import scala.reflect.runtime.universe.TypeTag
 
-import SwaggerMeta._
-
-import scala.util.Random
-
 
 class ApiBuilder(apiVersion: String) extends StrictLogging {
 
@@ -66,6 +62,9 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     paramAccess: Option[String] = None)
    */
 
+  val swaggerVersion = "1.2"
+  val basepath = "/"
+
   def baseOp = Operation("GET", "", "", "void", "temp- will replace", 0)
 
   def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
@@ -74,27 +73,24 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
 
     // Get the result types and models
     val responseClass = action.responseType.map(TypeBuilder.DataType(_).name).getOrElse("void")
-    val models = action.responseType.map { tag =>
-      TypeBuilder.collectModels(tag, Set.empty)
-        .map(model => model.id -> model)
-        .toMap
+    val models = action.responseType.flatMap { tag =>
+      val models = TypeBuilder.collectModels(tag, Set.empty)
+                    .map(model => model.id -> model)
+                    .toMap
+      if (models.isEmpty) None else Some(models)
     }
-
-    println(models)
 
     // Collect the descriptions
     val descriptions = getDescriptions(action.path, action.query)
-      .flatMap(runHeaders(action.headers, _))
-      .map( desc => desc.copy(operations = desc.operations.map { op =>   // add HTTP Method
-           op.copy(method = action.method.toString,
-                   nickname = generateNickname(desc.path, action.method),
-                   responseClass = responseClass,
-                   produces = produces,
-                   consumes = consumes)
-        }))
-
-    val swaggerVersion = "1.2"
-    val basepath = "/"
+      .map { desc =>
+        desc.copy(operations = desc.operations.map( op =>
+            op.copy(method        = action.method.toString,
+                    nickname      = generateNickname(desc.path, action.method),
+                    responseClass = responseClass,
+                    produces      = produces,
+                    consumes      = consumes,
+                    parameters    = op.parameters:::analyzeHeaders(action.headers))))
+      }
 
     descriptions.map { apidesc =>
       val resourcepath = "/" + apidesc.path.split("/").find(!_.isEmpty).getOrElse("")
@@ -103,8 +99,8 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
   }
 
   // Generate a nickname for a route. Its simple: 'methodPathStuff' ~ 'getFooBar'
-  private def generateNickname(path: String, method: Method): String = {
-    method.toString + path.split("/")
+  private[swagger] def generateNickname(path: String, method: Method): String = {
+    method.toString.toLowerCase + path.split("/")
                           .filter(s => !s.isEmpty && !(s.startsWith("{") && s.endsWith("}")))
                           .map(_.capitalize)
                           .mkString
@@ -117,20 +113,20 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
       case PathMatch(s)::xs            => go(xs, desc.copy(path = desc.path + "/" + s))
 
       case stack @ (CaptureTail() | PathCapture(_, _, _))::_ =>
-        getOperations(stack, query).map{ case (path, op) =>
+        collectPaths(stack, query, baseOp).map{ case (path, op) =>
           desc.copy(desc.path + path, operations = List(op))
         }
 
       case stack @ MetaCons(CaptureTail() | PathCapture(_, _, _), meta)::_ =>
         val op = getMeta(meta).fold(baseOp){ meta => baseOp.copy(summary = meta) }
-        getOperations(stack, query, Some(op)).map { case (path, op) =>
+        collectPaths(stack, query, op).map { case (path, op) =>
           desc.copy(desc.path + path, operations = List(op))
         }
 
       case stack @ MetaCons(a, meta)::xs =>
         getMeta(meta) match {
           case m @ Some(meta) => desc.description match {
-            case Some(d) => go(a::xs, desc.copy(description = Some(desc + "\n" + d)))
+            case Some(d) => go(a::xs, desc.copy(description = Some(d + "\n" + desc)))
             case None       => go(a::xs, desc.copy(description = m))
           }         // need to see if we are working on Parameters
           case None       => go(a::xs, desc)
@@ -141,7 +137,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
       case PathEmpty::xs  => go(xs, desc)
 
       case Nil =>
-        val ops = getOperations(Nil, query)
+        val ops = collectPaths(Nil, query, baseOp)
         if (!ops.isEmpty) ops.map { case (path, op) =>
           desc.copy(desc.path + path, operations = List(op))
         }
@@ -151,7 +147,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     go(path::Nil, ApiDescription("", None))
   }
 
-  def getOperations(stack: List[PathRule], query: QueryRule, op: Option[Operation] = None): List[(String, Operation)] = {
+  private[swagger] def collectPaths(stack: List[PathRule], query: QueryRule, op: Operation): List[(String, Operation)] = {
     def go(stack: List[PathRule], path: String, op: Operation): List[(String, Operation)] = stack match {
       case PathOr(a, b)::xs     => go(a::xs, path, op):::go(b::xs, path, op)
       case PathAnd (a, b) :: xs => go(a::b::xs, path, op)
@@ -161,7 +157,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
       case PathCapture (id, parser, _) :: xs =>
         val tpe = parser.typeTag.map(getType).getOrElse("string")
         val p = Parameter (id, None, None, true, false, tpe, AnyAllowableValues, "path", None)
-        go(xs, path + s"/{$id}", op.copy(parameters = op.parameters:+p))
+        go(xs, s"$path/{$id}", op.copy(parameters = op.parameters:+p))
 
       case CaptureTail()::xs =>
         if (!xs.isEmpty) logger.warn(s"Warning: path rule after tail capture: $xs")
@@ -178,15 +174,29 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
         val qs = analyzeQuery(query)
         List(path -> op.copy(parameters = op.parameters:::qs))
     }
-    go(stack, "", op.getOrElse(baseOp))
+    go(stack, "", op)
   }
 
-  def analyzeQuery(query: QueryRule): List[Parameter] = {
+  // Adds a note that the params are optional if the other params are satisfied
+  private def addOrDescriptions(as: List[Parameter], bs: List[Parameter], tpe: String): List[Parameter] = {
+    if (bs.isEmpty) as      // These two cases shouldn't happen, but just in case something changes down the road
+    else if (as.isEmpty) bs
+    else {
+      val reqStr = s"Optional if the following $tpe are satisfied: " + bs.map(_.name).mkString("[",", ", "]")
+      as.map(p => p.copy(description = Some({ p.description.map(_ + "; ").getOrElse("") + reqStr})))
+    }
+  }
+
+  private[swagger] def analyzeQuery(query: QueryRule): List[Parameter] = {
     import bits.QueryAST._
     def go(stack: List[QueryRule]): List[Parameter] = stack match {
       case QueryAnd(a, b)::xs => go(a::b::xs)
       case EmptyQuery::xs => go(xs)
-      case QueryOr(a, b)::xs  => go(a::xs):::go(b::xs)
+      case QueryOr(a, b)::xs  =>
+        val as = go(a::xs)
+        val bs = go(b::xs)
+        addOrDescriptions(as, bs, "params"):::addOrDescriptions(bs, as, "params")
+
 
       case (q @ QueryCapture(_, _, _, _))::xs => gatherParam(q)::go(xs)
 
@@ -209,40 +219,35 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
   }
 
   // Finds any parameters required for the routes and adds them to the descriptions
-  private def runHeaders(rule: HeaderRule, desc: ApiDescription): Seq[ApiDescription] = {
+  private[swagger] def analyzeHeaders(rule: HeaderRule): List[Parameter] = {
     import bits.HeaderAST._
 
-    def addKey(key: HeaderKey.Extractable, desc: ApiDescription): ApiDescription = {
-      val p = Parameter(key.name.toString, None, None, true, false, "string", paramType = "header")
-      desc.copy(operations = desc.operations.map(op => op.copy(parameters = op.parameters:+p)))
+    def mkParam(key: HeaderKey.Extractable): Parameter = {
+      Parameter(key.name.toString, None, None, true, false, "string", paramType = "header")
     }
 
-    def go(stack: List[HeaderRule], desc: ApiDescription): List[ApiDescription] = stack match {
-      case HeaderAnd(a, b)::xs        => go(a::b::xs, desc)
-      case HeaderOr(a, b)::xs         => go(a::xs, desc):::go(b::xs, desc)
-      case MetaCons(a, _)::xs         => go(a::xs, desc)
-      case EmptyHeaderRule::xs        => go(xs, desc)
-      case HeaderCapture(key)::xs     => go(xs, addKey(key, desc))
-      case HeaderMapper(key, _)::xs   => go(xs, addKey(key, desc))
-      case HeaderRequire(key, _)::xs  => go(xs, addKey(key, desc))
-      case Nil                        => desc::Nil
+    def go(stack: List[HeaderRule]): List[Parameter] = stack match {
+      case HeaderAnd(a, b)::xs        => go(a::b::xs)
+      case MetaCons(a, _)::xs         => go(a::xs)
+      case EmptyHeaderRule::xs        => go(xs)
+      case HeaderCapture(key)::xs     => mkParam(key)::go(xs)
+      case HeaderMapper(key, _)::xs   => mkParam(key)::go(xs)
+      case HeaderRequire(key, _)::xs  => mkParam(key)::go(xs)
+      case HeaderOr(a, b)::xs         =>
+        val as = go(a::xs)
+        val bs = go(b::xs)
+        addOrDescriptions(as, bs, "headers"):::addOrDescriptions(bs, as, "headers")
+
+      case Nil                        => Nil
     }
 
-    go(rule::Nil, desc)
+    go(rule::Nil)
   }
 
-//  private def getType(m: TypeTag[_]): String = "string" // TODO: get right type
-private def getType(m: TypeTag[_]): String = TypeBuilder.DataType(m).name
-}
-
-
-object SwaggerMeta {
+  private def getType(m: TypeTag[_]): String = TypeBuilder.DataType(m).name
 
   def getMeta(meta: Metadata): Option[String] = {
     println("'getMeta' undefined")
     None
   }
-
-  sealed trait SwaggerMeta extends Metadata
-  case class ApiVersion(version: String) extends SwaggerMeta
 }

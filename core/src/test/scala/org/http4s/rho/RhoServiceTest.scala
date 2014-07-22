@@ -4,17 +4,7 @@ package rho
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
-class RhoServiceTest extends Specification {
-
-  def getBody(b: HttpBody): String = {
-    new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
-  }
-
-  def checkOk(r: Request): String = getBody(service(r).run.body)
-
-  def checkError(r: Request): String = {
-    getBody(service(r).run.body)
-  }
+class RhoServiceTest extends Specification with RequestRunner {
 
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
 

@@ -76,7 +76,7 @@ package object rho {
   def require(header: HeaderKey.Extractable): TypedHeader[HNil] = requireThat(header)(_ => true)
 
   /* Check that the header exists and satisfies the condition */
-  def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean = { _: H#HeaderT => true }): TypedHeader[HNil] =
+  def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
     TypedHeader(HeaderRequire(header, f))
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */
