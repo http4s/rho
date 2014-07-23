@@ -29,10 +29,8 @@ package object rho {
 
   implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
 
-  implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] = {
-    val capture = PathCapture(StringParser.strParser, stringTag)
-    TypedPath(PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}")))
-  }
+  implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] =
+    TypedPath(PathCapture(s.name, StringParser.strParser, stringTag))
 
   /**
    * Defines a parameter in query string that should be bound to a route definition.
@@ -54,13 +52,13 @@ package object rho {
    * Defines a path variable of a URI that should be bound to a route definition
    */
   def pathVar[T](implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    pathVar("unknown")(parser, m)
+    pathVar(m.tpe.toString.toLowerCase)(parser, m)
 
   /**
    * Defines a path variable of a URI that should be bound to a route definition
    */
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    TypedPath(PathAST.MetaCons(PathCapture(parser, stringTag), TextMeta(id, s"Param name: $id")))
+    TypedPath(PathCapture(id, parser, stringTag))
 
   /**
    * Helper to be able to define a path with one level only.
@@ -78,7 +76,7 @@ package object rho {
   def require(header: HeaderKey.Extractable): TypedHeader[HNil] = requireThat(header)(_ => true)
 
   /* Check that the header exists and satisfies the condition */
-  def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean = { _: H#HeaderT => true }): TypedHeader[HNil] =
+  def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
     TypedHeader(HeaderRequire(header, f))
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */

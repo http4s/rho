@@ -11,7 +11,7 @@ import scalaz.concurrent.Task
 sealed trait Decoder[T] {
 
   def decode(req: Request): Task[ParserResult[T]]
-  def consumes: Seq[MediaType]
+  def consumes: Set[MediaType]
   def force: Boolean
   def or(other: Decoder[T]): Decoder[T] = Decoder.OrDec(this, other)
 
@@ -33,13 +33,13 @@ object Decoder {
   private type Result[T] = Task[ParserResult[T]]
 
 
-  private case class BasicDecoder[T](decoder: Request => Result[T], consumes: Seq[MediaType], force: Boolean) extends Decoder[T] {
+  private case class BasicDecoder[T](decoder: Request => Result[T], consumes: Set[MediaType], force: Boolean) extends Decoder[T] {
     override def decode(req: Request): Result[T] = decoder(req)
   }
 
   private case class OrDec[T](c1: Decoder[T], c2: Decoder[T]) extends Decoder[T] {
 
-    override val consumes: Seq[MediaType] = c1.consumes ++ c2.consumes
+    override val consumes: Set[MediaType] = c1.consumes ++ c2.consumes
 
     override def force: Boolean = c1.force || c2.force
 
@@ -54,10 +54,10 @@ object Decoder {
 
   implicit val strDec: Decoder[String] = {
     val dec: Request => Result[String] = _.body.runLog.map(vs => ParserSuccess(new String(vs.reduce(_ ++ _).toArray)))
-    BasicDecoder(dec, MediaType.`text/plain`::Nil, true)
+    BasicDecoder(dec, Set(MediaType.`text/plain`), true)
   }
 
-  implicit def reqDecoder[T](f: Request => Task[T], mediaType: Seq[MediaType] = Nil, force: Boolean = true): Decoder[T] =
+  implicit def reqDecoder[T](f: Request => Task[T], mediaType: Set[MediaType] = Set.empty, force: Boolean = true): Decoder[T] =
     BasicDecoder(f.andThen(_.attempt.map(_ match {
       case \/-(r) => ParserSuccess(r)
       case -\/(e) => ParserFailure(s"Decoder failure: $e")

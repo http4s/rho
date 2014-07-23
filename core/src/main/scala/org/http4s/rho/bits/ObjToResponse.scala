@@ -25,9 +25,11 @@ object ObjToResponse {
 
     override def mediaTypes: Seq[MediaType] = w.contentType.mediaType::Nil
 
+    private val mediaHeader = Header.`Content-Type`(w.contentType.mediaType)::Nil
+
     override def apply(o: O): Task[Response] = w.toBody(o).map {
-      case (body, Some(i)) => Response(Status.Ok, headers = Headers(Header.`Content-Length`(i)), body = body)
-      case (body, None) => Response(Status.Ok, headers = Headers.empty, body = body)
+      case (body, Some(i)) => Response(Status.Ok, headers = Headers(Header.`Content-Length`(i)::mediaHeader), body = body)
+      case (body, None) => Response(Status.Ok, headers = Headers(mediaHeader), body = body)
     }
   }
 }

@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import spray.revolver.RevolverPlugin._
 
 object MyBuild extends Build {
   import Dependencies._
@@ -22,7 +23,12 @@ object MyBuild extends Build {
   lazy val swagger = project
                       .in(file("swagger"))
                       .settings(buildSettings:+ swaggerDeps : _*)
-                      .dependsOn(core)
+                      .dependsOn(core % "compile->compile;test->test")
+
+  lazy val examples = project
+                        .in(file("examples"))
+                        .settings(buildSettings ++ Revolver.settings :+ exampleDeps :_*)
+                        .dependsOn(swagger, hal)
 
   lazy val compileFlags = Seq("-feature")
 
@@ -54,7 +60,9 @@ object Dependencies {
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze"        % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"      % http4sVersion
   lazy val config              = "com.typesafe"                % "config"              % "1.2.1"
+  lazy val json4s              = "org.json4s"                 %% "json4s-ext"          % "3.2.10"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"      % "3.2.10"
+  lazy val swaggerCore         = "com.wordnik"                %% "swagger-core"        % "1.3.8-SNAPSHOT"
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"     % "1.1.2"
   lazy val scalaloggingSlf4j   = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
   lazy val specs2              = "org.specs2"                 %% "specs2"              % "2.3.12"
@@ -62,8 +70,10 @@ object Dependencies {
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
+    swaggerCore,
     json4sJackson,
-    "org.json4s" %% "json4s-ext"     % "3.2.10"
+    json4s
   )
 
+  lazy val exampleDeps = libraryDependencies += http4sBlaze
 }
