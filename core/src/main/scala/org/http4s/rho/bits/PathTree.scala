@@ -50,7 +50,7 @@ trait PathTree extends ValidationTree {
             case None    => addNode(MatchNode(s).append(tail, action))
           }
 
-        case PathCapture(p, _) =>
+        case PathCapture(_, p, _) =>
           paths.collectFirst{ case n@ CaptureNode(p1,_,_,_) if p1 eq p => n } match {
             case Some(w) => replaceNode(w, w.append(tail, action))
             case None    => addNode(CaptureNode(p).append(tail, action))
