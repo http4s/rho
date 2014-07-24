@@ -32,7 +32,7 @@ object PathAST {
 
     def /(s: Symbol): TypedPath[String :: T] = {
       val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
-      TypedPath(PathAnd(this.rule, PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}"))))
+      TypedPath(PathAnd(this.rule, capture))
     }
 
     def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =

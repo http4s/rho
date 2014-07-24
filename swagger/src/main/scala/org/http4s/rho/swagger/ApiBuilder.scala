@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import com.wordnik.swagger.model._
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
-import bits.Metadata
+import org.http4s.rho.bits.{TextMetaData, Metadata}
 import bits.PathAST._
 import bits.QueryAST.{QueryCapture, QueryRule}
 
@@ -246,8 +246,8 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
 
   private def getType(m: TypeTag[_]): String = TypeBuilder.DataType(m).name
 
-  def getMeta(meta: Metadata): Option[String] = {
-    println("'getMeta' undefined")
-    None
+  def getMeta(meta: Metadata): Option[String] = meta match {
+    case t: TextMetaData => Some(t.msg)
+    case _               => None
   }
 }

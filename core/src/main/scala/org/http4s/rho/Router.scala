@@ -4,11 +4,9 @@ package rho
 import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST.QueryRule
-import bits.HeaderAST.MetaCons
-import org.http4s.rho.bits.{HeaderAppendable, Metadata, MetaDataSyntax, HListToFunc}
+import org.http4s.rho.bits.{HeaderAppendable, HListToFunc}
 
 import shapeless.{::, HList}
-import scalaz.concurrent.Task
 import shapeless.ops.hlist.Prepend
 
 /** Provides the operations for generating a router
@@ -24,7 +22,6 @@ case class Router[T <: HList](method: Method,
                                validators: HeaderRule)
                        extends RouteExecutable[T]
                           with HeaderAppendable[T]
-                          with MetaDataSyntax
 {
 
   type Self = Router[T]
@@ -36,20 +33,13 @@ case class Router[T <: HList](method: Method,
     new RhoAction(this, f, hf)
 
   def decoding[R](decoder: Decoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
-
-  override def addMetaData(data: Metadata): Router[T] =
-    Router(method, path, query, MetaCons(validators, data))
 }
 
 case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
            extends HeaderAppendable[T]
            with RouteExecutable[R::T]
-           with MetaDataSyntax
 {
   type Self = CodecRouter[T, R]
-
-  override def addMetaData(data: Metadata): CodecRouter[T, R] =
-    CodecRouter(router.addMetaData(data), decoder)
 
   override def >>>[T2 <: HList](v: TypedHeader[T2])(implicit prep1: Prepend[T2, T]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)

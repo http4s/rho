@@ -5,7 +5,6 @@ import org.http4s.rho.bits.QueryAST.{ TypedQuery, QueryRule, EmptyQuery }
 import bits.HeaderAST._
 import bits.PathAST._
 import bits._
-import PathAST.MetaCons
 
 import shapeless.{ HNil, ::, HList }
 import shapeless.ops.hlist.Prepend
@@ -21,7 +20,6 @@ import scala.reflect.runtime.universe.TypeTag
 final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   extends HeaderAppendable[T]
   with RouteExecutable[T]
-  with MetaDataSyntax
   with UriConvertible {
   type Self = PathBuilder[T]
 
@@ -39,7 +37,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /(s: Symbol): PathBuilder[String :: T] = {
     val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
-    new PathBuilder(method, PathAnd(path, MetaCons(capture, TextMeta(s.name, s"Path name: ${s.name}"))))
+    new PathBuilder(method, PathAnd(path, capture))
   }
 
   def /[T2 <: HList](t: TypedPath[T2])(implicit prep: Prepend[T2, T]): PathBuilder[prep.Out] =
@@ -50,9 +48,6 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T2, T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, PathAnd(path, t.path), t.query)
-
-  override def addMetaData(data: Metadata): PathBuilder[T] =
-    new PathBuilder[T](method, MetaCons(path, data))
 
   override def >>>[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
     validate(h2)
