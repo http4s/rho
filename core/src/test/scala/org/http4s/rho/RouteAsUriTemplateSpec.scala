@@ -32,9 +32,9 @@ class RouteAsUriTemplateSpec extends Specification {
       val route = GET / pathVar[Int]("id")
       route.asUriTemplate.get must equalTo(UriTemplate(path = List(PathExp("id"))))
     }
-    "convert to {/unknown}" in {
+    "convert pathVar[Int] to {/int}" in {
       val route = GET / pathVar[Int]
-      route.asUriTemplate.get must equalTo(UriTemplate(path = List(PathExp("unknown"))))
+      route.asUriTemplate.get must equalTo(UriTemplate(path = List(PathExp("int"))))
       true
     }
     "convert to /orders{/id}/items" in {
@@ -112,9 +112,9 @@ class RouteAsUriTemplateSpec extends Specification {
       val route = pathVar[Int]("id")
       route.asUriTemplate.get must equalTo(UriTemplate(path = List(PathExp("id"))))
     }
-    "convert to {/unknown}" in {
+    "convert pathVar[Int] to {/int}" in {
       val route = pathVar[Int]
-      route.asUriTemplate.get must equalTo(UriTemplate(path = List(PathExp("unknown"))))
+      route.asUriTemplate.get must equalTo(UriTemplate(path = List(PathExp("int"))))
       true
     }
     "convert to /orders{/id}/items" in {

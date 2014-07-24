@@ -106,7 +106,7 @@ trait ExecutableCompiler {
             go(b, stack)
           }
 
-        case PathCapture(f, _) => f.parse(pop).map{ i => i::stack}
+        case PathCapture(_, f, _) => f.parse(pop).map{ i => i::stack}
 
         case PathMatch("") => ParserSuccess(stack)    // "" is consider a NOOP
 
@@ -172,7 +172,7 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
     val actionf = hf.conv(f)
     val allvals = {
       if (!r.decoder.force) {
-        val mediaReq: Seq[HeaderRule] = r.decoder.consumes.map { mediaType =>
+        val mediaReq: Set[HeaderRule] = r.decoder.consumes.map { mediaType =>
           HeaderRequire(Header.`Content-Type`, { h: Header.`Content-Type`.HeaderT => h.mediaType == mediaType })
         }
         if (mediaReq.isEmpty) r.router.validators

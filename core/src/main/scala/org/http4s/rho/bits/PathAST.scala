@@ -31,7 +31,7 @@ object PathAST {
     def /(s: String): TypedPath[T] = TypedPath(PathAnd(this.rule, PathMatch(s)))
 
     def /(s: Symbol): TypedPath[String :: T] = {
-      val capture = PathCapture(StringParser.strParser, implicitly[TypeTag[String]])
+      val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
       TypedPath(PathAnd(this.rule, PathAST.MetaCons(capture, TextMeta(s.name, s"Param name: ${s.name}"))))
     }
 
@@ -56,7 +56,7 @@ object PathAST {
 
   case class PathMatch(s: String) extends PathRule
 
-  case class PathCapture(parser: StringParser[_], m: TypeTag[_]) extends PathRule
+  case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
   // TODO: can I make this a case object?
   case class CaptureTail() extends PathRule

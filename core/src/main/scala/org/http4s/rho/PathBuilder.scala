@@ -36,8 +36,9 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /(s: String): PathBuilder[T] = new PathBuilder(method, PathAnd(path, PathMatch(s)))
 
+
   def /(s: Symbol): PathBuilder[String :: T] = {
-    val capture = PathCapture(StringParser.strParser, implicitly[TypeTag[String]])
+    val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
     new PathBuilder(method, PathAnd(path, MetaCons(capture, TextMeta(s.name, s"Path name: ${s.name}"))))
   }
 
