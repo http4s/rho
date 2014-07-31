@@ -8,7 +8,7 @@ trait RequestRunner {
 
   def service: RhoService
 
-  def getBody(b: HttpBody): String = {
+  def getBody(b: EntityBody): String = {
     new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
   }
 

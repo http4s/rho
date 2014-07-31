@@ -57,7 +57,7 @@ object Dependencies {
 //  lazy val http4sCore          = "org.http4s"                 %% "http4s-core"         % http4sVersion
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"       % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"          % http4sVersion
-  lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze"        % http4sVersion
+  lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blazeserver"  % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"      % http4sVersion
   lazy val config              = "com.typesafe"                % "config"              % "1.2.1"
   lazy val json4s              = "org.json4s"                 %% "json4s-ext"          % "3.2.10"

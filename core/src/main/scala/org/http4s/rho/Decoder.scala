@@ -63,6 +63,6 @@ object Decoder {
       case -\/(e) => ParserFailure(s"Decoder failure: $e")
     })), mediaType, force)
 
-  implicit def bodyDecoder[T](f: HttpBody => Task[T]): Decoder[T] = reqDecoder(r => f(r.body))
+  implicit def bodyDecoder[T](f: EntityBody => Task[T]): Decoder[T] = reqDecoder(r => f(r.body))
 
 }

@@ -45,7 +45,7 @@ class RhoServiceTest extends Specification with RequestRunner {
     val or = "or1" || "or2"
     GET / or |>> { () => "route9" }
 
-    GET / "orders" / pathVar[Int]("id") |>> { id: Int => id }
+    GET / "orders" / pathVar[Int]("id") |>> { id: Int => id.toString }
 
     GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => os.getOrElse("None") }
 

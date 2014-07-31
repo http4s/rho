@@ -6,7 +6,7 @@ import scodec.bits.ByteVector
 
 class ParamDefaultValueSpec extends Specification {
 
-  def getBody(b: HttpBody): String = {
+  def getBody(b: EntityBody): String = {
     new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
   }
 

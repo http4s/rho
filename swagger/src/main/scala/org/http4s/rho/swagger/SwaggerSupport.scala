@@ -5,6 +5,7 @@ package swagger
 import Header.`Content-Type`
 import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
+import org.http4s.Writable.Entity
 
 import shapeless.HList
 
@@ -12,6 +13,9 @@ import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import scodec.bits.ByteVector
+
+import scalaz.concurrent.Task
+import scalaz.stream.Process.emit
 
 trait SwaggerSupport extends RhoService {
   implicit protected def jsonFormats: Formats = SwaggerSerializers.formats
@@ -47,10 +51,11 @@ trait SwaggerSupport extends RhoService {
 
   protected def docToJson(doc: Api): JValue = Extraction.decompose(doc)
 
-  private implicit val jsonWritable = new SimpleWritable[JValue] {
-    override def contentType: `Content-Type` = `Content-Type`(MediaType.`application/json`)
-
-    override def asChunk(data: _root_.org.json4s.JValue): ByteVector =
-      ByteVector.view(compact(render(data)).getBytes(CharacterSet.`UTF-8`.charset))
+  private implicit val jsonWritable: Writable[JValue] = {
+    val headers: Headers = Headers(`Content-Type`(MediaType.`application/json`))
+    Writable({jv: JValue =>
+      val v = ByteVector.view(compact(render(jv)).getBytes(CharacterSet.`UTF-8`.charset))
+      Task.now(Entity(emit(v), Some(v.length)))
+    }, headers)
   }
 }
