@@ -58,7 +58,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
   override val validators: HeaderRule = {
     if (!decoder.consumes.isEmpty) {
       val mt = requireThat(Header.`Content-Type`) { h: Header.`Content-Type`.HeaderT =>
-        decoder.consumes.find(_.satisfiedBy(h.mediaType)).isDefined
+        decoder.matchesMediaType(h.mediaType)
       }
 
       HeaderAnd(router.validators, mt.rule)

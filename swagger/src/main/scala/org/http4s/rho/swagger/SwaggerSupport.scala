@@ -2,6 +2,8 @@ package org.http4s
 package rho
 package swagger
 
+import java.nio.charset.StandardCharsets
+
 import Header.`Content-Type`
 import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
@@ -54,7 +56,7 @@ trait SwaggerSupport extends RhoService {
   private implicit val jsonWritable: Writable[JValue] = {
     val headers: Headers = Headers(`Content-Type`(MediaType.`application/json`))
     Writable({jv: JValue =>
-      val v = ByteVector.view(compact(render(jv)).getBytes(CharacterSet.`UTF-8`.charset))
+      val v = ByteVector.view(compact(render(jv)).getBytes(StandardCharsets.UTF_8))
       Task.now(Entity(emit(v), Some(v.length)))
     }, headers)
   }
