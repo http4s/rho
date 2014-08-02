@@ -18,7 +18,7 @@ case class RhoAction[T <: HList, F](router: RouteExecutable[T], f: F, hf: HListT
   final def headers: HeaderRule = router.validators
   final def responseEncodings: Set[MediaType] = hf.encodings
   final def responseType: Option[TypeTag[_]] = hf.typeTag
-  final def decoders: Set[MediaType] = router match {
+  final def validMedia: Set[MediaRange] = router match {
     case r: CodecRouter[_,_] => r.decoder.consumes
     case _ => Set.empty
   }

@@ -37,7 +37,7 @@ private[rho] trait ValidationTree {
 
   final private case class SingleLeaf(query: QueryRule,
                                       vals: HeaderRule,       // TODO: For documentation purposes
-                                      codec: Option[Decoder[_]],  // For documentation purposes
+                                      codec: Option[EntityDecoder[_]],  // For documentation purposes
                                       f: (Request, HList) => Result) extends Leaf {
     override def attempt(req: Request, stack: HList): Result = f(req,stack)
   }

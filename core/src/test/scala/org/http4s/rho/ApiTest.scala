@@ -161,17 +161,18 @@ class ApiTest extends Specification {
 
   "Decoders" should {
     import Status._
-    import Decoder._
     import scalaz.stream.Process
 
     "Decode a body" in {
       val path = POST / "hello"
-      val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10}
+      val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10 }
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
-      val req = Request(requestUri = Uri.fromString("/hello").get, body = body)
-                  .withHeaders(Headers(Header.`Content-Length`("foo".length)))
 
-      val route = path.validate(reqHeader).decoding(strDec) runWith { str: String =>
+      val req = Method.Post("/hello")
+                    .withBody("foo")
+                    .run
+
+      val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
         Ok("stuff").withHeaders(Header.ETag(str))
       }
 
@@ -185,7 +186,7 @@ class ApiTest extends Specification {
       val req = Request(requestUri = Uri.fromString("/hello").get, body = body)
         .withHeaders(Headers(Header.`Content-Length`("foo".length)))
 
-      val route = path.validate(reqHeader).decoding(strDec) runWith { str: String =>
+      val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
         Ok("stuff").withHeaders(Header.ETag(str))
       }
 
@@ -196,7 +197,6 @@ class ApiTest extends Specification {
 
   "Do a complicated one" in {
     import Status._
-    import Decoder._
     import scalaz.stream.Process
 
     val path = POST / "hello" / 'world +? param[Int]("fav")
@@ -204,30 +204,31 @@ class ApiTest extends Specification {
                       capture(Header.ETag)
 
     val route =
-      (path >>> validations).decoding(strDec) runWith {(world: String, fav: Int, tag: Header.ETag, body: String) =>
+      (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, tag: Header.ETag, body: String) =>
 
         Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
           .addHeaders(Header.ETag("foo"))
       }
 
-    val body = Process.emit(ByteVector("cool".getBytes))
-    val req = Request(requestUri = Uri.fromString("/hello/neptune?fav=23").get, body = body)
-                .withHeaders(Headers(Header.`Content-Length`(4), Header.ETag("foo")))
+    val req = Method.Post("/hello/neptune?fav=23")
+                  .withBody("cool")
+                  .addHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
+                  .run
 
     val resp = route(req).get.run
+    printBody(resp)
     resp.headers.get(Header.ETag).get.value should_== "foo"
   }
 
   "Append headers to a Route" in {
     import Status._
-    import Decoder._
     import scalaz.stream.Process
 
     val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
 
 
-    val route = (path >>> validations >>> capture(Header.ETag)).decoding(strDec) runWith
+    val route = (path >>> validations >>> capture(Header.ETag)).decoding(EntityDecoder.text) runWith
       {(world: String, fav: Int, tag: Header.ETag, body: String) =>
 
         Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
@@ -235,8 +236,10 @@ class ApiTest extends Specification {
       }
 
     val body = Process.emit(ByteVector("cool".getBytes))
-    val req = Request(requestUri = Uri.fromString("/hello/neptune?fav=23").get, body = body)
-      .withHeaders(Headers(Header.`Content-Length`(4), Header.ETag("foo")))
+    val req = Method.Post("/hello/neptune?fav=23")
+                  .withBody("cool")
+                  .addHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
+                  .run
 
     val resp = route(req).get.run
     resp.headers.get(Header.ETag).get.value should_== "foo"

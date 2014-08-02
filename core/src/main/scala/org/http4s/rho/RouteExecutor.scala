@@ -13,9 +13,6 @@ import shapeless.{HNil, HList, ::}
 import scalaz.concurrent.Task
 import scalaz.{-\/, \/-, \/}
 
-import Decoder._
-
-
 
 trait ExecutableCompiler {
   def missingHeader(key: HeaderKey): String = s"Missing header: ${key.name}"
@@ -170,24 +167,10 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
   
   protected def compileCodecRouter[T <: HList, F, R](r: CodecRouter[T, R], f: F, hf: HListToFunc[R::T, F]): Result = {
     val actionf = hf.conv(f)
-    val allvals = {
-      if (!r.decoder.force) {
-        val mediaReq: Set[HeaderRule] = r.decoder.consumes.map { mediaType =>
-          HeaderRequire(Header.`Content-Type`, { h: Header.`Content-Type`.HeaderT => h.mediaType == mediaType })
-        }
-        if (mediaReq.isEmpty) r.router.validators
-        else HeaderAnd(r.router.validators, mediaReq.tail.foldLeft(mediaReq.head)(HeaderOr(_, _)))
-      }
-      else r.router.validators
-    }
     val ff: Result = { req =>
-      pathAndValidate(req, r.router.path, r.router.query, allvals).map(_ match {
-        case ParserSuccess(stack) => r.decoder.decode(req).flatMap(_ match {
-            case ParserSuccess(r)     => actionf(req,r::stack.asInstanceOf[T])
-            case ParserFailure(e)     => onBadRequest(s"Error decoding body: $e")
-            case ValidationFailure(e) => onBadRequest(s"Error decoding body: $e")
-          })
-
+      // TODO: how to handle decoder error
+      pathAndValidate(req, r.router.path, r.router.query, r.validators).map(_ match {
+        case ParserSuccess(stack) => r.decoder.decode(req).flatMap( r => actionf(req,r::stack.asInstanceOf[T]))
         case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
         case ParserFailure(s)     => onBadRequest(s)
       })

@@ -32,10 +32,10 @@ case class Router[T <: HList](method: Method,
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(this, f, hf)
 
-  def decoding[R](decoder: Decoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
+  def decoding[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
 }
 
-case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
+case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])
            extends HeaderAppendable[T]
            with RouteExecutable[R::T]
 {
@@ -53,13 +53,14 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: Decoder[R])
 
   override def query: QueryRule = router.query
 
-  def decoding(decoder2: Decoder[R]): CodecRouter[T, R] = CodecRouter(router, decoder.or(decoder2))
+  def decoding[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = CodecRouter(router, decoder orElse decoder2)
 
   override val validators: HeaderRule = {
     if (!decoder.consumes.isEmpty) {
-      val mt = requireThat(Header.`Content-Type`){ h: Header.`Content-Type`.HeaderT =>
-        decoder.consumes.find(_ == h.mediaType).isDefined
+      val mt = requireThat(Header.`Content-Type`) { h: Header.`Content-Type`.HeaderT =>
+        decoder.consumes.find(_.satisfiedBy(h.mediaType)).isDefined
       }
+
       HeaderAnd(router.validators, mt.rule)
     } else router.validators
   }

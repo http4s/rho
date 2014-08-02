@@ -68,7 +68,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
   def baseOp = Operation("GET", "", "", "void", "temp- will replace", 0)
 
   def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
-    val consumes = action.decoders.map(_.value).toList
+    val consumes = action.validMedia.map(_.value).toList
     val produces = action.responseEncodings.map(_.value).toList
 
     // Get the result types and models
