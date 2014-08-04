@@ -8,7 +8,6 @@ import org.specs2.mutable._
 import shapeless.HNil
 import scalaz.concurrent.Task
 import scodec.bits.ByteVector
-import Status._
 
 
 class ApiTest extends Specification {
@@ -66,7 +65,7 @@ class ApiTest extends Specification {
       val p1 = "one" / 'two
       val p2 = "three" / 'four
 
-      val f = GET / (p1 || p2) runWith { (s: String) => Ok("").withHeaders(Header.ETag(s)) }
+      val f = GET / (p1 || p2) runWith { (s: String) => OK("").withHeaders(Header.ETag(s)) }
 
       val req1 = Request(requestUri = Uri.fromString("/one/two").get)
       fetch(f(req1)) should_== "two"
@@ -90,7 +89,6 @@ class ApiTest extends Specification {
   }
 
   "PathValidator" should {
-    import Status._
 
     def check(p: Option[Task[Response]], s: String) = {
       p.get.run.headers.get(Header.ETag).get.value should_== s
@@ -100,7 +98,7 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request(requestUri = Uri.fromString("/hello").get)
 
-      val f: Request => Option[Task[Response]] = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
+      val f: Request => Option[Task[Response]] = stuff runWith { () => OK("Cool.").withHeaders(Header.ETag("foo")) }
       check(f(req), "foo")
     }
 
@@ -108,7 +106,7 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request(requestUri = Uri.fromString("/hello/world").get)
 
-      val f: Request => Option[Task[Response]] = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
+      val f: Request => Option[Task[Response]] = stuff runWith { () => OK("Cool.").withHeaders(Header.ETag("foo")) }
       val r = f(req)
       r should_== None
     }
@@ -117,7 +115,7 @@ class ApiTest extends Specification {
       val stuff = GET / 'hello
       val req = Request(requestUri = Uri.fromString("/hello").get)
 
-      val f: Request => Option[Task[Response]] = stuff runWith { str: String => Ok("Cool.").withHeaders(Header.ETag(str)) }
+      val f: Request => Option[Task[Response]] = stuff runWith { str: String => OK("Cool.").withHeaders(Header.ETag(str)) }
       check(f(req), "hello")
     }
 
@@ -125,7 +123,7 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request(requestUri = Uri.fromString("/hello").get)
 
-      val f = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
+      val f = stuff runWith { () => OK("Cool.").withHeaders(Header.ETag("foo")) }
 
       check(f(req), "foo")
     }
@@ -133,26 +131,25 @@ class ApiTest extends Specification {
     "capture end with nothing" in {
       val stuff = GET / "hello" / *
       val req = Request(requestUri = Uri.fromString("/hello").get)
-      val f = stuff runWith { path: List[String] => Ok("Cool.").withHeaders(Header.ETag(if (path.isEmpty) "go" else "nogo")) }
+      val f = stuff runWith { path: List[String] => OK("Cool.").withHeaders(Header.ETag(if (path.isEmpty) "go" else "nogo")) }
       check(f(req), "go")
     }
 
     "capture remaining" in {
       val stuff = GET / "hello" / *
       val req = Request(requestUri = Uri.fromString("/hello/world/foo").get)
-      val f = stuff runWith { path: List[String] => Ok("Cool.").withHeaders(Header.ETag(path.mkString)) }
+      val f = stuff runWith { path: List[String] => OK("Cool.").withHeaders(Header.ETag(path.mkString)) }
       check(f(req), "worldfoo")
     }
   }
 
   "Query validators" should {
-    import Status._
 
     "get a query string" in {
       val path = POST / "hello" +? param[Int]("jimbo")
       val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").get)
 
-      val route = path runWith { i: Int => Ok("stuff").withHeaders(Header.ETag((i + 1).toString)) }
+      val route = path runWith { i: Int => OK("stuff").withHeaders(Header.ETag((i + 1).toString)) }
 
       fetch(route(req)) should_== "33"
 
@@ -160,20 +157,18 @@ class ApiTest extends Specification {
   }
 
   "Decoders" should {
-    import Status._
     import scalaz.stream.Process
 
     "Decode a body" in {
       val path = POST / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10 }
-      val body = Process.emit(ByteVector.apply("foo".getBytes()))
 
       val req = Method.Post("/hello")
                     .withBody("foo")
                     .run
 
       val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
-        Ok("stuff").withHeaders(Header.ETag(str))
+        OK("stuff").withHeaders(Header.ETag(str))
       }
 
       fetch(route(req)) should_== "foo"
@@ -187,7 +182,7 @@ class ApiTest extends Specification {
         .withHeaders(Headers(Header.`Content-Length`("foo".length)))
 
       val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
-        Ok("stuff").withHeaders(Header.ETag(str))
+        OK("stuff").withHeaders(Header.ETag(str))
       }
 
       val result = route(req)
@@ -196,8 +191,6 @@ class ApiTest extends Specification {
   }
 
   "Do a complicated one" in {
-    import Status._
-    import scalaz.stream.Process
 
     val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
@@ -206,7 +199,7 @@ class ApiTest extends Specification {
     val route =
       (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, tag: Header.ETag, body: String) =>
 
-        Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+        OK(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
           .addHeaders(Header.ETag("foo"))
       }
 
@@ -221,7 +214,6 @@ class ApiTest extends Specification {
   }
 
   "Append headers to a Route" in {
-    import Status._
     import scalaz.stream.Process
 
     val path = POST / "hello" / 'world +? param[Int]("fav")
@@ -231,7 +223,7 @@ class ApiTest extends Specification {
     val route = (path >>> validations >>> capture(Header.ETag)).decoding(EntityDecoder.text) runWith
       {(world: String, fav: Int, tag: Header.ETag, body: String) =>
 
-        Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+        OK(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
           .addHeaders(Header.ETag("foo"))
       }
 

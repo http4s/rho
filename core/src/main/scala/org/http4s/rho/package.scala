@@ -11,7 +11,7 @@ import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
 
-package object rho {
+package object rho extends ResultSyntax {
 
   val OPTIONS = Method.Options
   val GET = Method.Get

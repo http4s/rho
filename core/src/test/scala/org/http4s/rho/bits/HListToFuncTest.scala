@@ -18,8 +18,7 @@ class HListToFuncTest extends Specification {
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h:_*))
 
   val service = new RhoService {
-    GET / "route1" |>> { () => Ok("foo") }
-    GET / "route2" |>> { () => "foo" }
+    GET / "route1" |>> { () => OK("foo") }
   }
 
   "HListToFunc" should {
@@ -28,9 +27,5 @@ class HListToFuncTest extends Specification {
       checkOk(req) should_== "foo"
     }
 
-    "Work for methods of type _ => O where a Writable[O] exists" in {
-      val req = Get("/route2")
-      checkOk(req) should_== "foo"
-    }
   }
 }

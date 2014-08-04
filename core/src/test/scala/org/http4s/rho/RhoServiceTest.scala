@@ -9,54 +9,54 @@ class RhoServiceTest extends Specification with RequestRunner {
   def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
 
   val service = new RhoService {
-    GET +? param("foo", "bar") |>> { foo: String => "Root " + foo }
+    GET +? param("foo", "bar") |>> { foo: String => OK("Root " + foo) }
 
-    GET / "hello" |>> { () => "route1" }
+    GET / "hello" |>> { () => OK("route1") }
 
-    GET / 'hello |>> { hello: String => "route2" }
+    GET / 'hello |>> { hello: String => OK("route2") }
 
-    GET / "hello" / "world" |>> { () => "route3" }
+    GET / "hello" / "world" |>> { () => OK("route3") }
 
     // keep the function for 'reverse routing'
-    val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => "route" + foo }
+    val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => OK("route" + foo) }
 
-    GET / "hello" / "reverse" |>> { () => "reverse: " + reverseQuery(0) }
+    GET / "hello" / "reverse" |>> { () => reverseQuery(0) }
 
-    GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => "some:" + s }
+    GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => OK("some:" + s) }
 
     // Routes that will have different headers/query string requirements should work together
-    GET / "hello" / "compete" +? param[Int]("foo") |>> { foo: Int => "route" + foo }
+    GET / "hello" / "compete" +? param[Int]("foo") |>> { foo: Int => OK("route" + foo) }
 
-    GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => "route6_" + foo }
+    GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => OK("route6_" + foo) }
 
-    GET / "hello" / "compete" |>> { () => "route7" }
+    GET / "hello" / "compete" |>> { () => OK("route7") }
 
     // Testing query params
     GET / "query" / "twoparams" +? param[Int]("foo") & param[String]("bar") |>> { (foo: Int, bar: String) =>
-      "twoparams" + foo + bar
+      OK("twoparams" + foo + bar)
     }
 
     GET / "query" / "twoparams2" +? param[Int]("foo") & param[Option[String]]("bar") |>> { (foo: Int, bar: Option[String]) =>
-      "twoparams2_" + foo + bar.getOrElse("cat")
+      OK("twoparams2_" + foo + bar.getOrElse("cat"))
     }
 
-    GET / "variadic" / * |>> { tail: Seq[String] => "route8_" + tail.mkString("/") }
+    GET / "variadic" / * |>> { tail: Seq[String] => OK("route8_" + tail.mkString("/")) }
 
     val or = "or1" || "or2"
-    GET / or |>> { () => "route9" }
+    GET / or |>> { () => OK("route9") }
 
-    GET / "orders" / pathVar[Int]("id") |>> { id: Int => id.toString }
+    GET / "orders" / pathVar[Int]("id") |>> { id: Int => OK(id.toString) }
 
-    GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => os.getOrElse("None") }
+    GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => OK(os.getOrElse("None")) }
 
-    GET / "seq" +? param[Seq[String]]("foo") |>> { os: Seq[String] => os.mkString(" ") }
+    GET / "seq" +? param[Seq[String]]("foo") |>> { os: Seq[String] => OK(os.mkString(" ")) }
 
-    GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => os.mkString(" ") }
+    GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => OK(os.mkString(" ")) }
 
-    GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => s"req $foo" }
+    GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => OK(s"req $foo") }
 
     val rootSome = root / "some"
-    GET / rootSome |>> { () => "root to some" }
+    GET / rootSome |>> { () => OK("root to some") }
   }
 
   "RhoService" should {
@@ -70,7 +70,7 @@ class RhoServiceTest extends Specification with RequestRunner {
 
     "Consider PathMatch(\"\") a NOOP" in {
       val service = new RhoService {
-        GET / "foo" / "" |>> { () => "bar" }
+        GET / "foo" / "" |>> { () => OK("bar") }
       }
       val req = Request(GET, Uri(path = "/foo"))
       getBody(service(req).run.body) should_== "bar"
@@ -98,7 +98,7 @@ class RhoServiceTest extends Specification with RequestRunner {
 
     "Provide 'reverse routing' characteristics" in {
       val req = Get("/hello/reverse")
-      checkOk(req) should_== "reverse: route0"
+      checkOk(req) should_== "route0"
     }
 
     "Fail a route with a missing query" in {
