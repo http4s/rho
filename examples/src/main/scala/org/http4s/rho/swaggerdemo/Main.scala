@@ -16,14 +16,10 @@ object MyService extends RhoService with SwaggerSupport with Json4sJacksonSuppor
   GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => (name -> id): JValue }
 }
 
-object Main {
-  def main(args: Array[String]) {
-    println("Hello world!")
-
-    val builder = BlazeServer.newBuilder
-    builder.mountService(MyService.andThen(_.addHeader(Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))))
-           .withPort(8080)
-           .build
-           .run()
-  }
+object Main extends App {
+  val builder = BlazeServer.newBuilder
+  builder.mountService(MyService.andThen(_.addHeader(Header.`Access-Control-Allow-Origin`.name, "*")))
+    .withPort(8080)
+    .build
+    .run()
 }
