@@ -168,7 +168,7 @@ class ApiTest extends Specification {
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10 }
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
 
-      val req = Method.Post("/hello")
+      val req = POST("/hello")
                     .withBody("foo")
                     .run
 
@@ -210,7 +210,7 @@ class ApiTest extends Specification {
           .addHeaders(Header.ETag("foo"))
       }
 
-    val req = Method.Post("/hello/neptune?fav=23")
+    val req = POST("/hello/neptune?fav=23")
                   .withBody("cool")
                   .addHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
                   .run
@@ -236,7 +236,7 @@ class ApiTest extends Specification {
       }
 
     val body = Process.emit(ByteVector("cool".getBytes))
-    val req = Method.Post("/hello/neptune?fav=23")
+    val req = POST("/hello/neptune?fav=23")
                   .withBody("cool")
                   .addHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
                   .run
