@@ -59,6 +59,7 @@ object Dependencies {
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"          % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blazeserver"  % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"      % http4sVersion
+  lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
   lazy val config              = "com.typesafe"                % "config"              % "1.2.1"
   lazy val json4s              = "org.json4s"                 %% "json4s-ext"          % "3.2.10"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"      % "3.2.10"
@@ -75,5 +76,8 @@ object Dependencies {
     json4s
   )
 
-  lazy val exampleDeps = libraryDependencies += http4sBlaze
+  lazy val exampleDeps = libraryDependencies ++= Seq(
+    http4sBlaze,
+    http4sJson4sJackson
+  )
 }
