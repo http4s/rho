@@ -73,8 +73,8 @@ class ApiExamples extends Specification {
         }
 
         // If you want to access the the Request, just add it as the first param
-        GET / "getrequest" |>> { req: Request => ??? }
-        GET / "getrequest" / 'foo |>> { (req: Request, foo: String) => ??? }
+        GET / "getrequest" |>> { req: Request => OK("Dont need a request") }
+        GET / "getrequest" / 'foo |>> { (req: Request, foo: String) => OK("I wanted a request") }
       }
 
       true should_== true

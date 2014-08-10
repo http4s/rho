@@ -14,13 +14,13 @@ class ApiBuilderSpec extends Specification {
 
   "ApiBuilder.generateNickname" should {
     "Generate a nickname without param" in {
-      builder.generateNickname("/hello/world", Get) should_== "getHelloWorld"
+      builder.generateNickname("/hello/world", GET) should_== "getHelloWorld"
     }
     "Generate a nickname with a pram" in {
-        builder.generateNickname("/hello/{world}", Get) should_== "getHello"
+        builder.generateNickname("/hello/{world}", GET) should_== "getHello"
     }
     "Generate a nickname with a POST" in {
-      builder.generateNickname("/hello", Post) should_== "postHello"
+      builder.generateNickname("/hello", POST) should_== "postHello"
     }
   }
 

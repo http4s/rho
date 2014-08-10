@@ -1,8 +1,11 @@
 package org.http4s.rho.swaggerdemo
 
-import org.http4s.Header.`Content-Type`
-import org.http4s.Header
-import org.http4s.blaze.BlazeServer
+import java.nio.charset.StandardCharsets
+
+import org.http4s.{Headers, Header}
+import org.http4s.Header.{`Content-Type`, `Access-Control-Allow-Origin`}
+import org.http4s.Writable.Entity
+import org.http4s.server.blaze.BlazeServer
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
 
@@ -17,36 +20,28 @@ object MyService extends RhoService with SwaggerSupport {
   GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => JsonResult(name, id) }
 }
 
-object Main {
-  def main(args: Array[String]) {
-    println("Hello world!")
-
-    val builder = BlazeServer.newBuilder
-    builder.mountService(MyService.andThen(_.addHeader(Header.Raw(Header.`Access-Control-Allow-Origin`.name, "*"))))
-           .withPort(8080)
-           .build
-           .run()
-  }
-}
-
 object JsonWritable {
   import org.json4s._
-  import org.json4s.jackson.JsonMethods._
   import org.json4s.jackson.Serialization
-  import org.json4s.jackson.Serialization.{read, write}
+  import org.json4s.jackson.Serialization.write
   import scalaz.stream.Process.emit
   import scalaz.concurrent.Task
   import scodec.bits.ByteVector
-  import org.http4s.{CharacterSet, HttpBody, Writable}
+  import org.http4s.Writable
 
   private implicit val formats = Serialization.formats(NoTypeHints)
 
-  implicit def jsonWritable[A <: AnyRef with Product]: Writable[A] = new Writable[A] {
-    override def contentType = `Content-Type`.`application/json`
+  implicit def jsonWritable[A <: AnyRef with Product]: Writable[A] =
+    Writable[A](a => Task.now {
+      val bytes = write(a).getBytes(StandardCharsets.UTF_8)
+      Entity(emit(ByteVector.view(bytes)), Some(bytes.length))
+    }, Headers.empty).withContentType(`Content-Type`.`application/json`)
+}
 
-    override def toBody(a: A): Task[(HttpBody, Option[Int])] = {
-      val bytes = write(a).getBytes(CharacterSet.`UTF-8`.charset)
-      Task.now(emit(ByteVector.view(bytes)) -> Some(bytes.length))
-    }
-  }
+object Main extends App {
+  val builder = BlazeServer.newBuilder
+  builder.mountService(MyService.andThen(_.addHeader(Header(`Access-Control-Allow-Origin`.name.toString, "*"))))
+    .withPort(8080)
+    .build
+    .run()
 }

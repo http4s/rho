@@ -7,14 +7,12 @@ import org.specs2.mutable.Specification
 
 class SwaggerSupportSpec extends Specification with RequestRunner {
 
-  import org.json4s.JsonDSL._
   import org.json4s.JsonAST._
   import org.json4s.jackson._
-  import org.http4s.rho._
 
-  val service = new SwaggerSupport {
-    GET / "hello" |>> { () => "hello world" }
-    GET / "hello"/ pathVar[String] |>> { world: String => "hello " + world }
+  lazy val service = new SwaggerSupport {
+    GET / "hello" |>> { () => OK("hello world") }
+    GET / "hello"/ pathVar[String] |>> { world: String => OK("hello " + world) }
   }
 
   "SwaggerSupport" should {

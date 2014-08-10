@@ -31,17 +31,17 @@ trait SwaggerSupport extends RhoService {
 
   GET / apiPath |>> { () =>
     val json = swaggerStorage.resourceListing
-    Status.Ok(compact(render(json)))
+    OK(compact(render(json)))
       .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
   }
 
   GET / apiPath / * |>> { params: Seq[String] =>
     swaggerStorage.getDoc(params) match {
       case Some(doc) =>
-        Status.Ok(compact(render(doc)))
+        OK(compact(render(doc)))
           .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
 
-      case None => Status.NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
+      case None => NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
     }
   }
 

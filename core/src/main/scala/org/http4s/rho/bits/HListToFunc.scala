@@ -23,50 +23,50 @@ trait HListToFunc[T <: HList, -F] {
 
 object HListToFunc {
 
-  implicit def wReqFun0[O](implicit t: TypeTag[O]) = new HListToFunc[HNil, (Request) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def wReqFun0[O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[HNil, (Request) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (Request) => Task[Result[O]]): (Request, HNil) => Task[Response] = (req, _) =>
       f(req).map(_.resp)
   }
 
-  implicit def fun0[O](implicit t: TypeTag[O]) = new HListToFunc[HNil, () => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def fun0[O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[HNil, () => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: () => Task[Result[O]]): (Request, HNil) => Task[Response] = (_, _) => f().map(_.resp)
   }
 
-  implicit def fun1[T1, O](implicit t: TypeTag[O]) = new HListToFunc[T1 :: HNil, T1 => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def fun1[T1, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: HNil, T1 => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (T1) => Task[Result[O]]): (Request, T1 :: HNil) => Task[Response] =
       (_, h) => f(h.head).map(_.resp)
   }
 
-  implicit def wReqfun1[T1, O](implicit t: TypeTag[O]) = new HListToFunc[T1 :: HNil, (Request, T1) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def wReqfun1[T1, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: HNil, (Request, T1) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (Request, T1) => Task[Result[O]]): (Request, T1 :: HNil) => Task[Response] =
       (req, h) => f(req, h.head).map(_.resp)
   }
 
-  implicit def fun2[T1, T2, O](implicit t: TypeTag[O]) = new HListToFunc[T1 :: T2 :: HNil, (T2, T1) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def fun2[T1, T2, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: T2 :: HNil, (T2, T1) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (T2, T1) => Task[Result[O]]): (Request, T1 :: T2 :: HNil) => Task[Response] = { (_, h) =>
       f(h.tail.head, h.head).map(_.resp) }
   }
 
-  implicit def wReqfun2[T1, T2, O](implicit t: TypeTag[O]) = new HListToFunc[T1 :: T2 :: HNil, (Request, T2, T1) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def wReqfun2[T1, T2, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: T2 :: HNil, (Request, T2, T1) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (Request, T2, T1) => Task[Result[O]]): (Request, T1 :: T2 :: HNil) => Task[Response] = { (req, h) =>
       f(req, h.tail.head, h.head).map(_.resp)
     }
   }
 
-  implicit def fun3[T1, T2, T3, O](implicit t: TypeTag[O]) = new HListToFunc[T3 :: T2 :: T1 :: HNil, (T1, T2, T3) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def fun3[T1, T2, T3, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T3 :: T2 :: T1 :: HNil, (T1, T2, T3) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (T1, T2, T3) => Task[Result[O]]): (Request, T3 :: T2 :: T1 :: HNil) => Task[Response] = { (_, h3) =>
       val t3 = h3.head
@@ -77,8 +77,8 @@ object HListToFunc {
     }
   }
 
-  implicit def wReqfun3[T1, T2, T3, O](implicit t: TypeTag[O]) = new HListToFunc[T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def wReqfun3[T1, T2, T3, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (Request, T1, T2, T3) => Task[Result[O]]): (Request, T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h3) =>
       val t3 = h3.head
@@ -89,8 +89,8 @@ object HListToFunc {
     }
   }
 
-  implicit def fun4[T1, T2, T3, T4, O](implicit t: TypeTag[O]) = new HListToFunc[T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def fun4[T1, T2, T3, T4, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (T1, T2, T3, T4) => Task[Result[O]]): (Request, T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (_, h4) =>
       val t4 = h4.head
@@ -103,8 +103,8 @@ object HListToFunc {
     }
   }
 
-  implicit def wReqfun4[T1, T2, T3, T4, O](implicit t: TypeTag[O]) = new HListToFunc[T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4) => Task[Result[O]]] {
-    override def encodings: Set[MediaType] = ???
+  implicit def wReqfun4[T1, T2, T3, T4, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4) => Task[Result[O]]] {
+    override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
     override def conv(f: (Request, T1, T2, T3, T4) => Task[Result[O]]): (Request, T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h4) =>
       val t4 = h4.head

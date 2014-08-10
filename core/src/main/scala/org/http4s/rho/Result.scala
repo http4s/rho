@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import scala.language.implicitConversions
+
 import org.http4s.Header.`Content-Length`
 
 import scalaz.concurrent.Task
@@ -42,5 +44,6 @@ trait ResultSyntax {
 
   def OK[R](r: R)(implicit w: Writable[R]) = mkResult(Status.Ok, r, w)
 
+  def NotFound(path: String) = mkResult(Status.NotFound, path, Writable.stringWritable)
 
 }
