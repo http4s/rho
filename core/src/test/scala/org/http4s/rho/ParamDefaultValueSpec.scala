@@ -47,7 +47,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   def body(r: Request): String = getBody(service(r).run.body)
-  def requestGet(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
+  def requestGet(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
   def status(r: Request): Status = service(r).run.status
 
   "GET /test1" should {

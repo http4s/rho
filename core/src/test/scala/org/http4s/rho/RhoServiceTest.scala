@@ -6,7 +6,7 @@ import scodec.bits.ByteVector
 
 class RhoServiceTest extends Specification with RequestRunner {
 
-  def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).get, headers = Headers(h: _*))
+  def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   val service = new RhoService {
     GET +? param("foo", "bar") |>> { foo: String => "Root " + foo }
@@ -63,7 +63,7 @@ class RhoServiceTest extends Specification with RequestRunner {
 
     "Get ROOT ('/')" in {
       val req1 = Request(GET, Uri(path = "/"))
-      val req2 = Request(GET, Uri.fromString("/?foo=biz").get)
+      val req2 = Request(GET, Uri.fromString("/?foo=biz").getOrElse(sys.error("Fail.")))
       (checkOk(req1) should_== "Root bar") and
         (checkOk(req2) should_== "Root biz")
     }

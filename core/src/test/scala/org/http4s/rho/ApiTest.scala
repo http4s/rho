@@ -68,10 +68,10 @@ class ApiTest extends Specification {
 
       val f = GET / (p1 || p2) runWith { (s: String) => Ok("").withHeaders(Header.ETag(s)) }
 
-      val req1 = Request(requestUri = Uri.fromString("/one/two").get)
+      val req1 = Request(requestUri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
       fetch(f(req1)) should_== "two"
 
-      val req2 = Request(requestUri = Uri.fromString("/three/four").get)
+      val req2 = Request(requestUri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
       fetch(f(req2)) should_== "four"
     }
   }
@@ -98,7 +98,7 @@ class ApiTest extends Specification {
 
     "traverse a captureless path" in {
       val stuff = GET / "hello"
-      val req = Request(requestUri = Uri.fromString("/hello").get)
+      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f: Request => Option[Task[Response]] = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
       check(f(req), "foo")
@@ -106,7 +106,7 @@ class ApiTest extends Specification {
 
     "Not match a path to long" in {
       val stuff = GET / "hello"
-      val req = Request(requestUri = Uri.fromString("/hello/world").get)
+      val req = Request(requestUri = Uri.fromString("/hello/world").getOrElse(sys.error("Failed.")))
 
       val f: Request => Option[Task[Response]] = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
       val r = f(req)
@@ -115,7 +115,7 @@ class ApiTest extends Specification {
 
     "capture a variable" in {
       val stuff = GET / 'hello
-      val req = Request(requestUri = Uri.fromString("/hello").get)
+      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f: Request => Option[Task[Response]] = stuff runWith { str: String => Ok("Cool.").withHeaders(Header.ETag(str)) }
       check(f(req), "hello")
@@ -123,7 +123,7 @@ class ApiTest extends Specification {
 
     "work directly" in {
       val stuff = GET / "hello"
-      val req = Request(requestUri = Uri.fromString("/hello").get)
+      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
 
@@ -132,14 +132,14 @@ class ApiTest extends Specification {
 
     "capture end with nothing" in {
       val stuff = GET / "hello" / *
-      val req = Request(requestUri = Uri.fromString("/hello").get)
+      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
       val f = stuff runWith { path: List[String] => Ok("Cool.").withHeaders(Header.ETag(if (path.isEmpty) "go" else "nogo")) }
       check(f(req), "go")
     }
 
     "capture remaining" in {
       val stuff = GET / "hello" / *
-      val req = Request(requestUri = Uri.fromString("/hello/world/foo").get)
+      val req = Request(requestUri = Uri.fromString("/hello/world/foo").getOrElse(sys.error("Failed.")))
       val f = stuff runWith { path: List[String] => Ok("Cool.").withHeaders(Header.ETag(path.mkString)) }
       check(f(req), "worldfoo")
     }
@@ -150,7 +150,7 @@ class ApiTest extends Specification {
 
     "get a query string" in {
       val path = POST / "hello" +? param[Int]("jimbo")
-      val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").get)
+      val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
 
       val route = path runWith { i: Int => Ok("stuff").withHeaders(Header.ETag((i + 1).toString)) }
 
@@ -183,7 +183,7 @@ class ApiTest extends Specification {
       val path = POST / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 2}
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
-      val req = Request(requestUri = Uri.fromString("/hello").get, body = body)
+      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")), body = body)
         .withHeaders(Headers(Header.`Content-Length`("foo".length)))
 
       val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
