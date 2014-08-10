@@ -164,69 +164,6 @@ object TypeBuilder extends StrictLogging {
     Some(m)
   } catch { case NonFatal(t) => logger.error("Failed to build Swagger model", t); None }
 
-//  object AllowableValues {
-//    case object AnyValue extends AllowableValues
-//    case class AllowableValuesList[T](values: List[T]) extends AllowableValues
-//    case class AllowableRangeValues(values: Range) extends AllowableValues
-//
-//    def apply(): AllowableValues = empty
-//    def apply[T](values: T*): AllowableValues = apply(values.toList)
-//    def apply[T](values: List[T]): AllowableValues = AllowableValuesList(values)
-//    def apply(values: Range): AllowableValues = AllowableRangeValues(values)
-//    def empty = AnyValue
-//  }
-//
-//  private def convertToAllowableValues(csvString: String, paramType: String = null): AllowableValues = {
-//    if (csvString.toLowerCase.startsWith("range[")) {
-//      val ranges = csvString.substring(6, csvString.length() - 1).split(",")
-//      buildAllowableRangeValues(ranges, csvString, inclusive = true)
-//    } else if (csvString.toLowerCase.startsWith("rangeexclusive[")) {
-//      val ranges = csvString.substring(15, csvString.length() - 1).split(",")
-//      buildAllowableRangeValues(ranges, csvString, inclusive = false)
-//    } else {
-//      if (csvString.isBlank) {
-//        AllowableValues.AnyValue
-//      } else {
-//        val params = csvString.split(",").toList
-//        //        implicit val format = DefaultJsonFormats.GenericFormat(DefaultReaders.StringReader, DefaultWriters.StringWriter)
-//        paramType match {
-//          case null => AllowableValues.AllowableValuesList(params)
-//          case "string" => AllowableValues.AllowableValuesList(params)
-//        }
-//      }
-//    }
-//  }
-//
-//  private def buildAllowableRangeValues(ranges: Array[String], inputStr: String, inclusive: Boolean = true): AllowableValues.AllowableRangeValues = {
-//    var min: java.lang.Float = 0
-//    var max: java.lang.Float = 0
-//    if (ranges.size < 2) {
-//      throw new RuntimeException("Allowable values format " + inputStr + "is incorrect")
-//    }
-//    if (ranges(0).equalsIgnoreCase("Infinity")) {
-//      min = Float.PositiveInfinity
-//    } else if (ranges(0).equalsIgnoreCase("-Infinity")) {
-//      min = Float.NegativeInfinity
-//    } else {
-//      min = ranges(0).toFloat
-//    }
-//    if (ranges(1).equalsIgnoreCase("Infinity")) {
-//      max = Float.PositiveInfinity
-//    } else if (ranges(1).equalsIgnoreCase("-Infinity")) {
-//      max = Float.NegativeInfinity
-//    } else {
-//      max = ranges(1).toFloat
-//    }
-//    val allowableValues =
-//      AllowableValues.AllowableRangeValues(if (inclusive) Range.inclusive(min.toInt, max.toInt) else Range(min.toInt, max.toInt))
-//    allowableValues
-//  }
-//
-//  private implicit class RichString(str: String) {
-//    def blankOption: Option[String] = if (isBlank) None else Some(str)
-//    def isBlank: Boolean = str == null || str.isEmpty
-//  }
-//
   sealed trait DataType {
     def name: String
   }
@@ -262,12 +199,6 @@ object TypeBuilder extends StrictLogging {
       def apply(v: DataType): DataType = new ContainerDataType("Array", Some(v))
     }
 
-    //  object GenMap {
-    //    def apply(): DataType = Map
-    //    def apply(k: DataType, v: DataType): DataType = new DataType("Map[%s, %s]" format(k.name, v.name))
-    //  }
-    //
-
     // Methods to get a Datatype
     def apply(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) =
       new ValueDataType(name, format, qualifiedName)
@@ -290,13 +221,6 @@ object TypeBuilder extends StrictLogging {
       else if (isDecimal(klass)) this.Double
       else if (isDateTime(klass)) this.DateTime
       else if (isBool(klass)) this.Boolean
-      //    else if (classOf[java.lang.Enum[_]].isAssignableFrom(klass)) this.Enum
-      //    else if (isMap(klass)) {
-      //      if (st.typeArgs.size == 2) {
-      //        val (k :: v :: Nil) = st.typeArgs.toList
-      //        GenMap(fromScalaType(k), fromScalaType(v))
-      //      } else GenMap()
-      //    }
       else if (klass <:< typeOf[scala.collection.Set[_]] || klass <:< typeOf[java.util.Set[_]]) {
         if (t.typeArgs.nonEmpty) GenSet(fromType(t.typeArgs.head))
         else GenSet()
