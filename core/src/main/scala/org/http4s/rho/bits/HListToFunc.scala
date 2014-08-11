@@ -16,7 +16,7 @@ import scala.reflect.runtime.universe.TypeTag
  * @tparam F type of element onto which T will be mapped
  */
 trait HListToFunc[T <: HList, -F] {
-  def conv(f: F): (Request, T) => Task[Response]
+  def conv(f: F): (Request, T) => Task[Result[_]]
   def encodings: Set[MediaType]
   def typeTag: TypeTag[_]
 }
@@ -26,94 +26,95 @@ object HListToFunc {
   implicit def wReqFun0[O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[HNil, (Request) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (Request) => Task[Result[O]]): (Request, HNil) => Task[Response] = (req, _) =>
-      f(req).map(_.resp)
+    override def conv(f: (Request) => Task[Result[O]]): (Request, HNil) => Task[Result[_]] = (req, _) =>
+      f(req)
   }
 
   implicit def fun0[O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[HNil, () => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: () => Task[Result[O]]): (Request, HNil) => Task[Response] = (_, _) => f().map(_.resp)
+    override def conv(f: () => Task[Result[O]]): (Request, HNil) => Task[Result[_]] = (_, _) => f()
   }
 
   implicit def fun1[T1, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: HNil, T1 => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (T1) => Task[Result[O]]): (Request, T1 :: HNil) => Task[Response] =
-      (_, h) => f(h.head).map(_.resp)
+    override def conv(f: (T1) => Task[Result[O]]): (Request, T1 :: HNil) => Task[Result[_]] =
+      (_, h) => f(h.head)
   }
 
   implicit def wReqfun1[T1, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: HNil, (Request, T1) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (Request, T1) => Task[Result[O]]): (Request, T1 :: HNil) => Task[Response] =
-      (req, h) => f(req, h.head).map(_.resp)
+    override def conv(f: (Request, T1) => Task[Result[O]]): (Request, T1 :: HNil) => Task[Result[_]] =
+      (req, h) => f(req, h.head)
   }
 
   implicit def fun2[T1, T2, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: T2 :: HNil, (T2, T1) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (T2, T1) => Task[Result[O]]): (Request, T1 :: T2 :: HNil) => Task[Response] = { (_, h) =>
-      f(h.tail.head, h.head).map(_.resp) }
+    override def conv(f: (T2, T1) => Task[Result[O]]): (Request, T1 :: T2 :: HNil) => Task[Result[_]] = { (_, h) =>
+      f(h.tail.head, h.head)
+    }
   }
 
   implicit def wReqfun2[T1, T2, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T1 :: T2 :: HNil, (Request, T2, T1) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (Request, T2, T1) => Task[Result[O]]): (Request, T1 :: T2 :: HNil) => Task[Response] = { (req, h) =>
-      f(req, h.tail.head, h.head).map(_.resp)
+    override def conv(f: (Request, T2, T1) => Task[Result[O]]): (Request, T1 :: T2 :: HNil) => Task[Result[_]] = { (req, h) =>
+      f(req, h.tail.head, h.head)
     }
   }
 
   implicit def fun3[T1, T2, T3, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T3 :: T2 :: T1 :: HNil, (T1, T2, T3) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (T1, T2, T3) => Task[Result[O]]): (Request, T3 :: T2 :: T1 :: HNil) => Task[Response] = { (_, h3) =>
+    override def conv(f: (T1, T2, T3) => Task[Result[O]]): (Request, T3 :: T2 :: T1 :: HNil) => Task[Result[_]] = { (_, h3) =>
       val t3 = h3.head
       val h2 = h3.tail
       val t2 = h2.head
       val t1 = h2.tail.head
-      f(t1, t2, t3).map(_.resp)
+      f(t1, t2, t3)
     }
   }
 
   implicit def wReqfun3[T1, T2, T3, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (Request, T1, T2, T3) => Task[Result[O]]): (Request, T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h3) =>
+    override def conv(f: (Request, T1, T2, T3) => Task[Result[O]]): (Request, T3 :: T2 :: T1 :: HNil) => Task[Result[_]] = { (req, h3) =>
       val t3 = h3.head
       val h2 = h3.tail
       val t2 = h2.head
       val t1 = h2.tail.head
-      f(req, t1, t2, t3).map(_.resp)
+      f(req, t1, t2, t3)
     }
   }
 
   implicit def fun4[T1, T2, T3, T4, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (T1, T2, T3, T4) => Task[Result[O]]): (Request, T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (_, h4) =>
+    override def conv(f: (T1, T2, T3, T4) => Task[Result[O]]): (Request, T4 :: T3 :: T2 :: T1 :: HNil) => Task[Result[_]] = { (_, h4) =>
       val t4 = h4.head
       val h3 = h4.tail
       val t3 = h3.head
       val h2 = h3.tail
       val t2 = h2.head
       val t1 = h2.tail.head
-      f(t1, t2, t3, t4).map(_.resp)
+      f(t1, t2, t3, t4)
     }
   }
 
   implicit def wReqfun4[T1, T2, T3, T4, O](implicit t: TypeTag[O], w: Writable[O]) = new HListToFunc[T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4) => Task[Result[O]]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override def typeTag: TypeTag[O] = t
-    override def conv(f: (Request, T1, T2, T3, T4) => Task[Result[O]]): (Request, T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h4) =>
+    override def conv(f: (Request, T1, T2, T3, T4) => Task[Result[O]]): (Request, T4 :: T3 :: T2 :: T1 :: HNil) => Task[Result[_]] = { (req, h4) =>
       val t4 = h4.head
       val h3 = h4.tail
       val t3 = h3.head
       val h2 = h3.tail
       val t2 = h2.head
       val t1 = h2.tail.head
-      f(req, t1, t2, t3, t4).map(_.resp)
+      f(req, t1, t2, t3, t4)
     }
   }
 //

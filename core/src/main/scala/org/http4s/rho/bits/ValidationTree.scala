@@ -66,7 +66,7 @@ private[rho] trait ValidationTree {
           for {
             i <- TempTools.runQuery(req, query, pathstack)
             j <- TempTools.runValidation(req, vals, i)
-          } yield (() => action.hf.conv(action.f)(req, j.asInstanceOf[T]))
+          } yield (() => action.hf.conv(action.f)(req, j.asInstanceOf[T]).map(_.resp))
         })
 
       case c@ CodecRouter(_, parser) =>
@@ -78,7 +78,7 @@ private[rho] trait ValidationTree {
                 j <- TempTools.runValidation(req, c.validators, i)
               } yield (() => {
                 parser.decode(req).flatMap {
-                  case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T])
+                  case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T]).map(_.resp)
                   case ParserFailure(e)     => TempTools.onBadRequest(s"Decoding error: $e")
                   case ValidationFailure(e) => TempTools.onBadRequest(s"Validation failure: $e")
                 }
