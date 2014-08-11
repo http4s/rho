@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe.{TypeTag, typeTag}
 case class Foo(a: Int, b: String)
 case class FooDefault(a: Int = 0)
 case class FooGeneric[+A](a: A)
-case class Bar(foo: Foo, a: Int)
+case class FooComposite(foo: Foo, a: Int)
 case class FooWithList(l: List[Int])
 case class FooWithMap(l: Map[String,Int])
 

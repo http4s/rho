@@ -108,9 +108,9 @@ object TypeBuilder extends StrictLogging {
         val models = alreadyKnown ++ modelToSwagger(tpe)
 
         val children = ctor.paramLists.flatten.flatMap { paramsym =>
-          val pTpe = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+          val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
                      else sym.typeSignature
-          collectModels(pTpe, alreadyKnown, known + tpe)
+          collectModels(paramType, alreadyKnown, known + tpe)
         }
 
         models ++ children
@@ -134,12 +134,12 @@ object TypeBuilder extends StrictLogging {
          .paramLists
          .flatten
          .zipWithIndex
-         .map { case (pSym, pos) =>
-           val pTpe = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+         .map { case (paramSymbol, pos) =>
+           val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
 
            val items: Option[ModelRef] = {
-             if (pTpe.isCollection) {
-               val t = pTpe.typeArgs.head
+             if (paramType.isCollection) {
+               val t = paramType.typeArgs.head
 
                val m = ModelRef(`type` = DataType.fromType(t).name,
                                 qualifiedType = Some(t.fullName)
@@ -150,14 +150,14 @@ object TypeBuilder extends StrictLogging {
            }
 
            val prop = ModelProperty(
-             DataType.fromType(pTpe).name,
-             pTpe.fullName,
+             DataType.fromType(paramType).name,
+             paramType.fullName,
              pos,
-             !(pSym.asTerm.isParamWithDefault || pTpe.isOption),
+             !(paramSymbol.asTerm.isParamWithDefault || paramType.isOption),
              items = items
            )
 
-           (pSym.name.decodedName.toString, prop)
+           (paramSymbol.name.decodedName.toString, prop)
          }
 
     val m = Model(tpe.simpleName, tpe.simpleName, tpe.fullName, LinkedHashMap(properties: _*))
