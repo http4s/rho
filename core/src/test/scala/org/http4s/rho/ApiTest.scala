@@ -8,7 +8,8 @@ import org.specs2.mutable._
 import shapeless.HNil
 import scalaz.concurrent.Task
 import scodec.bits.ByteVector
-import Status._
+
+import Http4s._
 
 
 class ApiTest extends Specification {

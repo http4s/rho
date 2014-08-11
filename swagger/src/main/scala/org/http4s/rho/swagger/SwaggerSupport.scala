@@ -9,6 +9,8 @@ import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
 import org.http4s.Writable.Entity
 
+import org.http4s.MessageSyntax._
+
 import shapeless.HList
 
 import org.json4s._

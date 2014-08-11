@@ -2,10 +2,10 @@ package org.http4s
 package rhotest
 
 import org.specs2.mutable.Specification
-import org.http4s.{ Header, Method, Status }
-import Status.Ok
 import org.http4s.rho._
 import scalaz.concurrent.Task
+
+import Http4s._
 
 
 class ApiExamples extends Specification {
