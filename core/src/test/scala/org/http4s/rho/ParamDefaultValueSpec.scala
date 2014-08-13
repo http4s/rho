@@ -4,6 +4,8 @@ package rho
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
+import Http4sConstants._
+
 class ParamDefaultValueSpec extends Specification {
 
   def getBody(b: EntityBody): String = {

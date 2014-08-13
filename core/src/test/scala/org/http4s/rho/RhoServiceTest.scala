@@ -2,7 +2,7 @@ package org.http4s
 package rho
 
 import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
+import Http4sConstants._
 
 class RhoServiceTest extends Specification with RequestRunner {
 

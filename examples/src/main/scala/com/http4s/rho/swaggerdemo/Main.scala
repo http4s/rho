@@ -1,6 +1,8 @@
-package org.http4s.rho.swaggerdemo
+package com.http4s.rho.swaggerdemo
 
 import java.nio.charset.StandardCharsets
+
+import org.http4s.Http4sConstants._
 import org.http4s.{ Headers, Header }
 import org.http4s.Header.{ `Content-Type`, `Access-Control-Allow-Origin` }
 import org.http4s.Writable.Entity

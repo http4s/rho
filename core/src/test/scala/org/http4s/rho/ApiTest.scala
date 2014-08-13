@@ -7,9 +7,11 @@ import org.http4s.rho.bits.{ParserSuccess, ValidationFailure}
 import org.specs2.mutable._
 import shapeless.HNil
 import scalaz.concurrent.Task
+import scalaz.stream.Process
 import scodec.bits.ByteVector
 
 import Http4s._
+import Http4sConstants._
 
 
 class ApiTest extends Specification {
@@ -91,7 +93,6 @@ class ApiTest extends Specification {
   }
 
   "PathValidator" should {
-    import Status._
 
     def check(p: Option[Task[Response]], s: String) = {
       p.get.run.headers.get(Header.ETag).get.value should_== s
@@ -147,8 +148,6 @@ class ApiTest extends Specification {
   }
 
   "Query validators" should {
-    import Status._
-
     "get a query string" in {
       val path = POST / "hello" +? param[Int]("jimbo")
       val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
@@ -161,9 +160,6 @@ class ApiTest extends Specification {
   }
 
   "Decoders" should {
-    import Status._
-    import scalaz.stream.Process
-
     "Decode a body" in {
       val path = POST / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10 }
@@ -197,9 +193,6 @@ class ApiTest extends Specification {
   }
 
   "Do a complicated one" in {
-    import Status._
-    import scalaz.stream.Process
-
     val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
                       capture(Header.ETag)
@@ -222,9 +215,6 @@ class ApiTest extends Specification {
   }
 
   "Append headers to a Route" in {
-    import Status._
-    import scalaz.stream.Process
-
     val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
 
