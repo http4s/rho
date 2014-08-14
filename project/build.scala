@@ -9,7 +9,7 @@ object MyBuild extends Build {
   lazy val rho = project
                   .in(file("."))
                   .settings(buildSettings: _*)
-                  .aggregate(core, hal, swagger)
+                  .aggregate(core, hal, swagger, examples)
    
   lazy val core = project
                     .in(file("core"))
@@ -36,7 +36,7 @@ object MyBuild extends Build {
 
   lazy val buildSettings = Defaults.defaultSettings ++
      Seq(
-        scalaVersion := "2.11.1",
+        scalaVersion := "2.11.2",
         scalacOptions ++= compileFlags,
         version := rhoVersion,
         resolvers += Resolver.sonatypeRepo("snapshots"),
@@ -45,7 +45,7 @@ object MyBuild extends Build {
         libraryDependencies ++= Seq(
           http4sServer,
           logbackClassic % "test",
-          specs2 % "test"
+          scalazSpecs2 % "test"
         )
     )
 
@@ -66,7 +66,7 @@ object Dependencies {
   lazy val swaggerCore         = "com.wordnik"                %% "swagger-core"        % "1.3.8-SNAPSHOT"
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"     % "1.1.2"
   lazy val scalaloggingSlf4j   = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
-  lazy val specs2              = "org.specs2"                 %% "specs2"              % "2.3.12"
+  lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"       % "0.3.0"
 
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
 

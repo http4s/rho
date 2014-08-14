@@ -3,7 +3,7 @@ package rho
 package swagger
 
 import org.specs2.mutable.Specification
-
+import Http4sConstants._
 
 class SwaggerSupportSpec extends Specification with RequestRunner {
 

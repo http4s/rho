@@ -7,6 +7,8 @@ import UriTemplate.ParamExp
 import UriTemplate.PathElm
 import UriTemplate.PathExp
 
+import Http4sConstants._
+
 class RouteAsUriTemplateSpec extends Specification {
 
   "PathBuilder as UriTemplate" should {

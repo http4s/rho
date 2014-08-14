@@ -35,10 +35,10 @@ trait RhoService extends server.HttpService with ExecutableCompiler with bits.Pa
   override def isDefinedAt(x: Request): Boolean = getResult(x).isDefined
 
   override def apply(req: Request): Task[Response] =
-    applyOrElse(req, (_:Request) => throw new MatchError(s"Route not defined at: ${req.requestUri}"))
+    applyOrElse(req, (_:Request) => throw new MatchError(s"Route not defined at: ${req.uri}"))
 
   override def applyOrElse[A1 <: Request, B1 >: Task[Response]](x: A1, default: (A1) => B1): B1 = {
-    logger.info(s"Request: ${x.requestMethod}:${x.requestUri}")
+    logger.info(s"Request: ${x.method}:${x.uri}")
     getResult(x) match {
       case Some(f) => attempt(f)
       case None => default(x)
@@ -46,11 +46,11 @@ trait RhoService extends server.HttpService with ExecutableCompiler with bits.Pa
   }
 
   private def getResult(req: Request): Option[()=>Task[Response]] = {
-    val path = req.requestUri.path.split("/").toList match {
+    val path = req.uri.path.split("/").toList match {
       case ""::xs => xs
       case     xs => xs
     }
-    methods.get(req.requestMethod).flatMap(_.walk(req, path, HNil) match {
+    methods.get(req.method).flatMap(_.walk(req, path, HNil) match {
       case null => None
       case ParserSuccess(t)     => Some(t)
       case ParserFailure(s)     => Some(() => onBadRequest(s))

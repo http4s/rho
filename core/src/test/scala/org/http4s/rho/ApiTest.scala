@@ -7,7 +7,11 @@ import org.http4s.rho.bits.{ParserSuccess, ValidationFailure}
 import org.specs2.mutable._
 import shapeless.HNil
 import scalaz.concurrent.Task
+import scalaz.stream.Process
 import scodec.bits.ByteVector
+
+import Http4s._
+import Http4sConstants._
 
 
 class ApiTest extends Specification {
@@ -67,10 +71,10 @@ class ApiTest extends Specification {
 
       val f = GET / (p1 || p2) runWith { (s: String) => OK("").withHeaders(Header.ETag(s)) }
 
-      val req1 = Request(requestUri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
+      val req1 = Request(uri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
       fetch(f(req1)) should_== "two"
 
-      val req2 = Request(requestUri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
+      val req2 = Request(uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
       fetch(f(req2)) should_== "four"
     }
   }
@@ -96,7 +100,7 @@ class ApiTest extends Specification {
 
     "traverse a captureless path" in {
       val stuff = GET / "hello"
-      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f: Request => Option[Task[Response]] = stuff runWith { () => OK("Cool.").withHeaders(Header.ETag("foo")) }
       check(f(req), "foo")
@@ -104,7 +108,7 @@ class ApiTest extends Specification {
 
     "Not match a path to long" in {
       val stuff = GET / "hello"
-      val req = Request(requestUri = Uri.fromString("/hello/world").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello/world").getOrElse(sys.error("Failed.")))
 
       val f: Request => Option[Task[Response]] = stuff runWith { () => OK("Cool.").withHeaders(Header.ETag("foo")) }
       val r = f(req)
@@ -113,7 +117,7 @@ class ApiTest extends Specification {
 
     "capture a variable" in {
       val stuff = GET / 'hello
-      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f: Request => Option[Task[Response]] = stuff runWith { str: String => OK("Cool.").withHeaders(Header.ETag(str)) }
       check(f(req), "hello")
@@ -121,7 +125,7 @@ class ApiTest extends Specification {
 
     "work directly" in {
       val stuff = GET / "hello"
-      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f = stuff runWith { () => OK("Cool.").withHeaders(Header.ETag("foo")) }
 
@@ -130,7 +134,7 @@ class ApiTest extends Specification {
 
     "capture end with nothing" in {
       val stuff = GET / "hello" / *
-      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
       val f = stuff runWith { path: List[String] => OK("Cool.").withHeaders(Header.ETag(if (path.isEmpty) "go" else "nogo")) }
 
       check(f(req), "go")
@@ -138,7 +142,7 @@ class ApiTest extends Specification {
 
     "capture remaining" in {
       val stuff = GET / "hello" / *
-      val req = Request(requestUri = Uri.fromString("/hello/world/foo").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello/world/foo").getOrElse(sys.error("Failed.")))
       val f = stuff runWith { path: List[String] => OK("Cool.").withHeaders(Header.ETag(path.mkString)) }
 
       check(f(req), "worldfoo")
@@ -146,10 +150,9 @@ class ApiTest extends Specification {
   }
 
   "Query validators" should {
-
     "get a query string" in {
       val path = POST / "hello" +? param[Int]("jimbo")
-      val req = Request(requestUri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
 
       val route = path runWith { i: Int => OK("stuff").withHeaders(Header.ETag((i + 1).toString)) }
 
@@ -159,13 +162,11 @@ class ApiTest extends Specification {
   }
 
   "Decoders" should {
-    import scalaz.stream.Process
-
     "Decode a body" in {
       val path = POST / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10 }
 
-      val req = POST("/hello")
+      val req = Request(POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
                     .withBody("foo")
                     .run
 
@@ -180,7 +181,7 @@ class ApiTest extends Specification {
       val path = POST / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 2}
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
-      val req = Request(requestUri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")), body = body)
+      val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")), body = body)
         .withHeaders(Headers(Header.`Content-Length`("foo".length)))
 
       val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
@@ -193,7 +194,6 @@ class ApiTest extends Specification {
   }
 
   "Do a complicated one" in {
-
     val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
                       capture(Header.ETag)
@@ -202,12 +202,12 @@ class ApiTest extends Specification {
       (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, tag: Header.ETag, body: String) =>
 
         OK(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-          .addHeaders(Header.ETag("foo"))
+          .putHeaders(Header.ETag("foo"))
       }
 
-    val req = POST("/hello/neptune?fav=23")
+    val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
                   .withBody("cool")
-                  .addHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
+                  .putHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
                   .run
 
     val resp = route(req).get.run
@@ -216,7 +216,6 @@ class ApiTest extends Specification {
   }
 
   "Append headers to a Route" in {
-    import scalaz.stream.Process
 
     val path = POST / "hello" / 'world +? param[Int]("fav")
     val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
@@ -226,13 +225,13 @@ class ApiTest extends Specification {
       {(world: String, fav: Int, tag: Header.ETag, body: String) =>
 
         OK(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-          .addHeaders(Header.ETag("foo"))
+          .putHeaders(Header.ETag("foo"))
       }
 
     val body = Process.emit(ByteVector("cool".getBytes))
-    val req = POST("/hello/neptune?fav=23")
+    val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
                   .withBody("cool")
-                  .addHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
+                  .putHeaders(Header.`Content-Length`(4), Header.ETag("foo"))
                   .run
 
     val resp = route(req).get.run

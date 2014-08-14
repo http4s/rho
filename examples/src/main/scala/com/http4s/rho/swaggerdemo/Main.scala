@@ -1,9 +1,10 @@
-package org.http4s.rho.swaggerdemo
+package com.http4s.rho.swaggerdemo
 
 import java.nio.charset.StandardCharsets
 
-import org.http4s.{Headers, Header}
-import org.http4s.Header.{`Content-Type`, `Access-Control-Allow-Origin`}
+import org.http4s.Http4sConstants._
+import org.http4s.{ Headers, Header }
+import org.http4s.Header.{ `Content-Type`, `Access-Control-Allow-Origin` }
 import org.http4s.Writable.Entity
 import org.http4s.server.blaze.BlazeServer
 import org.http4s.rho.RhoService
@@ -15,9 +16,9 @@ object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
   import JsonWritable.jsonWritable
 
-  GET / "hello" |>> { () => "Hello world!" }
-  GET / "hello" / pathVar[Int] |>> { i: Int => s"You returned $i" }
-  GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => JsonResult(name, id) }
+  GET / "hello" |>> { () => OK("Hello world!") }
+  GET / "hello" / pathVar[Int] |>> { i: Int => OK(s"You returned $i") }
+  GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => OK(JsonResult(name, id)) }
 }
 
 object JsonWritable {
@@ -40,7 +41,10 @@ object JsonWritable {
 
 object Main extends App {
   val builder = BlazeServer.newBuilder
-  builder.mountService(MyService.andThen(_.addHeader(Header(`Access-Control-Allow-Origin`.name.toString, "*"))))
+  val service = MyService.andThen { t =>
+    for (r <- t) yield r.putHeaders(Header(`Access-Control-Allow-Origin`.name.toString, "*"))
+  }
+  builder.mountService(service)
     .withPort(8080)
     .build
     .run()

@@ -11,30 +11,53 @@ case class Result[T](resp: Response) extends AnyVal
 
 trait ResultSyntax {
 
-  implicit def resultToMessage[T](r: Result[T]): MessageSyntax.ResponseSyntax[Result[T]] =
-    new MessageSyntax.ResponseSyntax[Result[T]] {
-      override protected def translateMessage(f: (Response) => Response#Self): Result[T] =
-        Result(f(r.resp))
+  implicit class ResultSyntax[T](r: Result[T]) extends MessageOps {
+    override type Self = Result[T]
 
-      override protected def translateWithTask(f: (Response) => Task[Response#Self]): Task[Response#Self] =
-        f(r.resp)
-    }
+    override def withAttribute[A](key: AttributeKey[A], value: A): Self =
+      Result[T](r.resp.withAttribute(key, value))
 
-  implicit def resultToMessage[T](r: Task[Result[T]]): MessageSyntax.ResponseSyntax[Task[Result[T]]] =
-    new MessageSyntax.ResponseSyntax[Task[Result[T]]] {
-      override protected def translateMessage(f: (Response) => Response#Self): Task[Result[T]] =
-        r.map(res => Result(f(res.resp)))
+    override def withHeaders(headers: Headers): Self =
+      Result(r.resp.withHeaders(headers))
 
-      override protected def translateWithTask(f: (Response) => Task[Response#Self]): Task[Response#Self] = {
-        r.flatMap(res => f(res.resp))
-      }
-    }
+    override def putHeaders(headers: Header*): Self =
+      Result(r.resp.putHeaders(headers:_*))
 
+    override def filterHeaders(f: (Header) => Boolean): Self =
+      Result(r.resp.filterHeaders(f))
+  }
+
+  implicit class TaskResultSyntax[T](r: Task[Result[T]]) extends MessageOps {
+    override type Self = Task[Result[T]]
+
+    override def withAttribute[A](key: AttributeKey[A], value: A): Self =
+      r.map(r => Result(r.resp.withAttribute(key, value)))
+
+    override def withHeaders(headers: Headers): Self =
+      r.map(r => Result(r.resp.withHeaders(headers)))
+
+    override def putHeaders(headers: Header*): Self =
+      r.map(r => Result(r.resp.putHeaders(headers:_*)))
+
+    override def filterHeaders(f: (Header) => Boolean): Self =
+      r.map(r => Result(r.resp.filterHeaders(f)))
+  }
+
+//  implicit def resultToMessage[T](r: Task[Result[T]]): MessageSyntax.ResponseSyntax[Task[Result[T]]] =
+//    new MessageSyntax.ResponseSyntax[Task[Result[T]]] {
+//      override protected def translateMessage(f: (Response) => Response#Self): Task[Result[T]] =
+//        r.map(res => Result(f(res.resp)))
+//
+//      override protected def translateWithTask(f: (Response) => Task[Response#Self]): Task[Response#Self] = {
+//        r.flatMap(res => f(res.resp))
+//      }
+//    }
+//
 
   private def mkResult[R](s: Status, r: R, w: Writable[R]): Task[Result[R]] = {
     w.toEntity(r).map { entity =>
       val h = entity.length match {
-        case Some(l) => w.headers :+ `Content-Length`(l)
+        case Some(l) => w.headers.put(`Content-Length`(l))
         case None    => w.headers
       }
 
@@ -45,5 +68,4 @@ trait ResultSyntax {
   def OK[R](r: R)(implicit w: Writable[R]) = mkResult(Status.Ok, r, w)
 
   def NotFound(path: String) = mkResult(Status.NotFound, path, Writable.stringWritable)
-
 }

@@ -184,7 +184,7 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
                             query: QueryRule,
                                 v: HeaderRule): Option[ParserResult[HList]] =
   {
-    val p = parsePath(req.requestUri.path)
+    val p = parsePath(req.uri.path)
 
     runPath(req, path, p).map { r =>
       for {

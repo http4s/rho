@@ -13,16 +13,6 @@ import scala.reflect.runtime.universe.TypeTag
 
 package object rho extends ResultSyntax {
 
-  val OPTIONS = Method.OPTIONS
-  val GET = Method.GET
-  val HEAD = Method.HEAD
-  val POST = Method.POST
-  val PUT = Method.PUT
-  val DELETE = Method.DELETE
-  val TRACE = Method.TRACE
-  val CONNECT = Method.CONNECT
-  val PATCH = Method.PATCH
-
   private val stringTag = implicitly[TypeTag[String]]
 
   implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, PathEmpty)

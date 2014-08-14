@@ -2,10 +2,9 @@ package org.http4s
 package rho
 package bits
 
-import Status._
-
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
+import Http4sConstants._
 
 class HListToFuncTest extends Specification {
 
