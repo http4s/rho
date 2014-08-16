@@ -9,9 +9,6 @@ import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
 import org.http4s.Writable.Entity
 
-import MessageSyntax._
-import Http4sConstants.GET
-
 import shapeless.HList
 
 import org.json4s._
@@ -34,14 +31,14 @@ trait SwaggerSupport extends RhoService {
 
   GET / apiPath |>> { () =>
     val json = swaggerStorage.resourceListing
-    OK(compact(render(json)))
+    Ok(compact(render(json)))
       .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
   }
 
   GET / apiPath / * |>> { params: Seq[String] =>
     swaggerStorage.getDoc(params) match {
       case Some(doc) =>
-        OK(compact(render(doc)))
+        Ok(compact(render(doc)))
           .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
 
       case None => NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))

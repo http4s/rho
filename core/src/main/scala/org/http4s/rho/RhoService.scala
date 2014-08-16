@@ -10,11 +10,26 @@ import shapeless.{HNil, HList}
 
 import scalaz.concurrent.Task
 
-trait RhoService extends server.HttpService with ExecutableCompiler with bits.PathTree with LazyLogging {
+trait RhoService extends server.HttpService
+                    with ExecutableCompiler
+                    with bits.PathTree
+                    with bits.MethodAliases
+                    with bits.ResponseGeneratorInstances
+                    with LazyLogging {
 
   private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
 
-  protected def onError(t: Throwable): Task[Response] = Status.InternalServerError()
+  protected def onError(t: Throwable): Task[Response] = {
+    logger.error("Error during route execution.", t)
+    val w = Writable.stringWritable
+    w.toEntity(t.getMessage).map { entity =>
+      val hs = entity.length match {
+        case Some(l) => w.headers.put(Header.`Content-Length`(l))
+        case None    => w.headers
+      }
+      Response(Status.InternalServerError, body = entity.body, headers = hs)
+    }
+  }
 
   implicit protected def compilerSrvc[F] = new CompileService[F, F] {
     override def compile(action: RhoAction[_ <: HList, F]): F = {
@@ -62,10 +77,6 @@ trait RhoService extends server.HttpService with ExecutableCompiler with bits.Pa
 
   private def attempt(f: () => Task[Response]): Task[Response] = {
     try f()
-    catch { case t: Throwable =>
-      logger.error("Error during route execution.", t)
-      try onError(t)
-      catch {case t: Throwable => Status.InternalServerError(t.getMessage) }
-    }
+    catch { case t: Throwable => onError(t) }
   }
 }

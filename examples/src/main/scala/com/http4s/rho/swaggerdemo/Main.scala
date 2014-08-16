@@ -2,7 +2,6 @@ package com.http4s.rho.swaggerdemo
 
 import java.nio.charset.StandardCharsets
 
-import org.http4s.Http4sConstants._
 import org.http4s.{ Headers, Header }
 import org.http4s.Header.{ `Content-Type`, `Access-Control-Allow-Origin` }
 import org.http4s.Writable.Entity
@@ -16,9 +15,9 @@ object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
   import JsonWritable.jsonWritable
 
-  GET / "hello" |>> { () => OK("Hello world!") }
-  GET / "hello" / pathVar[Int] |>> { i: Int => OK(s"You returned $i") }
-  GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => OK(JsonResult(name, id)) }
+  GET / "hello" |>> { () => Ok("Hello world!") }
+  GET / "hello" / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
+  GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 }
 
 object JsonWritable {

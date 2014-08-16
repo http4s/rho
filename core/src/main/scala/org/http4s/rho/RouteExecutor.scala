@@ -21,7 +21,16 @@ trait ExecutableCompiler {
 
   def invalidHeader(h: Header): String = s"Invalid header: $h"
 
-  def onBadRequest(reason: String): Task[Response] = BadRequest(reason)
+  def onBadRequest(reason: String): Task[Response] = {
+    val w = Writable.stringWritable
+    w.toEntity(reason).map{ entity =>
+      val hs = entity.length match {
+        case Some(l) => w.headers.put(Header.`Content-Length`(l))
+        case None    => w.headers
+      }
+      Response(BadRequest, body = entity.body, headers = hs)
+    }
+  }
 
   def parsePath(path: String): List[String] = path.split("/").toList
 

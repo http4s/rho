@@ -4,7 +4,6 @@ package bits
 
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
-import Http4sConstants._
 
 class HListToFuncTest extends Specification {
 
@@ -14,10 +13,11 @@ class HListToFuncTest extends Specification {
 
   def checkOk(r: Request): String = getBody(service(r).run.body)
 
-  def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
+  def Get(s: String, h: Header*): Request =
+    Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
 
   val service = new RhoService {
-    GET / "route1" |>> { () => OK("foo") }
+    GET / "route1" |>> { () => Ok("foo") }
   }
 
   "HListToFunc" should {

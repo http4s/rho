@@ -3,11 +3,20 @@ package rho
 
 import scala.language.implicitConversions
 
-import org.http4s.Header.`Content-Length`
+import org.http4s.Writable.Entity
 
 import scalaz.concurrent.Task
+import scalaz.stream.Process
 
 case class Result[T](resp: Response) extends AnyVal
+
+sealed trait EmptyResult
+
+object EmptyResult {
+  implicit val emptyResultWritable: Writable[EmptyResult] = Writable(
+    _ => Task.now(Entity(Process.halt, None)), Headers.empty
+  )
+}
 
 trait ResultSyntax {
 
@@ -25,6 +34,10 @@ trait ResultSyntax {
 
     override def filterHeaders(f: (Header) => Boolean): Self =
       Result(r.resp.filterHeaders(f))
+
+    def withBody[T](b: T)(implicit w: Writable[T]): Task[Self] = {
+      r.resp.withBody(b)(w).map(Result(_))
+    }
   }
 
   implicit class TaskResultSyntax[T](r: Task[Result[T]]) extends MessageOps {
@@ -41,31 +54,9 @@ trait ResultSyntax {
 
     override def filterHeaders(f: (Header) => Boolean): Self =
       r.map(r => Result(r.resp.filterHeaders(f)))
-  }
 
-//  implicit def resultToMessage[T](r: Task[Result[T]]): MessageSyntax.ResponseSyntax[Task[Result[T]]] =
-//    new MessageSyntax.ResponseSyntax[Task[Result[T]]] {
-//      override protected def translateMessage(f: (Response) => Response#Self): Task[Result[T]] =
-//        r.map(res => Result(f(res.resp)))
-//
-//      override protected def translateWithTask(f: (Response) => Task[Response#Self]): Task[Response#Self] = {
-//        r.flatMap(res => f(res.resp))
-//      }
-//    }
-//
-
-  private def mkResult[R](s: Status, r: R, w: Writable[R]): Task[Result[R]] = {
-    w.toEntity(r).map { entity =>
-      val h = entity.length match {
-        case Some(l) => w.headers.put(`Content-Length`(l))
-        case None    => w.headers
-      }
-
-      Result(Response(status = s, body = entity.body, headers = h))
+    def withBody[T](b: T)(implicit w: Writable[T]): Self = {
+      r.flatMap(_.withBody(b)(w))
     }
   }
-
-  def OK[R](r: R)(implicit w: Writable[R]) = mkResult(Status.Ok, r, w)
-
-  def NotFound(path: String) = mkResult(Status.NotFound, path, Writable.stringWritable)
 }

@@ -7,7 +7,7 @@ import UriTemplate.ParamExp
 import UriTemplate.PathElm
 import UriTemplate.PathExp
 
-import Http4sConstants._
+import bits.MethodAliases.GET
 
 class RouteAsUriTemplateSpec extends Specification {
 

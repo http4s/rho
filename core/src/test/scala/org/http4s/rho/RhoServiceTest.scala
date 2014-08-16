@@ -2,77 +2,76 @@ package org.http4s
 package rho
 
 import org.specs2.mutable.Specification
-import Http4sConstants._
 
 class RhoServiceTest extends Specification with RequestRunner {
 
-  def Get(s: String, h: Header*): Request = Request(GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+  def Get(s: String, h: Header*): Request = Request(Method.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   val service = new RhoService {
-    GET +? param("foo", "bar") |>> { foo: String => OK("Root " + foo) }
+    GET +? param("foo", "bar") |>> { foo: String => Ok("Root " + foo) }
 
-    GET / "hello" |>> { () => OK("route1") }
+    GET / "hello" |>> { () => Ok("route1") }
 
-    GET / 'hello |>> { hello: String => OK("route2") }
+    GET / 'hello |>> { hello: String => Ok("route2") }
 
-    GET / "hello" / "world" |>> { () => OK("route3") }
+    GET / "hello" / "world" |>> { () => Ok("route3") }
 
     // keep the function for 'reverse routing'
-    val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => OK("route" + foo) }
+    val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => Ok("route" + foo) }
 
     GET / "hello" / "reverse" |>> { () => reverseQuery(0) }
 
-    GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => OK("some:" + s) }
+    GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => Ok("some:" + s) }
 
     // Routes that will have different headers/query string requirements should work together
-    GET / "hello" / "compete" +? param[Int]("foo") |>> { foo: Int => OK("route" + foo) }
+    GET / "hello" / "compete" +? param[Int]("foo") |>> { foo: Int => Ok("route" + foo) }
 
-    GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => OK("route6_" + foo) }
+    GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => Ok("route6_" + foo) }
 
-    GET / "hello" / "compete" |>> { () => OK("route7") }
+    GET / "hello" / "compete" |>> { () => Ok("route7") }
 
     // Testing query params
     GET / "query" / "twoparams" +? param[Int]("foo") & param[String]("bar") |>> { (foo: Int, bar: String) =>
-      OK("twoparams" + foo + bar)
+      Ok("twoparams" + foo + bar)
     }
 
     GET / "query" / "twoparams2" +? param[Int]("foo") & param[Option[String]]("bar") |>> { (foo: Int, bar: Option[String]) =>
-      OK("twoparams2_" + foo + bar.getOrElse("cat"))
+      Ok("twoparams2_" + foo + bar.getOrElse("cat"))
     }
 
-    GET / "variadic" / * |>> { tail: Seq[String] => OK("route8_" + tail.mkString("/")) }
+    GET / "variadic" / * |>> { tail: Seq[String] => Ok("route8_" + tail.mkString("/")) }
 
     val or = "or1" || "or2"
-    GET / or |>> { () => OK("route9") }
+    GET / or |>> { () => Ok("route9") }
 
-    GET / "orders" / pathVar[Int]("id") |>> { id: Int => OK(id.toString) }
+    GET / "orders" / pathVar[Int]("id") |>> { id: Int => Ok(id.toString) }
 
-    GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => OK(os.getOrElse("None")) }
+    GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => Ok(os.getOrElse("None")) }
 
-    GET / "seq" +? param[Seq[String]]("foo") |>> { os: Seq[String] => OK(os.mkString(" ")) }
+    GET / "seq" +? param[Seq[String]]("foo") |>> { os: Seq[String] => Ok(os.mkString(" ")) }
 
-    GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => OK(os.mkString(" ")) }
+    GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => Ok(os.mkString(" ")) }
 
-    GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => OK(s"req $foo") }
+    GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => Ok(s"req $foo") }
 
     val rootSome = root / "some"
-    GET / rootSome |>> { () => OK("root to some") }
+    GET / rootSome |>> { () => Ok("root to some") }
   }
 
   "RhoService" should {
 
     "Get ROOT ('/')" in {
-      val req1 = Request(GET, Uri(path = "/"))
-      val req2 = Request(GET, Uri.fromString("/?foo=biz").getOrElse(sys.error("Fail.")))
+      val req1 = Request(Method.GET, Uri(path = "/"))
+      val req2 = Request(Method.GET, Uri.fromString("/?foo=biz").getOrElse(sys.error("Fail.")))
       (checkOk(req1) should_== "Root bar") and
         (checkOk(req2) should_== "Root biz")
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
       val service = new RhoService {
-        GET / "foo" / "" |>> { () => OK("bar") }
+        GET / "foo" / "" |>> { () => Ok("bar") }
       }
-      val req = Request(GET, Uri(path = "/foo"))
+      val req = Request(Method.GET, Uri(path = "/foo"))
       getBody(service(req).run.body) should_== "bar"
     }
 
@@ -186,22 +185,22 @@ class RhoServiceTest extends Specification with RequestRunner {
     }
 
     "Level one path definition to /some" in {
-      val req1 = Request(GET, Uri(path = "/some"))
+      val req1 = Request(Method.GET, Uri(path = "/some"))
       checkOk(req1) should_== "root to some"
     }
 
     ////////////////////////////////////////////////////
     "Handle errors in the route actions" in {
       val service = new RhoService {
-        GET / "error" |>> { () => throw new Error("an error"); OK("Wont get here...") }
+        GET / "error" |>> { () => throw new Error("an error"); Ok("Wont get here...") }
       }
-      val req = Request(GET, Uri(path = "/error"))
+      val req = Request(Method.GET, Uri(path = "/error"))
       service(req).run.status must equalTo(Status.InternalServerError)
     }
 
     "throw a MatchError on apply for missing route" in {
       val service = new RhoService {}
-      val req = Request(GET, Uri(path = "/missing"))
+      val req = Request(Method.GET, Uri(path = "/missing"))
       service(req).run must throwA[MatchError]
     }
   }

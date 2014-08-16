@@ -3,7 +3,7 @@ package rho
 package swagger
 
 import org.specs2.mutable.Specification
-import Http4sConstants._
+import org.http4s.rho.bits.MethodAliases.GET
 
 class SwaggerSupportSpec extends Specification with RequestRunner {
 
@@ -11,8 +11,8 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
   import org.json4s.jackson._
 
   lazy val service = new SwaggerSupport {
-    GET / "hello" |>> { () => OK("hello world") }
-    GET / "hello"/ pathVar[String] |>> { world: String => OK("hello " + world) }
+    GET / "hello" |>> { () => Ok("hello world") }
+    GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
   }
 
   "SwaggerSupport" should {
@@ -26,7 +26,6 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
       val r = Request(GET, Uri(path = "/api-info/hello"))
       val json = parseJson(checkOk(r))
 
-//      println(checkOk(r))
       val JArray(List(a, b)) = json \ "apis"
 
       (a \ "path" should_== JString("/hello")) &&

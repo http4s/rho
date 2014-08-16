@@ -6,7 +6,6 @@ import org.http4s.rho._
 import scalaz.concurrent.Task
 
 import Http4s._
-import Http4sConstants._
 
 
 class ApiExamples extends Specification {
@@ -20,25 +19,25 @@ class ApiExamples extends Specification {
         // the path can be built up in multiple steps and the parts reused
         val path = POST / "hello"
         val path2 = path / 'world +? param[Int]("fav") // the symbol 'world just says 'capture a String'
-        path |>> { () => OK("Empty") } // use the |>> operator to turn a Router into an Action
-        path2 |>> { (world: String, fav: Int) => OK(s"Received $fav, $world") }
+        path |>> { () => Ok("Empty") } // use the |>> operator to turn a Router into an Action
+        path2 |>> { (world: String, fav: Int) => Ok(s"Received $fav, $world") }
         path2 |>> (foo(_, _))
 
         // It can also be made all at once
         val path3 = POST / "hello" / pathVar[Int] +? param[Int]("fav")
         path3 |>> {
-          (i1: Int, i2: Int) => OK(s"Sum of the number is ${i1 + i2}")
+          (i1: Int, i2: Int) => Ok(s"Sum of the number is ${i1 + i2}")
         }
 
         // You can automatically parse variables in the path
         val path4 = GET / "helloworldnumber" / pathVar[Int] / "foo"
         path4 |>> {
-          i: Int => OK("Received $i")
+          i: Int => Ok("Received $i")
         }
 
         // You can capture the entire rest of the tail using *
         val path5 = GET / "hello" / * |>> {
-          r: List[String] => OK(s"Got the rest: ${r.mkString}")
+          r: List[String] => Ok(s"Got the rest: ${r.mkString}")
         }
 
         // header validation is also composable
@@ -55,7 +54,7 @@ class ApiExamples extends Specification {
         // Now this can be combined with a method to make the 'Action'
         val action = r2 |>> {
           (world: String, fav: Int, tag: Header.ETag) =>
-            OK("Success").withHeaders(Header.ETag(fav.toString))
+            Ok("Success").withHeaders(Header.ETag(fav.toString))
         }
 
         /**
@@ -72,12 +71,12 @@ class ApiExamples extends Specification {
 
         GET / (path6 || path7) +? param[String]("foo") >>> (v6 || v7) |>> {
           (i: Int, foo: String, v: Int) =>
-            OK(s"Received $i, $foo, $v")
+            Ok(s"Received $i, $foo, $v")
         }
 
         // If you want to access the the Request, just add it as the first param
-        GET / "getrequest" |>> { req: Request => OK("Dont need a request") }
-        GET / "getrequest" / 'foo |>> { (req: Request, foo: String) => OK("I wanted a request") }
+        GET / "getrequest" |>> { req: Request => Ok("Dont need a request") }
+        GET / "getrequest" / 'foo |>> { (req: Request, foo: String) => Ok("I wanted a request") }
       }
 
       true should_== true
