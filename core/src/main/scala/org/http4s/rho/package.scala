@@ -11,7 +11,7 @@ import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
 
-package object rho extends ResultSyntax {
+package object rho extends ResultSyntaxInstances {
 
   private val stringTag = implicitly[TypeTag[String]]
 

@@ -33,7 +33,8 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
 }
 
 abstract class LocationResponseGenerator(val status: Status) extends ResponseGenerator {
-  def apply(location: Uri): Task[Result[EmptyResult]] = Task.now(Result(Response(status).putHeaders(Header.Location(location))))
+  def apply(location: Uri): Task[Result[EmptyResult]] =
+    Task.now(Result(Response(status).putHeaders(Header.Location(location))))
 }
 
 object ResponseGeneratorInstances extends ResponseGeneratorInstances

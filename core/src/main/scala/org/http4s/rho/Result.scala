@@ -18,7 +18,7 @@ object EmptyResult {
   )
 }
 
-trait ResultSyntax {
+trait ResultSyntaxInstances {
 
   implicit class ResultSyntax[T](r: Result[T]) extends MessageOps {
     override type Self = Result[T]
