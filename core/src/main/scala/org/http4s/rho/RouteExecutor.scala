@@ -175,11 +175,15 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
   }
   
   protected def compileCodecRouter[T <: HList, F, R](r: CodecRouter[T, R], f: F, hf: HListToFunc[R::T, F]): Result = {
-    val actionf = hf.conv(f)
+    val actionf = hf.conv(f)        // Cache our converted function
     val ff: Result = { req =>
-      // TODO: how to handle decoder error
+      // TODO: how to handle decoder error, using the Task error handling, special exceptions, or disjunctions?
       pathAndValidate(req, r.router.path, r.router.query, r.validators).map(_ match {
-        case ParserSuccess(stack) => r.decoder.decode(req).flatMap( r => actionf(req,r::stack.asInstanceOf[T]).map(_.resp))
+        case ParserSuccess(stack) =>
+          r.decoder.decode(req)                                  // Decode the body of the `Request`
+            .flatMap( r => actionf(req,r::stack.asInstanceOf[T]) // append body to path and query and feed to the actionf
+            .map(_.resp))                                        // extract the `Response` from the `Result[T]`
+
         case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
         case ParserFailure(s)     => onBadRequest(s)
       })

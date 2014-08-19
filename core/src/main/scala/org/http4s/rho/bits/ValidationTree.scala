@@ -2,17 +2,18 @@ package org.http4s
 package rho
 package bits
 
+import scala.annotation.tailrec
+
 import QueryAST.QueryRule
 import HeaderAST.HeaderRule
 
-import scala.annotation.tailrec
-
 import shapeless.HList
-
 import scalaz.concurrent.Task
 
 
+// Note that these methods don't preserve the full type structure of the HList and will need to be cast at some point
 private[bits] object TempTools extends ExecutableCompiler {
+
   override def runValidation(req: Request, v: HeaderRule, stack: HList): ParserResult[HList] =
     super.runValidation(req, v, stack)
 
@@ -65,7 +66,7 @@ private[rho] trait ValidationTree {
         SingleLeaf(query, vals, None, (req, pathstack) => {
           for {
             i <- TempTools.runQuery(req, query, pathstack)
-            j <- TempTools.runValidation(req, vals, i)
+            j <- TempTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
           } yield (() => action.hf.conv(action.f)(req, j.asInstanceOf[T]).map(_.resp))
         })
 
@@ -77,7 +78,7 @@ private[rho] trait ValidationTree {
                 i <- TempTools.runQuery(req, c.router.query, pathstack)
                 j <- TempTools.runValidation(req, c.validators, i)
               } yield (() => {
-                parser.decode(req).flatMap {
+                parser.decode(req).flatMap {               // `asInstanceOf` to turn the untyped HList to type T
                   case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T]).map(_.resp)
                   case ParserFailure(e)     => TempTools.onBadRequest(s"Decoding error: $e")
                   case ValidationFailure(e) => TempTools.onBadRequest(s"Validation failure: $e")
