@@ -46,5 +46,4 @@ class ResponseGeneratorSpec extends Specification {
           .run.resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.`application/json`)
     }
   }
-
 }

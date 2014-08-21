@@ -5,8 +5,6 @@ import org.specs2.mutable.Specification
 import org.http4s.rho._
 import scalaz.concurrent.Task
 
-import Http4s._
-
 
 class ApiExamples extends Specification {
 
