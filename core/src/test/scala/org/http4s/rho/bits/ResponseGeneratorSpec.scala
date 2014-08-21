@@ -1,7 +1,7 @@
 package org.http4s.rho.bits
 
-import org.http4s.Header.{Location, `Transfer-Encoding`, `Content-Length`}
-import org.http4s.{Uri, Status, Writable}
+import org.http4s.Header.{`Content-Type`, Location, `Transfer-Encoding`, `Content-Length`}
+import org.http4s._
 import org.specs2.mutable.Specification
 
 
@@ -37,6 +37,13 @@ class ResponseGeneratorSpec extends Specification {
       resp.headers.get(`Content-Length`) must_== None
       resp.headers.get(`Transfer-Encoding`) must_== None
       resp.headers.get(Location) must_== Some(Location(location))
+    }
+
+    "Explicitly added headers have priority" in {
+      val w = Writable[String](toEntity = Writable.stringWritable.toEntity,
+        headers = Writable.stringWritable.headers.put(`Content-Type`(MediaType.`text/html`)))
+         Ok("some content", Headers(`Content-Type`(MediaType.`application/json`)))(w)
+          .run.resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.`application/json`)
     }
   }
 

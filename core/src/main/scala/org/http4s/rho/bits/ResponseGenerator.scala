@@ -24,8 +24,8 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
   def apply[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[Result[A]] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
-        case Some(l) => headers ++ w.headers.put(`Content-Length`(l))
-        case None    => headers ++ w.headers
+        case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))
+        case None    => (w.headers ++ headers)
       }
       Task.now(Result(Response(status = status, headers = hs, body = proc)))
     }
