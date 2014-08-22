@@ -4,7 +4,6 @@ package bits
 import org.http4s.Header.`Content-Length`
 import org.http4s.Writable.Entity
 import org.http4s._
-import org.http4s.util.CaseInsensitiveString._
 
 import scalaz.concurrent.Task
 
