@@ -43,6 +43,7 @@ object TypeBuilder extends StrictLogging {
 
     def isProcess: Boolean = t <:< typeOf[Process[Task,_]]
     def isMap: Boolean = t <:< typeOf[collection.immutable.Map[_, _]] || t <:< typeOf[collection.Map[_, _]]
+    def isNothingOrNull: Boolean = t <:< typeOf[Nothing] || t <:< typeOf[Null]
     def isCollection: Boolean = t <:< typeOf[Array[_]] ||
                                 t <:< typeOf[Iterable[_]] ||
                                 t <:< typeOf[java.util.Collection[_]]
@@ -84,7 +85,10 @@ object TypeBuilder extends StrictLogging {
     catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.tpe.fullName}", e); Set.empty}
 
   private def collectModels(tpe: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = {
-    if (tpe.isMap) {
+    if (tpe.isNothingOrNull) {
+      Set.empty
+    }
+    else if (tpe.isMap) {
       collectModels(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
         collectModels(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
     }
@@ -138,7 +142,7 @@ object TypeBuilder extends StrictLogging {
            val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
 
            val items: Option[ModelRef] = {
-             if (paramType.isCollection) {
+             if (paramType.isCollection && !paramType.isNothingOrNull) {
                val t = paramType.typeArgs.head
 
                val m = ModelRef(`type` = DataType.fromType(t).name,

@@ -68,6 +68,26 @@ class TypeBuilderSpec extends Specification {
       m.properties("a").`type` must_== "integer"
     }
 
+    "Build a model with a generic of type Nothing" in {
+      val ms = models[FooGeneric[Nothing]]
+      ms.size must_== 1
+      val m = ms.head
+      m.id must_== "FooGeneric[Nothing]"
+
+      m.properties.size must_== 1
+      m.properties("a").`type` must_== "void"
+    }
+
+    "Build a model with a generic of type Null" in {
+      val ms = models[FooGeneric[Null]]
+      ms.size must_== 1
+      val m = ms.head
+      m.id must_== "FooGeneric[Null]"
+
+      m.properties.size must_== 1
+      m.properties("a").`type` must_== "void"
+    }
+
     "Build a model with a non-basic generic" in {
       val ms = models[FooGeneric[Foo]]
       ms.size must_== 2
