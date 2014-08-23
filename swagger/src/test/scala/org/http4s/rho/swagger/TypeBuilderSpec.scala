@@ -6,15 +6,14 @@ import java.util.Date
 import com.wordnik.swagger.model.Model
 import org.specs2.mutable.Specification
 
-import scala.reflect.runtime.universe.{TypeTag, typeTag}
+import scala.reflect.runtime.universe.{ TypeTag, typeTag }
 
 case class Foo(a: Int, b: String)
 case class FooDefault(a: Int = 0)
 case class FooGeneric[+A](a: A)
 case class FooComposite(foo: Foo, a: Int)
 case class FooWithList(l: List[Int])
-case class FooWithMap(l: Map[String,Int])
-
+case class FooWithMap(l: Map[String, Int])
 
 class TypeBuilderSpec extends Specification {
 
@@ -50,7 +49,7 @@ class TypeBuilderSpec extends Specification {
       val ms = models[FooDefault]
       ms.size must_== 1
 
-      val m  = ms.head
+      val m = ms.head
 
       m.name must_== "FooDefault"
       m.properties.size must_== 1
@@ -99,8 +98,8 @@ class TypeBuilderSpec extends Specification {
       import scalaz.stream.Process
 
       models[Seq[Foo]] must_== models[Foo]
-      models[Map[String,Foo]] must_== models[Foo]
-      models[Process[Task,Foo]] must_== models[Foo]
+      models[Map[String, Foo]] must_== models[Foo]
+      models[Process[Task, Foo]] must_== models[Foo]
     }
 
     "Build model that contains a List" in {
