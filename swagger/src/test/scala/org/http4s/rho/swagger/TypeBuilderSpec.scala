@@ -8,14 +8,20 @@ import org.specs2.mutable.Specification
 
 import scala.reflect.runtime.universe.{ TypeTag, typeTag }
 
-case class Foo(a: Int, b: String)
-case class FooDefault(a: Int = 0)
-case class FooGeneric[+A](a: A)
-case class FooComposite(foo: Foo, a: Int)
-case class FooWithList(l: List[Int])
-case class FooWithMap(l: Map[String, Int])
+package object model {
+  case class Foo(a: Int, b: String)
+  type Bar = Foo
+  case class FooDefault(a: Int = 0)
+  case class FooGeneric[+A](a: A)
+  type Foos = Seq[Foo]
+  case class FooComposite(single: Foo, many: Seq[Foo])
+  case class FooCompositeWithAlias(single: Bar, many: Seq[Bar], manyAlias: Foos)
+  case class FooWithList(l: List[Int])
+  case class FooWithMap(l: Map[String, Int])
+}
 
 class TypeBuilderSpec extends Specification {
+  import model._
 
   def models[T](implicit t: TypeTag[T]): Set[Model] = TypeBuilder.collectModels(t, Set.empty)
 
@@ -40,6 +46,13 @@ class TypeBuilderSpec extends Specification {
 
     "Build simple model" in {
       val model = models[Foo].head
+      model.id must_== "Foo"
+      model.properties("a").`type` must_== "integer"
+      model.properties("a").required must_== true
+    }
+
+    "Build a model from alias" in {
+      val model = models[Bar].head
       model.id must_== "Foo"
       model.properties("a").`type` must_== "integer"
       model.properties("a").required must_== true
@@ -85,6 +98,33 @@ class TypeBuilderSpec extends Specification {
 
       m.properties.size must_== 1
       m.properties("a").`type` must_== "void"
+    }
+
+    "Build a composite model" in {
+      val ms = models[FooComposite]
+      ms.size must_== 2
+      val m1 = ms.head
+      m1.id must_== "FooComposite"
+      m1.properties.size must_== 2
+      m1.properties("single").`type` must_== "Foo"
+      m1.properties("many").`type` must_== "List"
+
+      val m2 = ms.tail.head
+      m2.id must_== "Foo"
+    }
+
+    "Build a composite model with alias" in {
+      val ms = models[FooCompositeWithAlias]
+      ms.size must_== 2
+      val m1 = ms.head
+      m1.id must_== "FooCompositeWithAlias"
+      m1.properties.size must_== 3
+      m1.properties("single").`type` must_== "Foo"
+      m1.properties("many").`type` must_== "List"
+      m1.properties("manyAlias").`type` must_== "List"
+
+      val m2 = ms.tail.head
+      m2.id must_== "Foo"
     }
 
     "Build a model with a non-basic generic" in {

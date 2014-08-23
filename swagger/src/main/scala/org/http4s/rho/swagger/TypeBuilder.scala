@@ -84,7 +84,8 @@ object TypeBuilder extends StrictLogging {
     try collectModels(t.tpe.dealias, alreadyKnown, Set.empty)
     catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.tpe.fullName}", e); Set.empty}
 
-  private def collectModels(tpe: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = {
+    val tpe = t.dealias
     if (tpe.isNothingOrNull) {
       Set.empty
     }
@@ -143,7 +144,7 @@ object TypeBuilder extends StrictLogging {
 
            val items: Option[ModelRef] = {
              if (paramType.isCollection && !paramType.isNothingOrNull) {
-               val t = paramType.typeArgs.head
+               val t = paramType.dealias.typeArgs.head
 
                val m = ModelRef(`type` = DataType.fromType(t).name,
                                 qualifiedType = Some(t.fullName)
