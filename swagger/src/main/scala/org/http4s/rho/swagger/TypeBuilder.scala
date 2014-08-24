@@ -27,6 +27,7 @@ object TypeBuilder extends StrictLogging {
 
   implicit class ReflectionHelpers(t: Type) {
     import scala.reflect.runtime.universe._
+
     def simpleName: String = {
       t.typeSymbol.name.decodedName.toString + {
         if (t.typeArgs.isEmpty) ""
@@ -41,19 +42,31 @@ object TypeBuilder extends StrictLogging {
       }
     }
 
-    def isProcess: Boolean = t <:< typeOf[Process[Task, _]]
-    def isMap: Boolean = t <:< typeOf[collection.immutable.Map[_, _]] || t <:< typeOf[collection.Map[_, _]]
-    def isNothingOrNull: Boolean = t <:< typeOf[Nothing] || t <:< typeOf[Null]
+    def isArray: Boolean =
+      t <:< typeOf[Array[_]]
+
     def isCollection: Boolean = t <:< typeOf[Array[_]] ||
       t <:< typeOf[Iterable[_]] ||
       t <:< typeOf[java.util.Collection[_]]
 
-    def isPrimitive: Boolean = Reflector.primitives.find(_ =:= t).isDefined ||
-      Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
+    def isEither: Boolean =
+      t <:< typeOf[Either[_, _]]
 
-    def isOption: Boolean = t <:< typeOf[Option[_]]
-    def isEither: Boolean = t <:< typeOf[Either[_, _]]
-    def isArray: Boolean = t <:< typeOf[Array[_]]
+    def isMap: Boolean =
+      t <:< typeOf[collection.immutable.Map[_, _]] || t <:< typeOf[collection.Map[_, _]]
+
+    def isNothingOrNull: Boolean =
+      t <:< typeOf[Nothing] || t <:< typeOf[Null]
+
+    def isOption: Boolean =
+      t <:< typeOf[Option[_]]
+
+    def isPrimitive: Boolean =
+      Reflector.primitives.find(_ =:= t).isDefined ||
+        Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
+
+    def isProcess: Boolean =
+      t <:< typeOf[Process[Task, _]]
 
   }
 
