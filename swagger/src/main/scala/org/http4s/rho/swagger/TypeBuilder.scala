@@ -83,45 +83,40 @@ object TypeBuilder extends StrictLogging {
     try collectModels(t.tpe.dealias, alreadyKnown, Set.empty)
     catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.tpe.fullName}", e); Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = {
-    val tpe = t.dealias
-    if (tpe.isNothingOrNull) {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
+    case tpe if tpe.isNothingOrNull =>
       Set.empty
-    } else if (tpe.isMap) {
+    case tpe if tpe.isEither || tpe.isMap =>
       collectModels(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
         collectModels(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
-    } else if (tpe.isCollection || tpe.isOption) {
+    case tpe if tpe.isCollection || tpe.isOption =>
       val ntpe = tpe.typeArgs.head
       if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
       else Set.empty
-    } else if (tpe.isProcess) {
+    case tpe if tpe.isProcess =>
       val ntpe = tpe.typeArgs.apply(1)
       if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
       else Set.empty
-    } else if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) Set.empty // Not a map or collection
-
-    else {
-      val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
-      if (sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod) {
-        val ctor = sym.asClass.primaryConstructor.asMethod
-
-        val models = alreadyKnown ++ modelToSwagger(tpe)
-
-        val children = ctor.paramLists.flatten.flatMap { paramsym =>
-          val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-          else sym.typeSignature
-          collectModels(paramType, alreadyKnown, known + tpe)
-        }
-
-        models ++ children
-      } else {
-        logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${tpe.fullName}")
-        Set.empty
+    case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
+      Set.empty
+    case ExistentialType(_, _) =>
+      Set.empty
+    case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
+      val ctor = sym.asClass.primaryConstructor.asMethod
+      val models = alreadyKnown ++ modelToSwagger(tpe)
+      val children = ctor.paramLists.flatten.flatMap { paramsym =>
+        val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+        else sym.typeSignature
+        collectModels(paramType, alreadyKnown, known + tpe)
       }
-    }
+      models ++ children
+    case e =>
+      logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
+      Set.empty
   }
 
   private[this] val defaultExcluded = Set(typeOf[Nothing], typeOf[Null])
+  private[this] def isCaseClass(sym: Symbol): Boolean = sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) = (defaultExcluded ++ excludes).exists(_ =:= t)
 
   def modelToSwagger(tpe: Type): Option[Model] = try {
