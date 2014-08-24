@@ -1,10 +1,3 @@
-/*  This code was largely pillaged from worked by Wordnik, which is under an Apache 2.0 license.
-    https://github.com/swagger-api/swagger-scala.git
-    commit: 5746ffcc44a99dfaf25c41444559bb2bd197a33a
- */
-
-// TODO: deal with Maps correctly
-
 package org.http4s.rho.swagger
 
 import java.sql.Timestamp
@@ -13,6 +6,7 @@ import java.util.Date
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import com.wordnik.swagger.annotations.{ ApiModel, ApiModelProperty }
 import com.wordnik.swagger.model._
+
 import org.http4s.DateTime
 import org.joda.time.{ DateTimeZone, Chronology, ReadableInstant }
 
@@ -117,12 +111,16 @@ object TypeBuilder extends StrictLogging {
     case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
       val ctor = sym.asClass.primaryConstructor.asMethod
       val models = alreadyKnown ++ modelToSwagger(tpe)
+      val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
+        acc ++ collectModels(t, alreadyKnown, tpe.typeArgs.toSet)
+      }
       val children = ctor.paramLists.flatten.flatMap { paramsym =>
         val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
         else sym.typeSignature
         collectModels(paramType, alreadyKnown, known + tpe)
       }
-      models ++ children
+
+      models ++ generics ++ children
     case e =>
       logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
       Set.empty
