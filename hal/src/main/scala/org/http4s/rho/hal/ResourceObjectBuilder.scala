@@ -4,9 +4,9 @@ import scala.collection.mutable.LinkedHashMap
 import org.http4s.Uri
 import org.http4s.UriTemplate
 
-class ResourceObjectBuilder[T] {
-  private val _links = LinkedHashMap[String, Entry[LinkObjectLike]]()
-  private val _embedded = LinkedHashMap[String, Entry[ResourceObject[_]]]()
+class ResourceObjectBuilder[T, E] {
+  private val _links = LinkedHashMap[String, Either[LinkObject, Seq[LinkObject]]]()
+  private val _embedded = LinkedHashMap[String, Either[ResourceObject[E, _], Seq[ResourceObject[E, _]]]]()
   private var content: Option[T] = None
 
   def content(c: T): this.type = {
@@ -52,7 +52,7 @@ class ResourceObjectBuilder[T] {
    * overwritten.
    */
   def link(name: String, linkObj: LinkObject): this.type = {
-    _links.put(name, Single(linkObj))
+    _links.put(name, Left(linkObj))
     this
   }
 
@@ -62,7 +62,7 @@ class ResourceObjectBuilder[T] {
    * overwritten.
    */
   def links(name: String, linkObjs: List[LinkObject]): this.type = {
-    _links.put(name, Many(linkObjs))
+    _links.put(name, Right(linkObjs))
     this
   }
 
@@ -79,8 +79,8 @@ class ResourceObjectBuilder[T] {
    * document builder. In case the same `name` already exists the resource
    * object will be overwritten.
    */
-  def resource(name: String, resObj: ResourceObject[_]): this.type = {
-    _embedded.put(name, Single(resObj))
+  def resource(name: String, resObj: ResourceObject[E, _]): this.type = {
+    _embedded.put(name, Left(resObj))
     this
   }
 
@@ -89,8 +89,8 @@ class ResourceObjectBuilder[T] {
    * document builder. In case the same `name` already exists the resource
    * objects will be overwritten.
    */
-  def resources(name: String, resObjs: List[ResourceObject[_]]): this.type = {
-    _embedded.put(name, Many(resObjs))
+  def resources(name: String, resObjs: List[ResourceObject[E, _]]): this.type = {
+    _embedded.put(name, Right(resObjs))
     this
   }
 
@@ -99,9 +99,9 @@ class ResourceObjectBuilder[T] {
    * document builder. In case the same `name` already exists the resource
    * objects will be overwritten.
    */
-  def resources(name: String, resObjs: ResourceObject[_]*): this.type =
+  def resources(name: String, resObjs: ResourceObject[E, _]*): this.type =
     resources(name, resObjs.toList)
 
-  def build(): ResourceObject[T] = ResourceObject(_links.toList, _embedded.toList, content)
+  def build(): ResourceObject[T, E] = ResourceObject(_links.toList, _embedded.toList, content)
 
 }

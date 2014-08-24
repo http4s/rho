@@ -6,20 +6,12 @@ import org.http4s.rho.hal.ResourceObject
 /** Describes Hypertext Application Language types and functions */
 package object hal {
 
-  type EmbeddedDef = (String, Entry[ResourceObject[_]])
+  type EmbeddedDef[T] = (String, Either[ResourceObject[T, _], Seq[ResourceObject[T, _]]])
 
-  type Embedded = List[EmbeddedDef]
+  type Embedded[T] = List[EmbeddedDef[T]]
 
-  type LinkObjectDef = (String, Entry[LinkObjectLike])
+  type LinkObjectDef = (String, Either[LinkObject, Seq[LinkObject]])
 
   type Links = List[LinkObjectDef]
-
-  sealed trait Entry[+A]
-  final case class Single[+A](x: A) extends Entry[A]
-  final case class Many[+A](xs: List[A] = Nil) extends Entry[A]
-  object Many {
-    def empty[A]: Many[A] = Many()
-    def apply[A](xs: A*) = new Many(xs.toList)
-  }
 
 }
