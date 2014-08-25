@@ -41,7 +41,7 @@ trait SwaggerSupport extends RhoService {
         Ok(compact(render(doc)))
           .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
 
-      case None => NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
+      case None => ??? //NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
     }
   }
 

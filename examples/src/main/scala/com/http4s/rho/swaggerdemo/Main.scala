@@ -8,8 +8,11 @@ import org.http4s.Writable.Entity
 import org.http4s.server.blaze.BlazeServer
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
+import JsonWritable.AutoSerializable
 
-case class JsonResult(name: String, number: Int)
+import scalaz.{ \/-, -\/ }
+
+case class JsonResult(name: String, number: Int) extends AutoSerializable
 
 object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
@@ -18,6 +21,10 @@ object MyService extends RhoService with SwaggerSupport {
   GET / "hello" |>> { () => Ok("Hello world!") }
   GET / "hello" / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
   GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+  GET / "disjunction" / pathVar[Int] |>> { i: Int =>
+    if (true) \/-(Ok(JsonResult("Good result", i)))
+    else      -\/(Ok(<html><body>Negative number: {i}</body></html>))
+  }
 }
 
 object JsonWritable {
@@ -29,9 +36,11 @@ object JsonWritable {
   import scodec.bits.ByteVector
   import org.http4s.Writable
 
+  trait AutoSerializable extends AnyRef with Product
+
   private implicit val formats = Serialization.formats(NoTypeHints)
 
-  implicit def jsonWritable[A <: AnyRef with Product]: Writable[A] =
+  implicit def jsonWritable[A <: AutoSerializable]: Writable[A] =
     Writable[A](a => Task.now {
       val bytes = write(a).getBytes(StandardCharsets.UTF_8)
       Entity(emit(ByteVector.view(bytes)), Some(bytes.length))

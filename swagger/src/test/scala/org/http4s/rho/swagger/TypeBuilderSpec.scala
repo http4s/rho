@@ -23,7 +23,7 @@ package object model {
 class TypeBuilderSpec extends Specification {
   import model._
 
-  def models[T](implicit t: TypeTag[T]): Set[Model] = TypeBuilder.collectModels(t, Set.empty)
+  def models[T](implicit t: TypeTag[T]): Set[Model] = TypeBuilder.collectModels(t.tpe, Set.empty)
 
   "TypeBuilder" should {
 
@@ -39,7 +39,7 @@ class TypeBuilderSpec extends Specification {
           typeTag[java.math.BigDecimal], typeTag[java.math.BigInteger])
       }
 
-      val models = primitives.foldLeft(Set.empty[Model])((s, t) => TypeBuilder.collectModels(t, s))
+      val models = primitives.foldLeft(Set.empty[Model])((s, t) => TypeBuilder.collectModels(t.tpe, s))
 
       models.isEmpty must_== true
     }

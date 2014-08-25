@@ -90,9 +90,9 @@ object TypeBuilder extends StrictLogging {
   val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
   val containerTypes = Set("Array", "List", "Set")
 
-  def collectModels(t: TypeTag[_], alreadyKnown: Set[Model]): Set[Model] =
-    try collectModels(t.tpe.dealias, alreadyKnown, Set.empty)
-    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.tpe.fullName}", e); Set.empty }
+  def collectModels(t: Type, alreadyKnown: Set[Model]): Set[Model] =
+    try collectModels(t.dealias, alreadyKnown, Set.empty)
+    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.fullName}", e); Set.empty}
 
   private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
     case tpe if tpe.isNothingOrNull =>
@@ -210,7 +210,8 @@ object TypeBuilder extends StrictLogging {
     def apply(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) =
       new ValueDataType(name, format, qualifiedName)
 
-    def apply(tag: TypeTag[_]): DataType = fromType(tag.tpe.dealias)
+    def apply(tag: TypeTag[_]): DataType = apply(tag.tpe)
+    def apply(tag: Type): DataType = fromType(tag.dealias)
 
     private[this] val StringTypes = Set[Type](typeOf[String], typeOf[java.lang.String])
     private[this] def isString(t: Type) = StringTypes.exists(t =:= _)
