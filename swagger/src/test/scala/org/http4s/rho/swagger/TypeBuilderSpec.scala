@@ -74,7 +74,7 @@ class TypeBuilderSpec extends Specification {
       val ms = models[FooGeneric[Int]]
       ms.size must_== 1
       val m = ms.head
-      m.id must_== "FooGeneric[Int]"
+      m.id must_== "FooGeneric«Int»"
 
       m.properties.size must_== 1
       m.properties("a").`type` must_== "integer"
@@ -84,7 +84,7 @@ class TypeBuilderSpec extends Specification {
       val ms = models[FooGeneric[Nothing]]
       ms.size must_== 1
       val m = ms.head
-      m.id must_== "FooGeneric[Nothing]"
+      m.id must_== "FooGeneric«Nothing»"
 
       m.properties.size must_== 1
       m.properties("a").`type` must_== "void"
@@ -94,7 +94,7 @@ class TypeBuilderSpec extends Specification {
       val ms = models[FooGeneric[Null]]
       ms.size must_== 1
       val m = ms.head
-      m.id must_== "FooGeneric[Null]"
+      m.id must_== "FooGeneric«Null»"
 
       m.properties.size must_== 1
       m.properties("a").`type` must_== "void"

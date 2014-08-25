@@ -19,20 +19,24 @@ import scalaz.concurrent.Task
 
 object TypeBuilder extends StrictLogging {
 
+  val genericStart = "«"
+  val genericSep = ","
+  val genericEnd = "»"
+
   implicit class ReflectionHelpers(t: Type) {
     import scala.reflect.runtime.universe._
 
     def simpleName: String = {
       t.typeSymbol.name.decodedName.toString + {
         if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.simpleName).mkString("[", ",", "]")
+        else t.typeArgs.map(_.simpleName).mkString(genericStart, genericSep, genericEnd)
       }
     }
 
     def fullName: String = {
       t.typeSymbol.fullName + {
         if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.fullName).mkString("[", ",", "]")
+        else t.typeArgs.map(_.fullName).mkString(genericStart, genericSep, genericEnd)
       }
     }
 
