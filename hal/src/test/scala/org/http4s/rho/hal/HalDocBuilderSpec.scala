@@ -16,63 +16,63 @@ object ResourceObjectBuilderSpec extends Specification {
     "create LinkObject from href" in {
       new ResourceObjectBuilder()
         .link("self", "/some/where")
-        .build() must equalTo(ResourceObject(List("self" -> Single(LinkObject("/some/where", templated = None)))))
+        .build() must equalTo(ResourceObject(List("self" -> Left(LinkObject("/some/where", templated = None)))))
     }
 
     "create LinkObject from href and templated" in {
       new ResourceObjectBuilder()
         .link("self", "/some/where", Some(true))
-        .build() must equalTo(ResourceObject(List("self" -> Single(LinkObject("/some/where", templated = Some(true))))))
+        .build() must equalTo(ResourceObject(List("self" -> Left(LinkObject("/some/where", templated = Some(true))))))
     }
 
     "create LinkObject from href and title" in {
       new ResourceObjectBuilder()
         .link("self", "/some/where", "A title")
-        .build() must equalTo(ResourceObject(List("self" -> Single(LinkObject("/some/where", title = Some("A title"))))))
+        .build() must equalTo(ResourceObject(List("self" -> Left(LinkObject("/some/where", title = Some("A title"))))))
     }
 
     "create LinkObject from Uri" in {
       new ResourceObjectBuilder()
         .link("self", Uri(path = "/some/where"))
-        .build() must equalTo(ResourceObject(List("self" -> Single(LinkObject("/some/where")))))
+        .build() must equalTo(ResourceObject(List("self" -> Left(LinkObject("/some/where")))))
     }
 
     "create LinkObject from UriTemplate" in {
       new ResourceObjectBuilder()
         .link("self", UriTemplate(path = List(PathElm("some"), PathExp("where"))))
-        .build() must equalTo(ResourceObject(List("self" -> Single(LinkObject("/some{/where}", templated = Some(true))))))
+        .build() must equalTo(ResourceObject(List("self" -> Left(LinkObject("/some{/where}", templated = Some(true))))))
     }
 
     val document = ResourceObject(
 
       links = List(
-        "self" -> Single(LinkObject("/orders")),
-        "curies" -> Many(LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true))),
-        "next" -> Single(LinkObject("/orders?page=2")),
-        "ea:find" -> Single(LinkObject("/orders{?id}", templated = Some(true))),
-        "ea:admin" -> Many(LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate")))),
+        "self" -> Left(LinkObject("/orders")),
+        "curies" -> Right(Seq(LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true)))),
+        "next" -> Left(LinkObject("/orders?page=2")),
+        "ea:find" -> Left(LinkObject("/orders{?id}", templated = Some(true))),
+        "ea:admin" -> Right(Seq(LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate"))))),
 
       embedded = List(
         "ea:order" ->
-          Many(
-            ResourceObject[Map[String, Any]](
+          Right(Seq(
+            ResourceObject[Map[String, Any], Nothing](
               List(
-                "self" -> Single(LinkObject("/orders/123")),
-                "ea:basket" -> Single(LinkObject("/baskets/98712")),
-                "ea:customer" -> Single(LinkObject("/customers/7809"))),
+                "self" -> Left(LinkObject("/orders/123")),
+                "ea:basket" -> Left(LinkObject("/baskets/98712")),
+                "ea:customer" -> Left(LinkObject("/customers/7809"))),
               Nil,
               Some(Map("total" -> 30.00,
                 "currency" -> "USD",
                 "status" -> "shipped"))),
-            ResourceObject[Map[String, Any]](
+            ResourceObject[Map[String, Any], Nothing](
               List(
-                "self" -> Single(LinkObject("/orders/124")),
-                "ea:basket" -> Single(LinkObject("/baskets/97213")),
-                "ea:customer" -> Single(LinkObject("/customers/12369"))),
+                "self" -> Left(LinkObject("/orders/124")),
+                "ea:basket" -> Left(LinkObject("/baskets/97213")),
+                "ea:customer" -> Left(LinkObject("/customers/12369"))),
               Nil,
               Some(Map("total" -> 20.00,
                 "currency" -> "USD",
-                "status" -> "processing"))))),
+                "status" -> "processing")))))),
 
       content = Some(
         Map(
@@ -81,21 +81,21 @@ object ResourceObjectBuilderSpec extends Specification {
 
     // our data structure
     val documentBuilder =
-      new ResourceObjectBuilder[Map[String, Int]]()
+      new ResourceObjectBuilder[Map[String, Int], Map[String, Any]]()
         .link("self", "/orders")
         .links("curies", LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true)))
         .link("next", "/orders?page=2")
         .link("ea:find", "/orders{?id}", Some(true))
         .links("ea:admin", LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate")))
         .resources("ea:order",
-          new ResourceObjectBuilder[Map[String, Any]]()
+          new ResourceObjectBuilder[Map[String, Any], Nothing]()
             .link("self", LinkObject("/orders/123"))
             .link("ea:basket", LinkObject("/baskets/98712"))
             .link("ea:customer", LinkObject("/customers/7809"))
             .content(Map("total" -> 30.00,
               "currency" -> "USD",
               "status" -> "shipped")).build,
-          new ResourceObjectBuilder[Map[String, Any]]()
+          new ResourceObjectBuilder[Map[String, Any], Nothing]()
             .link("self", LinkObject("/orders/124"))
             .link("ea:basket", LinkObject("/baskets/97213"))
             .link("ea:customer", LinkObject("/customers/12369"))

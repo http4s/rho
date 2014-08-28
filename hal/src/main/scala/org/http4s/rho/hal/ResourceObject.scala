@@ -29,7 +29,7 @@ package org.http4s.rho.hal
  * represent the current state of the resource.
  *
  */
-case class ResourceObject[T](
+case class ResourceObject[T, E](
   links: Links = Nil,
-  embedded: Embedded = Nil,
+  embedded: Embedded[E] = Nil,
   content: Option[T] = None)

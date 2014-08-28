@@ -6,7 +6,7 @@ import org.json4s.Extraction._
 
 object ResourceObjectSerializer {
 
-  def serialize(r: ResourceObject[_])(implicit jsonFormats: Formats): JValue = {
+  def serialize(r: ResourceObject[_, _])(implicit jsonFormats: Formats): JValue = {
     val links = serializeLinks(r.links)
     val embedded = serializeEmbedded(r.embedded)
     val root: JValue = r.content match {
@@ -35,7 +35,7 @@ object ResourceObjectSerializer {
     root
   }
 
-  private[hal] def serializeEmbedded(embedded: Embedded)(implicit jsonFormats: Formats): Option[JField] = {
+  private[hal] def serializeEmbedded(embedded: Embedded[_])(implicit jsonFormats: Formats): Option[JField] = {
     val embeddedAsFields = for {
       fieldOption <- embedded map serializeEmbeddedDef
       field <- fieldOption
@@ -46,10 +46,10 @@ object ResourceObjectSerializer {
       Some(JField("_embedded", JObject(embeddedAsFields.toList)))
   }
 
-  private[hal] def serializeEmbeddedDef(embeddedDef: (String, Entry[ResourceObject[_]]))(implicit jsonFormats: Formats): Option[JField] =
+  private[hal] def serializeEmbeddedDef(embeddedDef: EmbeddedDef[_])(implicit jsonFormats: Formats): Option[JField] =
     serializeSingleOrMany(embeddedDef)(ResourceObjectSerializer.serialize)
 
-  private[hal] def serializeLinkDef(linkDef: (String, Entry[LinkObjectLike])): Option[JField] =
+  private[hal] def serializeLinkDef(linkDef: LinkObjectDef): Option[JField] =
     serializeSingleOrMany(linkDef)(LinkObjectSerializer.serialize)
 
   private[hal] def serializeLinks(links: Links): Option[JField] = {
@@ -63,21 +63,21 @@ object ResourceObjectSerializer {
       Some(JField("_links", JObject(linksAsFields.toList)))
   }
 
-  private[hal] def serializeSingleOrMany[T](linkDef: (String, Entry[T]))(f: T => JValue): Option[JField] = linkDef._2 match {
-    case Many(vs) =>
+  private[hal] def serializeSingleOrMany[T](entry: (String, Either[T, Seq[T]]))(f: T => JValue): Option[JField] = entry._2 match {
+    case Left(v) =>
+      Some(JField(entry._1, f(v)))
+    case Right(vs) =>
       val xs = vs map f
-      Some(JField(linkDef._1, JArray(xs.toList)))
-    case Single(v) =>
-      Some(JField(linkDef._1, f(v)))
+      Some(JField(entry._1, JArray(xs.toList)))
     case _ =>
       None
   }
 
 }
 
-class ResourceObjectSerializer extends CustomSerializer[ResourceObject[_]](format => (
+class ResourceObjectSerializer extends CustomSerializer[ResourceObject[_, _]](format => (
   PartialFunction.empty,
   {
-    case r: ResourceObject[_] =>
+    case r: ResourceObject[_, _] =>
       ResourceObjectSerializer.serialize(r)(format)
   }))

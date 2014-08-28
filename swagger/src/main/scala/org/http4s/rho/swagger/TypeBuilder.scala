@@ -1,20 +1,14 @@
-/*  This code was largely pillaged from worked by Wordnik, which is under an Apache 2.0 license.
-    https://github.com/swagger-api/swagger-scala.git
-    commit: 5746ffcc44a99dfaf25c41444559bb2bd197a33a
- */
-
-// TODO: deal with Maps correctly
-
 package org.http4s.rho.swagger
 
 import java.sql.Timestamp
 import java.util.Date
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import com.wordnik.swagger.annotations.{ApiModel, ApiModelProperty}
+import com.wordnik.swagger.annotations.{ ApiModel, ApiModelProperty }
 import com.wordnik.swagger.model._
+
 import org.http4s.DateTime
-import org.joda.time.{DateTimeZone, Chronology, ReadableInstant}
+import org.joda.time.{ DateTimeZone, Chronology, ReadableInstant }
 
 import scala.collection.mutable.LinkedHashMap
 import scala.reflect.runtime.universe._
@@ -25,35 +19,52 @@ import scalaz.concurrent.Task
 
 object TypeBuilder extends StrictLogging {
 
+  val genericStart = "«"
+  val genericSep = ","
+  val genericEnd = "»"
+
   implicit class ReflectionHelpers(t: Type) {
     import scala.reflect.runtime.universe._
+
     def simpleName: String = {
       t.typeSymbol.name.decodedName.toString + {
         if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.simpleName).mkString("[", ",", "]")
+        else t.typeArgs.map(_.simpleName).mkString(genericStart, genericSep, genericEnd)
       }
     }
 
     def fullName: String = {
       t.typeSymbol.fullName + {
         if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.fullName).mkString("[", ",", "]")
+        else t.typeArgs.map(_.fullName).mkString(genericStart, genericSep, genericEnd)
       }
     }
 
-    def isProcess: Boolean = t <:< typeOf[Process[Task,_]]
-    def isMap: Boolean = t <:< typeOf[collection.immutable.Map[_, _]] || t <:< typeOf[collection.Map[_, _]]
-    def isNothingOrNull: Boolean = t <:< typeOf[Nothing] || t <:< typeOf[Null]
+    def isArray: Boolean =
+      t <:< typeOf[Array[_]]
+
     def isCollection: Boolean = t <:< typeOf[Array[_]] ||
-                                t <:< typeOf[Iterable[_]] ||
-                                t <:< typeOf[java.util.Collection[_]]
+      t <:< typeOf[Iterable[_]] ||
+      t <:< typeOf[java.util.Collection[_]]
 
-    def isPrimitive: Boolean = Reflector.primitives.find(_ =:= t).isDefined ||
-                               Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
+    def isEither: Boolean =
+      t <:< typeOf[Either[_, _]]
 
-    def isOption: Boolean = t <:< typeOf[Option[_]]
-    def isEither: Boolean = t <:< typeOf[Either[_, _]]
-    def isArray: Boolean = t <:< typeOf[Array[_]]
+    def isMap: Boolean =
+      t <:< typeOf[collection.immutable.Map[_, _]] || t <:< typeOf[collection.Map[_, _]]
+
+    def isNothingOrNull: Boolean =
+      t <:< typeOf[Nothing] || t <:< typeOf[Null]
+
+    def isOption: Boolean =
+      t <:< typeOf[Option[_]]
+
+    def isPrimitive: Boolean =
+      Reflector.primitives.find(_ =:= t).isDefined ||
+        Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
+
+    def isProcess: Boolean =
+      t <:< typeOf[Process[Task, _]]
 
   }
 
@@ -73,61 +84,54 @@ object TypeBuilder extends StrictLogging {
     def isPrimitive(t: Type, extra: Set[Type] = Set.empty) = (primitives ++ extra).exists(t =:= _)
   }
 
-
   ///////////////////////////////////////////////////////////////////////////////////
 
   val baseTypes = Set("byte", "boolean", "int", "long", "float", "double", "string", "date", "void", "Date", "DateTime", "DateMidnight", "Duration", "FiniteDuration", "Chronology")
-  val excludes: Set[Type] = Set(typeOf[java.util.TimeZone] ,typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
+  val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
   val containerTypes = Set("Array", "List", "Set")
 
   def collectModels(t: TypeTag[_], alreadyKnown: Set[Model]): Set[Model] =
     try collectModels(t.tpe.dealias, alreadyKnown, Set.empty)
-    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.tpe.fullName}", e); Set.empty}
+    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.tpe.fullName}", e); Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = {
-    val tpe = t.dealias
-    if (tpe.isNothingOrNull) {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
+    case tpe if tpe.isNothingOrNull =>
       Set.empty
-    }
-    else if (tpe.isMap) {
+    case tpe if tpe.isEither || tpe.isMap =>
       collectModels(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
         collectModels(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
-    }
-    else if (tpe.isCollection || tpe.isOption) {
+    case tpe if tpe.isCollection || tpe.isOption =>
       val ntpe = tpe.typeArgs.head
-      if (! known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
+      if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
       else Set.empty
-    }
-    else if (tpe.isProcess) {
+    case tpe if tpe.isProcess =>
       val ntpe = tpe.typeArgs.apply(1)
-      if (! known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
+      if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
       else Set.empty
-    }
-    else if (alreadyKnown.map(_.id).contains(tpe.simpleName) ||(tpe.isPrimitive)) Set.empty  // Not a map or collection
-
-    else {
-      val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
-      if (sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod) {
-        val ctor = sym.asClass.primaryConstructor.asMethod
-
-        val models = alreadyKnown ++ modelToSwagger(tpe)
-
-        val children = ctor.paramLists.flatten.flatMap { paramsym =>
-          val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-                     else sym.typeSignature
-          collectModels(paramType, alreadyKnown, known + tpe)
-        }
-
-        models ++ children
+    case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
+      Set.empty
+    case ExistentialType(_, _) =>
+      Set.empty
+    case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
+      val ctor = sym.asClass.primaryConstructor.asMethod
+      val models = alreadyKnown ++ modelToSwagger(tpe)
+      val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
+        acc ++ collectModels(t, alreadyKnown, tpe.typeArgs.toSet)
       }
-      else {
-        logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${tpe.fullName}")
-        Set.empty
+      val children = ctor.paramLists.flatten.flatMap { paramsym =>
+        val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+        else sym.typeSignature
+        collectModels(paramType, alreadyKnown, known + tpe)
       }
-    }
+
+      models ++ generics ++ children
+    case e =>
+      logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
+      Set.empty
   }
 
   private[this] val defaultExcluded = Set(typeOf[Nothing], typeOf[Null])
+  private[this] def isCaseClass(sym: Symbol): Boolean = sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) = (defaultExcluded ++ excludes).exists(_ =:= t)
 
   def modelToSwagger(tpe: Type): Option[Model] = try {
@@ -135,35 +139,33 @@ object TypeBuilder extends StrictLogging {
 
     val properties: Seq[(String, ModelProperty)] =
       tpe.member(termNames.CONSTRUCTOR)
-         .typeSignature
-         .paramLists
-         .flatten
-         .zipWithIndex
-         .map { case (paramSymbol, pos) =>
-           val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+        .typeSignature
+        .paramLists
+        .flatten
+        .zipWithIndex
+        .map {
+          case (paramSymbol, pos) =>
+            val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
 
-           val items: Option[ModelRef] = {
-             if (paramType.isCollection && !paramType.isNothingOrNull) {
-               val t = paramType.dealias.typeArgs.head
+            val items: Option[ModelRef] = {
+              if (paramType.isCollection && !paramType.isNothingOrNull) {
+                val t = paramType.dealias.typeArgs.head
 
-               val m = ModelRef(`type` = DataType.fromType(t).name,
-                                qualifiedType = Some(t.fullName)
-                               )
-               Some(m)
-             }
-             else None
-           }
+                val m = ModelRef(`type` = DataType.fromType(t).name,
+                  qualifiedType = Some(t.fullName))
+                Some(m)
+              } else None
+            }
 
-           val prop = ModelProperty(
-             DataType.fromType(paramType).name,
-             paramType.fullName,
-             pos,
-             !(paramSymbol.asTerm.isParamWithDefault || paramType.isOption),
-             items = items
-           )
+            val prop = ModelProperty(
+              DataType.fromType(paramType).name,
+              paramType.fullName,
+              pos,
+              !(paramSymbol.asTerm.isParamWithDefault || paramType.isOption),
+              items = items)
 
-           (paramSymbol.name.decodedName.toString, prop)
-         }
+            (paramSymbol.name.decodedName.toString, prop)
+        }
 
     val m = Model(tpe.simpleName, tpe.simpleName, tpe.fullName, LinkedHashMap(properties: _*))
     Some(m)
@@ -210,9 +212,9 @@ object TypeBuilder extends StrictLogging {
 
     def apply(tag: TypeTag[_]): DataType = fromType(tag.tpe.dealias)
 
-    private[this] val StringTypes = Set[Type](typeOf[String],typeOf[java.lang.String])
+    private[this] val StringTypes = Set[Type](typeOf[String], typeOf[java.lang.String])
     private[this] def isString(t: Type) = StringTypes.exists(t =:= _)
-    private[this] val BoolTypes = Set[Type](typeOf[Boolean],typeOf[java.lang.Boolean])
+    private[this] val BoolTypes = Set[Type](typeOf[Boolean], typeOf[java.lang.Boolean])
     private[this] def isBool(t: Type) = BoolTypes.exists(t =:= _)
 
     private[swagger] def fromType(t: Type): DataType = {
@@ -229,20 +231,16 @@ object TypeBuilder extends StrictLogging {
       else if (klass <:< typeOf[scala.collection.Set[_]] || klass <:< typeOf[java.util.Set[_]]) {
         if (t.typeArgs.nonEmpty) GenSet(fromType(t.typeArgs.head))
         else GenSet()
-      }
-      else if (klass <:< typeOf[collection.Seq[_]] || klass <:< typeOf[java.util.List[_]]) {
+      } else if (klass <:< typeOf[collection.Seq[_]] || klass <:< typeOf[java.util.List[_]]) {
         if (t.typeArgs.nonEmpty) GenList(fromType(t.typeArgs.head))
         else GenList()
-      }
-      else if (t.isArray || isCollection(klass)) {
+      } else if (t.isArray || isCollection(klass)) {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs.head))
         else GenArray()
-      }
-      else if (t.isProcess) {
+      } else if (t.isProcess) {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs(1)))
         else GenArray()
-      }
-      else {
+      } else {
         val stt = if (t.isOption) t.typeArgs.head else t
         new ValueDataType(stt.simpleName, qualifiedName = Option(stt.fullName))
       }
@@ -262,7 +260,7 @@ object TypeBuilder extends StrictLogging {
 
     private[this] def isCollection(t: Type): Boolean =
       t <:< typeOf[collection.Traversable[_]] ||
-      t <:< typeOf[java.util.Collection[_]]
+        t <:< typeOf[java.util.Collection[_]]
 
   }
 }

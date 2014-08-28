@@ -21,7 +21,7 @@ object ResourceObjectSpec extends Specification {
     "with one link only" in {
       val resObj = ResourceObject(
         List("self" ->
-          Single(LinkObject("/some/path"))))
+          Left(LinkObject("/some/path"))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("_links" ->
           ("self" ->
@@ -30,9 +30,9 @@ object ResourceObjectSpec extends Specification {
     "with two links only" in {
       val resObj = ResourceObject(
         List("self" ->
-          Many(
+          Right(Seq(
             LinkObject("/some/path/1"),
-            LinkObject("/some/path/2"))))
+            LinkObject("/some/path/2")))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("_links" ->
           ("self" ->
@@ -43,7 +43,7 @@ object ResourceObjectSpec extends Specification {
     "with one embedded only" in {
       val resObj = ResourceObject(
         Nil,
-        List("text" -> Single(ResourceObject(content = Some("some content")))))
+        List("text" -> Left(ResourceObject(content = Some("some content")))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("_embedded" ->
           ("text" ->
@@ -53,9 +53,9 @@ object ResourceObjectSpec extends Specification {
       val resObj = ResourceObject(
         Nil,
         List("texts" ->
-          Many(
+          Right(Seq(
             ResourceObject(content = Some("/some/path/1")),
-            ResourceObject(content = Some("/some/path/2")))))
+            ResourceObject(content = Some("/some/path/2"))))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("_embedded" ->
           ("texts" ->
@@ -73,13 +73,13 @@ object ResourceObjectSpec extends Specification {
         content = Some(user1),
         links =
           List("self" ->
-            Single(
+            Left(
               LinkObject("/users/1"))),
         embedded =
           List("groups" ->
-            Many(
+            Right(Seq(
               ResourceObject(content = Some("/groups/1")),
-              ResourceObject(content = Some("/groups/2")))))
+              ResourceObject(content = Some("/groups/2"))))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         (
           ("_links" -> ("self" -> ("href", "/users/1"))) ~
@@ -92,10 +92,10 @@ object ResourceObjectSpec extends Specification {
         content = Some("some content"),
         links =
           List("self" ->
-            Single(LinkObject("/some/path"))),
+            Left(LinkObject("/some/path"))),
         embedded =
           List("text" ->
-            Single(ResourceObject(content = Some("some other content")))))
+            Left(ResourceObject(content = Some("some other content")))))
       ResourceObjectSerializer.serialize(resObj) must be equalTo
         ("some content")
     }
@@ -151,33 +151,33 @@ object ResourceObjectSpec extends Specification {
     val halDocument = ResourceObject(
 
       links = List(
-        "self" -> Single(LinkObject("/orders")),
-        "curies" -> Many(LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true))),
-        "next" -> Single(LinkObject("/orders?page=2")),
-        "ea:find" -> Single(LinkObject("/orders{?id}", templated = Some(true))),
-        "ea:admin" -> Many(LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate")))),
+        "self" -> Left(LinkObject("/orders")),
+        "curies" -> Right(Seq(LinkObject(name = Some("ea"), href = "http://example.com/docs/rels/{rel}", templated = Some(true)))),
+        "next" -> Left(LinkObject("/orders?page=2")),
+        "ea:find" -> Left(LinkObject("/orders{?id}", templated = Some(true))),
+        "ea:admin" -> Right(Seq(LinkObject("/admins/2", title = Some("Fred")), LinkObject("/admins/5", title = Some("Kate"))))),
 
       embedded = List(
         "ea:order" ->
-          Many(
-            ResourceObject[Map[String, Any]](
+          Right(Seq(
+            ResourceObject[Map[String, Any], Nothing](
               List(
-                "self" -> Single(LinkObject("/orders/123")),
-                "ea:basket" -> Single(LinkObject("/baskets/98712")),
-                "ea:customer" -> Single(LinkObject("/customers/7809"))),
+                "self" -> Left(LinkObject("/orders/123")),
+                "ea:basket" -> Left(LinkObject("/baskets/98712")),
+                "ea:customer" -> Left(LinkObject("/customers/7809"))),
               Nil,
               Some(Map("total" -> 30.00,
                 "currency" -> "USD",
                 "status" -> "shipped"))),
-            ResourceObject[Map[String, Any]](
+            ResourceObject[Map[String, Any], Nothing](
               List(
-                "self" -> Single(LinkObject("/orders/124")),
-                "ea:basket" -> Single(LinkObject("/baskets/97213")),
-                "ea:customer" -> Single(LinkObject("/customers/12369"))),
+                "self" -> Left(LinkObject("/orders/124")),
+                "ea:basket" -> Left(LinkObject("/baskets/97213")),
+                "ea:customer" -> Left(LinkObject("/customers/12369"))),
               Nil,
               Some(Map("total" -> 20.00,
                 "currency" -> "USD",
-                "status" -> "processing"))))),
+                "status" -> "processing")))))),
 
       content = Some(
         Map(
