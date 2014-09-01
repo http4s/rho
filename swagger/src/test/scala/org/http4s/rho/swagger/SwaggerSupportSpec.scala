@@ -31,6 +31,11 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
       (a \ "path" should_== JString("/hello")) &&
       (b \ "path" should_== JString("/hello/{string}"))
     }
+
+    "Return a 404 on bad path" in {
+      val r = Request(GET, Uri(path = "/api-info/notfound"))
+      checkStatus(r)(_ == Status.NotFound) should_== "Api Not Found: api-info/notfound"
+    }
   }
   
 
