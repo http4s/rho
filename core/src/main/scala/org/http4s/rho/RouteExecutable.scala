@@ -22,10 +22,6 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
 
   /** Compiles a HTTP request definition into an action */
   final def |>>[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[F, R]): R =
-    compile(f)(hf, srvc)
-
-  /** Compiles a HTTP request definition into an action */
-  final def compile[F, R](f: F)(implicit hf: HListToFunc[T, F], srvc: CompileService[F, R]): R =
     srvc.compile(makeAction(f, hf))
 
   /** Provide an action from which to generate a complete route
@@ -36,5 +32,5 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
     * @return a function `Request => Option[Task[Response]]` which can be used as a complete route
     */
   final def runWith[F, O](f: F)(implicit hf: HListToFunc[T, F]): Request => Option[Task[Response]] =
-    compile(f)(hf, new RouteExecutor)
+    new RouteExecutor().compile(makeAction(f, hf))
 }

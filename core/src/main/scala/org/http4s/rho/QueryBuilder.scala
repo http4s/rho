@@ -18,7 +18,7 @@ case class QueryBuilder[T <: HList](method: Method,
   override type Self = QueryBuilder[T]
 
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
-    RhoAction(Router(method, path, query, validators), f, hf)
+    RhoAction(Router(method, path, query, headers), f, hf)
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
     Router(method, path, query, v.rule)
@@ -26,7 +26,7 @@ case class QueryBuilder[T <: HList](method: Method,
   def &[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, path, QueryAnd(query, q.rule))
 
-  override def validators: HeaderRule = EmptyHeaderRule
+  override def headers: HeaderRule = EmptyHeaderRule
 
   override val asUriTemplate =
     for {

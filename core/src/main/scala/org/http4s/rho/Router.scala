@@ -9,25 +9,33 @@ import org.http4s.rho.bits.{HeaderAppendable, HListToFunc}
 import shapeless.{::, HList}
 import shapeless.ops.hlist.Prepend
 
+sealed trait RoutingEntity[T <: HList] {
+  def method: Method
+  def path: PathRule
+  def query: QueryRule
+  def headers: HeaderRule
+}
+
 /** Provides the operations for generating a router
   *
   * @param method request methods to match
   * @param path path matching stack
-  * @param validators header validation stack
+  * @param headers header validation stack
   * @tparam T cumulative type of the required method for executing the router
   */
 case class Router[T <: HList](method: Method,
                                val path: PathRule,
                                val query: QueryRule,
-                               validators: HeaderRule)
+                               val headers: HeaderRule)
                        extends RouteExecutable[T]
                           with HeaderAppendable[T]
+                          with RoutingEntity[T]
 {
 
   type Self = Router[T]
 
   override def >>>[T2 <: HList](v: TypedHeader[T2])(implicit prep1: Prepend[T2, T]): Router[prep1.Out] =
-    Router(method, path, query, HeaderAnd(validators, v.rule))
+    Router(method, path, query, HeaderAnd(headers, v.rule))
 
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(this, f, hf)
@@ -38,6 +46,7 @@ case class Router[T <: HList](method: Method,
 case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])
            extends HeaderAppendable[T]
            with RouteExecutable[R::T]
+           with RoutingEntity[R::T]
 {
   type Self = CodecRouter[T, R]
 
@@ -55,14 +64,14 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   def decoding[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = CodecRouter(router, decoder orElse decoder2)
 
-  override val validators: HeaderRule = {
+  override val headers: HeaderRule = {
     if (!decoder.consumes.isEmpty) {
       val mt = requireThat(Header.`Content-Type`) { h: Header.`Content-Type`.HeaderT =>
         decoder.matchesMediaType(h.mediaType)
       }
 
-      HeaderAnd(router.validators, mt.rule)
-    } else router.validators
+      HeaderAnd(router.headers, mt.rule)
+    } else router.headers
   }
 }
 

@@ -13,7 +13,7 @@ case class RequestLineBuilder[T <: HList](path: PathRule, query: QueryRule)
   extends TypedBuilder[T]
   with UriConvertible {
 
-  override def validators: HeaderRule = EmptyHeaderRule
+  override def headers: HeaderRule = EmptyHeaderRule
 
   def &[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
     RequestLineBuilder(path, QueryAnd(query, q.rule))

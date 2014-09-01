@@ -20,7 +20,7 @@ trait TypedBuilder[T <: HList] extends UriConvertible {
   def query: QueryRule
 
   /** Untyped AST representation of the [[Header]]s to operate on */
-  def validators: HeaderRule
+  def headers: HeaderRule
 
   override def asUriTemplate =
     for {

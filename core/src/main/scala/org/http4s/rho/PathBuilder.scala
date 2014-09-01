@@ -23,7 +23,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   with UriConvertible {
   type Self = PathBuilder[T]
 
-  override def validators: HeaderRule = EmptyHeaderRule
+  override def headers: HeaderRule = EmptyHeaderRule
 
   override def query: QueryRule = EmptyQuery
 

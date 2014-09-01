@@ -72,11 +72,11 @@ private[rho] trait ValidationTree {
 
       case c@ CodecRouter(_, parser) =>
         val actionf = action.hf.conv(action.f)
-        SingleLeaf(c.router.query, c.validators, Some(parser), {
+        SingleLeaf(c.router.query, c.headers, Some(parser), {
           (req, pathstack) =>
               for {
                 i <- TempTools.runQuery(req, c.router.query, pathstack)
-                j <- TempTools.runValidation(req, c.validators, i)
+                j <- TempTools.runValidation(req, c.headers, i)
               } yield (() => {
                 parser.decode(req).flatMap {               // `asInstanceOf` to turn the untyped HList to type T
                   case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T]).map(_.resp)
