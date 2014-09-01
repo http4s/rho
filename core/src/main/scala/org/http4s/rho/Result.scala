@@ -8,7 +8,7 @@ import org.http4s.Writable.Entity
 import scalaz.concurrent.Task
 import scalaz.stream.Process
 
-case class Result[T](resp: Response) extends AnyVal
+case class Result[S, T](resp: Response) extends AnyVal
 
 sealed trait EmptyResult
 
@@ -20,11 +20,11 @@ object EmptyResult {
 
 trait ResultSyntaxInstances {
 
-  implicit class ResultSyntax[T](r: Result[T]) extends MessageOps {
-    override type Self = Result[T]
+  implicit class ResultSyntax[S, T](r: Result[S, T]) extends MessageOps {
+    override type Self = Result[S, T]
 
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
-      Result[T](r.resp.withAttribute(key, value))
+      Result[S, T](r.resp.withAttribute(key, value))
 
     override def withHeaders(headers: Headers): Self =
       Result(r.resp.withHeaders(headers))
@@ -40,8 +40,8 @@ trait ResultSyntaxInstances {
     }
   }
 
-  implicit class TaskResultSyntax[T](r: Task[Result[T]]) extends MessageOps {
-    override type Self = Task[Result[T]]
+  implicit class TaskResultSyntax[S, T](r: Task[Result[S, T]]) extends MessageOps {
+    override type Self = Task[Result[S, T]]
 
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
       r.map(r => Result(r.resp.withAttribute(key, value)))

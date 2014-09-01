@@ -3,12 +3,13 @@ package rhotest
 
 import org.specs2.mutable.Specification
 import org.http4s.rho._
+import scalaz.{ -\/, \/- }
 import scalaz.concurrent.Task
 
 
 class ApiExamples extends Specification {
 
-  def foo(s: String, i: Int): Task[Result[String]] = ???
+  def foo(s: String, i: Int): Task[Result[Status.Ok.type, String]] = ???
 
   "mock api" should {
     "Make it easy to compose routes" in {
@@ -75,6 +76,15 @@ class ApiExamples extends Specification {
         // If you want to access the the Request, just add it as the first param
         GET / "getrequest" |>> { req: Request => Ok("Dont need a request") }
         GET / "getrequest" / 'foo |>> { (req: Request, foo: String) => Ok("I wanted a request") }
+
+        // It is not manditory to give a status type
+        GET / "nostatus" |>> { () => "No status!"}
+        GET / "taskNoStatus" |>> { () => Task("A Future status!") }
+
+        // Work with disjunctions
+        GET / "disjunct" |>> { () =>
+          if (true) \/-(Ok("True!")) else -\/(NotFound(<html><body>Not Found.</body></html>))
+        }
       }
 
       true should_== true

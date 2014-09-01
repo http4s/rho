@@ -16,6 +16,7 @@ import org.json4s.jackson.JsonMethods._
 
 import scodec.bits.ByteVector
 
+import scalaz.{-\/, \/-}
 import scalaz.concurrent.Task
 import scalaz.stream.Process.emit
 
@@ -38,10 +39,11 @@ trait SwaggerSupport extends RhoService {
   GET / apiPath / * |>> { params: Seq[String] =>
     swaggerStorage.getDoc(params) match {
       case Some(doc) =>
-        Ok(compact(render(doc)))
-          .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
+        \/-(Ok(compact(render(doc)))
+          .withHeaders(Header.`Content-Type`(MediaType.`application/json`)))
 
-      case None => NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
+      case None =>
+        -\/(NotFound("Api Not Found: api-info" + params.mkString("/", "/", "")))
     }
   }
 

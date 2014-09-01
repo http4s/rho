@@ -6,11 +6,11 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import com.wordnik.swagger.model._
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
-import org.http4s.rho.bits.{TextMetaData, Metadata}
+import org.http4s.rho.bits._
 import bits.PathAST._
 import bits.QueryAST.{QueryCapture, QueryRule}
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.universe.Type
 
 
 class ApiBuilder(apiVersion: String) extends StrictLogging {
@@ -72,23 +72,40 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     val produces = action.responseEncodings.map(_.renderString).toList
 
     // Get the result types and models
-    val responseClass = TypeBuilder.DataType.apply(action.responseType).name
     val models = {
-      val models = TypeBuilder.collectModels(action.responseType, Set.empty)
+      val models = action.resultInfo.collect {
+        case ModelOnly(tpe) => tpe
+        case StatusAndModel(_, tpe) => tpe
+      }.foldLeft(Set.empty[Model]){(s, tpe) =>
+        TypeBuilder.collectModels(tpe, Set.empty)
+      }
       if (models.isEmpty) None
       else Some(models.map(m => m.id -> m).toMap)
+    }
+
+    val responseMessages = action.resultInfo.toList.collect {
+      case ModelOnly(tpe) => ResponseMessage(200, "OK", Some(TypeBuilder.DataType(tpe).name))
+      case StatusAndModel(s, tpe) => ResponseMessage(s.code, s.reason, Some(TypeBuilder.DataType(tpe).name))
+      case StatusOnly(status) => ResponseMessage(status.code, status.reason)
+    }
+
+    val responseClass = responseMessages match {
+      case ResponseMessage(_, _, Some(tpe))::Nil => tpe
+      case _                                     => "mixed result types"
     }
 
     // Collect the descriptions
     val descriptions = getDescriptions(action.path, action.query)
       .map { desc =>
         desc.copy(operations = desc.operations.map( op =>
-            op.copy(method        = action.method.toString,
-                    nickname      = generateNickname(desc.path, action.method),
-                    responseClass = responseClass,
-                    produces      = produces,
-                    consumes      = consumes,
-                    parameters    = op.parameters:::analyzeHeaders(action.headers))))
+            op.copy(method           = action.method.toString,
+                    nickname         = generateNickname(desc.path, action.method),
+                    responseClass    = responseClass,  // What does this do?
+                    produces         = produces,
+                    consumes         = consumes,
+                    parameters       = op.parameters:::analyzeHeaders(action.headers),
+                    responseMessages = responseMessages
+            )))
       }
 
     descriptions.map { apidesc =>
@@ -154,7 +171,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
       case PathEmpty::xs        => go(xs, path, op)
 
       case PathCapture (id, parser, _) :: xs =>
-        val tpe = parser.typeTag.map(getType).getOrElse("string")
+        val tpe = parser.typeTag.map(tag => getType(tag.tpe)).getOrElse("string")
         val p = Parameter (id, None, None, true, false, tpe, AnyAllowableValues, "path", None)
         go(xs, s"$path/{$id}", op.copy(parameters = op.parameters:+p))
 
@@ -214,7 +231,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
 
   private def gatherParam(rule: QueryCapture[_]): Parameter = {
     Parameter(rule.name, None, rule.default.map(_.toString), rule.default.isEmpty,
-      false, getType(rule.m), paramType = "query")
+      false, getType(rule.m.tpe), paramType = "query")
   }
 
   // Finds any parameters required for the routes and adds them to the descriptions
@@ -243,7 +260,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
     go(rule::Nil)
   }
 
-  private def getType(m: TypeTag[_]): String = TypeBuilder.DataType(m).name
+  private def getType(m: Type): String = TypeBuilder.DataType(m).name
 
   def getMeta(meta: Metadata): Option[String] = meta match {
     case t: TextMetaData => Some(t.msg)
