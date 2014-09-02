@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 
 import Header.`Content-Type`
 import com.wordnik.swagger.annotations.Api
-import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
+import com.wordnik.swagger.model.{ ApiInfo, SwaggerSerializers }
 import org.http4s.Writable.Entity
 
 import shapeless.HList
@@ -21,7 +21,7 @@ import scalaz.concurrent.Task
 import scalaz.stream.Process.emit
 
 trait SwaggerSupport extends RhoService {
-  implicit protected def jsonFormats: Formats = SwaggerSerializers.formats
+  implicit protected def jsonFormats: org.json4s.Formats = SwaggerSerializers.formats
 
   def apiPath = "api-info"
   def apiVersion: String = "1.0.0"
@@ -57,7 +57,7 @@ trait SwaggerSupport extends RhoService {
 
   private implicit val jsonWritable: Writable[JValue] = {
     val headers: Headers = Headers(`Content-Type`(MediaType.`application/json`))
-    Writable({jv: JValue =>
+    Writable({ jv: JValue =>
       val v = ByteVector.view(compact(render(jv)).getBytes(StandardCharsets.UTF_8))
       Task.now(Entity(emit(v), Some(v.length)))
     }, headers)
