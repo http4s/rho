@@ -23,47 +23,44 @@ object TypeBuilder extends StrictLogging {
   val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
   val containerTypes = Set("Array", "List", "Set")
 
-  def collectModels(t: Type, alreadyKnown: Set[Model])(implicit formats: Formats): Set[Model] =
-    try collectModels(t.dealias, alreadyKnown, Set.empty)
+  def collectModels(t: Type, alreadyKnown: Set[Model], formats: SwaggerFormats): Set[Model] =
+    try collectModels(t.dealias, alreadyKnown, Set.empty, formats)
     catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.fullName}", e); Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type])(implicit formats: Formats): Set[Model] = {
-    val tpe = t.dealias
-    val customSerializers = formats.customSerializers.reduceLeft(_ orElse _)
-    t.dealias match {
-
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], formats: SwaggerFormats): Set[Model] = {
+    def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
       // apply custom serializers first
-      case tpe if customSerializers.isDefinedAt(tpe) =>
-        customSerializers(tpe)
+      case tpe if formats.customSerializers.isDefinedAt(tpe) =>
+        formats.customSerializers(tpe)
 
       // TODO it would be the best if we could pull out the following cases into DefaultFormats
       case tpe if tpe.isNothingOrNull =>
         Set.empty
       case tpe if tpe.isEither || tpe.isMap =>
-        collectModels(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
-          collectModels(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
+        go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
+          go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
       case tpe if tpe.isCollection || tpe.isOption =>
         val ntpe = tpe.typeArgs.head
-        if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
+        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
       case tpe if tpe.isProcess =>
         val ntpe = tpe.typeArgs.apply(1)
-        if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
+        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
       case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
         Set.empty
       case ExistentialType(_, _) =>
         Set.empty
-      case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
+      case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
         val ctor = sym.asClass.primaryConstructor.asMethod
         val models = alreadyKnown ++ modelToSwagger(tpe)
         val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
-          acc ++ collectModels(t, alreadyKnown, tpe.typeArgs.toSet)
+          acc ++ go(t, alreadyKnown, tpe.typeArgs.toSet)
         }
         val children = ctor.paramLists.flatten.flatMap { paramsym =>
           val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
           else sym.typeSignature
-          collectModels(paramType, alreadyKnown, known + tpe)
+          go(paramType, alreadyKnown, known + tpe)
         }
 
         models ++ generics ++ children
@@ -71,6 +68,8 @@ object TypeBuilder extends StrictLogging {
         logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
         Set.empty
     }
+
+    go(t, alreadyKnown, known)
   }
 
   private[this] val defaultExcluded = Set(typeOf[Nothing], typeOf[Null])

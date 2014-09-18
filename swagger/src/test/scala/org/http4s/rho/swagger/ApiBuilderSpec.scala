@@ -10,7 +10,7 @@ import org.http4s.Header._
 
 class ApiBuilderSpec extends Specification {
 
-  val builder = new ApiBuilder("0.1")
+  val builder = new ApiBuilder("0.1", DefaultSwaggerFormats)
 
   "ApiBuilder.generateNickname" should {
     "Generate a nickname without param" in {

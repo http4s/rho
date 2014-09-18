@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 
 import Header.`Content-Type`
 import com.wordnik.swagger.annotations.Api
-import com.wordnik.swagger.model.{ ApiInfo, SwaggerSerializers }
+import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
 import org.http4s.Writable.Entity
 
 import shapeless.HList
@@ -23,11 +23,13 @@ import scalaz.stream.Process.emit
 trait SwaggerSupport extends RhoService {
   implicit protected def jsonFormats: org.json4s.Formats = SwaggerSerializers.formats
 
+  /** Override the `swaggerFormats` to add your own custom serializers */
+  def swaggerFormats: SwaggerFormats = DefaultSwaggerFormats
+
   def apiPath = "api-info"
   def apiVersion: String = "1.0.0"
   def apiInfo: ApiInfo = ApiInfo("None", "none", "none", "none", "none", "none")
 
-  private val swaggerBuilder = new ApiBuilder(apiVersion)
   private val swaggerStorage = new Swagger("1.2", apiVersion, apiInfo)
 
   GET / apiPath |>> { () =>
@@ -49,7 +51,7 @@ trait SwaggerSupport extends RhoService {
 
   override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
     super.append(action)
-    val apis = swaggerBuilder.actionToApiListing(action)
+    val apis = new ApiBuilder(apiVersion, swaggerFormats).actionToApiListing(action)
     apis.foreach { listing => swaggerStorage.register(listing.resourcePath, listing) }
   }
 

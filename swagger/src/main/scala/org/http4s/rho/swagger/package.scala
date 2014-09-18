@@ -11,8 +11,6 @@ import com.wordnik.swagger.model.Model
 
 package object swagger {
 
-  implicit val defaultFormats = DefaultFormats
-
   object Reflector {
     import scala.reflect.runtime.universe._
 
