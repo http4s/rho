@@ -13,7 +13,7 @@ import bits.QueryAST.{QueryCapture, QueryRule}
 import scala.reflect.runtime.universe.Type
 
 
-class ApiBuilder(apiVersion: String) extends StrictLogging {
+class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogging {
 
   /* swagger-core models
   case class ApiListing (
@@ -77,7 +77,7 @@ class ApiBuilder(apiVersion: String) extends StrictLogging {
         case ModelOnly(tpe) => tpe
         case StatusAndModel(_, tpe) => tpe
       }.foldLeft(Set.empty[Model]){(s, tpe) =>
-        TypeBuilder.collectModels(tpe, Set.empty)
+        TypeBuilder.collectModels(tpe, Set.empty, formats)
       }
       if (models.isEmpty) None
       else Some(models.map(m => m.id -> m).toMap)

@@ -19,115 +19,57 @@ import scalaz.concurrent.Task
 
 object TypeBuilder extends StrictLogging {
 
-  val genericStart = "«"
-  val genericSep = ","
-  val genericEnd = "»"
-
-  implicit class ReflectionHelpers(t: Type) {
-    import scala.reflect.runtime.universe._
-
-    def simpleName: String = {
-      t.typeSymbol.name.decodedName.toString + {
-        if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.simpleName).mkString(genericStart, genericSep, genericEnd)
-      }
-    }
-
-    def fullName: String = {
-      t.typeSymbol.fullName + {
-        if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.fullName).mkString(genericStart, genericSep, genericEnd)
-      }
-    }
-
-    def isArray: Boolean =
-      t <:< typeOf[Array[_]]
-
-    def isCollection: Boolean = t <:< typeOf[Array[_]] ||
-      t <:< typeOf[Iterable[_]] ||
-      t <:< typeOf[java.util.Collection[_]]
-
-    def isEither: Boolean =
-      t <:< typeOf[Either[_, _]]
-
-    def isMap: Boolean =
-      t <:< typeOf[collection.immutable.Map[_, _]] || t <:< typeOf[collection.Map[_, _]]
-
-    def isNothingOrNull: Boolean =
-      t <:< typeOf[Nothing] || t <:< typeOf[Null]
-
-    def isOption: Boolean =
-      t <:< typeOf[Option[_]]
-
-    def isPrimitive: Boolean =
-      Reflector.primitives.find(_ =:= t).isDefined ||
-        Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
-
-    def isProcess: Boolean =
-      t <:< typeOf[Process[Task, _]]
-
-  }
-
-  object Reflector {
-    import scala.reflect.runtime.universe._
-
-    private[swagger] val primitives = {
-      Set[Type](typeOf[String], typeOf[Int], typeOf[Long], typeOf[Double],
-        typeOf[Float], typeOf[Byte], typeOf[BigInt], typeOf[Boolean],
-        typeOf[Short], typeOf[java.lang.Integer], typeOf[java.lang.Long],
-        typeOf[java.lang.Double], typeOf[java.lang.Float], typeOf[BigDecimal],
-        typeOf[java.lang.Byte], typeOf[java.lang.Boolean], typeOf[Number],
-        typeOf[java.lang.Short], typeOf[Date], typeOf[Timestamp], typeOf[scala.Symbol],
-        typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger])
-    }
-
-    def isPrimitive(t: Type, extra: Set[Type] = Set.empty) = (primitives ++ extra).exists(t =:= _)
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////
-
   val baseTypes = Set("byte", "boolean", "int", "long", "float", "double", "string", "date", "void", "Date", "DateTime", "DateMidnight", "Duration", "FiniteDuration", "Chronology")
   val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
   val containerTypes = Set("Array", "List", "Set")
 
-  def collectModels(t: Type, alreadyKnown: Set[Model]): Set[Model] =
-    try collectModels(t.dealias, alreadyKnown, Set.empty)
-    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.fullName}", e); Set.empty}
+  def collectModels(t: Type, alreadyKnown: Set[Model], formats: SwaggerFormats): Set[Model] =
+    try collectModels(t.dealias, alreadyKnown, Set.empty, formats)
+    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.fullName}", e); Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
-    case tpe if tpe.isNothingOrNull =>
-      Set.empty
-    case tpe if tpe.isEither || tpe.isMap =>
-      collectModels(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
-        collectModels(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
-    case tpe if tpe.isCollection || tpe.isOption =>
-      val ntpe = tpe.typeArgs.head
-      if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
-      else Set.empty
-    case tpe if tpe.isProcess =>
-      val ntpe = tpe.typeArgs.apply(1)
-      if (!known.exists(_ =:= ntpe)) collectModels(ntpe, alreadyKnown, known + ntpe)
-      else Set.empty
-    case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
-      Set.empty
-    case ExistentialType(_, _) =>
-      Set.empty
-    case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
-      val ctor = sym.asClass.primaryConstructor.asMethod
-      val models = alreadyKnown ++ modelToSwagger(tpe)
-      val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
-        acc ++ collectModels(t, alreadyKnown, tpe.typeArgs.toSet)
-      }
-      val children = ctor.paramLists.flatten.flatMap { paramsym =>
-        val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-        else sym.typeSignature
-        collectModels(paramType, alreadyKnown, known + tpe)
-      }
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], formats: SwaggerFormats): Set[Model] = {
+    def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
+      // apply custom serializers first
+      case tpe if formats.customSerializers.isDefinedAt(tpe) =>
+        formats.customSerializers(tpe)
 
-      models ++ generics ++ children
-    case e =>
-      logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
-      Set.empty
+      // TODO it would be the best if we could pull out the following cases into DefaultFormats
+      case tpe if tpe.isNothingOrNull =>
+        Set.empty
+      case tpe if tpe.isEither || tpe.isMap =>
+        go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
+          go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
+      case tpe if tpe.isCollection || tpe.isOption =>
+        val ntpe = tpe.typeArgs.head
+        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
+        else Set.empty
+      case tpe if tpe.isProcess =>
+        val ntpe = tpe.typeArgs.apply(1)
+        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
+        else Set.empty
+      case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
+        Set.empty
+      case ExistentialType(_, _) =>
+        Set.empty
+      case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
+        val ctor = sym.asClass.primaryConstructor.asMethod
+        val models = alreadyKnown ++ modelToSwagger(tpe)
+        val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
+          acc ++ go(t, alreadyKnown, tpe.typeArgs.toSet)
+        }
+        val children = ctor.paramLists.flatten.flatMap { paramsym =>
+          val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+          else sym.typeSignature
+          go(paramType, alreadyKnown, known + tpe)
+        }
+
+        models ++ generics ++ children
+      case e =>
+        logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
+        Set.empty
+    }
+
+    go(t, alreadyKnown, known)
   }
 
   private[this] val defaultExcluded = Set(typeOf[Nothing], typeOf[Null])
