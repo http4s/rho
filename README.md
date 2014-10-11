@@ -15,12 +15,13 @@ The primary goal of ρ is to provide an easy to use AST with which to build HTTP
 * HAL documentation
 
 ### Get ρ
-Right now snapshots are available from the Sonatype repositories.
+Right now 0.1.0 is available at Maven Central and snapshots are available from the Sonatype repositories
 
 ```scala
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-libraryDependencies += "org.http4s" %% "rho-swagger" % "0.1.0-SNAPSHOT"
+libraryDependencies += "org.http4s" %% "rho-swagger" % version
+
 ```
 
 ### Stability
