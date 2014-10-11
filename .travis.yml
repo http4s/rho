@@ -6,7 +6,7 @@ notifications:
   irc: chat.freenode.net#http4s
 env:
   global:
-    secure: lFM4OKVXhzRR/r/OB2YygYUpyuUISfs6fghOKgGAeWy5HZBbccbFVJTMO5zg5l7rzdUeEbskpYNa3Y1zR5FPeBBJQYHZwwb10TxcuM1PZPYnzpTZm4Xyyd11tR5rQlrl7dZmhy0CTy2OnahsxU88gwJ0wacZmHsr6OUSr56UCVs=
-
-after_success:
-  test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && sbt ++$TRAVIS_SCALA_VERSION publish
+  - secure: lFM4OKVXhzRR/r/OB2YygYUpyuUISfs6fghOKgGAeWy5HZBbccbFVJTMO5zg5l7rzdUeEbskpYNa3Y1zR5FPeBBJQYHZwwb10TxcuM1PZPYnzpTZm4Xyyd11tR5rQlrl7dZmhy0CTy2OnahsxU88gwJ0wacZmHsr6OUSr56UCVs=
+  - secure: ggZdGATxRsVFvSEaXWQQDF/a4iASh9qyHYMfutgVw5ZrFJDK1n2sTQ+DlwQuXQrFW6uCDTINMq1ezgZySmB6bYoy6rPtdRsilHjK+/Rwb/p1baUoJQTnzUEFH5khAn1yzgARU2jPKUcFDLvX7Z1oZ88o0+1idDqkA2b9sRnO/Uw=
+after_success: test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master"
+  && sbt ++$TRAVIS_SCALA_VERSION publish
