@@ -75,7 +75,7 @@ object MyBuild extends Build {
     }
   )
 
-  lazy val travisCredentials = (envOrNone("SONATYPE_USER"), envOrNone("SONATYPE_PASS")) match {
+  lazy val travisCredentials = (envOrNone("SONATYPE_USERNAME"), envOrNone("SONATYPE_PASSWORD")) match {
     case (Some(user), Some(pass)) =>
       Some(Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", user, pass))
     case _ =>
