@@ -1,6 +1,7 @@
 package org.http4s.rho.swagger
 
 import com.wordnik.swagger.model._
+import org.json4s.JsonAST.JValue
 import scala.reflect.runtime.universe._
 
 /**
@@ -49,5 +50,9 @@ object DefaultSwaggerFormats extends SwaggerFormats {
     case tpe if tpe.isNothingOrNull => Set.empty
   }
 
-  override def customSerializers = ignoreNothingOrNull orElse ignoreExistentialType
+  val jsonSerializers: F = {
+    case tpe if tpe <:< typeOf[JValue] => Set.empty
+  }
+
+  override def customSerializers = jsonSerializers orElse ignoreNothingOrNull orElse ignoreExistentialType
 }
