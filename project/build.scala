@@ -32,7 +32,7 @@ object MyBuild extends Build {
 
   lazy val compileFlags = Seq("-feature")
 
-  lazy val rhoVersion = "0.1.0"
+  lazy val rhoVersion = "0.1.1-SNAPSHOT"
 
   lazy val license = licenses in ThisBuild := Seq(
     "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
