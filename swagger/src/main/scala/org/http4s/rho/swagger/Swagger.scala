@@ -54,7 +54,7 @@ class Swagger(swaggerVersion: String, apiVersion: String, apiInfo: ApiInfo) {
 
   private def renderDoc(doc: ApiListing): JValue = {
     val json = docToJson(doc) merge
-      ("basePath" -> "http://localhost:8080") ~
+      ("basePath" -> "/") ~
         ("swaggerVersion" -> swaggerVersion) ~
         ("apiVersion" -> apiVersion)
     val consumes = dontAddOnEmpty("consumes", doc.consumes)_
