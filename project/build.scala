@@ -42,7 +42,6 @@ object MyBuild extends Build {
      Seq(
         scalaVersion := "2.11.2",
         scalacOptions ++= compileFlags,
-        logLevel := Level.Warn,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
         fork in run := true,
