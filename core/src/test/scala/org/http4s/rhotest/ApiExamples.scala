@@ -90,6 +90,15 @@ class ApiExamples extends Specification {
       true should_== true
     }
 
+    "Allow comments" in {
+      new RhoService {
+        "This should be a route description" **
+          GET / "foo" |>> { () => Task("I have a description!") }
+      }
+
+      true should_== true
+    }
+
   }
 
 }

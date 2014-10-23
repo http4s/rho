@@ -122,6 +122,7 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
                           .mkString
   }
 
+  // TODO: This method needs documentation
   private def getDescriptions(path: PathRule, query: QueryRule): List[ApiDescription] = {
     def go(stack: List[PathRule], desc: ApiDescription): List[ApiDescription] = stack match {
       case PathAnd(a, b)::xs           => go(a::b::xs, desc)
@@ -139,12 +140,14 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
           desc.copy(desc.path + path, operations = List(op))
         }
 
+        // TODO: I think this idea needs more work
       case stack @ MetaCons(a, meta)::xs =>
         getMeta(meta) match {
-          case m @ Some(meta) => desc.description match {
-            case Some(d) => go(a::xs, desc.copy(description = Some(d + "\n" + desc)))
-            case None       => go(a::xs, desc.copy(description = m))
-          }         // need to see if we are working on Parameters
+          case m @ Some(meta) => go(a::xs, desc)
+            .map(desc => desc.copy(operations = desc.operations.map { op =>
+              if (op.summary != "") logger.warn(s"Overriding route description '${op.summary}' with '$meta'")
+              op.copy(summary = meta)
+            }))
           case None       => go(a::xs, desc)
         }
 

@@ -18,8 +18,12 @@ object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
   import JsonWritable.jsonWritable
 
-  GET / "hello" |>> { () => Ok("Hello world!") }
-  GET / "hello" / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
+  "This is a simple hello world route" **
+    GET / "hello" |>> { () => Ok("Hello world!") }
+
+  "This is a variant of the hello route that takes a param" **
+    GET / "hello" / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
+
   GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
   GET / "disjunction" / pathVar[Int] |>> { i: Int =>
     if (true) \/-(Ok(JsonResult("Good result", i)))

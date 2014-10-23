@@ -6,7 +6,7 @@ import rho.bits.PathAST._
 import rho.bits.HeaderAST._
 import rho.bits.QueryAST._
 
-import shapeless.{ HNil, :: }
+import shapeless.{HNil, ::}
 import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
@@ -21,6 +21,13 @@ package object rho extends Http4s with ResultSyntaxInstances {
 
   implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] =
     TypedPath(PathCapture(s.name, StringParser.strParser, stringTag))
+
+
+  /** Add support for adding documentation before a route using the ** operator */
+  implicit class StrOps(description: String) {
+    def **(method: Method): PathBuilder[HNil] =
+      new PathBuilder(method, PathAST.MetaCons(PathEmpty, RouteDescription(description)))
+  }
 
   /**
    * Defines a parameter in query string that should be bound to a route definition.
