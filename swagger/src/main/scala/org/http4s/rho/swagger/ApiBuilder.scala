@@ -134,22 +134,12 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
           desc.copy(desc.path + path, operations = List(op))
         }
 
-      case stack @ MetaCons(CaptureTail() | PathCapture(_, _, _), meta)::_ =>
-        val op = getMeta(meta).fold(baseOp){ meta => baseOp.copy(summary = meta) }
-        collectPaths(stack, query, op).map { case (path, op) =>
-          desc.copy(desc.path + path, operations = List(op))
-        }
+      case stack @ MetaCons(a, RouteDesc(meta))::xs =>
+        go(a::xs, desc).map(desc =>
+          desc.copy(operations = desc.operations.map(addOpSummary(meta, _)))
+        )
 
-        // TODO: I think this idea needs more work
-      case stack @ MetaCons(a, meta)::xs =>
-        getMeta(meta) match {
-          case m @ Some(meta) => go(a::xs, desc)
-            .map(desc => desc.copy(operations = desc.operations.map { op =>
-              if (op.summary != "") logger.warn(s"Overriding route description '${op.summary}' with '$meta'")
-              op.copy(summary = meta)
-            }))
-          case None       => go(a::xs, desc)
-        }
+      case stack @ MetaCons(a, _)::xs => go(a::xs, desc)    // ignore other metadata
 
       case PathEmpty::Nil => List(desc.copy(operations = baseOp::Nil))
 
@@ -184,10 +174,11 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
         List(path + "/{tail...}" -> op.copy(parameters = op.parameters:::ps::analyzeQuery(query)))
 
       case MetaCons(rule, meta)::xs =>
-        getMeta(meta) match {
-          case Some(meta) => go(rule::xs, path, op.copy(notes = op.notes + "\n" + meta))
-          case None       => go(rule::xs, path, op)
+        val op2 = meta match {
+          case RouteDesc(meta) => addOpSummary(meta, op)
+          case _               => op
         }
+        go(rule::xs, path, op2)
 
       case Nil =>
         val qs = analyzeQuery(query)
@@ -219,10 +210,10 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
 
       case (q @ QueryCapture(_, _, _, _))::xs => gatherParam(q)::go(xs)
 
-      case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs =>
-        getMeta(meta).fold(go(q::xs)){ s =>
-          gatherParam(q).copy(description = Some(s))::go(xs)
-        }
+      case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs => meta match {
+        case m: TextMetaData => gatherParam(q).copy(description = Some(m.msg))::go(xs)
+        case _               => go(q::xs)
+      }
 
       case MetaCons(a, _)::xs => go(a::xs)
 
@@ -263,10 +254,11 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
     go(rule::Nil)
   }
 
-  private def getType(m: Type): String = TypeBuilder.DataType(m).name
-
-  def getMeta(meta: Metadata): Option[String] = meta match {
-    case t: TextMetaData => Some(t.msg)
-    case _               => None
+  // Utility methods
+  private def addOpSummary(summary: String, op: Operation): Operation = {
+    if (op.summary != "") logger.warn(s"Overriding route description '${op.summary}' with '$summary'")
+    op.copy(summary = summary)
   }
+
+  private def getType(m: Type): String = TypeBuilder.DataType(m).name
 }

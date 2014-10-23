@@ -2,14 +2,27 @@ package org.http4s.rho
 
 import java.sql.Timestamp
 import java.util.Date
+import org.http4s.Method
+import org.http4s.rho.bits.{TextMetaData, PathAST}
+import org.http4s.rho.bits.PathAST.PathEmpty
+import shapeless.HNil
+
 import scala.reflect.runtime.universe._
 import scalaz.stream.Process
 import scalaz.concurrent.Task
-import scala.annotation.implicitNotFound
-import com.wordnik.swagger.model.ModelProperty
-import com.wordnik.swagger.model.Model
 
 package object swagger {
+
+  /** Metadata carrier for specific routes */
+  case class RouteDesc(msg: String) extends TextMetaData
+
+  /** Add support for adding documentation before a route using the ** operator */
+  implicit class StrOps(description: String) {
+    def **(method: Method): PathBuilder[HNil] = **(new PathBuilder[HNil](method, PathEmpty))
+
+    def **[T<: HNil](builder: PathBuilder[T]): PathBuilder[T] =
+      new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteDesc(description)))
+  }
 
   object Reflector {
     import scala.reflect.runtime.universe._

@@ -22,13 +22,6 @@ package object rho extends Http4s with ResultSyntaxInstances {
   implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] =
     TypedPath(PathCapture(s.name, StringParser.strParser, stringTag))
 
-
-  /** Add support for adding documentation before a route using the ** operator */
-  implicit class StrOps(description: String) {
-    def **(method: Method): PathBuilder[HNil] =
-      new PathBuilder(method, PathAST.MetaCons(PathEmpty, RouteDescription(description)))
-  }
-
   /**
    * Defines a parameter in query string that should be bound to a route definition.
    * @param name name of the parameter in query

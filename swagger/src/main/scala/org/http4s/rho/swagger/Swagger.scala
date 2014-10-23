@@ -5,7 +5,7 @@ import com.wordnik.swagger.model.{ApiListing, ApiInfo}
 import org.json4s._
 import org.json4s.JsonDSL._
 
-
+// TODO: It may be nice to make this cache the JSON docs as I bet they are a bit expensive to render
 class Swagger(swaggerVersion: String, apiVersion: String, apiInfo: ApiInfo) {
   import com.wordnik.swagger.model.SwaggerSerializers.formats
 

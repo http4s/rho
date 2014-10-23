@@ -21,6 +21,7 @@ import scalaz.concurrent.Task
 import scalaz.stream.Process.emit
 
 trait SwaggerSupport extends RhoService {
+
   implicit protected def jsonFormats: org.json4s.Formats = SwaggerSerializers.formats
 
   /** Override the `swaggerFormats` to add your own custom serializers */

@@ -16,13 +16,16 @@ case class JsonResult(name: String, number: Int) extends AutoSerializable
 
 object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
+  import org.http4s.rho.swagger._
   import JsonWritable.jsonWritable
 
+  val hello = GET / "hello"
+
   "This is a simple hello world route" **
-    GET / "hello" |>> { () => Ok("Hello world!") }
+    hello |>> { () => Ok("Hello world!") }
 
   "This is a variant of the hello route that takes a param" **
-    GET / "hello" / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
+    hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
 
   GET / "result" / pathVar[String] +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
   GET / "disjunction" / pathVar[Int] |>> { i: Int =>

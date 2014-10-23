@@ -7,4 +7,3 @@ trait TextMetaData extends Metadata {
   def msg: String
 }
 
-case class RouteDescription(msg: String) extends TextMetaData

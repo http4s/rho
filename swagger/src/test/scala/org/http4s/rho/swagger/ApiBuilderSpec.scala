@@ -130,4 +130,18 @@ class ApiBuilderSpec extends Specification {
     }
   }
 
+  "ApiBuilder.getMeta" should {
+    import DummyCompiler.compilerInstance
+    "Get a route description" in {
+      val r = "foo" ** GET / "bar" |>> { () => "" }
+
+      builder.actionToApiListing(r)
+        .head
+        .apis
+        .head
+        .operations
+        .head
+        .summary should_== "foo"
+    }
+  }
 }
