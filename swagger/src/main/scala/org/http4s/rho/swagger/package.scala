@@ -87,6 +87,8 @@ package object swagger {
     def isProcess: Boolean =
       t <:< typeOf[Process[Task, _]]
 
+    def isTask: Boolean =
+      t <:< typeOf[Task[_]]
   }
 
 }

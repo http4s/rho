@@ -6,7 +6,10 @@ import java.util.Date
 import com.wordnik.swagger.model.Model
 import org.specs2.mutable.Specification
 
-import scala.reflect.runtime.universe.{ TypeTag, typeTag }
+import scalaz.concurrent.Task
+import scalaz.stream.Process
+
+import scala.reflect.runtime.universe.{ TypeTag, typeTag, typeOf }
 
 package object model {
   case class Foo(a: Int, b: String)
@@ -42,6 +45,37 @@ class TypeBuilderSpec extends Specification {
       val models = primitives.foldLeft(Set.empty[Model])((s, t) => TypeBuilder.collectModels(t.tpe, s, DefaultSwaggerFormats))
 
       models.isEmpty must_== true
+    }
+
+    "Identify types" in {
+      typeOf[Task[String]].isTask should_== true
+      typeOf[String].isTask should_== false
+
+      typeOf[Process[Task,String]].isProcess should_== true
+      typeOf[String].isProcess== false
+
+      typeOf[Array[String]].isArray should_== true
+      typeOf[String].isArray== false
+
+      typeOf[Seq[String]].isCollection should_== true
+      typeOf[java.util.Collection[String]].isCollection should_== true
+      typeOf[String].isCollection== false
+
+      typeOf[Either[Int,String]].isEither should_== true
+      typeOf[String].isEither== false
+
+      typeOf[Map[Int,String]].isMap should_== true
+      typeOf[String].isMap== false
+
+      typeOf[Nothing].isNothingOrNull should_== true
+      typeOf[Null].isNothingOrNull should_== true
+      typeOf[String].isNothingOrNull should_== false
+
+      typeOf[Option[String]].isOption should_== true
+      typeOf[String].isOption should_== false
+
+      Reflector.primitives.foreach(_.isPrimitive should_== true)
+      typeOf[Some[String]].isPrimitive should_== false
     }
 
     "Build simple model" in {
@@ -134,12 +168,19 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Get types from a collection" in {
-      import scalaz.concurrent.Task
-      import scalaz.stream.Process
-
       models[Seq[Foo]] must_== models[Foo]
       models[Map[String, Foo]] must_== models[Foo]
+    }
+
+    "Get types from a scalaz.stream.Process" in {
+      import scalaz.concurrent.Task
+      import scalaz.stream.Process
       models[Process[Task, Foo]] must_== models[Foo]
+    }
+
+    "Get types from a scalaz.concurrent.Task" in {
+      import scalaz.concurrent.Task
+      models[Task[Foo]] must_== models[Foo]
     }
 
     "Build model that contains a List" in {

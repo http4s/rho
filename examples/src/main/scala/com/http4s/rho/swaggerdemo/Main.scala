@@ -39,7 +39,7 @@ object MyService extends RhoService with SwaggerSupport {
   "This gets a simple counter for the number of times this route has been requested" **
    GET / "counter" |>> {
     val i = new AtomicInteger(0)
-    Task(s"The number is ${i.getAndIncrement()}")
+    Task(<html><body><h2>{s"The number is ${i.getAndIncrement()}"}</h2></body></html>)
   }
 }
 

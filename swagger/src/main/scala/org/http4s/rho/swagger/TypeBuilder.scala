@@ -39,12 +39,16 @@ object TypeBuilder extends StrictLogging {
       case tpe if tpe.isEither || tpe.isMap =>
         go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
           go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
-      case tpe if tpe.isCollection || tpe.isOption =>
+      case tpe if (tpe.isCollection || tpe.isOption) && tpe.typeArgs.nonEmpty =>
         val ntpe = tpe.typeArgs.head
         if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
       case tpe if tpe.isProcess =>
         val ntpe = tpe.typeArgs.apply(1)
+        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
+        else Set.empty
+      case tpe if tpe.isTask =>
+        val ntpe = tpe.typeArgs.apply(0)
         if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
       case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
@@ -65,7 +69,7 @@ object TypeBuilder extends StrictLogging {
 
         models ++ generics ++ children
       case e =>
-        logger.warn(s"TypeBuilder cannot describe types other than case classes. Failing type: ${e.fullName}")
+        logger.warn(s"TypeBuilder failed to build type. Failing type: ${e.fullName}")
         Set.empty
     }
 
