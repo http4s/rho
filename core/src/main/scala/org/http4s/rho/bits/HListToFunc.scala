@@ -5,8 +5,6 @@ import org.http4s.rho.Result
 import shapeless.{ HList, HNil, :: }
 import scalaz.concurrent.Task
 
-import scala.reflect.runtime.universe.{ TypeTag, Type }
-
 /////////////////// Helpers for turning a function of may params to a function of a HList
 // The library https://github.com/sbt/sbt-boilerplate may be useful for final generation
 
@@ -23,6 +21,11 @@ trait HListToFunc[T <: HList, -F] {
 }
 
 object HListToFunc {
+
+  implicit def const0[R](implicit m: ResultMatcher[R]) = new HListToFunc[HNil,R] {
+    override def matcher = m
+    override def conv(r: R): (Request, HNil) => Task[Result[_, _]] = (req, _) => m.conv(req, r)
+  }
 
   implicit def wReqFun0[S, R](implicit m: ResultMatcher[R]) = new HListToFunc[HNil, (Request) => R] {
     override def matcher: ResultMatcher[_] = m

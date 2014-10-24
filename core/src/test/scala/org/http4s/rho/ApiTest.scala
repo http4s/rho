@@ -13,7 +13,7 @@ import scalaz.concurrent.Task
 import scalaz.stream.Process
 import scodec.bits.ByteVector
 
-
+// TODO: these tests are a bit of a mess
 class ApiTest extends Specification {
   val lenheader = Header.`Content-Length`(4)
   val etag = Header.ETag("foo")
@@ -58,6 +58,30 @@ class ApiTest extends Specification {
       new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
     }
 
+    "Append headers to a Route" in {
+
+      val path = POST / "hello" / 'world +? param[Int]("fav")
+      val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
+
+
+      val route = (path >>> validations >>> capture(Header.ETag)).decoding(EntityDecoder.text) runWith
+        {(world: String, fav: Int, tag: Header.ETag, body: String) =>
+
+          Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+            .putHeaders(Header.ETag("foo"))
+        }
+
+      val body = Process.emit(ByteVector("cool".getBytes))
+      val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
+        .putHeaders(Header.ETag("foo"))
+        .withBody("cool")
+        .run
+
+      val resp = route(req).get.run
+      resp.headers.get(Header.ETag).get.value should_== "foo"
+
+    }
+
     "Run || routes" in {
       val p1 = "one" / 'two
       val p2 = "three" / 'four
@@ -69,6 +93,37 @@ class ApiTest extends Specification {
 
       val req2 = Request(uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
       fetch(f(req2)) should_== "four"
+    }
+
+    "Execute a complicated route" in {
+
+      val path = POST / "hello" / 'world +? param[Int]("fav")
+      val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
+        capture(Header.ETag)
+
+      val route =
+        (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, tag: Header.ETag, body: String) =>
+
+          Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+            .putHeaders(Header.ETag("foo"))
+        }
+
+      val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
+        .putHeaders( Header.ETag("foo"))
+        .withBody("cool")
+        .run
+
+      val resp = route(req).get.run
+      resp.headers.get(Header.ETag).get.value should_== "foo"
+    }
+
+    "Deal with 'no entity' responses" in {
+      val route = GET / "foo" runWith { () => SwitchingProtocols() }
+      val req = Request(GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
+
+      val result = route(req).get.run
+      result.headers.size must_== 0
+      result.status must_== Status.SwitchingProtocols
     }
   }
 
@@ -184,60 +239,5 @@ class ApiTest extends Specification {
       val result = route(req)
       result.get.run.status should_== Status.BadRequest
     }
-  }
-
-  "Do a complicated one" in {
-
-    val path = POST / "hello" / 'world +? param[Int]("fav")
-    val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 } &&
-                      capture(Header.ETag)
-
-    val route =
-      (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, tag: Header.ETag, body: String) =>
-
-        Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-          .putHeaders(Header.ETag("foo"))
-      }
-
-    val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
-                  .putHeaders( Header.ETag("foo"))
-                  .withBody("cool")
-                  .run
-
-    val resp = route(req).get.run
-    resp.headers.get(Header.ETag).get.value should_== "foo"
-  }
-
-  "Append headers to a Route" in {
-
-    val path = POST / "hello" / 'world +? param[Int]("fav")
-    val validations = requireThat(Header.`Content-Length`){ h => h.length != 0 }
-
-
-    val route = (path >>> validations >>> capture(Header.ETag)).decoding(EntityDecoder.text) runWith
-      {(world: String, fav: Int, tag: Header.ETag, body: String) =>
-
-        Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-          .putHeaders(Header.ETag("foo"))
-      }
-
-    val body = Process.emit(ByteVector("cool".getBytes))
-    val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
-                  .putHeaders(Header.ETag("foo"))
-                  .withBody("cool")
-                  .run
-
-    val resp = route(req).get.run
-    resp.headers.get(Header.ETag).get.value should_== "foo"
-
-  }
-
-  "Deal with 'no entity' responses" in {
-    val route = GET / "foo" runWith { () => SwitchingProtocols() }
-    val req = Request(GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
-
-    val result = route(req).get.run
-    result.headers.size must_== 0
-    result.status must_== Status.SwitchingProtocols
   }
 }

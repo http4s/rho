@@ -2,6 +2,8 @@ package org.http4s
 package rho
 
 import org.specs2.mutable.Specification
+import java.util.concurrent.atomic.AtomicInteger
+import scalaz.concurrent.Task
 
 class RhoServiceTest extends Specification with RequestRunner {
 
@@ -10,11 +12,11 @@ class RhoServiceTest extends Specification with RequestRunner {
   val service = new RhoService {
     GET +? param("foo", "bar") |>> { foo: String => Ok("Root " + foo) }
 
-    GET / "hello" |>> { () => Ok("route1") }
+    GET / "hello" |>> Ok("route1")
 
     GET / 'hello |>> { hello: String => Ok("route2") }
 
-    GET / "hello" / "world" |>> { () => Ok("route3") }
+    GET / "hello" / "world" |>> Ok("route3")
 
     // keep the function for 'reverse routing'
     val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => Ok("route" + foo) }
@@ -28,7 +30,7 @@ class RhoServiceTest extends Specification with RequestRunner {
 
     GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => Ok("route6_" + foo) }
 
-    GET / "hello" / "compete" |>> { () => Ok("route7") }
+    GET / "hello" / "compete" |>> Ok("route7")
 
     // Testing query params
     GET / "query" / "twoparams" +? param[Int]("foo") & param[String]("bar") |>> { (foo: Int, bar: String) =>
@@ -55,7 +57,12 @@ class RhoServiceTest extends Specification with RequestRunner {
     GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => Ok(s"req $foo") }
 
     val rootSome = root / "some"
-    GET / rootSome |>> { () => Ok("root to some") }
+    GET / rootSome |>>  Ok("root to some")
+
+    GET / "directTask" |>> {
+      val i = new AtomicInteger(0)
+      Task(s"${i.getAndIncrement}")
+    }
   }
 
   "RhoService" should {
@@ -187,6 +194,12 @@ class RhoServiceTest extends Specification with RequestRunner {
     "Level one path definition to /some" in {
       val req1 = Request(Method.GET, Uri(path = "/some"))
       checkOk(req1) should_== "root to some"
+    }
+
+    "Execute a directly provided Task every invocation" in {
+      val req = Request(Method.GET, Uri(path="directTask"))
+      checkOk(req) should_== "0"
+      checkOk(req) should_== "1"
     }
 
     ////////////////////////////////////////////////////

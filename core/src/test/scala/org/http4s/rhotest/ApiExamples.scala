@@ -81,6 +81,11 @@ class ApiExamples extends Specification {
         GET / "nostatus" |>> { () => "No status!"}
         GET / "taskNoStatus" |>> { () => Task("A Future status!") }
 
+        // You can also return a constant result for routes that are invariante of their inputs
+        GET / "nostatus2" |>> "This is a constant result!"
+        GET / "taskNoStatus2" |>> Task("This task will be evaluated each time!")
+
+
         // Work with disjunctions
         GET / "disjunct" |>> { () =>
           if (true) \/-(Ok("True!")) else -\/(NotFound(<html><body>Not Found.</body></html>))

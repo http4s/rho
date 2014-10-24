@@ -1,6 +1,7 @@
 package com.http4s.rho.swaggerdemo
 
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.http4s.{ Headers, Header }
 import org.http4s.Header.{ `Content-Type`, `Access-Control-Allow-Origin` }
@@ -10,6 +11,7 @@ import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
 import JsonWritable.AutoSerializable
 
+import scalaz.concurrent.Task
 import scalaz.{ \/-, -\/ }
 
 case class JsonResult(name: String, number: Int) extends AutoSerializable
@@ -19,10 +21,11 @@ object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho.swagger._
   import JsonWritable.jsonWritable
 
+  // We want to define this chunk of the service as abstract for reuse below
   val hello = GET / "hello"
 
   "This is a simple hello world route" **
-    hello |>> { () => Ok("Hello world!") }
+    hello |>> Ok("Hello world!")
 
   "This is a variant of the hello route that takes a param" **
     hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
@@ -32,8 +35,15 @@ object MyService extends RhoService with SwaggerSupport {
     if (true) \/-(Ok(JsonResult("Good result", i)))
     else      -\/(Ok(<html><body>Negative number: {i}</body></html>))
   }
+
+  "This gets a simple counter for the number of times this route has been requested" **
+   GET / "counter" |>> {
+    val i = new AtomicInteger(0)
+    Task(s"The number is ${i.getAndIncrement()}")
+  }
 }
 
+// TODO: replace this with http4s json support
 object JsonWritable {
   import org.json4s._
   import org.json4s.jackson.Serialization
