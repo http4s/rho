@@ -42,7 +42,7 @@ trait PathTree extends ValidationTree {
 
         case MetaCons(r, _) => append(r::tail, action)  // discard metadata
 
-        case PathMatch("") => append(tail, action)      // "" is a NOOP
+        case PathMatch("") if !tail.isEmpty => append(tail, action) // "" is a NOOP in the middle of a path
 
         case PathMatch(s) =>
           paths.collectFirst { case n@MatchNode(s1,_,_,_) if s == s1 => n } match {

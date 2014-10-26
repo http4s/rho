@@ -4,10 +4,12 @@ package rho
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.http4s.rho.bits.{ValidationFailure, ParserFailure, ParserSuccess}
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 
 import shapeless.{HNil, HList}
 
+import scala.collection.mutable.ListBuffer
 import scalaz.concurrent.Task
 
 trait RhoService extends server.HttpService
@@ -61,16 +63,32 @@ trait RhoService extends server.HttpService
   }
 
   private def getResult(req: Request): Option[()=>Task[Response]] = {
-    val path = req.uri.path.split("/").toList match {
-      case ""::xs => xs
-      case     xs => xs
-    }
+    val path = splitPath(req.uri.path)
     methods.get(req.method).flatMap(_.walk(req, path, HNil) match {
-      case null => None
+      case null                 => None
       case ParserSuccess(t)     => Some(t)
       case ParserFailure(s)     => Some(() => onBadRequest(s))
       case ValidationFailure(s) => Some(() => onBadRequest(s))
     })
+  }
+
+  private def splitPath(path: String): List[String] = {
+    val buff = new ListBuffer[String]
+    val len = path.length
+    @tailrec
+    def go(i: Int, begin: Int): Unit = if (i < len) {
+      if (path.charAt(i) == '/') {
+        if (i > begin) buff += path.substring(begin, i)
+        go(i+1, i+1)
+      } else go(i+1, begin)
+    } else {
+      buff += path.substring(begin, i)
+    }
+
+    val i = if (path.charAt(0) == '/') 1 else 0
+    go(i,i)
+
+    buff.result
   }
 
   override def toString(): String = s"RhoService($methods)"

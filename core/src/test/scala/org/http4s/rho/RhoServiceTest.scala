@@ -10,7 +10,7 @@ class RhoServiceTest extends Specification with RequestRunner {
   def Get(s: String, h: Header*): Request = Request(Method.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   val service = new RhoService {
-    GET +? param("foo", "bar") |>> { foo: String => Ok("Root " + foo) }
+    GET / "" +? param("foo", "bar") |>> { foo: String => Ok("Root " + foo) }
 
     GET / "hello" |>> Ok("route1")
 
@@ -63,6 +63,10 @@ class RhoServiceTest extends Specification with RequestRunner {
       val i = new AtomicInteger(0)
       Task(s"${i.getAndIncrement}")
     }
+
+    GET / "terminal" / "" |>> "terminal/"
+
+    GET / "terminal" |>> "terminal"
   }
 
   "RhoService" should {
@@ -76,10 +80,13 @@ class RhoServiceTest extends Specification with RequestRunner {
 
     "Consider PathMatch(\"\") a NOOP" in {
       val service = new RhoService {
-        GET / "foo" / "" |>> { () => Ok("bar") }
+        GET / "" / "foo" |>>  Ok("bar")
       }
-      val req = Request(Method.GET, Uri(path = "/foo"))
-      getBody(service(req).run.body) should_== "bar"
+      val req1 = Request(Method.GET, Uri(path = "/foo"))
+      getBody(service(req1).run.body) should_== "bar"
+
+      val req2 = Request(Method.GET, Uri(path = "//foo"))
+      getBody(service(req2).run.body) should_== "bar"
     }
 
     "Execute a route with no params" in {
@@ -200,6 +207,14 @@ class RhoServiceTest extends Specification with RequestRunner {
       val req = Request(Method.GET, Uri(path="directTask"))
       checkOk(req) should_== "0"
       checkOk(req) should_== "1"
+    }
+
+    "Interpret uris ending in '/' differently than those without" in {
+      val req1 = Request(Method.GET, Uri(path="terminal/"))
+      checkOk(req1) should_== "terminal/"
+
+      val req2 = Request(Method.GET, Uri(path="terminal"))
+      checkOk(req2) should_== "terminal"
     }
 
     ////////////////////////////////////////////////////
