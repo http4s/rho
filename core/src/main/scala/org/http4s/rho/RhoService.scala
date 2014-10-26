@@ -2,7 +2,7 @@ package org.http4s
 package rho
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import org.http4s.rho.bits.{ValidationFailure, ParserFailure, ParserSuccess}
+import org.http4s.rho.bits.{NoMatch, ValidationFailure, ParserFailure, ParserSuccess}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -65,7 +65,7 @@ trait RhoService extends server.HttpService
   private def getResult(req: Request): Option[()=>Task[Response]] = {
     val path = splitPath(req.uri.path)
     methods.get(req.method).flatMap(_.walk(req, path, HNil) match {
-      case null                 => None
+      case NoMatch              => None
       case ParserSuccess(t)     => Some(t)
       case ParserFailure(s)     => Some(() => onBadRequest(s))
       case ValidationFailure(s) => Some(() => onBadRequest(s))

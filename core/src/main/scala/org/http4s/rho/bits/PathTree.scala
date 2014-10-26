@@ -78,14 +78,14 @@ trait PathTree extends ValidationTree {
         if (path.tail.isEmpty) {
           if (end != null) end.attempt(req, h)
           else if (variadic != null) variadic.attempt(req, Nil::h)
-          else null
+          else NoMatch
         }
         else {
           @tailrec               // error may be null
           def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[()=>Task[Response]] = {
             if (nodes.isEmpty) error
             else nodes.head.walk(req, path.tail, h) match {
-              case null => go(nodes.tail, error)
+              case NoMatch                 => go(nodes.tail, error)
               case r@ ParserSuccess(_)     => r
               case e@ ParserFailure(_)     => go(nodes.tail, if (error != null) error else e)
               case e@ ValidationFailure(_) => go(nodes.tail, if (error != null) error else e)
@@ -95,11 +95,11 @@ trait PathTree extends ValidationTree {
           val routeMatch = go(paths, null)
           if (routeMatch != null) routeMatch
           else if(variadic != null) variadic.attempt(req, path.tail::h)
-          else null
+          else NoMatch
         }
 
       }
-      else null
+      else NoMatch
     }
 
     // Searches the available nodes and replaces the current one
@@ -148,14 +148,14 @@ trait PathTree extends ValidationTree {
       if (path.isEmpty) {
         if (end != null) end.attempt(req, stack)
         else if (variadic != null) variadic.attempt(req, Nil::stack)
-        else null
+        else NoMatch
       }
       else {
         @tailrec               // error may be null
         def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[()=>Task[Response]] = {
           if (nodes.isEmpty) error
           else nodes.head.walk(req, path, stack) match {
-            case null => go(nodes.tail, error)
+            case NoMatch                 => go(nodes.tail, error)
             case r@ ParserSuccess(_)     => r
             case e@ ParserFailure(_)     => go(nodes.tail, if (error != null) error else e)
             case e@ ValidationFailure(_) => go(nodes.tail, if (error != null) error else e)
@@ -165,7 +165,7 @@ trait PathTree extends ValidationTree {
         val routeMatch = go(paths, null)
         if (routeMatch != null) routeMatch
         else if(variadic != null) variadic.attempt(req, path.tail::stack)
-        else null
+        else NoMatch
       }
     }
 
