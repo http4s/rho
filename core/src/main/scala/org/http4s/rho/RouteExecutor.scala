@@ -102,7 +102,7 @@ trait ExecutableCompiler {
           if (v == null) null
           else if (!currentPath.isEmpty    ||
             b.isInstanceOf[PathAnd]        ||
-            b.isInstanceOf[CaptureTail]) v.flatMap(go(b, _))
+            b == CaptureTail) v.flatMap(go(b, _))
           else null
 
         case PathOr(a, b) =>
@@ -129,7 +129,7 @@ trait ExecutableCompiler {
           }
           else null
 
-        case CaptureTail() =>
+        case CaptureTail =>
           val p = currentPath
           currentPath = Nil
           ParserSuccess(p::stack)

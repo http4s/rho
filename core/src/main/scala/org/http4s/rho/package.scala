@@ -58,7 +58,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
    */
   def root(): TypedPath[HNil] = TypedPath(PathEmpty)
 
-  def * = CaptureTail()
+  def * : CaptureTail.type = CaptureTail
 
   /////////////////////////////// Header helpers //////////////////////////////////////
 

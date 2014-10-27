@@ -59,7 +59,7 @@ object PathAST {
   case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
   // TODO: can I make this a case object?
-  case class CaptureTail() extends PathRule
+  case object CaptureTail extends PathRule
 
   case object PathEmpty extends PathRule
 

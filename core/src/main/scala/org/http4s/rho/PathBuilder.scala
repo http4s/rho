@@ -30,7 +30,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, path, q.rule)
 
-  def /(t: CaptureTail): Router[List[String] :: T] = new Router(method, PathAnd(path, t), EmptyQuery, EmptyHeaderRule)
+  def /(t: CaptureTail.type): Router[List[String] :: T] = new Router(method, PathAnd(path, t), EmptyQuery, EmptyHeaderRule)
 
   def /(s: String): PathBuilder[T] = new PathBuilder(method, PathAnd(path, PathMatch(s)))
 

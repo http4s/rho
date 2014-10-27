@@ -102,7 +102,7 @@ trait PathTree {
             case None    => addNode(CaptureNode(p).append(tail, action))
           }
 
-        case CaptureTail() =>
+        case CaptureTail =>
           val v = if (variadic != null) variadic ++ action else action
           clone(paths, v, end)
 

@@ -129,7 +129,7 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
       case PathOr(a, b)::xs            => go(a::xs, desc):::go(b::xs, desc)
       case PathMatch(s)::xs            => go(xs, desc.copy(path = desc.path + "/" + s))
 
-      case stack @ (CaptureTail() | PathCapture(_, _, _))::_ =>
+      case stack @ (CaptureTail | PathCapture(_, _, _))::_ =>
         collectPaths(stack, query, baseOp).map{ case (path, op) =>
           desc.copy(desc.path + path, operations = List(op))
         }
@@ -168,7 +168,7 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
         val p = Parameter (id, None, None, true, false, tpe, AnyAllowableValues, "path", None)
         go(xs, s"$path/{$id}", op.copy(parameters = op.parameters:+p))
 
-      case CaptureTail()::xs =>
+      case CaptureTail::xs =>
         if (!xs.isEmpty) logger.warn(s"Warning: path rule after tail capture: $xs")
         val ps = Parameter ("tail...", None, None, false, true, "string", AnyAllowableValues, "path", None)
         List(path + "/{tail...}" -> op.copy(parameters = op.parameters:::ps::analyzeQuery(query)))

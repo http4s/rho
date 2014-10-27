@@ -23,7 +23,7 @@ object UriConverter {
       case PathOr(a, _) :: rs          => go(a :: rs, acc) // we decided to take the first root
       case PathMatch(s) :: rs          => go(rs, PathElm(s) :: acc)
       case PathCapture(id, _, _) :: rs => go(rs, PathExp(id) :: acc)
-      case CaptureTail() :: rs         => go(rs, acc)
+      case CaptureTail :: rs         => go(rs, acc)
       case PathEmpty :: rs             => go(rs, acc)
       case MetaCons(p, _) :: rs        => go(p::rs, acc)
     }
