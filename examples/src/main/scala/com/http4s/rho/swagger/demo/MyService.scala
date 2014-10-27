@@ -1,15 +1,22 @@
-package com.http4s.rho.swaggerdemo
+package com.http4s.rho.swagger.demo
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.reflect.runtime.universe
+
 import org.http4s.Uri
-import com.http4s.rho.swaggerdemo.JsonWritable.AutoSerializable
 import org.http4s.rho.RhoService
+import org.http4s.rho.charSequenceWritable
+import org.http4s.rho.htmlWritable
+import org.http4s.rho.method
+import org.http4s.rho.param
+import org.http4s.rho.pathVar
+import org.http4s.rho.swagger.StrOps
 import org.http4s.rho.swagger.SwaggerSupport
 
-import scalaz._
+import JsonWritable.AutoSerializable
 import scalaz.Scalaz._
-
+import scalaz.{ \/- }
 import scalaz.concurrent.Task
 
 object MyService extends RhoService with SwaggerSupport {
@@ -34,17 +41,17 @@ object MyService extends RhoService with SwaggerSupport {
 
   "Generates some JSON data from a route param, and a query Int" **
     GET / "result" / pathVar[String] +? param[Int]("id") |>>
-      { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+    { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
     GET / "disjunction" / pathVar[Int] |>> { i: Int =>
       if (i >= 0) Ok(JsonResult("Good result", i)).right
-      else        BadRequest(<html><body>Negative number: {i}</body></html>).left
+      else BadRequest(<html><body>Negative number: { i }</body></html>).left
     }
 
   "This gets a simple counter for the number of times this route has been requested" **
     GET / "counter" |>> {
       val i = new AtomicInteger(0)
-      Task(<html><body><h2>{s"The number is ${i.getAndIncrement()}"}</h2></body></html>)
+      Task(<html><body><h2>{ s"The number is ${i.getAndIncrement()}" }</h2></body></html>)
     }
 }

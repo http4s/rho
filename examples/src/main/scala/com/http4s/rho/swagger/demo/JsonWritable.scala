@@ -1,10 +1,18 @@
-package com.http4s.rho.swaggerdemo
+package com.http4s.rho.swagger.demo
 
 import java.nio.charset.StandardCharsets
 
-import org.http4s.Header.`Content-Type`
+import org.http4s.Header.{ `Content-Type` }
 import org.http4s.Headers
+import org.http4s.Writable
 import org.http4s.Writable.Entity
+import org.json4s.NoTypeHints
+import org.json4s.jackson.Serialization
+import org.json4s.jackson.Serialization.write
+
+import scalaz.concurrent.Task
+import scalaz.stream.Process.emit
+import scodec.bits.ByteVector
 
 // TODO: replace this with http4s json support
 object JsonWritable {
@@ -14,7 +22,7 @@ object JsonWritable {
   import org.json4s.jackson.Serialization.write
   import scodec.bits.ByteVector
 
-import scalaz.concurrent.Task
+  import scalaz.concurrent.Task
   import scalaz.stream.Process.emit
 
   trait AutoSerializable extends AnyRef with Product
