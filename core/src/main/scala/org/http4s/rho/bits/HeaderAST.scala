@@ -35,6 +35,6 @@ object HeaderAST {
 
   case class MetaCons(a: HeaderRule, meta: Metadata) extends HeaderRule
 
-  object EmptyHeaderRule extends HeaderRule
+  case object EmptyHeaderRule extends HeaderRule
 
 }
