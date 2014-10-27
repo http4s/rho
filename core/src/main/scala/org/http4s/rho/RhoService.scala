@@ -13,15 +13,50 @@ import scala.collection.mutable.ListBuffer
 import scalaz.concurrent.Task
 
 trait RhoService extends server.HttpService
-                    with ExecutableCompiler
-                    with bits.PathTree
+                    with LazyLogging
                     with bits.MethodAliases
-                    with bits.ResponseGeneratorInstances
-                    with LazyLogging {
+                    with ExecutableCompiler
+                    with bits.ResponseGeneratorInstances {
 
-  private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
+  private val __tree = new bits.RhoPathTree
 
-  protected def onError(t: Throwable): Task[Response] = {
+  protected def append[T <: HList, F](action: RhoAction[T, F]): Unit =
+    __tree.appendAction(action)
+
+  implicit protected def compilerSrvc[F] = new CompileService[F, F] {
+    override def compile(action: RhoAction[_ <: HList, F]): F = {
+      append(action)
+      action.f
+    }
+  }
+
+  override def isDefinedAt(x: Request): Boolean = __tree.getResult(x) match {
+    case NoMatch => false
+    case _       => true
+  }
+
+  override def apply(req: Request): Task[Response] =
+    applyOrElse(req, (_:Request) => throw new MatchError(s"Route not defined at: ${req.uri}"))
+
+  override def applyOrElse[A1 <: Request, B1 >: Task[Response]](x: A1, default: (A1) => B1): B1 = {
+    logger.info(s"Request: ${x.method}:${x.uri}")
+    __tree.getResult(x) match {
+      case NoMatch              => default(x)
+      case ParserSuccess(t)     => attempt(t)
+      case ParserFailure(s)     => onBadRequest(s)
+      case ValidationFailure(s) => onBadRequest(s)
+    }
+  }
+
+  override def toString(): String = s"RhoService(${__tree.toString()})"
+
+  private def attempt(f: () => Task[Response]): Task[Response] = {
+    try f()
+    catch { case t: Throwable => onError(t) }
+  }
+
+
+  override def onError(t: Throwable): Task[Response] = {
     logger.error("Error during route execution.", t)
     val w = Writable.stringWritable
     w.toEntity(t.getMessage).map { entity =>
@@ -31,70 +66,5 @@ trait RhoService extends server.HttpService
       }
       Response(Status.InternalServerError, body = entity.body, headers = hs)
     }
-  }
-
-  implicit protected def compilerSrvc[F] = new CompileService[F, F] {
-    override def compile(action: RhoAction[_ <: HList, F]): F = {
-      append(action)
-      action.f
-    }
-  }
-
-  protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
-    val m = action.method
-    val newLeaf = makeLeaf(action)
-    val newNode = methods.get(m).getOrElse(HeadNode()).append(action.path, newLeaf)
-    methods(m) = newNode
-  }
-
-
-
-  override def isDefinedAt(x: Request): Boolean = getResult(x).isDefined
-
-  override def apply(req: Request): Task[Response] =
-    applyOrElse(req, (_:Request) => throw new MatchError(s"Route not defined at: ${req.uri}"))
-
-  override def applyOrElse[A1 <: Request, B1 >: Task[Response]](x: A1, default: (A1) => B1): B1 = {
-    logger.info(s"Request: ${x.method}:${x.uri}")
-    getResult(x) match {
-      case Some(f) => attempt(f)
-      case None => default(x)
-    }
-  }
-
-  private def getResult(req: Request): Option[()=>Task[Response]] = {
-    val path = splitPath(req.uri.path)
-    methods.get(req.method).flatMap(_.walk(req, path, HNil) match {
-      case NoMatch              => None
-      case ParserSuccess(t)     => Some(t)
-      case ParserFailure(s)     => Some(() => onBadRequest(s))
-      case ValidationFailure(s) => Some(() => onBadRequest(s))
-    })
-  }
-
-  private def splitPath(path: String): List[String] = {
-    val buff = new ListBuffer[String]
-    val len = path.length
-    @tailrec
-    def go(i: Int, begin: Int): Unit = if (i < len) {
-      if (path.charAt(i) == '/') {
-        if (i > begin) buff += path.substring(begin, i)
-        go(i+1, i+1)
-      } else go(i+1, begin)
-    } else {
-      buff += path.substring(begin, i)
-    }
-
-    val i = if (path.charAt(0) == '/') 1 else 0
-    go(i,i)
-
-    buff.result
-  }
-
-  override def toString(): String = s"RhoService($methods)"
-
-  private def attempt(f: () => Task[Response]): Task[Response] = {
-    try f()
-    catch { case t: Throwable => onError(t) }
   }
 }

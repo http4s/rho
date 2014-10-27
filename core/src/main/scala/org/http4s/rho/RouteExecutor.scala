@@ -5,13 +5,12 @@ import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST._
 
-import org.http4s.Status.BadRequest
+import org.http4s.Status.{BadRequest, InternalServerError}
 import org.http4s.rho.bits._
 
 import shapeless.{HNil, HList, ::}
 
 import scalaz.concurrent.Task
-import scalaz.{-\/, \/-, \/}
 
 
 trait ExecutableCompiler {
@@ -31,6 +30,9 @@ trait ExecutableCompiler {
       Response(BadRequest, body = entity.body, headers = hs)
     }
   }
+
+  def onError(t: Throwable): Task[Response] =
+      Task.now(Response(InternalServerError))
 
   def parsePath(path: String): List[String] = path.split("/").toList
 
