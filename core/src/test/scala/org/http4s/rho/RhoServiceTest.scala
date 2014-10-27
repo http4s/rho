@@ -10,7 +10,9 @@ class RhoServiceTest extends Specification with RequestRunner {
   def Get(s: String, h: Header*): Request = Request(Method.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   val service = new RhoService {
-    GET / "" +? param("foo", "bar") |>> { foo: String => Ok("Root " + foo) }
+    GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
+
+    GET / "" +? param("foo", "bar") |>> { foo: String => Ok("this definition should be hidden by the previous definition") }
 
     GET / "hello" |>> Ok("route1")
 
@@ -57,7 +59,7 @@ class RhoServiceTest extends Specification with RequestRunner {
     GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => Ok(s"req $foo") }
 
     val rootSome = root / "some"
-    GET / rootSome |>>  Ok("root to some")
+    GET / rootSome |>> Ok("root to some")
 
     GET / "directTask" |>> {
       val i = new AtomicInteger(0)
@@ -71,16 +73,19 @@ class RhoServiceTest extends Specification with RequestRunner {
 
   "RhoService" should {
 
-    "Get ROOT ('/')" in {
-      val req1 = Request(Method.GET, Uri(path = "/"))
-      val req2 = Request(Method.GET, Uri.fromString("/?foo=biz").getOrElse(sys.error("Fail.")))
-      (checkOk(req1) should_== "Root bar") and
-        (checkOk(req2) should_== "Root biz")
+    "Handle definition without a path, which points to '/'" in {
+      val request = Request(Method.GET, Uri(path = "/"))
+      checkOk(request) should_== "just root with parameter 'foo=bar'"
+    }
+
+    "Handle definition without a path but with a parameter" in {
+      val request = Request(Method.GET, Uri.fromString("/?foo=biz").getOrElse(sys.error("Fail.")))
+      checkOk(request) should_== "just root with parameter 'foo=biz'"
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
       val service = new RhoService {
-        GET / "" / "foo" |>>  Ok("bar")
+        GET / "" / "foo" |>> Ok("bar")
       }
       val req1 = Request(Method.GET, Uri(path = "/foo"))
       getBody(service(req1).run.body) should_== "bar"
@@ -204,16 +209,16 @@ class RhoServiceTest extends Specification with RequestRunner {
     }
 
     "Execute a directly provided Task every invocation" in {
-      val req = Request(Method.GET, Uri(path="directTask"))
+      val req = Request(Method.GET, Uri(path = "directTask"))
       checkOk(req) should_== "0"
       checkOk(req) should_== "1"
     }
 
     "Interpret uris ending in '/' differently than those without" in {
-      val req1 = Request(Method.GET, Uri(path="terminal/"))
+      val req1 = Request(Method.GET, Uri(path = "terminal/"))
       checkOk(req1) should_== "terminal/"
 
-      val req2 = Request(Method.GET, Uri(path="terminal"))
+      val req2 = Request(Method.GET, Uri(path = "terminal"))
       checkOk(req2) should_== "terminal"
     }
 
