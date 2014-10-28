@@ -67,7 +67,7 @@ final class RhoPathTree extends PathTree {
 
 }
 
-private[this] object RhoPathTree {
+private object RhoPathTree {
 
   def splitPath(path: String): List[String] = {
     val buff = new ListBuffer[String]
