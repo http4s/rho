@@ -127,6 +127,11 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
     def go(stack: List[PathRule], desc: ApiDescription): List[ApiDescription] = stack match {
       case PathAnd(a, b)::xs           => go(a::b::xs, desc)
       case PathOr(a, b)::xs            => go(a::xs, desc):::go(b::xs, desc)
+
+      case PathMatch("")::Nil          => go(Nil, desc.copy(path = desc.path + "/"))
+
+      case PathMatch("")::xs           => go(xs, desc)
+
       case PathMatch(s)::xs            => go(xs, desc.copy(path = desc.path + "/" + s))
 
       case stack @ (CaptureTail | PathCapture(_, _, _))::_ =>
@@ -140,10 +145,6 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
         )
 
       case stack @ MetaCons(a, _)::xs => go(a::xs, desc)    // ignore other metadata
-
-      case PathEmpty::Nil => List(desc.copy(operations = baseOp::Nil))
-
-      case PathEmpty::xs  => go(xs, desc)
 
       case Nil =>
         val ops = collectPaths(Nil, query, baseOp)
@@ -160,8 +161,8 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogg
     def go(stack: List[PathRule], path: String, op: Operation): List[(String, Operation)] = stack match {
       case PathOr(a, b)::xs     => go(a::xs, path, op):::go(b::xs, path, op)
       case PathAnd (a, b) :: xs => go(a::b::xs, path, op)
+      case PathMatch("")::Nil   => go(Nil, path + "/", op)
       case PathMatch(s)::xs     => go(xs, path + "/" + s, op)
-      case PathEmpty::xs        => go(xs, path, op)
 
       case PathCapture (id, parser, _) :: xs =>
         val tpe = parser.typeTag.map(tag => getType(tag.tpe)).getOrElse("string")

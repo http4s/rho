@@ -116,18 +116,18 @@ trait ExecutableCompiler {
 
         case PathCapture(_, f, _) => f.parse(pop).map{ i => i::stack}
 
+        case PathMatch("") if currentPath.head.length == 0 => // Needs to be the empty path
+          pop
+          ParserSuccess(stack)
+
+
         case PathMatch("") => ParserSuccess(stack)    // "" is consider a NOOP
 
         case PathMatch(s) =>
           if (pop == s) ParserSuccess(stack)
           else null
 
-        case PathEmpty => // Needs to be the empty path
-          if (currentPath.head.length == 0) {
-            pop
-            ParserSuccess(stack)
-          }
-          else null
+
 
         case CaptureTail =>
           val p = currentPath
