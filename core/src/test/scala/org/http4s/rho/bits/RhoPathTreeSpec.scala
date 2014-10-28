@@ -15,5 +15,8 @@ class RhoPathTreeSpec extends Specification {
     "handle /test/path" in {
       splitPath("/test/path") must_== List("test", "path")
     }
+    "Interpret '//' as '/'" in {
+      splitPath("/test//path") must_== List("test", "path")
+    }
   }
 }

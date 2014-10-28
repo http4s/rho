@@ -1,10 +1,10 @@
 package org.http4s
 package rho.bits
 
+import scala.language.existentials
+
 import rho.RequestLineBuilder
 import rho.bits.QueryAST.TypedQuery
-
-import scala.language.existentials
 
 import shapeless.ops.hlist.Prepend
 import shapeless.{ ::, HList }
@@ -14,7 +14,6 @@ import scala.reflect.runtime.universe.TypeTag
 import org.http4s.rho.UriConvertible
 
 /** Actual elements which build up the AST */
-
 object PathAST {
 
   case class TypedPath[T <: HList](rule: PathRule) extends UriConvertible {
@@ -58,7 +57,6 @@ object PathAST {
 
   case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
-  // TODO: can I make this a case object?
   case object CaptureTail extends PathRule
 
   case object PathEmpty extends PathRule
