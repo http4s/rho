@@ -105,12 +105,6 @@ trait PathTree {
         case CaptureTail =>
           val v = if (variadic != null) variadic ++ action else action
           clone(paths, v, end)
-
-        case PathEmpty if tail.isEmpty =>
-          // an empty path should be interpreted as '/'
-          append(List(PathMatch("")), action)
-
-        case PathEmpty => append(tail, action)
       }
 
       case Nil =>  // this is the end of the stack

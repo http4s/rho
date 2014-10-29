@@ -15,12 +15,14 @@ package object rho extends Http4s with ResultSyntaxInstances {
 
   private val stringTag = implicitly[TypeTag[String]]
 
-  implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, PathEmpty)
+  implicit def method(m: Method): PathBuilder[HNil] = new PathBuilder(m, pathEmpty)
 
   implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
 
   implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] =
     TypedPath(PathCapture(s.name, StringParser.strParser, stringTag))
+
+  val pathEmpty: PathRule = PathMatch("")
 
   /**
    * Defines a parameter in query string that should be bound to a route definition.
@@ -56,7 +58,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
    * val hello = Root / "hello"
    * }}}
    */
-  def root(): TypedPath[HNil] = TypedPath(PathEmpty)
+  def root(): TypedPath[HNil] = TypedPath(pathEmpty)
 
   def * : CaptureTail.type = CaptureTail
 

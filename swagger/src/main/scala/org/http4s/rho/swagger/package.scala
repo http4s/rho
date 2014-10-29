@@ -4,7 +4,6 @@ import java.sql.Timestamp
 import java.util.Date
 import org.http4s.Method
 import org.http4s.rho.bits.{TextMetaData, PathAST}
-import org.http4s.rho.bits.PathAST.PathEmpty
 import shapeless.HNil
 
 import scala.reflect.runtime.universe._
@@ -18,7 +17,7 @@ package object swagger {
 
   /** Add support for adding documentation before a route using the ** operator */
   implicit class StrOps(description: String) {
-    def **(method: Method): PathBuilder[HNil] = **(new PathBuilder[HNil](method, PathEmpty))
+    def **(method: Method): PathBuilder[HNil] = **(new PathBuilder[HNil](method, pathEmpty))
 
     def **[T<: HNil](builder: PathBuilder[T]): PathBuilder[T] =
       new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteDesc(description)))

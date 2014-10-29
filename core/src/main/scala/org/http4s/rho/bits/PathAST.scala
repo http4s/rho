@@ -59,7 +59,7 @@ object PathAST {
 
   case object CaptureTail extends PathRule
 
-  case object PathEmpty extends PathRule
+//  case object PathEmpty extends PathRule
 
   case class MetaCons(path: PathRule, meta: Metadata) extends PathRule
 
