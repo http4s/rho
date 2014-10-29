@@ -17,7 +17,7 @@ package object swagger {
 
   /** Add support for adding documentation before a route using the ** operator */
   implicit class StrOps(description: String) {
-    def **(method: Method): PathBuilder[HNil] = **(new PathBuilder[HNil](method, pathEmpty))
+    def **(method: Method): PathBuilder[HNil] = **(new PathBuilder[HNil](method, PathEmpty))
 
     def **[T<: HNil](builder: PathBuilder[T]): PathBuilder[T] =
       new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteDesc(description)))
