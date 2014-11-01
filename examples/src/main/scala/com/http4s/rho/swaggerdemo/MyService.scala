@@ -36,10 +36,10 @@ object MyService extends RhoService with SwaggerSupport {
     GET / "result" / pathVar[String] +? param[Int]("id") |>>
       { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
-  "Two different response codes can result from this route" **
+  "Two different response codes can result from this route based on the number given" **
     GET / "disjunction" / pathVar[Int] |>> { i: Int =>
-      if (true) Ok(JsonResult("Good result", i)).right
-      else      Ok(<html><body>Negative number: {i}</body></html>).left
+      if (i >= 0) Ok(JsonResult("Good result", i)).right
+      else        BadRequest(<html><body>Negative number: {i}</body></html>).left
     }
 
   "This gets a simple counter for the number of times this route has been requested" **
