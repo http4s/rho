@@ -222,7 +222,57 @@ class RhoServiceTest extends Specification with RequestRunner {
       checkOk(req2) should_== "terminal"
     }
 
-    ////////////////////////////////////////////////////
+    ///// Order of execution tests /////////////////////
+    "Attempt to evaluate params in order" in {
+      val service = new RhoService {
+        GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
+        GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
+        GET / "foo" |>> Ok("none")
+      }
+
+      val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "0"))
+      getBody(service(req1).run.body) must_== "Int: 0"
+
+      val req2 = Request(Method.GET, Uri(path = "/foo").+?("bar", "s"))
+      getBody(service(req2).run.body) must_== "String: s"
+
+      val req3 = Request(Method.GET, Uri(path = "/foo"))
+      getBody(service(req3).run.body) must_== "none"
+    }
+
+    "Fail to match more specific routes defined after a less specific route" in {
+      val service = new RhoService {
+        GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
+        GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
+      }
+
+      val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "0"))
+      getBody(service(req1).run.body) must_== "String: 0"
+
+      val req2 = Request(Method.GET, Uri(path = "/foo").+?("bar", "s"))
+      getBody(service(req2).run.body) must_== "String: s"
+    }
+
+    "Match an empty Option over a bare route" in {
+      val service = new RhoService {
+        GET / "foo" +? param[Option[String]]("bar") |>> { o: Option[String] =>
+          o.map(s => s"String: $s").getOrElse("none")
+        }
+
+        GET / "foo" |>> Ok(s"failure")
+      }
+
+      val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "s"))
+      getBody(service(req1).run.body) must_== "String: s"
+
+      val req2 = Request(Method.GET, Uri(path = "/foo"))
+      getBody(service(req2).run.body) must_== "none"
+    }
+
+
+
+
+  ////////////////////////////////////////////////////
     "Handle errors in the route actions" in {
       val service = new RhoService {
         GET / "error" |>> { () => throw new Error("an error"); Ok("Wont get here...") }
