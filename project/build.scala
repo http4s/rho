@@ -126,6 +126,7 @@ object Dependencies {
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
   lazy val scalaloggingSlf4j   = "com.typesafe.scala-logging" %% "scala-logging-slf4j"   % "2.1.2"
   lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
+  lazy val uadetector          = "net.sf.uadetector" % "uadetector-resources" % "2014.09"
 
 
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
@@ -138,6 +139,8 @@ object Dependencies {
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
     http4sBlaze,
-    http4sJson4sJackson
+    http4sDSL,
+    http4sJson4sJackson,
+    uadetector
   )
 }
