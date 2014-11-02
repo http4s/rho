@@ -15,4 +15,4 @@ rho-examples/reStop
 
 The JSON HAL example contains a JavaScript-based browser to easily navigate from one resource to another. Just enter [http://localhost:8080/hal-ui]() to get access.
 
-Both examples contains a Swagger UI to make the automatically generated API more accessable for humans. Visit [http://localhost:8080/swagger-ui]() to navigate through the REST API documentation of the running example.
+Both examples contains a Swagger UI to make the automatically generated API more accessible for humans. Visit [http://localhost:8080/swagger-ui]() to navigate through the REST API documentation of the running example.
