@@ -21,7 +21,7 @@ final class RhoPathTree extends PathTree {
   override def toString() = methods.toString()
 
   /** Generates a list of tokens that represent the path */
-  override def keyToPath(key: Key): List[String] = splitPath(key.uri.path)
+  override def keyToPath(key: Key): List[String] = splitPath(key.pathInfo)
 
   def appendAction[T <: HList, F](action: RhoAction[T, F]): Unit = {
     val m = action.method
