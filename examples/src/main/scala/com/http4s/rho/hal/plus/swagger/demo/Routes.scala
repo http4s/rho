@@ -1,8 +1,10 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
+import org.http4s.server.HttpService
+
 class Routes(businessLayer: BusinessLayer) {
 
-  val dynamicContent = new RestService(businessLayer)
+  val dynamicContent: HttpService = new RestService(businessLayer).toService
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,

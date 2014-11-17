@@ -1,22 +1,18 @@
 package org.http4s
 package rho
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.http4s.rho.bits.{NoMatch, ValidationFailure, ParserFailure, ParserSuccess}
+import org.http4s.server.{Service, HttpService}
 
-import scala.annotation.tailrec
-import scala.collection.mutable
-
-import shapeless.{HNil, HList}
-
-import scala.collection.mutable.ListBuffer
+import org.log4s.getLogger
+import shapeless.HList
 import scalaz.concurrent.Task
 
-trait RhoService extends server.HttpService
-                    with LazyLogging
-                    with bits.MethodAliases
+trait RhoService extends bits.MethodAliases
                     with ExecutableCompiler
                     with bits.ResponseGeneratorInstances {
+
+  final protected val logger = getLogger
 
   private val __tree = new bits.RhoPathTree
 
@@ -30,23 +26,17 @@ trait RhoService extends server.HttpService
     }
   }
 
-  override def isDefinedAt(x: Request): Boolean = __tree.getResult(x) match {
-    case NoMatch => false
-    case _       => true
-  }
-
-  override def apply(req: Request): Task[Response] =
-    applyOrElse(req, (_:Request) => throw new MatchError(s"Route not defined at: ${req.uri}"))
-
-  override def applyOrElse[A1 <: Request, B1 >: Task[Response]](x: A1, default: (A1) => B1): B1 = {
-    logger.info(s"Request: ${x.method}:${x.uri}")
-    __tree.getResult(x) match {
-      case NoMatch              => default(x)
-      case ParserSuccess(t)     => attempt(t)
-      case ParserFailure(s)     => onBadRequest(s)
-      case ValidationFailure(s) => onBadRequest(s)
+  private def findRoute(req: Request): Task[Option[Response]] = {
+    logger.info(s"Request: ${req.method}:${req.uri}")
+    __tree.getResult(req) match {
+      case NoMatch              => Task.now(None)
+      case ParserSuccess(t)     => attempt(t).map(Some(_))
+      case ParserFailure(s)     => onBadRequest(s).map(Some(_))
+      case ValidationFailure(s) => onBadRequest(s).map(Some(_))
     }
   }
+
+  def toService: HttpService = Service.lift(findRoute)
 
   override def toString(): String = s"RhoService(${__tree.toString()})"
 
@@ -57,7 +47,7 @@ trait RhoService extends server.HttpService
 
 
   override def onError(t: Throwable): Task[Response] = {
-    logger.error("Error during route execution.", t)
+    logger.error(t)("Error during route execution.")
     val w = Writable.stringWritable
     w.toEntity(t.getMessage).map { entity =>
       val hs = entity.length match {

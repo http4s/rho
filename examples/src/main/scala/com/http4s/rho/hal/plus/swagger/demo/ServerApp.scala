@@ -1,10 +1,11 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import org.http4s.server.blaze.BlazeServer
-import com.typesafe.scalalogging.slf4j.StrictLogging
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
 
-class ServerApp(port: Int) extends StrictLogging {
+import org.log4s.getLogger
+
+class ServerApp(port: Int) {
 
   val businessLayer = new UADetectorDatabase(new ResourceModuleXmlDataStore())
 
@@ -19,7 +20,9 @@ class ServerApp(port: Int) extends StrictLogging {
   def run(): Unit = server.run
 }
 
-object ServerApp extends StrictLogging {
+object ServerApp {
+  private val logger = getLogger
+
   val port = (Option(System.getenv("DATAMEER_REST_PORT")) orElse
     Option(System.getenv("HTTP_PORT")))
     .map(_.toInt)

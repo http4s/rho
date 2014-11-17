@@ -23,7 +23,7 @@ object StaticContentService {
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
    * but its nice to keep it self contained
    */
-  def routes(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = {
+  def routes(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = HttpService {
 
     // JSON HAL User Interface
     case req if req.uri.path.startsWith("/js/") =>

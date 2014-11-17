@@ -40,7 +40,7 @@ object MyBuild extends Build {
 
   lazy val buildSettings = Defaults.defaultSettings ++ publishing ++
      Seq(
-        scalaVersion := "2.11.2",
+        scalaVersion := "2.11.4",
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
@@ -112,7 +112,7 @@ object MyBuild extends Build {
 }
 
 object Dependencies {
-  lazy val http4sVersion = "0.3.0"
+  lazy val http4sVersion = "0.4.0-SNAPSHOT"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
@@ -124,7 +124,6 @@ object Dependencies {
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % "3.2.10"
   lazy val swaggerCore         = "com.wordnik"                %% "swagger-core"          % "1.3.10"
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
-  lazy val scalaloggingSlf4j   = "com.typesafe.scala-logging" %% "scala-logging-slf4j"   % "2.1.2"
   lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
   lazy val uadetector          = "net.sf.uadetector" % "uadetector-resources" % "2014.09"
 
