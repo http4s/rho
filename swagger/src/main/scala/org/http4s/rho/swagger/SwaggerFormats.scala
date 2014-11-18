@@ -13,12 +13,12 @@ import scala.reflect.runtime.universe._
  */
 sealed trait SwaggerFormats { self =>
   def customSerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
-  def customFieldSerializers: PartialFunction[Type, Set[ModelProperty]] = PartialFunction.empty
+  def customFieldSerializers: PartialFunction[Type, ModelProperty] = PartialFunction.empty
 
   /** Construct a new SwaggerFormats with custom model serializers */
   def withSerializers(s: PartialFunction[Type, Set[Model]]): SwaggerFormats = new SwaggerFormats {
     override val customSerializers: PartialFunction[Type, Set[Model]] = s orElse self.customSerializers
-    override val customFieldSerializers: PartialFunction[Type, Set[ModelProperty]] = self.customFieldSerializers
+    override val customFieldSerializers: PartialFunction[Type, ModelProperty] = self.customFieldSerializers
   }
 
   /** Construct a new SwaggerFormats with custom model serializers */
@@ -27,13 +27,13 @@ sealed trait SwaggerFormats { self =>
   }
 
   /** Construct a new SwaggerFormats with custom field serializers */
-  def withFieldSerializers(f: PartialFunction[Type, Set[ModelProperty]]): SwaggerFormats = new SwaggerFormats {
+  def withFieldSerializers(f: PartialFunction[Type, ModelProperty]): SwaggerFormats = new SwaggerFormats {
     override val customSerializers: PartialFunction[Type, Set[Model]] = self.customSerializers
-    override val customFieldSerializers: PartialFunction[Type, Set[ModelProperty]] = f orElse self.customFieldSerializers
+    override val customFieldSerializers: PartialFunction[Type, ModelProperty] = f orElse self.customFieldSerializers
   }
 
   /** Construct a new SwaggerFormats with custom field serializers */
-  def withFieldSerializers(t: Type, ms: Set[ModelProperty]): SwaggerFormats = withFieldSerializers {
+  def withFieldSerializers(t: Type, ms: ModelProperty): SwaggerFormats = withFieldSerializers {
     case tpe if tpe =:= t => ms
   }
 }

@@ -19,9 +19,9 @@ import scalaz.concurrent.Task
 
 object TypeBuilder extends StrictLogging {
 
-  val baseTypes = Set("byte", "boolean", "int", "long", "float", "double", "string", "date", "void", "Date", "DateTime", "DateMidnight", "Duration", "FiniteDuration", "Chronology")
-  val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
-  val containerTypes = Set("Array", "List", "Set")
+  //val baseTypes = Set("byte", "boolean", "int", "long", "float", "double", "string", "date", "void", "Date", "DateTime", "DateMidnight", "Duration", "FiniteDuration", "Chronology")
+  //val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
+  //val containerTypes = Set("Array", "List", "Set")
 
   def collectModels(t: Type, alreadyKnown: Set[Model], formats: SwaggerFormats): Set[Model] =
     try collectModels(t.dealias, alreadyKnown, Set.empty, formats)
@@ -57,7 +57,7 @@ object TypeBuilder extends StrictLogging {
         Set.empty
       case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
         val ctor = sym.asClass.primaryConstructor.asMethod
-        val models = alreadyKnown ++ modelToSwagger(tpe)
+        val models = alreadyKnown ++ modelToSwagger(tpe, formats)
         val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
           acc ++ go(t, alreadyKnown, tpe.typeArgs.toSet)
         }
@@ -80,42 +80,46 @@ object TypeBuilder extends StrictLogging {
   private[this] def isCaseClass(sym: Symbol): Boolean = sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) = (defaultExcluded ++ excludes).exists(_ =:= t)
 
-  def modelToSwagger(tpe: Type): Option[Model] = try {
-    val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
+  private def modelToSwagger(tpe: Type, serializers: SwaggerFormats): Option[Model] = {
+    try {
+      val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
 
-    val properties: Seq[(String, ModelProperty)] =
-      tpe.member(termNames.CONSTRUCTOR)
-        .typeSignature
-        .paramLists
-        .flatten
-        .zipWithIndex
-        .map {
+      val properties: Seq[(String, ModelProperty)] =
+        tpe.member(termNames.CONSTRUCTOR)
+          .typeSignature
+          .paramLists
+          .flatten
+          .zipWithIndex
+          .map {
           case (paramSymbol, pos) =>
             val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
 
-            val items: Option[ModelRef] = {
-              if (paramType.isCollection && !paramType.isNothingOrNull) {
-                val t = paramType.dealias.typeArgs.head
+            val prop: ModelProperty = serializers.customFieldSerializers.applyOrElse(paramType, { _: Type =>
+              val items: Option[ModelRef] = {
+                if (paramType.isCollection && !paramType.isNothingOrNull) {
+                  val t = paramType.dealias.typeArgs.head
 
-                val m = ModelRef(`type` = DataType.fromType(t).name,
-                  qualifiedType = Some(t.fullName))
-                Some(m)
-              } else None
-            }
+                  val m = ModelRef(`type` = DataType.fromType(t).name,
+                    qualifiedType = Some(t.fullName))
+                  Some(m)
+                } else None
+              }
 
-            val prop = ModelProperty(
-              DataType.fromType(paramType).name,
-              paramType.fullName,
-              pos,
-              !(paramSymbol.asTerm.isParamWithDefault || paramType.isOption),
-              items = items)
+              ModelProperty(
+                DataType.fromType(paramType).name,
+                paramType.fullName,
+                pos,
+                !(paramSymbol.asTerm.isParamWithDefault || paramType.isOption),
+                items = items)
+            })
 
             (paramSymbol.name.decodedName.toString, prop)
         }
 
-    val m = Model(tpe.simpleName, tpe.simpleName, tpe.fullName, LinkedHashMap(properties: _*))
-    Some(m)
-  } catch { case NonFatal(t) => logger.error("Failed to build Swagger model", t); None }
+      val m = Model(tpe.simpleName, tpe.simpleName, tpe.fullName, LinkedHashMap(properties: _*))
+      Some(m)
+    } catch { case NonFatal(t) => logger.error("Failed to build Swagger model", t); None }
+  }
 
   sealed trait DataType {
     def name: String
