@@ -1,23 +1,20 @@
 package org.http4s.rho.swagger
 
-import java.sql.Timestamp
 import java.util.Date
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
-import com.wordnik.swagger.annotations.{ ApiModel, ApiModelProperty }
 import com.wordnik.swagger.model._
 
 import org.http4s.DateTime
-import org.joda.time.{ DateTimeZone, Chronology, ReadableInstant }
 
 import scala.collection.mutable.LinkedHashMap
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
-import scalaz.stream.Process
-import scalaz.concurrent.Task
+import org.log4s.getLogger
 
-object TypeBuilder extends StrictLogging {
+object TypeBuilder {
+
+  private[this] val logger = getLogger
 
   //val baseTypes = Set("byte", "boolean", "int", "long", "float", "double", "string", "date", "void", "Date", "DateTime", "DateMidnight", "Duration", "FiniteDuration", "Chronology")
   //val excludes: Set[Type] = Set(typeOf[java.util.TimeZone], typeOf[java.util.Date], typeOf[DateTime], typeOf[ReadableInstant], typeOf[Chronology], typeOf[DateTimeZone])
@@ -25,7 +22,7 @@ object TypeBuilder extends StrictLogging {
 
   def collectModels(t: Type, alreadyKnown: Set[Model], formats: SwaggerFormats): Set[Model] =
     try collectModels(t.dealias, alreadyKnown, Set.empty, formats)
-    catch { case NonFatal(e) => logger.error(s"Failed to build model for type: ${t.fullName}", e); Set.empty }
+    catch { case NonFatal(e) => logger.error(e)(s"Failed to build model for type: ${t.fullName}"); Set.empty }
 
   private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], formats: SwaggerFormats): Set[Model] = {
     def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
@@ -80,7 +77,7 @@ object TypeBuilder extends StrictLogging {
   private[this] def isCaseClass(sym: Symbol): Boolean = sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) = (defaultExcluded ++ excludes).exists(_ =:= t)
 
-  private def modelToSwagger(tpe: Type, serializers: SwaggerFormats): Option[Model] = {
+  private def modelToSwagger(tpe: Type, serializers: SwaggerFormats): Option[Model] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
 
@@ -90,8 +87,7 @@ object TypeBuilder extends StrictLogging {
           .paramLists
           .flatten
           .zipWithIndex
-          .map {
-          case (paramSymbol, pos) =>
+          .map { case (paramSymbol, pos) =>
             val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
 
             val prop: ModelProperty = serializers.customFieldSerializers.applyOrElse(paramType, { _: Type =>
@@ -114,12 +110,11 @@ object TypeBuilder extends StrictLogging {
             })
 
             (paramSymbol.name.decodedName.toString, prop)
-        }
-
+          }
       val m = Model(tpe.simpleName, tpe.simpleName, tpe.fullName, LinkedHashMap(properties: _*))
       Some(m)
-    } catch { case NonFatal(t) => logger.error("Failed to build Swagger model", t); None }
-  }
+
+    } catch { case NonFatal(t) => logger.error(t)("Failed to build Swagger model"); None }
 
   sealed trait DataType {
     def name: String

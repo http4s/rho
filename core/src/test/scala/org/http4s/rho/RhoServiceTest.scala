@@ -86,12 +86,13 @@ class RhoServiceTest extends Specification with RequestRunner {
     "Consider PathMatch(\"\") a NOOP" in {
       val service = new RhoService {
         GET / "" / "foo" |>> Ok("bar")
-      }
+      }.toService
+
       val req1 = Request(Method.GET, Uri(path = "/foo"))
-      getBody(service(req1).run.body) should_== "bar"
+      getBody(service(req1).run.get.body) should_== "bar"
 
       val req2 = Request(Method.GET, Uri(path = "//foo"))
-      getBody(service(req2).run.body) should_== "bar"
+      getBody(service(req2).run.get.body) should_== "bar"
     }
 
     "Execute a route with no params" in {
@@ -228,29 +229,29 @@ class RhoServiceTest extends Specification with RequestRunner {
         GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
         GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
         GET / "foo" |>> Ok("none")
-      }
+      }.toService
 
       val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "0"))
-      getBody(service(req1).run.body) must_== "Int: 0"
+      getBody(service(req1).run.get.body) must_== "Int: 0"
 
       val req2 = Request(Method.GET, Uri(path = "/foo").+?("bar", "s"))
-      getBody(service(req2).run.body) must_== "String: s"
+      getBody(service(req2).run.get.body) must_== "String: s"
 
       val req3 = Request(Method.GET, Uri(path = "/foo"))
-      getBody(service(req3).run.body) must_== "none"
+      getBody(service(req3).run.get.body) must_== "none"
     }
 
     "Fail to match more specific routes defined after a less specific route" in {
       val service = new RhoService {
         GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
         GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
-      }
+      }.toService
 
       val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "0"))
-      getBody(service(req1).run.body) must_== "String: 0"
+      getBody(service(req1).run.get.body) must_== "String: 0"
 
       val req2 = Request(Method.GET, Uri(path = "/foo").+?("bar", "s"))
-      getBody(service(req2).run.body) must_== "String: s"
+      getBody(service(req2).run.get.body) must_== "String: s"
     }
 
     "Match an empty Option over a bare route" in {
@@ -260,13 +261,13 @@ class RhoServiceTest extends Specification with RequestRunner {
         }
 
         GET / "foo" |>> Ok(s"failure")
-      }
+      }.toService
 
       val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "s"))
-      getBody(service(req1).run.body) must_== "String: s"
+      getBody(service(req1).run.get.body) must_== "String: s"
 
       val req2 = Request(Method.GET, Uri(path = "/foo"))
-      getBody(service(req2).run.body) must_== "none"
+      getBody(service(req2).run.get.body) must_== "none"
     }
 
 
@@ -276,15 +277,15 @@ class RhoServiceTest extends Specification with RequestRunner {
     "Handle errors in the route actions" in {
       val service = new RhoService {
         GET / "error" |>> { () => throw new Error("an error"); Ok("Wont get here...") }
-      }
+      }.toService
       val req = Request(Method.GET, Uri(path = "/error"))
-      service(req).run.status must equalTo(Status.InternalServerError)
+      service(req).run.get.status must equalTo(Status.InternalServerError)
     }
 
-    "throw a MatchError on apply for missing route" in {
-      val service = new RhoService {}
+    "give a None for missing route" in {
+      val service = new RhoService {}.toService
       val req = Request(Method.GET, Uri(path = "/missing"))
-      service(req).run must throwA[MatchError]
+      service(req).run must_== None
     }
   }
 

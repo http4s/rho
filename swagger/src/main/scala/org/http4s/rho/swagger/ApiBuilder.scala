@@ -2,7 +2,6 @@ package org.http4s
 package rho
 package swagger
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
 import com.wordnik.swagger.model._
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
@@ -10,10 +9,14 @@ import org.http4s.rho.bits._
 import bits.PathAST._
 import bits.QueryAST.{QueryCapture, QueryRule}
 
+import org.log4s.getLogger
+
 import scala.reflect.runtime.universe.Type
 
 
-class ApiBuilder(apiVersion: String, formats: SwaggerFormats) extends StrictLogging {
+class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
+
+  private[this] val logger = getLogger
 
   /* swagger-core models
   case class ApiListing (

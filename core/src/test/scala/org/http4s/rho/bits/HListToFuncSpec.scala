@@ -5,20 +5,20 @@ package bits
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
-class HListToFuncTest extends Specification {
+class HListToFuncSpec extends Specification {
 
   def getBody(b: EntityBody): String = {
     new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
   }
 
-  def checkOk(r: Request): String = getBody(service(r).run.body)
+  def checkOk(r: Request): String = getBody(service(r).run.get.body)
 
   def Get(s: String, h: Header*): Request =
     Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
 
   val service = new RhoService {
     GET / "route1" |>> { () => Ok("foo") }
-  }
+  }.toService
 
   "HListToFunc" should {
     "Work for methods of type _ => Task[Response]" in {

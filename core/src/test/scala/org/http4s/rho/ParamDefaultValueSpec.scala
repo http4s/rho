@@ -11,7 +11,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   def checkError(r: Request): String = {
-    getBody(service(r).run.body)
+    getBody(service(r).run.get.body)
   }
 
   val service = new RhoService {
@@ -44,14 +44,14 @@ class ParamDefaultValueSpec extends Specification {
     GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => !p.contains("") && !p.contains("z")) |>> { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
 
     GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p != Seq(8, 5, 3)) |>> { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
-  }
+  }.toService
 
-  def body(r: Request): String = getBody(service(r).run.body)
+  def body(r: Request): String = getBody(service(r).run.get.body)
 
   def requestGet(s: String, h: Header*): Request =
     Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
-  def status(r: Request): Status = service(r).run.status
+  def status(r: Request): Status = service(r).run.get.status
 
   "GET /test1" should {
     val default = "test1:default1"

@@ -31,9 +31,9 @@ class RhoPathTreeSpec extends Specification {
   "Honor UriTranslations" in {
     val svc = URITranslation.translateRoot("/bar")(new RhoService {
       GET / "foo" |>> "foo"
-    })
+    }.toService)
     val req = Request(Method.GET, uri = Uri(path = "/bar/foo"))
-    val resp = svc(req).run
+    val resp = svc(req).run.get
 
     resp.status must_== Status.Ok
     val b = new String(resp.body.runLog.run.reduce(_ ++ _).toArray, StandardCharsets.UTF_8)
