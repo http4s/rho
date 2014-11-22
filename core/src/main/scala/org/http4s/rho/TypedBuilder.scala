@@ -22,9 +22,12 @@ trait TypedBuilder[T <: HList] extends UriConvertible {
   /** Untyped AST representation of the [[Header]]s to operate on */
   def headers: HeaderRule
 
-  override def asUriTemplate =
+  private val uriTemplate =
     for {
       p <- UriConverter.createPath(path)
       q <- UriConverter.createQuery(query)
     } yield UriTemplate(path = p, query = Some(q))
+
+  override def asUriTemplate(request: Request) =
+    UriConvertible.respectPathInfo(uriTemplate, request)
 }

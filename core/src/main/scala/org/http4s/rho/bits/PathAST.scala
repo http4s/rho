@@ -43,7 +43,12 @@ object PathAST {
     def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
       RequestLineBuilder(rule, q.rule)
 
-    override val asUriTemplate = for (p <- UriConverter.createPath(rule)) yield UriTemplate(path = p)
+    private val uriTemplate =
+      for (p <- UriConverter.createPath(rule))
+        yield UriTemplate(path = p)
+
+    override def asUriTemplate(request: Request) =
+      UriConvertible.respectPathInfo(uriTemplate, request)
   }
 
   /** The root type of the parser AST */
@@ -58,8 +63,6 @@ object PathAST {
   case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathRule
 
   case object CaptureTail extends PathRule
-
-//  case object PathEmpty extends PathRule
 
   case class MetaCons(path: PathRule, meta: Metadata) extends PathRule
 

@@ -34,7 +34,6 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /(s: String): PathBuilder[T] = new PathBuilder(method, PathAnd(path, PathMatch(s)))
 
-
   def /(s: Symbol): PathBuilder[String :: T] = {
     val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
     new PathBuilder(method, PathAnd(path, capture))
@@ -62,6 +61,10 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(Router(method, path, EmptyQuery, EmptyHeaderRule), f, hf)
 
-  override val asUriTemplate = for (p <- UriConverter.createPath(path)) yield UriTemplate(path = p)
+  private val uriTemplate =
+    for (p <- UriConverter.createPath(path))
+      yield UriTemplate(path = p)
 
+  override def asUriTemplate(request: Request) =
+    UriConvertible.respectPathInfo(uriTemplate, request)
 }
