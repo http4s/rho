@@ -9,7 +9,9 @@ import scalaz.concurrent.Task
 
 class ApiExamples extends Specification {
 
-  def foo(s: String, i: Int): Task[Result[Status.Ok.type, String]] = ???
+  import org.http4s.rho.bits.ResponseGeneratorInstances._
+
+  def foo(s: String, i: Int): Task[OK[String]] = ???
 
   "mock api" should {
     "Make it easy to compose routes" in {
@@ -50,11 +52,11 @@ class ApiExamples extends Specification {
         val r2 = r >>> require(Header.`Cache-Control`)
         // r2 / "stuff" // Doesn't work
 
-        // Now this can be combined with a method to make the 'Action'
-        val action = r2 |>> {
-          (world: String, fav: Int, tag: Header.ETag) =>
-            Ok("Success").withHeaders(Header.ETag(fav.toString))
-        }
+//        // Now this can be combined with a method to make the 'Action'
+//        val action = r2 |>> {
+//          (world: String, fav: Int, tag: Header.ETag) =>
+//            Ok("Success").withHeaders(Header.ETag(fav.toString))
+//        }
 
         /**
          * Boolean logic
@@ -85,11 +87,17 @@ class ApiExamples extends Specification {
         GET / "nostatus2" |>> "This is a constant result!"
         GET / "taskNoStatus2" |>> Task("This task will be evaluated each time!")
 
-
-        // Work with disjunctions
-        GET / "disjunct" |>> { () =>
-          if (true) \/-(Ok("True!")) else -\/(NotFound(<html><body>Not Found.</body></html>))
+        // TODO: this is just a basic example!
+        GET /"twoResults" |>> { () =>
+          if (true) Ok("One result")
+          else NotFound(<html><body>Boo... Not found...</body></html>)
         }
+
+//
+//        // Work with disjunctions
+//        GET / "disjunct" |>> { () =>
+//          if (true) \/-(Ok("True!")) else -\/(NotFound(<html><body>Not Found.</body></html>))
+//        }
       }
 
       true should_== true
