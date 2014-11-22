@@ -9,16 +9,18 @@ import UriTemplate.PathExp
 
 class TypedQuerySpec extends Specification {
 
+  val request = Request()
+
   "TypedQuery.asUriTemplate" should {
     "convert to {?world}" in {
       val route = param[Int]("world")
       val q = Some(List(ParamExp("world")))
-      route.asUriTemplate.get must equalTo(UriTemplate(query = q))
+      route.asUriTemplate(request).get must equalTo(UriTemplate(query = q))
     }
     "convert to {?start}{&start}" in {
       val route = param[Int]("start", 0) && param[Int]("limit", 10)
       val q = Some(List(ParamExp("start"), ParamExp("limit")))
-      route.asUriTemplate.get must equalTo(UriTemplate(query = q))
+      route.asUriTemplate(request).get must equalTo(UriTemplate(query = q))
     }
   }
 

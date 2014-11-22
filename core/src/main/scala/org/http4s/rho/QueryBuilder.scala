@@ -28,9 +28,12 @@ case class QueryBuilder[T <: HList](method: Method,
 
   override def headers: HeaderRule = EmptyHeaderRule
 
-  override val asUriTemplate =
+  private val uriTemplate =
     for {
       p <- UriConverter.createPath(path)
       q <- UriConverter.createQuery(query)
     } yield UriTemplate(path = p, query = Some(q))
+
+  override def asUriTemplate(request: Request) =
+    UriConvertible.respectPathInfo(uriTemplate, request)
 }

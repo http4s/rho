@@ -26,7 +26,12 @@ object QueryAST {
      */
     val names: List[String] = collectNames(rule)
 
-    override val asUriTemplate = for (q <- UriConverter.createQuery(rule)) yield UriTemplate(query = Some(q))
+    private val uriTemplate =
+      for (q <- UriConverter.createQuery(rule))
+        yield UriTemplate(query = Some(q))
+
+    override def asUriTemplate(request: Request) =
+      UriConvertible.respectPathInfo(uriTemplate, request)
   }
 
   sealed trait QueryRule
