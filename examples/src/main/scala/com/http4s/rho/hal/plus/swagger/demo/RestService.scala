@@ -50,7 +50,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
 
       \/-(Ok(b.build))
     }
-    found getOrElse -\/(NotFound(warning(s"Browser $id not found").asInstanceOf[ResourceObject[Browser, Nothing]]))
+    found getOrElse -\/(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatternsById = browsers / id / "patterns"
@@ -58,7 +58,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
     val self = request.uri
     val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
       yield \/-(Ok(browserPatternsAsResource(self, 0, Int.MaxValue, patterns, patterns.size).build))
-    found getOrElse -\/(NotFound(warning(s"Browser $id not found").asInstanceOf[ResourceObject[Browser, Nothing]]))
+    found getOrElse -\/(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatterns = "browser-patterns"
@@ -80,7 +80,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
       } b.link("browser", tpl.expandPath("id", browserId).toUriIfPossible.get)
       \/-(Ok(b.build))
     }
-    found getOrElse -\/(NotFound(warning(s"Browser $id not found").asInstanceOf[ResourceObject[BrowserPattern, Nothing]]))
+    found getOrElse -\/(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserTypes = "browser-types"
@@ -100,7 +100,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
       } b.link("browsers", tpl.expandPath("id", browserType.id).toUriIfPossible.get)
       \/-(Ok(b.build))
     }
-    found getOrElse -\/(NotFound(warning(s"Browser type $id not found").asInstanceOf[ResourceObject[BrowserType, Nothing]]))
+    found getOrElse -\/(NotFound(warning(s"Browser type $id not found")))
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
@@ -111,7 +111,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
     if (browsers.nonEmpty)
       \/-(Ok(browsersAsResource(self, first, max, browsers, total).build))
     else
-      -\/(NotFound(warning(s"No browsers for type $id found").asInstanceOf[ResourceObject[BrowserType, Nothing]]))
+      -\/(NotFound(warning(s"No browsers for type $id found")))
   }
 
   val operatingSystems = "operating-systems"
@@ -132,7 +132,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
           b.link("browsers", tpl.expandPath("id", operatingSystem.id).toUriIfPossible.get)
       \/-(Ok(b.build))
     }
-    found getOrElse -\/(NotFound(warning(s"OperatingSystem $id not found").asInstanceOf[ResourceObject[OperatingSystem, Nothing]]))
+    found getOrElse -\/(NotFound(warning(s"OperatingSystem $id not found")))
   }
 
   val browsersByOperatingSystem = operatingSystemById / "browsers"
@@ -142,7 +142,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
     if (browsers.nonEmpty)
       \/-(Ok(browsersAsResource(self, 0, Int.MaxValue, browsers, browsers.size).build))
     else
-      -\/(NotFound(warning(s"No Browsers for operating system $id found").asInstanceOf[ResourceObject[Nothing, Browser]]))
+      -\/(NotFound(warning(s"No Browsers for operating system $id found")))
   }
 
   val operatingSystemsByBrowser = browserById / "operating-systems"
@@ -152,7 +152,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
     if (operatingSystems.nonEmpty)
       \/-(Ok(operatingSystemsAsResource(self, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build))
     else
-      -\/(NotFound(warning(s"No operating systems for browser $id found").asInstanceOf[ResourceObject[Nothing, OperatingSystem]]))
+      -\/(NotFound(warning(s"No operating systems for browser $id found")))
   }
 
   GET / "" |>> { request: Request =>
@@ -267,13 +267,11 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
 
   // use JSON messages if a non-successful HTTP status must be send 
 
-  def message(text: String, `type`: MessageType): ResourceObject[Message, Nothing] = {
-    val b = new ResObjBuilder[Message, Nothing]
-    b.content(Message(text, `type`))
-    b.build
+  def message(text: String, `type`: MessageType): Message = {
+    Message(text, `type`)
   }
-  def error(text: String): ResourceObject[Message, Nothing] = message(text, Error)
-  def info(text: String): ResourceObject[Message, Nothing] = message(text, Info)
-  def warning(text: String): ResourceObject[Message, Nothing] = message(text, Warning)
+  def error(text: String): Message = message(text, Error)
+  def info(text: String):  Message = message(text, Info)
+  def warning(text: String):  Message = message(text, Warning)
 
 }

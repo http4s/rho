@@ -38,12 +38,17 @@ package object demo {
       new LinkObjectSerializer +
       new ResourceObjectSerializer
 
-  private val mediaType = `Content-Type`(MediaType.`application/hal+json`, Charset.`UTF-8`)
-  implicit def jsonWritable: Writable[ResourceObject[_, _]] =
+  implicit def resourceObjectAsJsonWritable: Writable[ResourceObject[_, _]] =
     Writable
       .stringWritable(Charset.`UTF-8`)
       .contramap { r: ResourceObject[_, _] => compact(render(json(r))) }
-      .withContentType(mediaType)
+      .withContentType(`Content-Type`(MediaType.`application/hal+json`, Charset.`UTF-8`))
+
+  implicit def messageAsJsonWritable: Writable[Message] =
+    Writable
+      .stringWritable(Charset.`UTF-8`)
+      .contramap { r: Message => compact(render(json(r))) }
+      .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
   /** Extracts the name of the first query parameter as string */
   implicit def paramName(q: TypedQuery[_]): String = q.names.head
