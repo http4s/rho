@@ -42,11 +42,11 @@ trait SwaggerSupport extends RhoService {
   GET / apiPath / * |>> { params: Seq[String] =>
     swaggerStorage.getDoc(params) match {
       case Some(doc) =>
-        \/-(Ok(compact(render(doc)))
-          .withHeaders(Header.`Content-Type`(MediaType.`application/json`)))
+        Ok(compact(render(doc)))
+          .withHeaders(Header.`Content-Type`(MediaType.`application/json`))
 
       case None =>
-        -\/(NotFound("Api Not Found: api-info" + params.mkString("/", "/", "")))
+        NotFound("Api Not Found: api-info" + params.mkString("/", "/", ""))
     }
   }
 

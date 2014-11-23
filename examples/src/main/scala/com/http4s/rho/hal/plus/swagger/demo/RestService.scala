@@ -47,16 +47,16 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
         for (tpl <- operatingSystemsByBrowser.asUriTemplate(request))
           b.link("operating-systems", tpl.expandPath("id", browser.id).toUriIfPossible.get)
 
-      \/-(Ok(b.build))
+      Ok(b.build)
     }
-    found getOrElse -\/(NotFound(warning(s"Browser $id not found")))
+    found getOrElse NotFound(warning(s"Browser $id not found"))
   }
 
   val browserPatternsById = browsers / id / "patterns"
   GET / browserPatternsById |>> { (request: Request, id: Int) =>
     val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
-      yield \/-(Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build))
-    found getOrElse -\/(NotFound(warning(s"Browser $id not found")))
+      yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build)
+    found getOrElse NotFound(warning(s"Browser $id not found"))
   }
 
   val browserPatterns = "browser-patterns"
@@ -75,9 +75,9 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
         tpl <- browserById.asUriTemplate(request)
         browserId <- businessLayer.findBrowserIdByPatternId(pattern.id)
       } b.link("browser", tpl.expandPath("id", browserId).toUriIfPossible.get)
-      \/-(Ok(b.build))
+      Ok(b.build)
     }
-    found getOrElse -\/(NotFound(warning(s"Browser $id not found")))
+    found getOrElse NotFound(warning(s"Browser $id not found"))
   }
 
   val browserTypes = "browser-types"
@@ -94,9 +94,9 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
       for {
         tpl <- browsersByBrowserTypeId.asUriTemplate(request)
       } b.link("browsers", tpl.expandPath("id", browserType.id).toUriIfPossible.get)
-      \/-(Ok(b.build))
+      Ok(b.build)
     }
-    found getOrElse -\/(NotFound(warning(s"Browser type $id not found")))
+    found getOrElse NotFound(warning(s"Browser type $id not found"))
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
@@ -104,9 +104,9 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
     val browsers = businessLayer.findBrowsersByBrowserTypeId(id, first, max)
     val total = businessLayer.countBrowsersByBrowserTypeId(id)
     if (browsers.nonEmpty)
-      \/-(Ok(browsersAsResource(request, first, max, browsers, total).build))
+      Ok(browsersAsResource(request, first, max, browsers, total).build)
     else
-      -\/(NotFound(warning(s"No browsers for type $id found")))
+      NotFound(warning(s"No browsers for type $id found"))
   }
 
   val operatingSystems = "operating-systems"
@@ -124,27 +124,27 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
       if (businessLayer.hasBrowsersByOperatingSystemId(operatingSystem.id))
         for (tpl <- browsersByOperatingSystem.asUriTemplate(request))
           b.link("browsers", tpl.expandPath("id", operatingSystem.id).toUriIfPossible.get)
-      \/-(Ok(b.build))
+      Ok(b.build)
     }
-    found getOrElse -\/(NotFound(warning(s"OperatingSystem $id not found")))
+    found getOrElse NotFound(warning(s"OperatingSystem $id not found"))
   }
 
   val browsersByOperatingSystem = operatingSystemById / "browsers"
   GET / browsersByOperatingSystem |>> { (request: Request, id: Int) =>
     val browsers = businessLayer.findBrowsersByOperatingSystemId(id)
     if (browsers.nonEmpty)
-      \/-(Ok(browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build))
+      Ok(browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build)
     else
-      -\/(NotFound(warning(s"No Browsers for operating system $id found")))
+      NotFound(warning(s"No Browsers for operating system $id found"))
   }
 
   val operatingSystemsByBrowser = browserById / "operating-systems"
   GET / operatingSystemsByBrowser |>> { (request: Request, id: Int) =>
     val operatingSystems = businessLayer.findOperatingSystemsByBrowserId(id)
     if (operatingSystems.nonEmpty)
-      \/-(Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build))
+      Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build)
     else
-      -\/(NotFound(warning(s"No operating systems for browser $id found")))
+      NotFound(warning(s"No operating systems for browser $id found"))
   }
 
   GET / "" |>> { request: Request =>

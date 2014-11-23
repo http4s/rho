@@ -1,12 +1,74 @@
 package org.http4s
 package rho
 
-sealed case class Result[+OK, +NOTFOUND, +NOCONTENT](resp: Response)
+sealed case class Result[
++CONTINUE,
++SWITCHINGPROTOCOLS,
++PROCESSING,
+
++OK,
++CREATED,
++ACCEPTED,
++NONAUTHORITATIVEINFORMATION,
++NOCONTENT,
++RESETCONTENT,
++PARTIALCONTENT,
++MULTISTATUS,
++ALREADYREPORTED,
++IMUSED,
+
++MULTIPLECHOICES,
++MOVEDPERMANENTLY,
++FOUND,
++SEEOTHER,
++NOTMODIFIED,
++USEPROXY,
++TEMPORARYREDIRECT,
++PERMANENTREDIRECT,
+
++BADREQUEST,
++UNAUTHORIZED,
++PAYMENTREQUIRED,
++FORBIDDEN,
++NOTFOUND,
++METHODNOTALLOWED,
++NOTACCEPTABLE,
++PROXYAUTHENTICATIONREQUIRED,
++REQUESTTIMEOUT,
++CONFLICT,
++GONE,
++LENGTHREQUIRED,
++PRECONDITIONFAILED,
++PAYLOADTOOLARGE,
++URITOOLONG,
++UNSUPPORTEDMEDIATYPE,
++RANGENOTSATISFIABLE,
++EXPECTATIONFAILED,
++UNPROCESSABLEENTITY,
++LOCKED,
++FAILEDDEPENDENCY,
++UPGRADEREQUIRED,
++PRECONDITIONREQUIRED,
++TOOMANYREQUESTS,
++REQUESTHEADERFIELDSTOOLARGE,
+
++INTERNALSERVERERROR,
++NOTIMPLEMENTED,
++BADGATEWAY,
++SERVICEUNAVAILABLE,
++GATEWAYTIMEOUT,
++HTTPVERSIONNOTSUPPORTED,
++VARIANTALSONEGOTIATES,
++INSUFFICIENTSTORAGE,
++LOOPDETECTED,
++NOTEXTENDED,
++NETWORKAUTHENTICATIONREQUIRED
+](resp: Response)
 
 object Result {
-  type BaseResult = Result[Any, Any, Any]
-  type TopResult  = Result[Nothing, Nothing, Nothing]
-  type ExResult   = Result[_, _, _]
+  type BaseResult = Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]
+  type TopResult  = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type ExResult   = Result[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]
 }
 
 import Result._
