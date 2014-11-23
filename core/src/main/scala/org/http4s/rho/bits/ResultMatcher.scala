@@ -5,12 +5,12 @@ import org.http4s.{Request, Status, Writable, MediaType}
 import org.http4s.rho.Result
 import scodec.bits.ByteVector
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.universe.{ Type, TypeTag }
 import scalaz.\/
 import scalaz.concurrent.Task
 
 
-trait ResultMatcher[R] {
+trait ResultMatcher[-R] {
   def encodings: Set[MediaType]
   def resultInfo: Set[ResultInfo]
   def conv(req: Request, r: R): Task[Result.ExResult]
@@ -18,30 +18,25 @@ trait ResultMatcher[R] {
 
 object ResultMatcher extends Level0Impls {
 
-  sealed trait MaybeWritable[+T] {
+  sealed trait MaybeWritable[T] {
     def contentType: Set[MediaType]
-    def resultInfo: Set[ResultInfo]
+    def resultInfo: Option[Type]
     def encodings: Set[MediaType]
   }
 
   object MaybeWritable {
 
-    implicit def maybeIsWritable[T >: Nothing](implicit w: Writable[T]): MaybeWritable[T] = new MaybeWritable[T] {
+    // This will represent a "missing" result meaning this status wasn't used
+    implicit val maybeWritableAny: MaybeWritable[Any] = new MaybeWritable[Any] {
+      override def contentType: Set[MediaType] = Set.empty
+      override def encodings: Set[MediaType] = Set.empty
+      override def resultInfo: Option[Type] = None
+    }
+
+    implicit def maybeIsWritable[T](implicit w: Writable[T], t: TypeTag[T]): MaybeWritable[T] = new MaybeWritable[T] {
       override def contentType: Set[MediaType] = w.contentType.toSet
       override def encodings: Set[MediaType] = w.contentType.toSet
-      override def resultInfo: Set[ResultInfo] = ???
-    }
-
-    implicit val maybeWritableNothing: MaybeWritable[Nothing] = new MaybeWritable[Nothing] {
-      override def contentType: Set[MediaType] = Set.empty
-      override def resultInfo: Set[ResultInfo] = Set.empty
-      override def encodings: Set[MediaType] = Set.empty
-    }
-
-    implicit val maybeWritableEmpty: MaybeWritable[ResponseGenerator.EmptyResponse.type] = new MaybeWritable[ResponseGenerator.EmptyResponse.type] {
-      override def contentType: Set[MediaType] = Set.empty
-      override def resultInfo: Set[ResultInfo] = Set.empty
-      override def encodings: Set[MediaType] = Set.empty
+      override def resultInfo: Option[Type] = Some(t.tpe.dealias)
     }
   }
 
@@ -53,7 +48,20 @@ object ResultMatcher extends Level0Impls {
 
     override def conv(req: Request, r: Result[OK, NOTFOUND, NOCONTENT]): Task[ExResult] = Task.now(r)
 
-    override def resultInfo: Set[ResultInfo] = ???
+    override def resultInfo: Set[ResultInfo] = {
+      allTpes.flatMap { case (s, mw) =>
+        mw.resultInfo.map( t => StatusAndModel(s, t))
+      }.toSet
+    }
+
+    private val allTpes: List[(Status, MaybeWritable[_])] = {
+      import Status._
+      List(
+        (Ok, mOK),
+        (NotFound, mNOTFOUND),
+        (NoContent, mNOCONTENT)
+      )
+    }
   }
 
 //  implicit def resultMatcher[T <: Result.BaseResult, O](implicit s: TypeTag[T], o: TypeTag[O], w: Writable[O]): ResultMatcher[Result[S, O]] =

@@ -1,6 +1,8 @@
 package org.http4s.rho
 package bits
 
+import scodec.bits.ByteVector
+
 import scala.language.higherKinds
 
 
@@ -16,7 +18,14 @@ sealed trait ResponseGenerator {
 }
 
 object ResponseGenerator {
-  object EmptyResponse
+  case class EmptyResponse()
+
+  object EmptyResponse {
+    // This is just a dummy so that the implicits in ResultMatcher will work.
+    implicit val w: Writable[EmptyResponse] = {
+      Writable.simple[EmptyResponse](_ => ByteVector.empty)
+    }
+  }
 }
 
 abstract class EmptyResponseGenerator(val status: Status) extends ResponseGenerator {
@@ -57,7 +66,7 @@ trait ResponseGeneratorInstances {
 //  object SwitchingProtocols extends EmptyResponseGenerator[Status.Ok.type](Status.SwitchingProtocols)
   type OK[A] = Result[A, Nothing, Nothing]
   type NOTFOUND[A] = Result[Nothing, A, Nothing]
-  type NOCONTENT = Result[Nothing, Nothing, EmptyResponse.type]
+  type NOCONTENT = Result[Nothing, Nothing, EmptyResponse]
 
   object Ok extends EntityResponseGenerator(Status.Ok) { type T[A] = OK[A] }
   object NotFound extends EntityResponseGenerator(Status.NotFound) { type T[A] = NOTFOUND[A] }
