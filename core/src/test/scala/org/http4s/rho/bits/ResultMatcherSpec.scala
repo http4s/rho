@@ -44,6 +44,20 @@ class ResultMatcherSpec extends Specification {
       srvc.statuses should_== Set(NotFound, Ok)
     }
 
+    "Match two results with same stat different result type" in {
+      val srvc = new TRhoService {
+        PUT / "foo" |>> { () =>
+          val a = 0
+          a match {
+            case 0 => Ok(s"Not found")
+            case 1 => Ok(<html><body>Hello world</body></html>)
+          }
+        }
+      }
+
+      srvc.statuses should_== Set(Ok)
+    }
+
     "Match an empty result type" in {
       val srvc = new TRhoService {
         PUT / "foo" |>> { () => NoContent() }

@@ -31,9 +31,12 @@ object ResultMatcher extends Level0Impls {
       override def resultInfo: Option[Type] = None
     }
 
-    implicit def maybeIsWritable[T](implicit w: Writable[T], t: TypeTag[T]): MaybeWritable[T] = new MaybeWritable[T] {
-      override def contentType: Set[MediaType] = w.contentType.toSet
-      override def encodings: Set[MediaType] = w.contentType.toSet
+    /* Allowing the `Writable` to be `null` only matches real results but allows for
+       situations where you return the same status with two types */
+    implicit def maybeIsWritable[T](implicit t: TypeTag[T], w: Writable[T] = null): MaybeWritable[T] = new MaybeWritable[T] {
+      private val ww = Option(w)
+      override def contentType: Set[MediaType] = ww.flatMap(_.contentType).toSet
+      override def encodings: Set[MediaType] = ww.flatMap(_.contentType).toSet
       override def resultInfo: Option[Type] = Some(t.tpe.dealias)
     }
   }
