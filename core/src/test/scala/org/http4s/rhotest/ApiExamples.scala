@@ -3,7 +3,6 @@ package rhotest
 
 import org.specs2.mutable.Specification
 import org.http4s.rho._
-import scalaz.{ -\/, \/- }
 import scalaz.concurrent.Task
 
 
@@ -52,11 +51,11 @@ class ApiExamples extends Specification {
         val r2 = r >>> require(Header.`Cache-Control`)
         // r2 / "stuff" // Doesn't work
 
-//        // Now this can be combined with a method to make the 'Action'
-//        val action = r2 |>> {
-//          (world: String, fav: Int, tag: Header.ETag) =>
-//            Ok("Success").withHeaders(Header.ETag(fav.toString))
-//        }
+        // Now this can be combined with a method to make the 'Action'
+        val action = r2 |>> {
+          (world: String, fav: Int, tag: Header.ETag) =>
+            Ok("Success").withHeaders(Header.ETag(fav.toString))
+        }
 
         /**
          * Boolean logic
@@ -92,12 +91,6 @@ class ApiExamples extends Specification {
           if (true) Ok("One result")
           else NotFound(<html><body>Boo... Not found...</body></html>)
         }
-
-//
-//        // Work with disjunctions
-//        GET / "disjunct" |>> { () =>
-//          if (true) \/-(Ok("True!")) else -\/(NotFound(<html><body>Not Found.</body></html>))
-//        }
       }
 
       true should_== true

@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import scalaz.concurrent.Task
+
 sealed case class Result[
 +CONTINUE,
 +SWITCHINGPROTOCOLS,
@@ -73,24 +75,6 @@ object Result {
 
 import Result._
 
-//
-//import scala.language.implicitConversions
-//
-//import org.http4s.Writable.Entity
-//
-import scalaz.concurrent.Task
-import scalaz.stream.Process
-//
-//case class Result[S, T](resp: Response) extends AnyVal
-//
-//sealed trait EmptyResult
-//
-//object EmptyResult {
-//  implicit val emptyResultWritable: Writable[EmptyResult] = Writable(
-//    _ => Task.now(Entity(Process.halt, None)), Headers.empty
-//  )
-//}
-//
 trait ResultSyntaxInstances {
 
   implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends MessageOps {

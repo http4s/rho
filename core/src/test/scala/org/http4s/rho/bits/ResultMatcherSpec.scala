@@ -51,50 +51,36 @@ class ResultMatcherSpec extends Specification {
 
       srvc.statuses should_== Set(NoContent)
     }
-//
-//    "Match three results with different status but same result type" in {
-//      val srvc = new TRhoService {
-//        PUT / "foo" |>> { () =>
-//          val a = 0
-//          a match {
-//            case 0 => NotFound(s"Not found")
-//            case 1 => Ok("updated")
-//            //case 2 => Accepted("it was accepted")
-//          }
-//        }
-//      }
-//
-//      srvc.statuses should_== Set(NotFound, Ok, Accepted)
-//    }
-//
-//    "Match four results with different status but same result type" in {
-//      val srvc = new TRhoService {
-//        PUT / "foo" |>> { () =>
-//          val a = 0
-//          a match {
-//            case 0 => NotFound(s"Not found")
-//            case 1 => Ok("updated")
-//            //case 2 => Accepted("it was accepted")
-//            //case 4 => Created("it was created")
-//          }
-//        }
-//      }
-//
-//      srvc.statuses should_== Set(NotFound, Ok, Accepted, Created)
-//    }
-//
-//        "Match two results with same status but different result type" in {
-    //      val srvc = new RhoService {
-    //        PUT / "foo" |>> { () =>
-    //          val a = 0
-    //          a match {
-    //            case 0 => Ok(<html><body>foo</body></html>)
-    //            case 1 => Ok("updated")
-    //          }
-    //        }
-    //      }
-    //
-    //      true should_== true
-    //    }
+
+    "Match three results with different status but same result type" in {
+      val srvc = new TRhoService {
+        PUT / "foo" |>> { () =>
+          val a = 0
+          a match {
+            case 0 => NotFound(s"Not found")
+            case 1 => Ok("updated")
+            case 2 => Accepted("it was accepted")
+          }
+        }
+      }
+
+      srvc.statuses should_== Set(NotFound, Ok, Accepted)
+    }
+
+    "Match four results with different status but same result type" in {
+      val srvc = new TRhoService {
+        PUT / "foo" |>> { () =>
+          val a = 0
+          a match {
+            case 0 => NotFound(s"Not found")
+            case 1 => Ok("updated")
+            case 2 => Accepted("it was accepted")
+            case 4 => Created("it was created")
+          }
+        }
+      }
+
+      srvc.statuses should_== Set(NotFound, Ok, Accepted, Created)
+    }
   }
 }
