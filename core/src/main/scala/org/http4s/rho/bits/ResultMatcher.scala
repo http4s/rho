@@ -277,9 +277,11 @@ object ResultMatcher extends Level0Impls {
     LOOPDETECTED,
     NOTEXTENDED,
     NETWORKAUTHENTICATIONREQUIRED]] {
-    override def encodings: Set[MediaType] = mOK.encodings ++ mNOCONTENT.encodings ++ mNOTFOUND.encodings
+    override lazy val encodings: Set[MediaType] =
+      allTpes.flatMap { case (_, m) => m.encodings }.toSet
 
-    override def conv(req: Request, r: Result[CONTINUE,
+    override def conv(req: Request, r: Result[
+      CONTINUE,
       SWITCHINGPROTOCOLS,
       PROCESSING,
 
