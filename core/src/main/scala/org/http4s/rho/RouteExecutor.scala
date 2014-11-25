@@ -167,7 +167,7 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
     val readyf = hf.conv(f)
     val ff: Result = { req =>
        pathAndValidate(req, r.path, r.query, r.headers).map(_ match {
-           case ParserSuccess(stack) => readyf(req, stack.asInstanceOf[T]).map(_.resp)
+           case ParserSuccess(stack) => readyf(req, stack.asInstanceOf[T])
            case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
            case ParserFailure(s)     => onBadRequest(s)
        })
@@ -183,8 +183,7 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
       pathAndValidate(req, r.router.path, r.router.query, r.headers).map(_ match {
         case ParserSuccess(stack) =>
           r.decoder.decode(req)                                  // Decode the body of the `Request`
-            .flatMap( r => actionf(req,r::stack.asInstanceOf[T]) // append body to path and query and feed to the actionf
-            .map(_.resp))                                        // extract the `Response` from the `Result[T]`
+            .flatMap( r => actionf(req,r::stack.asInstanceOf[T])) // append body to path and query and feed to the actionf
 
         case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
         case ParserFailure(s)     => onBadRequest(s)

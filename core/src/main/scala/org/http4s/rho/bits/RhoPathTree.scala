@@ -44,7 +44,7 @@ final class RhoPathTree extends PathTree {
           for {
             i <- TempTools.runQuery(req, query, pathstack)
             j <- TempTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
-          } yield (() => action.hf.conv(action.f)(req, j.asInstanceOf[T]).map(_.resp))
+          } yield (() => action.hf.conv(action.f)(req, j.asInstanceOf[T]))
         })
 
       case c @ CodecRouter(_, parser) =>
@@ -56,7 +56,7 @@ final class RhoPathTree extends PathTree {
               j <- TempTools.runValidation(req, c.headers, i)
             } yield (() => {
               parser.decode(req).flatMap { // `asInstanceOf` to turn the untyped HList to type T
-                case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T]).map(_.resp)
+                case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T])
                 case ParserFailure(e)     => TempTools.onBadRequest(s"Decoding error: $e")
                 case ValidationFailure(e) => TempTools.onBadRequest(s"Validation failure: $e")
               }

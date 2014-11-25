@@ -1,7 +1,6 @@
 package org.http4s.rho.bits
 
-import org.http4s.rho.Result.ExResult
-import org.http4s.{Request, Status, Writable, MediaType}
+import org.http4s.{Request, Response, Status, Writable, MediaType}
 import org.http4s.rho.Result
 
 import scala.reflect.runtime.universe.{ Type, TypeTag }
@@ -11,10 +10,10 @@ import scalaz.concurrent.Task
 trait ResultMatcher[-R] {
   def encodings: Set[MediaType]
   def resultInfo: Set[ResultInfo]
-  def conv(req: Request, r: R): Task[Result.ExResult]
+  def conv(req: Request, r: R): Task[Response]
 }
 
-object ResultMatcher extends Level0Impls {
+object ResultMatcher {
 
   sealed trait MaybeWritable[T] {
     def contentType: Set[MediaType]
@@ -41,7 +40,8 @@ object ResultMatcher extends Level0Impls {
     }
   }
 
-  implicit def statusMatcher[CONTINUE,
+  implicit def statusMatcher[
+  CONTINUE,
   SWITCHINGPROTOCOLS,
   PROCESSING,
 
@@ -219,7 +219,8 @@ object ResultMatcher extends Level0Impls {
     LOOPDETECTED,
     NOTEXTENDED,
     NETWORKAUTHENTICATIONREQUIRED]] =
-  new ResultMatcher[Result[CONTINUE,
+  new ResultMatcher[Result[
+    CONTINUE,
     SWITCHINGPROTOCOLS,
     PROCESSING,
 
@@ -344,7 +345,7 @@ object ResultMatcher extends Level0Impls {
       INSUFFICIENTSTORAGE,
       LOOPDETECTED,
       NOTEXTENDED,
-      NETWORKAUTHENTICATIONREQUIRED]): Task[ExResult] = Task.now(r)
+      NETWORKAUTHENTICATIONREQUIRED]): Task[Response] = Task.now(r.resp)
 
     override def resultInfo: Set[ResultInfo] = {
       allTpes.flatMap { case (s, mw) =>
@@ -420,24 +421,21 @@ object ResultMatcher extends Level0Impls {
     override val encodings: Set[MediaType] = w.contentType.toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
-    override def conv(req: Request, r: Option[O]): Task[Result.ExResult] = r match {
-      case Some(r) => ResponseGeneratorInstances.Ok(r)
-      case None    => ResponseGeneratorInstances.NotFound(req.uri.path)
+    override def conv(req: Request, r: Option[O]): Task[Response] = r match {
+      case Some(r) => ResponseGeneratorInstances.Ok.pure(r)
+      case None    => ResponseGeneratorInstances.NotFound.pure(req.uri.path)
     }
   }
 
   implicit def writableMatcher[O](implicit o: TypeTag[O], w: Writable[O]) = new ResultMatcher[O] {
     override def encodings: Set[MediaType] = w.contentType.toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
-    override def conv(req: Request, r: O): Task[ResponseGeneratorInstances.OK[O]] = ResponseGeneratorInstances.Ok(r)
+    override def conv(req: Request, r: O): Task[Response] = ResponseGeneratorInstances.Ok.pure(r)
   }
-}
 
-
-trait Level0Impls {
   implicit def taskMatcher[R](implicit r: ResultMatcher[R]): ResultMatcher[Task[R]] = new ResultMatcher[Task[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
-    override def conv(req: Request, t: Task[R]): Task[Result.ExResult] = t.flatMap(r.conv(req, _))
+    override def conv(req: Request, t: Task[R]): Task[Response] = t.flatMap(r.conv(req, _))
   }
 }

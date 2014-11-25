@@ -30,16 +30,24 @@ object ResponseGenerator {
 
 abstract class EmptyResponseGenerator(val status: Status) extends ResponseGenerator {
   type T <: Result.BaseResult
-  private val result: Task[T] = Task.now(Result(Response(status)).asInstanceOf[T])
+  private val pureResult: Task[Response] = Task.now(Response(status))
+  private val result: Task[T] = pureResult.map(Result(_).asInstanceOf[T])
+
+  /** Generate a [[Result]] that carries the type information */
   def apply(): Task[T] = result
+
+  /** Generate wrapper free [[Response]] */
+  def pure(): Task[Response] = pureResult
 }
 
 abstract class EntityResponseGenerator(val status: Status) extends ResponseGenerator {
   type T[_] <: Result.BaseResult
 
+  /** Generate a [[Result]] that carries the type information */
   def apply[A](body: A)(implicit w: Writable[A]): Task[T[A]] =
     apply(body, Headers.empty)(w)
 
+  /** Generate a [[Result]] that carries the type information */
   def apply[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[T[A]] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
@@ -49,6 +57,22 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
       Task.now(Result(Response(status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
     }
   }
+
+  /** Generate wrapper free [[Response]] */
+  def pure[A](body: A)(implicit w: Writable[A]): Task[Response] =
+    pure(body, Headers.empty)(w)
+
+  /** Generate wrapper free [[Response]] */
+  def pure[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[Response] = {
+    w.toEntity(body).flatMap { case Entity(proc, len) =>
+      val hs = len match {
+        case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))
+        case None    => (w.headers ++ headers)
+      }
+      Task.now(Response(status = status, headers = hs, body = proc))
+    }
+  }
+
 }
 
 abstract class LocationResponseGenerator(val status: Status) extends ResponseGenerator {
@@ -60,10 +84,6 @@ abstract class LocationResponseGenerator(val status: Status) extends ResponseGen
 object ResponseGeneratorInstances extends ResponseGeneratorInstances
 
 trait ResponseGeneratorInstances {
-
-  // 1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23      24      25      26      27      28      29      30      31      32      33       34      35      36      37      38      39      40      41      42      43      44      45      46      47      48      49      50      51      52      53      54      55      56      57
-  //Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
-
   //                                             1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23      24      25      26      27      28      29      30      31      32      33       34      35      36      37      38      39      40      41      42      43      44      45      46      47      48      49      50      51      52      53      54      55      56      57
   // type 1xx
   type CONTINUE                       = Result[EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
