@@ -3,6 +3,8 @@ package rho
 package bits
 
 import org.specs2.mutable.Specification
+
+import scala.reflect.runtime.universe._
 import shapeless.HList
 
 import Status._
@@ -10,23 +12,24 @@ import Status._
 class ResultMatcherSpec extends Specification {
 
   trait TRhoService extends RhoService {
-    var statuses: Set[Status] = Set.empty
+    var statuses: Set[(Status, Type)] = Set.empty
 
     override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
       statuses = action.resultInfo.collect {
-        case StatusAndType(s, _) => s
+        case StatusAndType(s, t) => (s,t)
       }
       super.append(action)
     }
   }
 
   "ResponseGenerator" should {
+
     "Match a single result type" in {
       val srvc = new TRhoService {
         PUT / "foo" |>> { () => Ok("updated").run }
       }
 
-      srvc.statuses should_== Set(Ok)
+      srvc.statuses.map(_._1) should_== Set(Ok)
     }
 
     "Match two results with different status with different result type" in {
@@ -40,7 +43,9 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses should_== Set(NotFound, Ok)
+      srvc.statuses.map(_._1) should_== Set(NotFound, Ok)
+      srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[String] must_== true
+      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[scala.xml.Elem] must_== true
     }
 
     "Match two results with same stat different result type" in {
@@ -54,7 +59,7 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses should_== Set(Ok)
+      srvc.statuses.map(_._1) should_== Set(Ok)
     }
 
     "Match an empty result type" in {
@@ -62,7 +67,8 @@ class ResultMatcherSpec extends Specification {
         PUT / "foo" |>> { () => NoContent() }
       }
 
-      srvc.statuses should_== Set(NoContent)
+      srvc.statuses.map(_._1) should_== Set(NoContent)
+      srvc.statuses.head._2 =:= weakTypeOf[org.http4s.rho.bits.ResponseGenerator.EmptyRe]
     }
 
     "Match three results with different status but same result type" in {
@@ -77,7 +83,7 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses should_== Set(NotFound, Ok, Accepted)
+      srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted)
     }
 
     "Match four results with different status but same result type" in {
@@ -93,7 +99,56 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses should_== Set(NotFound, Ok, Accepted, Created)
+      srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted, Created)
+    }
+    
+    "Match results with locally defined types" in {
+      import scodec.bits.ByteVector
+
+      case class ModelA(name: String, color: Int)
+      case class ModelB(name: String, id: Long)
+
+      implicit def w1: Writable[ModelA] = Writable.simple[ModelA](_ => ByteVector.view("A".getBytes))
+      implicit def w2: Writable[ModelB] = Writable.simple[ModelB](_ => ByteVector.view("B".getBytes))
+
+      val srvc = new TRhoService {
+        GET / "foo" |>> { () =>
+          if (true) Ok(ModelA("test ok", 1))
+          else NotFound(ModelB("test not found", 234))
+        }
+      }
+
+      srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
+
+      // the type equality for locally defined types is a bit "murkey" so we use the String name
+      srvc.statuses.collect{ case (Ok, t) => t }.head.toString must_== "ModelA"
+      srvc.statuses.collect{ case (NotFound, t) => t }.head.toString must_== "ModelB"
+    }
+
+    "Match complex models as well as simple ones" in {
+      import Foo._
+
+      val srvc = new TRhoService {
+        GET / "foo" |>> { () =>
+          if (true) Ok(FooA("test ok", 1))
+          else NotFound(FooB("test not found", 234))
+        }
+      }
+
+      srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
+      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[FooA] must_== true
+      srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[FooB] must_== true
+
     }
   }
+}
+
+object Foo {
+  import scodec.bits.ByteVector
+
+  case class FooA(name: String, color: Int)
+  case class FooB(name: String, id: Long)
+
+  implicit def w1: Writable[FooA] = Writable.simple[FooA](_ => ByteVector.view("A".getBytes))
+  implicit def w2: Writable[FooB] = Writable.simple[FooB](_ => ByteVector.view("B".getBytes))
 }
