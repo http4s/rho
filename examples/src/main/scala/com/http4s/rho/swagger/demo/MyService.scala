@@ -33,7 +33,7 @@ object MyService extends RhoService with SwaggerSupport {
     { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
-    GET / "disjunction" / pathVar[Int] |>> { i: Int =>
+    GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
       if (i >= 0) Ok(JsonResult("Good result", i))
       else BadRequest(<html><body>Negative number: { i }</body></html>)
     }
