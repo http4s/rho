@@ -29,12 +29,15 @@ object MyBuild extends Build {
                         .in(file("examples"))
                         .settings(buildSettings ++
                                   Revolver.settings ++
-                                  Seq(exampleDeps, libraryDependencies += logbackClassic) :_*)
+                                  Seq(exampleDeps, libraryDependencies += logbackClassic, dontPublish) :_*)
                         .dependsOn(`rho-swagger`, `rho-hal`)
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
 
   lazy val rhoVersion = "0.3.0-SNAPSHOT"
+
+  /* Don't publish setting */
+  val dontPublish = packagedArtifacts := Map.empty
 
   lazy val license = licenses in ThisBuild := Seq(
     "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
