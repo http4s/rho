@@ -30,7 +30,7 @@ object MyBuild extends Build {
                         .settings(buildSettings ++ Revolver.settings :+ exampleDeps :_*)
                         .dependsOn(`rho-swagger`, `rho-hal`)
 
-  lazy val compileFlags = Seq("-feature")
+  lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
 
   lazy val rhoVersion = "0.2.0-SNAPSHOT"
 

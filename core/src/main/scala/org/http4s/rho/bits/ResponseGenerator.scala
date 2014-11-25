@@ -1,167 +1,194 @@
 package org.http4s.rho
 package bits
 
+import scodec.bits.ByteVector
+
+import scala.language.higherKinds
+
+
 import org.http4s.Header.`Content-Length`
 import org.http4s.Writable.Entity
 import org.http4s._
+import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
 import scalaz.concurrent.Task
 
-trait ResponseGenerator {
+sealed trait ResponseGenerator {
   def status: Status
 }
 
-abstract class EmptyResponseGenerator[S <: Status](val status: Status) extends ResponseGenerator {
-  private val result: Task[Result[S, EmptyResult]] = Task.now(Result(Response(status)))
-  def apply(): Task[Result[S, EmptyResult]] = result
+object ResponseGenerator {
+  case class EmptyRe()
+
+  object EmptyRe {
+    // This is just a dummy so that the implicits in ResultMatcher will work.
+    implicit val w: Writable[EmptyRe] = {
+      Writable.simple[EmptyRe](_ => ByteVector.empty)
+    }
+  }
 }
 
-abstract class EntityResponseGenerator[S <: Status](val status: Status) extends ResponseGenerator {
-  def apply[A](body: A)(implicit w: Writable[A]): Task[Result[S, A]] =
+abstract class EmptyResponseGenerator(val status: Status) extends ResponseGenerator {
+  type T <: Result.BaseResult
+  private val result: Task[T] = Task.now(Result(Response(status)).asInstanceOf[T])
+  def apply(): Task[T] = result
+}
+
+abstract class EntityResponseGenerator(val status: Status) extends ResponseGenerator {
+  type T[_] <: Result.BaseResult
+
+  def apply[A](body: A)(implicit w: Writable[A]): Task[T[A]] =
     apply(body, Headers.empty)(w)
 
-  def apply[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[Result[S, A]] = {
+  def apply[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[T[A]] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
         case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))
         case None    => (w.headers ++ headers)
       }
-      Task.now(Result(Response(status = status, headers = hs, body = proc)))
+      Task.now(Result(Response(status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
     }
   }
 }
 
-abstract class LocationResponseGenerator[S <: Status](val status: Status) extends ResponseGenerator {
-  def apply(location: Uri): Task[Result[S, EmptyResult]] =
-    Task.now(Result(Response(status).putHeaders(Header.Location(location))))
+abstract class LocationResponseGenerator(val status: Status) extends ResponseGenerator {
+  type T <: Result.BaseResult
+  def apply(location: Uri): Task[T] =
+    Task.now(Result(Response(status).putHeaders(Header.Location(location))).asInstanceOf[T])
 }
 
 object ResponseGeneratorInstances extends ResponseGeneratorInstances
 
 trait ResponseGeneratorInstances {
 
-  object Continue extends EmptyResponseGenerator[Status.Continue.type](Status.Continue)
+  // 1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23      24      25      26      27      28      29      30      31      32      33       34      35      36      37      38      39      40      41      42      43      44      45      46      47      48      49      50      51      52      53      54      55      56      57
+  //Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
 
-  // TODO support Upgrade header
-  object SwitchingProtocols extends EmptyResponseGenerator[Status.Ok.type](Status.SwitchingProtocols)
+  //                                             1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23      24      25      26      27      28      29      30      31      32      33       34      35      36      37      38      39      40      41      42      43      44      45      46      47      48      49      50      51      52      53      54      55      56      57
+  // type 1xx
+  type CONTINUE                       = Result[EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type SWITCHINGPROTOCOLS             = Result[Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PROCESSING                     = Result[Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  // type 2xx
+  type OK[A]                          = Result[Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type CREATED[A]                     = Result[Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type ACCEPTED[A]                    = Result[Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type NONAUTHORITATIVEINFORMATION[A] = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type NOCONTENT                      = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type RESETCONTENT                   = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PARTIALCONTENT[A]              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type MULTISTATUS[A]                 = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type ALREADYREPORTED[A]             = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type IMUSED[A]                      = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  // type 3xx
+  type MULTIPLECHOICES[A]             = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type MOVEDPERMANENTLY               = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type FOUND[A]                       = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type SEEOTHER[A]                    = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type NOTMODIFIED                    = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type USEPROXY[A]                    = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type TEMPORARYREDIRECT              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PERMANENTREDIRECT              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,EmptyRe,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  // type 4xx
+  //                                             1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16      17      18      19      20      21      22      23      24      25      26      27      28      29      30      31      32      33       34      35      36      37      38      39      40      41      42      43      44      45      46      47      48      49      50      51      52      53      54      55      56      57
+  type BADREQUEST[A]                  = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type UNAUTHORIZED[A]                = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PAYMENTREQUIRED[A]             = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type FORBIDDEN[A]                   = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type NOTFOUND[A]                    = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type METHODNOTALLOWED[A]            = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type NOTACCEPTABLE[A]               = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PROXYAUTHENTICATIONREQUIRED[A] = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type REQUESTTIMEOUT[A]              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type CONFLICT[A]                    = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type GONE[A]                        = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type LENGTHREQUIRED[A]              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A     ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PRECONDITIONFAILED[A]          = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PAYLOADTOOLARGE[A]             = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type URITOOLONG[A]                  = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type UNSUPPORTEDMEDIATYPE[A]        = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type RANGENOTSATISFIABLE[A]         = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type EXPECTATIONFAILED[A]           = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type UNPROCESSABLEENTITY[A]         = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type LOCKED[A]                      = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type FAILEDDEPENDENCY[A]            = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type UPGRADEREQUIRED[A]             = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type PRECONDITIONREQUIRED[A]        = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type TOOMANYREQUESTS[A]             = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type REQUESTHEADERFIELDSTOOLARGE[A] = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  // type 5xx
+  type INTERNALSERVERERROR[A]         = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type NOTIMPLEMENTED[A]              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type BADGATEWAY[A]                  = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type SERVICEUNAVAILABLE[A]          = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type GATEWAYTIMEOUT[A]              = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type HTTPVERSIONNOTSUPPORTED[A]     = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type VARIANTALSONEGOTIATES[A]       = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing]
+  type INSUFFICIENTSTORAGE[A]         = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing]
+  type LOOPDETECTED[A]                = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing]
+  type NOTEXTENDED[A]                 = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing]
+  type NETWORKAUTHENTICATIONREQUIRED[A] = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ]
 
-  object Ok extends EntityResponseGenerator[Status.Ok.type](Status.Ok)
 
-  object Created extends EntityResponseGenerator[Status.Created.type](Status.Created)
+  object Continue                     extends EmptyResponseGenerator(Status.Continue) { type T  = CONTINUE }
+  object SwitchingProtocols           extends EmptyResponseGenerator(Status.SwitchingProtocols) { type T = SWITCHINGPROTOCOLS }
+  object Processing                   extends EmptyResponseGenerator(Status.Processing) { type T = PROCESSING }
 
-  object Accepted extends EntityResponseGenerator[Status.Accepted.type](Status.Accepted)
+  object Ok                           extends EntityResponseGenerator(Status.Ok) { type T[A] = OK[A] }
+  object Created                      extends EntityResponseGenerator(Status.Created) { type T[A] = CREATED[A] }
+  object Accepted                     extends EntityResponseGenerator(Status.Accepted) { type T[A] = ACCEPTED[A] }
+  object NonAuthoritativeInformation  extends EntityResponseGenerator(Status.NonAuthoritativeInformation) { type T[A] = NONAUTHORITATIVEINFORMATION[A] }
+  object NoContent                    extends EmptyResponseGenerator(Status.NoContent) { type T = NOCONTENT }
+  object ResetContent                 extends EmptyResponseGenerator(Status.ResetContent) { type T = RESETCONTENT }
+  object PartialContent               extends EntityResponseGenerator(Status.PartialContent) { type T[A] = PARTIALCONTENT[A] }
+  object MultiStatus                  extends EntityResponseGenerator(Status.MultiStatus) { type T[A] = MULTISTATUS[A] }
+  object AlreadyReported              extends EntityResponseGenerator(Status.AlreadyReported) { type T[A] = ALREADYREPORTED[A] }
+  object IMUsed                       extends EntityResponseGenerator(Status.IMUsed) { type T[A] = IMUSED[A] }
 
-  object NonAuthoritativeInformation extends EntityResponseGenerator[Status.NonAuthoritativeInformation.type](Status.NonAuthoritativeInformation)
+  object MultipleChoices              extends EntityResponseGenerator(Status.MultipleChoices) { type T[A] = MULTIPLECHOICES[A] }
+  object MovedPermanently             extends LocationResponseGenerator(Status.MovedPermanently) { type T = MOVEDPERMANENTLY }
+  object Found                        extends EntityResponseGenerator(Status.Found) { type T[A] = FOUND[A] }
+  object SeeOther                     extends EntityResponseGenerator(Status.SeeOther) { type T[A] = SEEOTHER[A] }
+  object NotModified                  extends EmptyResponseGenerator(Status.NotModified) { type T = NOTMODIFIED }
+  object UseProxy                     extends EntityResponseGenerator(Status.UseProxy) { type T[A] = USEPROXY[A] }
+  object TemporaryRedirect            extends LocationResponseGenerator(Status.TemporaryRedirect) { type T = TEMPORARYREDIRECT }
+  object PermanentRedirect            extends LocationResponseGenerator(Status.PermanentRedirect) { type T = PERMANENTREDIRECT }
 
-  object NoContent extends EmptyResponseGenerator[Status.NoContent.type](Status.NoContent)
+  object BadRequest                   extends EntityResponseGenerator(Status.BadRequest) { type T[A] = BADREQUEST[A] }
+  object Unauthorized                 extends EntityResponseGenerator(Status.Unauthorized) { type T[A] = UNAUTHORIZED[A] }
+  object PaymentRequired              extends EntityResponseGenerator(Status.PaymentRequired) { type T[A] = PAYMENTREQUIRED[A] }
+  object Forbidden                    extends EntityResponseGenerator(Status.Forbidden) { type T[A] = FORBIDDEN[A] }
+  object NotFound                     extends EntityResponseGenerator(Status.NotFound) { type T[A] = NOTFOUND[A] }
+  object MethodNotAllowed             extends EntityResponseGenerator(Status.MethodNotAllowed) { type T[A] = METHODNOTALLOWED[A] }
+  object NotAcceptable                extends EntityResponseGenerator(Status.NotAcceptable) { type T[A] = NOTACCEPTABLE[A] }
+  object ProxyAuthenticationRequired  extends EntityResponseGenerator(Status.ProxyAuthenticationRequired) { type T[A] = PROXYAUTHENTICATIONREQUIRED[A] }
+  object RequestTimeout               extends EntityResponseGenerator(Status.RequestTimeout) { type T[A] = REQUESTTIMEOUT[A] }
+  object Conflict                     extends EntityResponseGenerator(Status.Conflict) { type T[A] = CONFLICT[A] }
+  object Gone                         extends EntityResponseGenerator(Status.Gone) { type T[A] = GONE[A] }
+  object LengthRequired               extends EntityResponseGenerator(Status.LengthRequired) { type T[A] = LENGTHREQUIRED[A] }
+  object PreconditionFailed           extends EntityResponseGenerator(Status.PreconditionFailed) { type T[A] = PRECONDITIONFAILED[A] }
+  object PayloadTooLarge              extends EntityResponseGenerator(Status.PayloadTooLarge) { type T[A] = PAYLOADTOOLARGE[A] }
+  object UriTooLong                   extends EntityResponseGenerator(Status.UriTooLong) { type T[A] = URITOOLONG[A] }
+  object UnsupportedMediaType         extends EntityResponseGenerator(Status.UnsupportedMediaType) { type T[A] = UNSUPPORTEDMEDIATYPE[A] }
+  object RangeNotSatisfiable          extends EntityResponseGenerator(Status.RangeNotSatisfiable) { type T[A] = RANGENOTSATISFIABLE[A] }
+  object ExpectationFailed            extends EntityResponseGenerator(Status.ExpectationFailed) { type T[A] = EXPECTATIONFAILED[A] }
+  object UnprocessableEntity          extends EntityResponseGenerator(Status.UnprocessableEntity) { type T[A] = UNPROCESSABLEENTITY[A] }
+  object Locked                       extends EntityResponseGenerator(Status.Locked) { type T[A] = LOCKED[A] }
+  object FailedDependency             extends EntityResponseGenerator(Status.FailedDependency) { type T[A] = FAILEDDEPENDENCY[A] }
+  object UpgradeRequired              extends EntityResponseGenerator(Status.UpgradeRequired) { type T[A] = UPGRADEREQUIRED[A] }
+  object PreconditionRequired         extends EntityResponseGenerator(Status.PreconditionRequired) { type T[A] = PRECONDITIONREQUIRED[A] }
+  object TooManyRequests              extends EntityResponseGenerator(Status.TooManyRequests) { type T[A] = TOOMANYREQUESTS[A] }
+  object RequestHeaderFieldsTooLarge  extends EntityResponseGenerator(Status.RequestHeaderFieldsTooLarge) { type T[A] = REQUESTHEADERFIELDSTOOLARGE[A] }
 
-  object ResetContent extends EmptyResponseGenerator[Status.ResetContent.type](Status.ResetContent)
-
-  // TODO helpers for Content-Range and multipart/byteranges
-  object PartialContent extends EntityResponseGenerator[Status.PartialContent.type](Status.PartialContent)
-
-  object MultiStatus extends EntityResponseGenerator[Status.MultiStatus.type](Status.MultiStatus)
-
-  object AlreadyReported extends EntityResponseGenerator[Status.AlreadyReported.type](Status.AlreadyReported)
-
-  object IMUsed extends EntityResponseGenerator[Status.IMUsed.type](Status.IMUsed)
-
-  object MultipleChoices extends LocationResponseGenerator[Status.MultipleChoices.type](Status.MultipleChoices)
-
-  object MovedPermanently extends LocationResponseGenerator[Status.MovedPermanently.type](Status.MovedPermanently)
-
-  object Found extends LocationResponseGenerator[Status.Found.type](Status.Found)
-
-  object SeeOther extends LocationResponseGenerator[Status.SeeOther.type](Status.SeeOther)
-
-  object NotModified extends EntityResponseGenerator[Status.NotModified.type](Status.NotModified)
-
-  // Note: UseProxy is deprecated in RFC7231, so we will not ease its creation here.
-
-  object TemporaryRedirect extends LocationResponseGenerator[Status.TemporaryRedirect.type](Status.TemporaryRedirect)
-
-  object PermanentRedirect extends LocationResponseGenerator[Status.PermanentRedirect.type](Status.PermanentRedirect)
-
-  object BadRequest extends EntityResponseGenerator[Status.BadRequest.type](Status.BadRequest)
-
-  object Unauthorized extends ResponseGenerator {
-    val status: Status = Status.Unauthorized
-    def apply(challenge: Challenge, challenges: Challenge*): Task[Result[Status.Unauthorized.type, EmptyResult]] =
-      Task.now(Result(Response(status).putHeaders(Header.`WWW-Authenticate`(challenge, challenges: _*))))
-  }
-
-  object PaymentRequired extends EntityResponseGenerator[Status.PaymentRequired.type](Status.PaymentRequired)
-
-  object Forbidden extends EntityResponseGenerator[Status.Forbidden.type](Status.Forbidden)
-
-  object NotFound extends EntityResponseGenerator[Status.NotFound.type](Status.NotFound)
-
-  object MethodNotAllowed extends ResponseGenerator {
-    val status: Status = Status.MethodNotAllowed
-    def apply(method: Method*): Task[Result[Status.MethodNotAllowed.type, EmptyResult]] = Task.now {
-      Result(Response(status).putHeaders(Header.Raw("Allow".ci, method.mkString(","))))
-    }
-  }
-
-  object NotAcceptable extends EntityResponseGenerator[Status.NotAcceptable.type](Status.NotAcceptable)
-
-  object ProxyAuthenticationRequired extends EntityResponseGenerator[Status.ProxyAuthenticationRequired.type](Status.ProxyAuthenticationRequired)
-
-  // TODO send Connection: close?
-  object RequestTimeout extends EntityResponseGenerator[Status.RequestTimeout.type](Status.RequestTimeout)
-
-  object Conflict extends EntityResponseGenerator[Status.Conflict.type](Status.Conflict)
-
-  object Gone extends EntityResponseGenerator[Status.Gone.type](Status.Gone)
-
-  object LengthRequired extends EntityResponseGenerator[Status.LengthRequired.type](Status.LengthRequired)
-
-  object PreconditionFailed extends EntityResponseGenerator[Status.PreconditionFailed.type](Status.PreconditionFailed)
-
-  object PayloadTooLarge extends EntityResponseGenerator[Status.PayloadTooLarge.type](Status.PayloadTooLarge)
-
-  object UriTooLong extends EntityResponseGenerator[Status.UriTooLong.type](Status.UriTooLong)
-
-  object UnsupportedMediaType extends EntityResponseGenerator[Status.UnsupportedMediaType.type](Status.UnsupportedMediaType)
-
-  object RangeNotSatisfiable extends EntityResponseGenerator[Status.RangeNotSatisfiable.type](Status.RangeNotSatisfiable)
-
-  object ExpectationFailed extends EntityResponseGenerator[Status.ExpectationFailed.type](Status.ExpectationFailed)
-
-  object UnprocessableEntity extends EntityResponseGenerator[Status.UnprocessableEntity.type](Status.UnprocessableEntity)
-
-  object Locked extends EntityResponseGenerator[Status.Locked.type](Status.Locked)
-
-  object FailedDependency extends EntityResponseGenerator[Status.FailedDependency.type](Status.FailedDependency)
-
-  // TODO Mandatory upgrade field
-  object UpgradeRequired extends EntityResponseGenerator[Status.UpgradeRequired.type](Status.UpgradeRequired)
-
-  object PreconditionRequired extends EntityResponseGenerator[Status.PreconditionFailed.type](Status.PreconditionRequired)
-
-  object TooManyRequests extends EntityResponseGenerator[Status.TooManyRequests.type](Status.TooManyRequests)
-
-  object RequestHeaderFieldsTooLarge extends EntityResponseGenerator[Status.RequestHeaderFieldsTooLarge.type](Status.RequestHeaderFieldsTooLarge)
-
-  object InternalServerError extends EntityResponseGenerator[Status.InternalServerError.type](Status.InternalServerError)
-
-  object NotImplemented extends EntityResponseGenerator[Status.NotImplemented.type](Status.NotImplemented)
-
-  object BadGateway extends EntityResponseGenerator[Status.BadGateway.type](Status.BadGateway)
-
-  object ServiceUnavailable extends EntityResponseGenerator[Status.ServiceUnavailable.type](Status.ServiceUnavailable)
-
-  object GatewayTimeout extends EntityResponseGenerator[Status.GatewayTimeout.type](Status.GatewayTimeout)
-
-  object HttpVersionNotSupported extends EntityResponseGenerator[Status.HttpVersionNotSupported.type](Status.HttpVersionNotSupported)
-
-  object VariantAlsoNegotiates extends EntityResponseGenerator[Status.VariantAlsoNegotiates.type](Status.VariantAlsoNegotiates)
-
-  object InsufficientStorage extends EntityResponseGenerator[Status.InsufficientStorage.type](Status.InsufficientStorage)
-
-  object LoopDetected extends EntityResponseGenerator[Status.LoopDetected.type](Status.LoopDetected)
-
-  object NotExtended extends EntityResponseGenerator[Status.NotExtended.type](Status.NotExtended)
-
-  object NetworkAuthenticationRequired extends EntityResponseGenerator[Status.NetworkAuthenticationRequired.type](Status.NetworkAuthenticationRequired)
+  object InternalServerError          extends EntityResponseGenerator(Status.InternalServerError) { type T[A] = INTERNALSERVERERROR[A] }
+  object NotImplemented               extends EntityResponseGenerator(Status.NotImplemented) { type T[A] = NOTIMPLEMENTED[A] }
+  object BadGateway                   extends EntityResponseGenerator(Status.BadGateway) { type T[A] = BADGATEWAY[A] }
+  object ServiceUnavailable           extends EntityResponseGenerator(Status.ServiceUnavailable) { type T[A] = SERVICEUNAVAILABLE[A] }
+  object GatewayTimeout               extends EntityResponseGenerator(Status.GatewayTimeout) { type T[A] = GATEWAYTIMEOUT[A] }
+  object HttpVersionNotSupported      extends EntityResponseGenerator(Status.HttpVersionNotSupported) { type T[A] = HTTPVERSIONNOTSUPPORTED[A] }
+  object VariantAlsoNegotiates        extends EntityResponseGenerator(Status.VariantAlsoNegotiates) { type T[A] = VARIANTALSONEGOTIATES[A] }
+  object InsufficientStorage          extends EntityResponseGenerator(Status.InsufficientStorage) { type T[A] = INSUFFICIENTSTORAGE[A] }
+  object LoopDetected                 extends EntityResponseGenerator(Status.LoopDetected) { type T[A] = LOOPDETECTED[A] }
+  object NotExtended                  extends EntityResponseGenerator(Status.NotExtended) { type T[A] = NOTEXTENDED[A] }
+  object NetworkAuthenticationRequired extends EntityResponseGenerator(Status.NetworkAuthenticationRequired) { type T[A] = NETWORKAUTHENTICATIONREQUIRED[A] }
 }

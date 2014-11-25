@@ -3,13 +3,14 @@ package rhotest
 
 import org.specs2.mutable.Specification
 import org.http4s.rho._
-import scalaz.{ -\/, \/- }
 import scalaz.concurrent.Task
 
 
 class ApiExamples extends Specification {
 
-  def foo(s: String, i: Int): Task[Result[Status.Ok.type, String]] = ???
+  import org.http4s.rho.bits.ResponseGeneratorInstances._
+
+  def foo(s: String, i: Int): Task[OK[String]] = ???
 
   "mock api" should {
     "Make it easy to compose routes" in {
@@ -85,10 +86,10 @@ class ApiExamples extends Specification {
         GET / "nostatus2" |>> "This is a constant result!"
         GET / "taskNoStatus2" |>> Task("This task will be evaluated each time!")
 
-
-        // Work with disjunctions
-        GET / "disjunct" |>> { () =>
-          if (true) \/-(Ok("True!")) else -\/(NotFound(<html><body>Not Found.</body></html>))
+        // TODO: this is just a basic example!
+        GET /"twoResults" |>> { () =>
+          if (true) Ok("One result")
+          else NotFound(<html><body>Boo... Not found...</body></html>)
         }
       }
 

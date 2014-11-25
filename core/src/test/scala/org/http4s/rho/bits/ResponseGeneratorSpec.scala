@@ -2,10 +2,8 @@ package org.http4s.rho.bits
 
 import org.http4s.Header.{`Content-Type`, Location, `Transfer-Encoding`, `Content-Length`}
 import org.http4s._
-import org.http4s.rho.{EmptyResult, Result}
 import org.specs2.mutable.Specification
 
-import scalaz.concurrent.Task
 
 
 class ResponseGeneratorSpec extends Specification {
@@ -13,7 +11,7 @@ class ResponseGeneratorSpec extends Specification {
 
   "ResponseGenerator" should {
     "Build a response with a body" in {
-      val result: Result[Status.Ok.type , String] = Ok("Foo").run
+      val result = Ok("Foo").run
       val resp = result.resp
 
       val str = new String(resp.body.runLog.run.reduce(_ ++ _).toArray)
@@ -24,7 +22,7 @@ class ResponseGeneratorSpec extends Specification {
     }
 
     "Build a response without a body" in {
-      val result: Result[Status.Ok.type, EmptyResult] = SwitchingProtocols().run
+      val result = SwitchingProtocols().run
       val resp = result.resp
 
       resp.body.runLog.run.length must_== 0
@@ -35,7 +33,7 @@ class ResponseGeneratorSpec extends Specification {
 
     "Build a redirect response" in {
       val location = Uri.fromString("/foo").getOrElse(sys.error("Fail."))
-      val result: Result[Status.MovedPermanently.type , EmptyResult] = MovedPermanently(location).run
+      val result = MovedPermanently(location).run
       val resp = result.resp
 
       resp.body.runLog.run.length must_== 0
