@@ -5,6 +5,7 @@ import java.util.Date
 import com.wordnik.swagger.model._
 
 import org.http4s.DateTime
+import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
 import scala.collection.mutable.LinkedHashMap
 import scala.reflect.runtime.universe._
@@ -30,9 +31,13 @@ object TypeBuilder {
       case tpe if formats.customSerializers.isDefinedAt(tpe) =>
         formats.customSerializers(tpe)
 
+      case tpe if tpe =:= weakTypeOf[EmptyRe] =>
+        Set.empty
+
       // TODO it would be the best if we could pull out the following cases into DefaultFormats
       case tpe if tpe.isNothingOrNull =>
         Set.empty
+
       case tpe if tpe.isEither || tpe.isMap =>
         go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
           go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
@@ -40,18 +45,23 @@ object TypeBuilder {
         val ntpe = tpe.typeArgs.head
         if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
+
       case tpe if tpe.isProcess =>
         val ntpe = tpe.typeArgs.apply(1)
         if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
+
       case tpe if tpe.isTask =>
         val ntpe = tpe.typeArgs.apply(0)
         if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
         else Set.empty
+
       case tpe if (alreadyKnown.map(_.id).contains(tpe.simpleName) || (tpe.isPrimitive)) =>
         Set.empty
+
       case ExistentialType(_, _) =>
         Set.empty
+
       case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
         val ctor = sym.asClass.primaryConstructor.asMethod
         val models = alreadyKnown ++ modelToSwagger(tpe, formats)
@@ -166,6 +176,7 @@ object TypeBuilder {
     private[swagger] def fromType(t: Type): DataType = {
       val klass = if (t.isOption && t.typeArgs.size > 0) t.typeArgs.head else t
       if (klass <:< typeOf[Unit] || klass <:< typeOf[Void]) this.Void
+      else if (t =:= weakTypeOf[EmptyRe]) this.Void
       else if (isString(klass)) this.String
       else if (klass <:< typeOf[Byte] || klass <:< typeOf[java.lang.Byte]) this.Byte
       else if (klass <:< typeOf[Long] || klass <:< typeOf[java.lang.Long]) this.Long

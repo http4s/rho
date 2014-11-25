@@ -5,13 +5,14 @@ package swagger
 import com.wordnik.swagger.model._
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
+import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 import org.http4s.rho.bits._
 import bits.PathAST._
 import bits.QueryAST.{QueryCapture, QueryRule}
 
 import org.log4s.getLogger
 
-import scala.reflect.runtime.universe.Type
+import scala.reflect.runtime.universe.{ Type, weakTypeOf }
 
 
 class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
