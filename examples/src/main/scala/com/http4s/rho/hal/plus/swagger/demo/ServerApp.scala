@@ -22,8 +22,7 @@ class ServerApp(port: Int) {
 object ServerApp {
   private val logger = getLogger
 
-  val port = (Option(System.getenv("DATAMEER_REST_PORT")) orElse
-    Option(System.getenv("HTTP_PORT")))
+  val port = Option(System.getenv("HTTP_PORT"))
     .map(_.toInt)
     .getOrElse(8080)
 
