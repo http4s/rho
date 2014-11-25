@@ -17,7 +17,8 @@ object MyService extends RhoService with SwaggerSupport {
 
   case class JsonResult(name: String, number: Int) extends AutoSerializable
 
-  GET |>> TemporaryRedirect(Uri(path="/hello"))
+  "We don't want to have a real 'root' route anyway... " **
+    GET |>> TemporaryRedirect(Uri(path="/swagger-ui"))
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = GET / "hello"
