@@ -80,7 +80,7 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
         case TypeOnly(tpe) => tpe
         case StatusAndType(_, tpe) => tpe
       }.foldLeft(Set.empty[Model]){(s, tpe) =>
-        TypeBuilder.collectModels(tpe, Set.empty, formats)
+        TypeBuilder.collectModels(tpe, s, formats)
       }
       if (models.isEmpty) None
       else Some(models.map(m => m.id -> m).toMap)
