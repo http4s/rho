@@ -14,8 +14,7 @@ class ResultMatcherSpec extends Specification {
 
     override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
       statuses = action.resultInfo.collect {
-        case StatusOnly(s)        => s
-        case StatusAndModel(s, _) => s
+        case StatusAndType(s, _) => s
       }
       super.append(action)
     }

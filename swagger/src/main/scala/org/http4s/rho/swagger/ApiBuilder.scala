@@ -77,8 +77,8 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
     // Get the result types and models
     val models = {
       val models = action.resultInfo.collect {
-        case ModelOnly(tpe) => tpe
-        case StatusAndModel(_, tpe) => tpe
+        case TypeOnly(tpe) => tpe
+        case StatusAndType(_, tpe) => tpe
       }.foldLeft(Set.empty[Model]){(s, tpe) =>
         TypeBuilder.collectModels(tpe, Set.empty, formats)
       }
@@ -87,8 +87,8 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
     }
 
     val responseMessages = action.resultInfo.toList.collect {
-      case ModelOnly(tpe) => ResponseMessage(200, "OK", Some(TypeBuilder.DataType(tpe).name))
-      case StatusAndModel(s, tpe) => ResponseMessage(s.code, s.reason, Some(TypeBuilder.DataType(tpe).name))
+      case TypeOnly(tpe) => ResponseMessage(200, "OK", Some(TypeBuilder.DataType(tpe).name))
+      case StatusAndType(s, tpe) => ResponseMessage(s.code, s.reason, Some(TypeBuilder.DataType(tpe).name))
       case StatusOnly(status) => ResponseMessage(status.code, status.reason)
     }
 

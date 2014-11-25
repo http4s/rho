@@ -348,7 +348,7 @@ object ResultMatcher extends Level0Impls {
 
     override def resultInfo: Set[ResultInfo] = {
       allTpes.flatMap { case (s, mw) =>
-        mw.resultInfo.map( t => StatusAndModel(s, t))
+        mw.resultInfo.map( t => StatusAndType(s, t))
       }.toSet
     }
 
@@ -418,7 +418,7 @@ object ResultMatcher extends Level0Impls {
 
   implicit def optionMatcher[O](implicit o: TypeTag[O], w: Writable[O]) = new ResultMatcher[Option[O]] {
     override val encodings: Set[MediaType] = w.contentType.toSet
-    override val resultInfo: Set[ResultInfo] = Set(StatusAndModel(Status.Ok, o.tpe.dealias),
+    override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
     override def conv(req: Request, r: Option[O]): Task[Result.ExResult] = r match {
       case Some(r) => ResponseGeneratorInstances.Ok(r)
@@ -428,7 +428,7 @@ object ResultMatcher extends Level0Impls {
 
   implicit def writableMatcher[O](implicit o: TypeTag[O], w: Writable[O]) = new ResultMatcher[O] {
     override def encodings: Set[MediaType] = w.contentType.toSet
-    override def resultInfo: Set[ResultInfo] = Set(StatusAndModel(Status.Ok, o.tpe.dealias))
+    override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
     override def conv(req: Request, r: O): Task[ResponseGeneratorInstances.OK[O]] = ResponseGeneratorInstances.Ok(r)
   }
 }
