@@ -27,7 +27,9 @@ object MyBuild extends Build {
 
   lazy val `rho-examples` = project
                         .in(file("examples"))
-                        .settings(buildSettings ++ Revolver.settings :+ exampleDeps :_*)
+                        .settings(buildSettings ++
+                                  Revolver.settings ++
+                                  Seq(exampleDeps, libraryDependencies += logbackClassic) :_*)
                         .dependsOn(`rho-swagger`, `rho-hal`)
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
