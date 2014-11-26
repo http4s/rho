@@ -166,11 +166,11 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
   protected def compileRouter[T <: HList, F](r: Router[T], f: F, hf: HListToFunc[T, F]): Result = {
     val readyf = hf.conv(f)
     val ff: Result = { req =>
-       pathAndValidate(req, r.path, r.query, r.headers).map(_ match {
+       pathAndValidate(req, r.path, r.query, r.headers).map {r: ParserResult[_] => r match {
            case ParserSuccess(stack) => readyf(req, stack.asInstanceOf[T])
            case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
            case ParserFailure(s)     => onBadRequest(s)
-       })
+       }}
     }
 
     ff
@@ -180,14 +180,14 @@ private[rho] class RouteExecutor[F] extends ExecutableCompiler
     val actionf = hf.conv(f)        // Cache our converted function
     val ff: Result = { req =>
       // TODO: how to handle decoder error, using the Task error handling, special exceptions, or disjunctions?
-      pathAndValidate(req, r.router.path, r.router.query, r.headers).map(_ match {
+      pathAndValidate(req, r.router.path, r.router.query, r.headers).map {
         case ParserSuccess(stack) =>
-          r.decoder.decode(req)                                  // Decode the body of the `Request`
-            .flatMap( r => actionf(req,r::stack.asInstanceOf[T])) // append body to path and query and feed to the actionf
+          // Decode the body of the `Request` and append body to path and query and feed to the actionf
+          r.decoder.decode(req).flatMap( r => actionf(req,r::stack.asInstanceOf[T]))
 
         case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
         case ParserFailure(s)     => onBadRequest(s)
-      })
+      }
     }
 
     ff

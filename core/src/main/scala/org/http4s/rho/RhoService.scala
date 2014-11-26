@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.{NoMatch, ValidationFailure, ParserFailure, ParserSuccess}
+import org.http4s.rho.bits._
 import org.http4s.server.{Service, HttpService}
 
 import org.log4s.getLogger
@@ -27,8 +27,9 @@ trait RhoService extends bits.MethodAliases
   }
 
   private def findRoute(req: Request): Task[Option[Response]] = {
-    logger.info(s"Request: ${req.method}:${req.uri}")
-    __tree.getResult(req) match {
+    logger.trace(s"Request: ${req.method}:${req.uri}")
+    val routeResult: RouteResult[__tree.Value] = __tree.getResult(req)
+    routeResult match {
       case NoMatch              => Task.now(None)
       case ParserSuccess(t)     => attempt(t).map(Some(_))
       case ParserFailure(s)     => onBadRequest(s).map(Some(_))

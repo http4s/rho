@@ -18,7 +18,7 @@ final class RhoPathTree extends PathTree {
 
   override type Value = () => Task[Response]
 
-  override def toString() = methods.toString()
+  override def toString = methods.toString()
 
   /** Generates a list of tokens that represent the path */
   override def keyToPath(key: Key): List[String] = splitPath(key.pathInfo)
@@ -26,7 +26,7 @@ final class RhoPathTree extends PathTree {
   def appendAction[T <: HList, F](action: RhoAction[T, F]): Unit = {
     val m = action.method
     val newLeaf = makeLeaf(action)
-    val newNode = methods.get(m).getOrElse(HeadNode()).append(action.path, newLeaf)
+    val newNode = methods.getOrElse(m, HeadNode()).append(action.path, newLeaf)
     methods(m) = newNode
   }
 
@@ -44,7 +44,7 @@ final class RhoPathTree extends PathTree {
           for {
             i <- TempTools.runQuery(req, query, pathstack)
             j <- TempTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
-          } yield (() => action.hf.conv(action.f)(req, j.asInstanceOf[T]))
+          } yield () => action.hf.conv(action.f)(req, j.asInstanceOf[T])
         })
 
       case c @ CodecRouter(_, parser) =>
@@ -54,13 +54,10 @@ final class RhoPathTree extends PathTree {
             for {
               i <- TempTools.runQuery(req, c.router.query, pathstack)
               j <- TempTools.runValidation(req, c.headers, i)
-            } yield (() => {
-              parser.decode(req).flatMap { // `asInstanceOf` to turn the untyped HList to type T
-                case ParserSuccess(r)     => actionf(req, (r :: pathstack).asInstanceOf[T])
-                case ParserFailure(e)     => TempTools.onBadRequest(s"Decoding error: $e")
-                case ValidationFailure(e) => TempTools.onBadRequest(s"Validation failure: $e")
-              }
-            })
+            } yield () => parser.decode(req).flatMap { body =>
+              // `asInstanceOf` to turn the untyped HList to type T
+              actionf(req, (body :: pathstack).asInstanceOf[T])
+            }
         })
     }
   }
