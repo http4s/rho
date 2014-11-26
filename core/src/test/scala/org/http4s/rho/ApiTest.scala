@@ -5,7 +5,7 @@ import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 
 import org.http4s.rho.bits.HeaderAST.{TypedHeader, HeaderAnd}
-import org.http4s.rho.bits.{ParserSuccess, ValidationFailure}
+import org.http4s.rho.bits.{RhoPathTree, ParserSuccess, ValidationFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -21,7 +21,16 @@ class ApiTest extends Specification {
   val RequireETag = require(Header.ETag)
   val RequireNonZeroLen = requireThat(Header.`Content-Length`){ h => h.length != 0 }
 
-  def fetch(p: Option[Task[Response]]) = p.get.run.headers.get(Header.ETag).get.value
+  def fetchETag(p: Task[Option[Response]]): String = {
+    val resp = p.run
+
+    val mvalue = for {
+      r <- resp
+      h <- r.headers.get(Header.ETag)
+    } yield h.value
+
+    mvalue.getOrElse(sys.error("No ETag: " + resp))
+  }
 
   "RhoDsl bits" should {
     "Combine validators" in {
@@ -30,7 +39,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
-      new RouteExecutor().ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq) should_==
+      RhoPathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq) should_==
                 ValidationFailure(s"Missing header: ${etag.name}")
     }
 
@@ -38,24 +47,24 @@ class ApiTest extends Specification {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
+      RhoPathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(Header.`Content-Length`) && RequireETag
-        new RouteExecutor().ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
+        RhoPathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
       }, {
         val c3 = capture(Header.`Content-Length`) && capture(Header.ETag)
-        new RouteExecutor().ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
+        RhoPathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = requireMap(Header.`Content-Length`)(_.length)
-      new RouteExecutor().ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
+      RhoPathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
     }
 
     "Append headers to a Route" in {
@@ -77,7 +86,7 @@ class ApiTest extends Specification {
         .withBody("cool")
         .run
 
-      val resp = route(req).get.run
+      val resp = route(req).run.get
       resp.headers.get(Header.ETag).get.value should_== "foo"
 
     }
@@ -89,10 +98,10 @@ class ApiTest extends Specification {
       val f = GET / (p1 || p2) runWith { (s: String) => Ok("").withHeaders(Header.ETag(s)) }
 
       val req1 = Request(uri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
-      fetch(f(req1)) should_== "two"
+      fetchETag(f(req1)) should_== "two"
 
       val req2 = Request(uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
-      fetch(f(req2)) should_== "four"
+      fetchETag(f(req2)) should_== "four"
     }
 
     "Execute a complicated route" in {
@@ -113,7 +122,7 @@ class ApiTest extends Specification {
         .withBody("cool")
         .run
 
-      val resp = route(req).get.run
+      val resp = route(req).run.get
       resp.headers.get(Header.ETag).get.value should_== "foo"
     }
 
@@ -121,7 +130,7 @@ class ApiTest extends Specification {
       val route = GET / "foo" runWith { () => SwitchingProtocols() }
       val req = Request(GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
 
-      val result = route(req).get.run
+      val result = route(req).run.get
       result.headers.size must_== 0
       result.status must_== Status.SwitchingProtocols
     }
@@ -142,15 +151,15 @@ class ApiTest extends Specification {
 
   "PathValidator" should {
 
-    def check(p: Option[Task[Response]], s: String) = {
-      p.get.run.headers.get(Header.ETag).get.value should_== s
+    def check(p: Task[Option[Response]], s: String) = {
+      p.run.get.headers.get(Header.ETag).get.value should_== s
     }
 
     "traverse a captureless path" in {
       val stuff = GET / "hello"
       val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
-      val f: Request => Option[Task[Response]] = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
+      val f = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
       check(f(req), "foo")
     }
 
@@ -158,8 +167,8 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request(uri = Uri.fromString("/hello/world").getOrElse(sys.error("Failed.")))
 
-      val f: Request => Option[Task[Response]] = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
-      val r = f(req)
+      val f = stuff runWith { () => Ok("Cool.").withHeaders(Header.ETag("foo")) }
+      val r = f(req).run
       r should_== None
     }
 
@@ -167,7 +176,7 @@ class ApiTest extends Specification {
       val stuff = GET / 'hello
       val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
-      val f: Request => Option[Task[Response]] = stuff runWith { str: String => Ok("Cool.").withHeaders(Header.ETag(str)) }
+      val f = stuff runWith { str: String => Ok("Cool.").withHeaders(Header.ETag(str)) }
       check(f(req), "hello")
     }
 
@@ -199,12 +208,12 @@ class ApiTest extends Specification {
 
   "Query validators" should {
     "get a query string" in {
-      val path = POST / "hello" +? param[Int]("jimbo")
+      val path = GET / "hello" +? param[Int]("jimbo")
       val req = Request(uri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
 
       val route = path runWith { i: Int => Ok("stuff").withHeaders(Header.ETag((i + 1).toString)) }
 
-      fetch(route(req)) should_== "33"
+      fetchETag(route(req)) should_== "33"
 
     }
   }
@@ -222,11 +231,11 @@ class ApiTest extends Specification {
         Ok("stuff").withHeaders(Header.ETag(str))
       }
 
-      fetch(route(req)) should_== "foo"
+      fetchETag(route(req)) should_== "foo"
     }
 
     "Fail on a header" in {
-      val path = POST / "hello"
+      val path = GET / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 2}
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
       val req = Request(uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")), body = body)
@@ -237,7 +246,7 @@ class ApiTest extends Specification {
       }
 
       val result = route(req)
-      result.get.run.status should_== Status.BadRequest
+      result.run.get.status should_== Status.BadRequest
     }
   }
 }
