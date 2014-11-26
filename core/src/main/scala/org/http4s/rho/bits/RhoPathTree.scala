@@ -40,25 +40,24 @@ final class RhoPathTree extends PathTree {
   private def makeLeaf[T <: HList, F, O](action: RhoAction[T, F]): Leaf = {
     action.router match {
       case Router(method, _, query, vals) =>
-        SingleLeaf(query, vals, None, (req, pathstack) => {
+        Leaf(query, vals, None){ (req, pathstack) =>
           for {
             i <- TempTools.runQuery(req, query, pathstack)
             j <- TempTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
           } yield () => action.hf.conv(action.f)(req, j.asInstanceOf[T])
-        })
+        }
 
       case c @ CodecRouter(_, parser) =>
         val actionf = action.hf.conv(action.f)
-        SingleLeaf(c.router.query, c.headers, Some(parser), {
-          (req, pathstack) =>
-            for {
-              i <- TempTools.runQuery(req, c.router.query, pathstack)
-              j <- TempTools.runValidation(req, c.headers, i)
-            } yield () => parser.decode(req).flatMap { body =>
-              // `asInstanceOf` to turn the untyped HList to type T
-              actionf(req, (body :: pathstack).asInstanceOf[T])
-            }
-        })
+        Leaf(c.router.query, c.headers, Some(parser)){ (req, pathstack) =>
+          for {
+            i <- TempTools.runQuery(req, c.router.query, pathstack)
+            j <- TempTools.runValidation(req, c.headers, i)
+          } yield () => parser.decode(req).flatMap { body =>
+            // `asInstanceOf` to turn the untyped HList to type T
+            actionf(req, (body :: pathstack).asInstanceOf[T])
+          }
+        }
     }
   }
 

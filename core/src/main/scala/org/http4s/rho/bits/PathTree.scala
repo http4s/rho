@@ -26,11 +26,18 @@ trait PathTree {
 
   /** Generates a list of tokens that represent the path */
   def keyToPath(key: Key): List[String]
-  
 
-  sealed protected trait Leaf {
+  object Leaf {
+    def apply(query: QueryRule, vals: HeaderRule, codec: Option[EntityDecoder[_]])
+                      (f: (Key, HList) => ParserResult[Value]): Leaf = SingleLeaf(query, vals, codec, f)
+  }
+
+  /** Leaves of the PathTree */
+  sealed trait Leaf {
+    /** Attempt to match this leaf */
     def attempt(req: Key, stack: HList): ParserResult[Value]
 
+    /** Concatenate this leaf with another, giving the first precedence */
     final def ++(l: Leaf): Leaf = (this, l) match {
       case (s1@SingleLeaf(_, _, _, _), s2@SingleLeaf(_, _, _, _)) => ListLeaf(s1 :: s2 :: Nil)
       case (s1@SingleLeaf(_, _, _, _), ListLeaf(l)) => ListLeaf(s1 :: l)
@@ -39,10 +46,10 @@ trait PathTree {
     }
   }
 
-  final protected case class SingleLeaf(query: QueryRule,
-                                      vals: HeaderRule, // TODO: For documentation purposes
+  final private case class SingleLeaf(query: QueryRule,
+                                       vals: HeaderRule, // TODO: For documentation purposes
                                       codec: Option[EntityDecoder[_]], // For documentation purposes
-                                      f: (Key, HList) => ParserResult[Value]) extends Leaf {
+                                          f: (Key, HList) => ParserResult[Value]) extends Leaf {
     override def attempt(req: Key, stack: HList): ParserResult[Value] = f(req, stack)
   }
 
