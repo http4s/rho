@@ -1,6 +1,5 @@
 package org.http4s.rho.bits
 
-
 sealed trait RouteResult[+T]
 
 case object NoMatch extends RouteResult[Nothing]
@@ -26,4 +25,6 @@ sealed trait ParserResult[+T] extends RouteResult[T] {
 
 case class ParserSuccess[+T](result: T) extends ParserResult[T]
 case class ParserFailure(reason: String) extends ParserResult[Nothing]
+// TODO: I think the reason for failure could be made easier to use with specific failure types
 case class ValidationFailure(reason: String) extends ParserResult[Nothing]
+

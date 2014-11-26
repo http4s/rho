@@ -42,8 +42,8 @@ final class RhoPathTree extends PathTree {
       case Router(method, _, query, vals) =>
         SingleLeaf(query, vals, None, (req, pathstack) => {
           for {
-            i <- TempTools.runQuery(req, query, pathstack)
-            j <- TempTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
+            i <- ValidationTools.runQuery(req, query, pathstack)
+            j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
           } yield () => action.hf.conv(action.f)(req, j.asInstanceOf[T])
         })
 
@@ -52,11 +52,11 @@ final class RhoPathTree extends PathTree {
         SingleLeaf(c.router.query, c.headers, Some(parser), {
           (req, pathstack) =>
             for {
-              i <- TempTools.runQuery(req, c.router.query, pathstack)
-              j <- TempTools.runValidation(req, c.headers, i)
+              i <- ValidationTools.runQuery(req, c.router.query, pathstack)
+              j <- ValidationTools.runValidation(req, c.headers, i)
             } yield () => parser.decode(req).flatMap { body =>
               // `asInstanceOf` to turn the untyped HList to type T
-              actionf(req, (body :: pathstack).asInstanceOf[T])
+              actionf(req, (body :: j).asInstanceOf[T])
             }
         })
     }
@@ -64,7 +64,9 @@ final class RhoPathTree extends PathTree {
 
 }
 
-private object RhoPathTree {
+private[rho] object RhoPathTree {
+
+  object ValidationTools extends ExecutableCompiler
 
   def splitPath(path: String): List[String] = {
     val buff = new ListBuffer[String]
