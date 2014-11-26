@@ -14,12 +14,6 @@ import scalaz.concurrent.Task
 
 
 trait ExecutableCompiler {
-  def missingHeader(key: HeaderKey): String = s"Missing header: ${key.name}"
-
-  def missingQuery(key: String): String = s"Missing query param: $key"
-
-  def invalidHeader(h: Header): String = s"Invalid header: $h"
-
   def onBadRequest(reason: String): Task[Response] = {
     val w = Writable.stringWritable
     w.toEntity(reason).map{ entity =>
@@ -38,8 +32,12 @@ trait ExecutableCompiler {
 
   //////////////////////// Stuff for executing the route //////////////////////////////////////
 
+  /** Walks the validation tree */
+  def ensureValidHeaders(v: HeaderRule, req: Request): ParserResult[HList] =
+    runValidation(req, v, HNil)
+
   /** The untyped guts of ensureValidHeaders and friends */
-  protected def runValidation(req: Request, v: HeaderRule, stack: HList): ParserResult[HList] = {
+  def runValidation(req: Request, v: HeaderRule, stack: HList): ParserResult[HList] = {
     import bits.HeaderAST.MetaCons
     v match {
       case HeaderAnd(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
@@ -48,17 +46,17 @@ trait ExecutableCompiler {
 
       case HeaderCapture(key) => req.headers.get(key) match {
         case Some(h) => ParserSuccess(h::stack)
-        case None => ValidationFailure(missingHeader(key))
+        case None => ValidationFailure(s"Missing header: ${key.name}")
       }
 
       case HeaderRequire(key, f) => req.headers.get(key) match {
-        case Some(h) => if (f(h)) ParserSuccess(stack) else ValidationFailure(invalidHeader(h))
-        case None => ValidationFailure(missingHeader(key))
+        case Some(h) => if (f(h)) ParserSuccess(stack) else ValidationFailure(s"Invalid header: $h")
+        case None => ValidationFailure(s"Missing header: ${key.name}")
       }
 
       case HeaderMapper(key, f) => req.headers.get(key) match {
         case Some(h) => ParserSuccess(f(h)::stack)
-        case None => ValidationFailure(missingHeader(key))
+        case None => ValidationFailure(s"Missing header: ${key.name}")
       }
 
       case MetaCons(r, _) => runValidation(req, r, stack)
@@ -67,7 +65,7 @@ trait ExecutableCompiler {
     }
   }
 
-  protected def runQuery(req: Request, v: QueryRule, stack: HList): ParserResult[HList] = {
+  def runQuery(req: Request, v: QueryRule, stack: HList): ParserResult[HList] = {
     import QueryAST.MetaCons
     v match {
       case QueryAnd(a, b) => runQuery(req, a, stack).flatMap(runQuery(req, b, _))
@@ -81,135 +79,4 @@ trait ExecutableCompiler {
       case EmptyQuery => ParserSuccess(stack)
     }
   }
-
-  /** Runs the URL and pushes values to the HList stack */
-  protected def runPath(req: Request, v: PathRule, path: List[String]): Option[ParserResult[HList]] = {
-
-    // setup a stack for the path
-    var currentPath = path
-    def pop = {
-      val head = currentPath.head
-      currentPath = currentPath.tail
-      head
-    }
-
-    // WARNING: returns null if not matched but no nulls should escape the runPath method
-    def go(v: PathRule, stack: HList): ParserResult[HList] = {
-      import PathAST.MetaCons
-      v match {
-        case PathAnd(a, b) =>
-          val v = go(a, stack)
-          if (v == null) null
-          else if (!currentPath.isEmpty    ||
-            b.isInstanceOf[PathAnd]        ||
-            b == CaptureTail) v.flatMap(go(b, _))
-          else null
-
-        case PathOr(a, b) =>
-          val oldPath = currentPath
-          val v = go(a, stack)
-          if (v != null) v
-          else {
-            currentPath = oldPath // reset the path stack
-            go(b, stack)
-          }
-
-        case PathCapture(_, f, _) => f.parse(pop).map{ i => i::stack}
-
-        case PathMatch("") if currentPath.head.length == 0 => // Needs to be the empty path
-          pop
-          ParserSuccess(stack)
-
-
-        case PathMatch("") => ParserSuccess(stack)    // "" is consider a NOOP
-
-        case PathMatch(s) =>
-          if (pop == s) ParserSuccess(stack)
-          else null
-
-
-
-        case CaptureTail =>
-          val p = currentPath
-          currentPath = Nil
-          ParserSuccess(p::stack)
-
-        case MetaCons(r, _) => go(r, stack)
-      }
-    }
-
-    if (!path.isEmpty) {
-      val r = go(v, HNil)
-      if (currentPath.isEmpty) r match {
-        case null => None
-//        case r@ ParserSuccess(_) => Some(r)
-        case r => Some(r)
-      } else None
-    }
-    else None
-  }
-
-}
-
-private[rho] class RouteExecutor[F] extends ExecutableCompiler
-                                       with CompileService[F, Request=>Option[Task[Response]]] {
-
-  private type Result = Request => Option[Task[Response]]
-
-  ///////////////////// Route execution bits //////////////////////////////////////
-
-  override def compile(action: RhoAction[_ <: HList, F]): Result = action match {
-    case RhoAction(r@ Router(_,_,_,_), f, hf)  => compileRouter(r, f, hf)
-    case RhoAction(r@ CodecRouter(_,_), f, hf) => compileCodecRouter(r, f, hf)
-  }
-
-  protected def compileRouter[T <: HList, F](r: Router[T], f: F, hf: HListToFunc[T, F]): Result = {
-    val readyf = hf.conv(f)
-    val ff: Result = { req =>
-       pathAndValidate(req, r.path, r.query, r.headers).map {r: ParserResult[_] => r match {
-           case ParserSuccess(stack) => readyf(req, stack.asInstanceOf[T])
-           case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
-           case ParserFailure(s)     => onBadRequest(s)
-       }}
-    }
-
-    ff
-  }
-  
-  protected def compileCodecRouter[T <: HList, F, R](r: CodecRouter[T, R], f: F, hf: HListToFunc[R::T, F]): Result = {
-    val actionf = hf.conv(f)        // Cache our converted function
-    val ff: Result = { req =>
-      // TODO: how to handle decoder error, using the Task error handling, special exceptions, or disjunctions?
-      pathAndValidate(req, r.router.path, r.router.query, r.headers).map {
-        case ParserSuccess(stack) =>
-          // Decode the body of the `Request` and append body to path and query and feed to the actionf
-          r.decoder.decode(req).flatMap( r => actionf(req,r::stack.asInstanceOf[T]))
-
-        case ValidationFailure(s) => onBadRequest(s"Failed validation: $s")
-        case ParserFailure(s)     => onBadRequest(s)
-      }
-    }
-
-    ff
-  }
-
-  private def pathAndValidate(req: Request,
-                             path: PathRule,
-                            query: QueryRule,
-                                v: HeaderRule): Option[ParserResult[HList]] =
-  {
-    val p = parsePath(req.uri.path)
-
-    runPath(req, path, p).map { r =>
-      for {
-        i <- r
-        j <- runQuery(req, query, i)
-        k <- runValidation(req, v, j)
-      } yield k
-    }
-  }
-
-  /** Walks the validation tree */
-  def ensureValidHeaders(v: HeaderRule, req: Request): ParserResult[HList] =
-    runValidation(req, v, HNil)
 }
