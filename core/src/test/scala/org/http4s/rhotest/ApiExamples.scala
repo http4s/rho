@@ -91,6 +91,11 @@ class ApiExamples extends Specification {
           if (true) Ok("One result")
           else NotFound(<html><body>Boo... Not found...</body></html>)
         }
+
+        // Using decoders you can parse the body as well
+        POST / "postSomething" ^ EntityDecoder.formEncoded |>> { m: Map[String, Seq[String]] =>
+          Ok(s"You posted these things: $m")
+        }
       }
 
       true should_== true

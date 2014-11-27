@@ -220,14 +220,35 @@ class ApiTest extends Specification {
 
   "Decoders" should {
     "Decode a body" in {
-      val path = POST / "hello"
       val reqHeader = requireThat(Header.`Content-Length`){ h => h.length < 10 }
 
-      val req = Request(POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
+      val path = POST / "hello" >>> reqHeader
+
+
+      val req1 = Request(POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
                     .withBody("foo")
                     .run
 
-      val route = path.validate(reqHeader).decoding(EntityDecoder.text) runWith { str: String =>
+      val req2 = Request(POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
+        .withBody("0123456789") // length 10
+        .run
+
+      val route = path.decoding(EntityDecoder.text) runWith { str: String =>
+        Ok("stuff").withHeaders(Header.ETag(str))
+      }
+
+      fetchETag(route(req1)) should_== "foo"
+      route(req2).run.get.status should_== Status.BadRequest
+    }
+
+    "Allow the infix operator syntax" in {
+      val path = POST / "hello"
+
+      val req = Request(POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
+        .withBody("foo")
+        .run
+
+      val route = path ^ EntityDecoder.text runWith { str: String =>
         Ok("stuff").withHeaders(Header.ETag(str))
       }
 
