@@ -3,7 +3,10 @@ package rho
 
 import org.specs2.mutable.Specification
 import java.util.concurrent.atomic.AtomicInteger
+import scodec.bits.ByteVector
+
 import scalaz.concurrent.Task
+import scalaz.stream.Process
 
 class RhoServiceSpec extends Specification with RequestRunner {
 
@@ -270,7 +273,25 @@ class RhoServiceSpec extends Specification with RequestRunner {
       getBody(service(req2).run.get.body) must_== "none"
     }
 
+    "work with all syntax elements" in {
+      val reqHeader = requireThat(Header.`Content-Length`){ h => h.length <= 3 }
 
+      val srvc = new RhoService {
+        POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text |>> {
+          (p1: Int, param: String, body: String) => Ok("success")
+        }
+      }
+
+      val body = Process.emit(ByteVector.apply("foo".getBytes()))
+      val uri = Uri.fromString("/foo/1?param=myparam").getOrElse(sys.error("Failed."))
+      val req = Request(method = Method.POST, uri = uri, body = body)
+                    .withHeaders(Headers(Header.`Content-Type`(MediaType.`text/plain`),
+                                         Header.`Content-Length`("foo".length)))
+
+      val r = srvc.toService(req)
+      getBody(r.run.get.body) must_== "success"
+
+    }
 
 
   ////////////////////////////////////////////////////

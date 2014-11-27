@@ -40,6 +40,8 @@ case class Router[T <: HList](method: Method,
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(this, f, hf)
 
+  def ^[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = decoding(decoder)
+
   def decoding[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
 }
 
@@ -61,6 +63,8 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
   override def method: Method = router.method
 
   override def query: QueryRule = router.query
+
+  def ^[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = decoding(decoder2)
 
   def decoding[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = CodecRouter(router, decoder orElse decoder2)
 
