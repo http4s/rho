@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 import java.util.concurrent.atomic.AtomicInteger
 import scalaz.concurrent.Task
 
-class RhoServiceTest extends Specification with RequestRunner {
+class RhoServiceSpec extends Specification with RequestRunner {
 
   def Get(s: String, h: Header*): Request = Request(Method.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 

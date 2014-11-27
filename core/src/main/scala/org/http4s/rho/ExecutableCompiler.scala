@@ -1,32 +1,15 @@
 package org.http4s
 package rho
 
-import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST._
 
-import org.http4s.Status.{BadRequest, InternalServerError}
 import org.http4s.rho.bits._
 
-import shapeless.{HNil, HList, ::}
-
-import scalaz.concurrent.Task
+import shapeless.{ HNil, HList, :: }
 
 
 trait ExecutableCompiler {
-  def onBadRequest(reason: String): Task[Response] = {
-    val w = Writable.stringWritable
-    w.toEntity(reason).map{ entity =>
-      val hs = entity.length match {
-        case Some(l) => w.headers.put(Header.`Content-Length`(l))
-        case None    => w.headers
-      }
-      Response(BadRequest, body = entity.body, headers = hs)
-    }
-  }
-
-  def onError(t: Throwable): Task[Response] =
-      Task.now(Response(InternalServerError))
 
   def parsePath(path: String): List[String] = path.split("/").toList
 

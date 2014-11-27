@@ -2,14 +2,13 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits._
-import org.http4s.server.{Service, HttpService}
+import org.http4s.server.{ Service, HttpService }
 
 import org.log4s.getLogger
 import shapeless.HList
 import scalaz.concurrent.Task
 
 trait RhoService extends bits.MethodAliases
-                    with ExecutableCompiler
                     with bits.ResponseGeneratorInstances {
 
   final protected val logger = getLogger
@@ -46,16 +45,20 @@ trait RhoService extends bits.MethodAliases
     catch { case t: Throwable => onError(t) }
   }
 
+  private def onBadRequest(s: String): Task[Response] =
+    genMessage(Status.BadRequest, s)
 
-  override def onError(t: Throwable): Task[Response] = {
-    logger.error(t)("Error during route execution.")
+  def onError(t: Throwable): Task[Response] =
+    genMessage(Status.InternalServerError, t.getMessage)
+
+  private def genMessage(status: Status, reason: String): Task[Response] = {
     val w = Writable.stringWritable
-    w.toEntity(t.getMessage).map { entity =>
+    w.toEntity(reason).map{ entity =>
       val hs = entity.length match {
         case Some(l) => w.headers.put(Header.`Content-Length`(l))
         case None    => w.headers
       }
-      Response(Status.InternalServerError, body = entity.body, headers = hs)
+      Response(status, body = entity.body, headers = hs)
     }
   }
 }
