@@ -30,6 +30,7 @@ case class Router[T <: HList](method: Method,
                        extends RouteExecutable[T]
                           with HeaderAppendable[T]
                           with RoutingEntity[T]
+                          with Decodable[T, Nothing]
 {
 
   type Self = Router[T]
@@ -40,15 +41,14 @@ case class Router[T <: HList](method: Method,
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(this, f, hf)
 
-  def ^[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = decoding(decoder)
-
-  def decoding[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
+  override def decoding[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(this, decoder)
 }
 
 case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])
            extends HeaderAppendable[T]
            with RouteExecutable[R::T]
            with RoutingEntity[R::T]
+           with Decodable[T, R]
 {
   type Self = CodecRouter[T, R]
 
@@ -64,9 +64,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override def query: QueryRule = router.query
 
-  def ^[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = decoding(decoder2)
-
-  def decoding[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = CodecRouter(router, decoder orElse decoder2)
+  override def decoding[R2 >: R](decoder2: EntityDecoder[R2]): CodecRouter[T, R2] = CodecRouter(router, decoder orElse decoder2)
 
   override val headers: HeaderRule = {
     if (!decoder.consumes.isEmpty) {
