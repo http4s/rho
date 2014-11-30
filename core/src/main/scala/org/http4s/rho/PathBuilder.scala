@@ -58,7 +58,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   def validate[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
     Router(method, path, EmptyQuery, h2.rule)
 
-  override def decoding[R](dec: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(toAction, dec)
+  override def decoding[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(toAction, decoder)
 
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     new RhoAction(Router(method, path, EmptyQuery, EmptyHeaderRule), f, hf)
