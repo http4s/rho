@@ -22,6 +22,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   with RouteExecutable[T]
   with Decodable[T, Nothing]
   with UriConvertible
+  with Validatable[T]
 {
   type Self = PathBuilder[T]
 
@@ -50,12 +51,9 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T2, T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, PathAnd(path, t.path), t.query)
 
-  override def >>>[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
-    validate(h2)
-
   def toAction: Router[T] = validate(TypedHeader[HNil](EmptyHeaderRule))
 
-  def validate[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
+  override def validate[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
     Router(method, path, EmptyQuery, h2.rule)
 
   override def decoding[R](decoder: EntityDecoder[R]): CodecRouter[T, R] = CodecRouter(toAction, decoder)
