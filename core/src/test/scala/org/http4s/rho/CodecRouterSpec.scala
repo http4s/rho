@@ -24,7 +24,7 @@ class CodecRouterSpec extends Specification {
     "Decode a valid body" in {
 
       val b = Process.emit(ByteVector.view("hello".getBytes))
-      val h: Headers = Headers(Header.`Content-Type`(MediaType.`text/plain`))
+      val h = Headers(Header.`Content-Type`(MediaType.`text/plain`))
       val req = Request(Method.POST, Uri(path = "/foo"), headers = h, body = b)
       val result = service(req).run.get
       val (bb, s) = bodyAndStatus(result)
@@ -46,7 +46,7 @@ class CodecRouterSpec extends Specification {
 
     "Fail on invalid body" in {
       val b = Process.emit(ByteVector.view("hello =".getBytes))
-      val h: Headers = Headers(Header.`Content-Type`(MediaType.`application/x-www-form-urlencoded`))
+      val h = Headers(Header.`Content-Type`(MediaType.`application/x-www-form-urlencoded`))
       val req = Request(Method.POST, Uri(path = "/form"), headers = h, body = b)
 
       service(req).run.get must throwA[DecodingException]
