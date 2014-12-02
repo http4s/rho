@@ -117,7 +117,7 @@ object MyBuild extends Build {
 }
 
 object Dependencies {
-  lazy val http4sVersion = "0.4.1"
+  lazy val http4sVersion = "0.4.2"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
@@ -125,9 +125,9 @@ object Dependencies {
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
   lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
   lazy val config              = "com.typesafe"                % "config"                % "1.2.1"
-  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.2.10"
-  lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % "3.2.10"
-  lazy val swaggerCore         = "com.wordnik"                %% "swagger-core"          % "1.3.10"
+  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.2.11"
+  lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
+  lazy val swaggerCore         = "com.wordnik"                %% "swagger-core"          % "1.3.11"
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
   lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
   lazy val uadetector          = "net.sf.uadetector" % "uadetector-resources" % "2014.09"
