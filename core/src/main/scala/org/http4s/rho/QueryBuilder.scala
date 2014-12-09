@@ -10,12 +10,13 @@ import shapeless.ops.hlist.Prepend
 import shapeless.{ ::, HList }
 
 case class QueryBuilder[T <: HList](method: Method,
-  path: PathRule,
-  query: QueryRule)
+                                      path: PathRule,
+                                     query: QueryRule)
   extends RouteExecutable[T]
   with HeaderAppendable[T]
-  with UriConvertible {
-  override type Self = QueryBuilder[T]
+  with UriConvertible
+{
+  override type HeaderAppendResult[T <: HList] = Router[T]
 
   override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
     RhoAction(Router(method, path, query, headers), f, hf)

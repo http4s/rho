@@ -32,8 +32,7 @@ case class Router[T <: HList](method: Method,
                           with RoutingEntity[T]
                           with Decodable[T, Nothing]
 {
-
-  type Self = Router[T]
+  override type HeaderAppendResult[T <: HList] = Router[T]
 
   override def >>>[T2 <: HList](v: TypedHeader[T2])(implicit prep1: Prepend[T2, T]): Router[prep1.Out] =
     Router(method, path, query, HeaderAnd(headers, v.rule))
@@ -50,10 +49,13 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
            with RoutingEntity[R::T]
            with Decodable[T, R]
 {
-  type Self = CodecRouter[T, R]
+  override type HeaderAppendResult[T <: HList] = CodecRouter[T, R]
 
   override def >>>[T2 <: HList](v: TypedHeader[T2])(implicit prep1: Prepend[T2, T]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
+
+  /** Append the header to the builder, generating a new typed representation of the route */
+//  override def >>>[T2 <: HList](header: TypedHeader[T2])(implicit prep: Prepend[T2, T]): CodecRouter[prep.Out, R] = ???
 
   override def makeAction[F](f: F, hf: HListToFunc[R::T, F]): RhoAction[R::T, F] =
     new RhoAction(this, f, hf)
