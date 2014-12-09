@@ -29,7 +29,11 @@ object MyBuild extends Build {
                         .in(file("examples"))
                         .settings(buildSettings ++
                                   Revolver.settings ++
-                                  Seq(exampleDeps, libraryDependencies += logbackClassic, dontPublish) :_*)
+                                  Seq(
+                                    exampleDeps,
+                                    libraryDependencies += logbackClassic,
+                                    dontPublish
+                                  ) :_*)
                         .dependsOn(`rho-swagger`, `rho-hal`)
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
@@ -58,7 +62,7 @@ object MyBuild extends Build {
         license,
 
         libraryDependencies ++= Seq(
-          http4sServer,
+          http4sServer % "provided",
           logbackClassic % "test",
           scalazSpecs2 % "test"
         )
@@ -118,8 +122,9 @@ object MyBuild extends Build {
 
 object Dependencies {
   lazy val http4sVersion = "0.4.2"
+  lazy val http4sServerVersion = http4sVersion.dropRight(1) + "0"
 
-  lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
+  lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sServerVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blazeserver"    % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
