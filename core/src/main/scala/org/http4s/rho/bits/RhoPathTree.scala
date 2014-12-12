@@ -53,7 +53,7 @@ final class RhoPathTree extends PathTree {
           for {
             i <- ValidationTools.runQuery(req, c.router.query, pathstack)
             j <- ValidationTools.runValidation(req, c.headers, i)
-          } yield () => parser.decode(req).flatMap { body =>
+          } yield () => parser.apply(req) { body =>
             // `asInstanceOf` to turn the untyped HList to type T
             actionf(req, (body :: j).asInstanceOf[T])
           }

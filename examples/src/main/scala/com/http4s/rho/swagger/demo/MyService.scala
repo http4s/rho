@@ -6,7 +6,7 @@ import org.http4s.Uri
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
 
-import JsonWritable.AutoSerializable
+import JsonEncoder.AutoSerializable
 import scalaz._
 import scalaz.Scalaz._
 import scalaz.concurrent.Task

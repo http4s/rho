@@ -7,7 +7,7 @@ import scala.language.higherKinds
 
 
 import org.http4s.Header.`Content-Length`
-import org.http4s.Writable.Entity
+import org.http4s.EntityEncoder.Entity
 import org.http4s._
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
@@ -22,8 +22,8 @@ object ResponseGenerator {
 
   object EmptyRe {
     // This is just a dummy so that the implicits in ResultMatcher will work.
-    implicit val w: Writable[EmptyRe] = {
-      Writable.simple[EmptyRe](_ => ByteVector.empty)
+    implicit val w: EntityEncoder[EmptyRe] = {
+      EntityEncoder.simple[EmptyRe]()(_ => ByteVector.empty)
     }
   }
 }
@@ -44,11 +44,11 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
   type T[_] <: Result.BaseResult
 
   /** Generate a [[Result]] that carries the type information */
-  def apply[A](body: A)(implicit w: Writable[A]): Task[T[A]] =
+  def apply[A](body: A)(implicit w: EntityEncoder[A]): Task[T[A]] =
     apply(body, Headers.empty)(w)
 
   /** Generate a [[Result]] that carries the type information */
-  def apply[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[T[A]] = {
+  def apply[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[T[A]] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
         case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))
@@ -59,11 +59,11 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
   }
 
   /** Generate wrapper free [[Response]] */
-  def pure[A](body: A)(implicit w: Writable[A]): Task[Response] =
+  def pure[A](body: A)(implicit w: EntityEncoder[A]): Task[Response] =
     pure(body, Headers.empty)(w)
 
   /** Generate wrapper free [[Response]] */
-  def pure[A](body: A, headers: Headers)(implicit w: Writable[A]): Task[Response] = {
+  def pure[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[Response] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
         case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))

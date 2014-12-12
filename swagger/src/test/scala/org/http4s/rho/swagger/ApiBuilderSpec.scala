@@ -160,10 +160,10 @@ class ApiBuilderSpec extends Specification {
       implicit val jsonFormats: Formats =
         DefaultFormats
 
-      implicit def jsonWritable: Writable[Renderable] =
-        Writable
-          .stringWritable(Charset.`UTF-8`)
-          .contramap { r: Renderable => compact(render(decompose(r))) }
+      implicit def renderableEncoder[T <: Renderable]: EntityEncoder[T] =
+        EntityEncoder
+          .stringEncoder(Charset.`UTF-8`)
+          .contramap { r: T => compact(render(decompose(r))) }
           .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
       val r = "testing models" ** GET / "models" |>> { () =>

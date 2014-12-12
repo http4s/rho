@@ -1,7 +1,6 @@
 package org.http4s
 package rho
 
-import org.http4s.EntityDecoder.DecodingException
 import org.specs2.mutable.Specification
 
 import scodec.bits.ByteVector
@@ -49,7 +48,7 @@ class CodecRouterSpec extends Specification {
       val h = Headers(Header.`Content-Type`(MediaType.`application/x-www-form-urlencoded`))
       val req = Request(Method.POST, Uri(path = "/form"), headers = h, body = b)
 
-      service(req).run.get must throwA[DecodingException]
+      service(req).run.get.status must_== Status.BadRequest
     }
   }
 
