@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets
 import Header.`Content-Type`
 import com.wordnik.swagger.annotations.Api
 import com.wordnik.swagger.model.{ApiInfo, SwaggerSerializers}
-import org.http4s.Writable.Entity
+import org.http4s.EntityEncoder.Entity
 
 import shapeless.HList
 
@@ -58,11 +58,11 @@ trait SwaggerSupport extends RhoService {
 
   protected def docToJson(doc: Api): JValue = Extraction.decompose(doc)
 
-  private implicit val jsonWritable: Writable[JValue] = {
+  private implicit val jsonWritable: EntityEncoder[JValue] = {
     val headers: Headers = Headers(`Content-Type`(MediaType.`application/json`))
-    Writable({ jv: JValue =>
+    EntityEncoder.encodeBy(headers){ jv: JValue =>
       val v = ByteVector.view(compact(render(jv)).getBytes(StandardCharsets.UTF_8))
       Task.now(Entity(emit(v), Some(v.length)))
-    }, headers)
+    }
   }
 }

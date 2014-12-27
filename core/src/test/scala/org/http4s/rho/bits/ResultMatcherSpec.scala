@@ -108,8 +108,8 @@ class ResultMatcherSpec extends Specification {
       case class ModelA(name: String, color: Int)
       case class ModelB(name: String, id: Long)
 
-      implicit def w1: Writable[ModelA] = Writable.simple[ModelA](_ => ByteVector.view("A".getBytes))
-      implicit def w2: Writable[ModelB] = Writable.simple[ModelB](_ => ByteVector.view("B".getBytes))
+      implicit def w1: EntityEncoder[ModelA] = EntityEncoder.simple[ModelA]()(_ => ByteVector.view("A".getBytes))
+      implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => ByteVector.view("B".getBytes))
 
       val srvc = new TRhoService {
         GET / "foo" |>> { () =>
@@ -149,6 +149,6 @@ object Foo {
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1: Writable[FooA] = Writable.simple[FooA](_ => ByteVector.view("A".getBytes))
-  implicit def w2: Writable[FooB] = Writable.simple[FooB](_ => ByteVector.view("B".getBytes))
+  implicit def w1: EntityEncoder[FooA] = EntityEncoder.simple[FooA]()(_ => ByteVector.view("A".getBytes))
+  implicit def w2: EntityEncoder[FooB] = EntityEncoder.simple[FooB]()(_ => ByteVector.view("B".getBytes))
 }

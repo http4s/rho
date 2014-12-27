@@ -52,7 +52,7 @@ trait RhoService extends bits.MethodAliases
     genMessage(Status.InternalServerError, t.getMessage)
 
   private def genMessage(status: Status, reason: String): Task[Response] = {
-    val w = Writable.stringWritable
+    val w = EntityEncoder.stringEncoder
     w.toEntity(reason).map{ entity =>
       val hs = entity.length match {
         case Some(l) => w.headers.put(Header.`Content-Length`(l))

@@ -1,6 +1,7 @@
 package org.http4s
 package rho
 
+import scalaz.{\/, EitherT}
 import scalaz.concurrent.Task
 
 sealed case class Result[
@@ -80,6 +81,11 @@ trait ResultSyntaxInstances {
   implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends MessageOps {
     override type Self = T
 
+    override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
+      val t: Task[ParseFailure\/T] = r.resp.attemptAs(decoder).run
+      EitherT[Task, ParseFailure, T](t)
+    }
+
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
       Result(r.resp.withAttribute(key, value))
 
@@ -92,13 +98,20 @@ trait ResultSyntaxInstances {
     override def filterHeaders(f: (Header) => Boolean): Self =
       Result(r.resp.filterHeaders(f))
 
-    def withBody[T](b: T)(implicit w: Writable[T]): Task[Self] = {
+    def withBody[T](b: T)(implicit w: EntityEncoder[T]): Task[Self] = {
       r.resp.withBody(b)(w).map(Result(_))
     }
   }
 
   implicit class TaskResultSyntax[T >: Result.TopResult <: BaseResult](r: Task[T]) extends MessageOps {
     override type Self = Task[T]
+
+    override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
+      val t: Task[ParseFailure\/T] = r.flatMap { t =>
+        t.resp.attemptAs(decoder).run
+      }
+      EitherT[Task, ParseFailure, T](t)
+    }
 
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
       r.map(r => Result(r.resp.withAttribute(key, value)))
@@ -112,7 +125,7 @@ trait ResultSyntaxInstances {
     override def filterHeaders(f: (Header) => Boolean): Self =
       r.map(r => Result(r.resp.filterHeaders(f)))
 
-    def withBody[T](b: T)(implicit w: Writable[T]): Self = {
+    def withBody[T](b: T)(implicit w: EntityEncoder[T]): Self = {
       r.flatMap(_.withBody(b)(w))
     }
   }

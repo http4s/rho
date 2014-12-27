@@ -18,7 +18,7 @@ class ResponseGeneratorSpec extends Specification {
       str must_== "Foo"
 
       resp.headers.get(`Content-Length`) must_== Some(`Content-Length`("Foo".getBytes.length))
-      resp.headers.filterNot(_.is(`Content-Length`)).toList must_== Writable.stringWritable.headers.toList
+      resp.headers.filterNot(_.is(`Content-Length`)).toList must_== EntityEncoder.stringEncoder.headers.toList
     }
 
     "Build a response without a body" in {
@@ -44,8 +44,8 @@ class ResponseGeneratorSpec extends Specification {
     }
 
     "Explicitly added headers have priority" in {
-      val w = Writable[String](toEntity = Writable.stringWritable.toEntity,
-        headers = Writable.stringWritable.headers.put(`Content-Type`(MediaType.`text/html`)))
+      val w = EntityEncoder.encodeBy[String](`Content-Type`(MediaType.`text/html`))(EntityEncoder.stringEncoder.toEntity(_))
+
          Ok("some content", Headers(`Content-Type`(MediaType.`application/json`)))(w)
           .run.resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.`application/json`)
     }
