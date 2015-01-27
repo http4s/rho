@@ -1,6 +1,6 @@
 language: scala
 scala:
-- 2.11.2
+- 2.11.5
 script: sbt ++$TRAVIS_SCALA_VERSION test
 notifications:
   irc: chat.freenode.net#http4s
