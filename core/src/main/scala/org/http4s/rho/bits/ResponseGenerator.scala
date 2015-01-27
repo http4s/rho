@@ -6,7 +6,7 @@ import scodec.bits.ByteVector
 import scala.language.higherKinds
 
 
-import org.http4s.Header.`Content-Length`
+import org.http4s.headers.{ `Content-Length`, Location }
 import org.http4s.EntityEncoder.Entity
 import org.http4s._
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
@@ -78,7 +78,7 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
 abstract class LocationResponseGenerator(val status: Status) extends ResponseGenerator {
   type T <: Result.BaseResult
   def apply(location: Uri): Task[T] =
-    Task.now(Result(Response(status).putHeaders(Header.Location(location))).asInstanceOf[T])
+    Task.now(Result(Response(status).putHeaders(Location(location))).asInstanceOf[T])
 }
 
 object ResponseGeneratorInstances extends ResponseGeneratorInstances

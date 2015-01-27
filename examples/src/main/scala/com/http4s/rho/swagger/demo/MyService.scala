@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.http4s.Uri
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
+import org.http4s.scalaxml._
 
 import JsonEncoder.AutoSerializable
 import scalaz._

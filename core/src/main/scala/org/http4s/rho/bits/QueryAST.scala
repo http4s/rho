@@ -28,10 +28,26 @@ object QueryAST {
 
     private val uriTemplate =
       for (q <- UriConverter.createQuery(rule))
-        yield UriTemplate(query = Some(q))
+        yield UriTemplate(query = q)
 
     override def asUriTemplate(request: Request) =
       UriConvertible.respectPathInfo(uriTemplate, request)
+  }
+
+  object TypedQuery {
+    import shapeless.{HNil, ::}
+    implicit def queryParamKeyLike[T]: QueryParamKeyLike[TypedQuery[T::HNil]] = new QueryParamKeyLike[TypedQuery[T::HNil]] {
+      override def getKey(t: TypedQuery[T::HNil]): QueryParameterKey =
+        getKey(t.rule).getOrElse(sys.error("Empty Query doesn't have a key name"))
+
+      private def getKey(rule: QueryRule): Option[QueryParameterKey] = rule match {
+        case QueryCapture(n,_,_,_) => Some(QueryParameterKey(n))
+        case QueryOr(a, b)         => getKey(a) orElse getKey(b)
+        case MetaCons(r,_)         => getKey(r)
+        case QueryAnd(a, b)        => getKey(a) orElse getKey(b) // shouldn't get here
+        case EmptyQuery            => None                       // shouldn't get here
+      }
+    }
   }
 
   sealed trait QueryRule

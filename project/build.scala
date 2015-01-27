@@ -31,7 +31,7 @@ object MyBuild extends Build {
                                   Revolver.settings ++
                                   Seq(
                                     exampleDeps,
-                                    libraryDependencies += logbackClassic,
+                                    libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
                                     dontPublish
                                   ) :_*)
                         .dependsOn(`rho-swagger`, `rho-hal`)
@@ -49,7 +49,7 @@ object MyBuild extends Build {
 
   lazy val buildSettings = Defaults.defaultSettings ++ publishing ++
      Seq(
-        scalaVersion := "2.11.4",
+        scalaVersion := "2.11.5",
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
@@ -121,14 +121,16 @@ object MyBuild extends Build {
 }
 
 object Dependencies {
-  lazy val http4sVersion = "0.5.0"
-  lazy val http4sServerVersion = http4sVersion.dropRight(1) + "0"
+  lazy val http4sVersion = "0.6.0-SNAPSHOT"
+  lazy val http4sServerVersion = if (!http4sVersion.endsWith("SNAPSHOT")) (http4sVersion.dropRight(1) + "0")
+                                 else http4sVersion
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sServerVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blazeserver"    % http4sVersion
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
   lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
+  lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
   lazy val config              = "com.typesafe"                % "config"                % "1.2.1"
   lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.2.11"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision

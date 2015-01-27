@@ -2,6 +2,7 @@ package org.http4s
 package rho
 package bits
 
+import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 import shapeless.HList
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -53,10 +54,12 @@ final class RhoPathTree extends PathTree {
           for {
             i <- ValidationTools.runQuery(req, c.router.query, pathstack)
             j <- ValidationTools.runValidation(req, c.headers, i)
-          } yield () => parser.apply(req) { body =>
+          } yield () => parser.decode(req).run.flatMap(_.fold(e =>
+            Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
+          { body =>
             // `asInstanceOf` to turn the untyped HList to type T
             actionf(req, (body :: j).asInstanceOf[T])
-          }
+          }))
         }
     }
   }

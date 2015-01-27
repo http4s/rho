@@ -34,8 +34,8 @@ object ResultMatcher {
        situations where you return the same status with two types */
     implicit def maybeIsWritable[T](implicit t: WeakTypeTag[T], w: EntityEncoder[T] = null): MaybeWritable[T] = new MaybeWritable[T] {
       private val ww = Option(w)
-      override def contentType: Set[MediaType] = ww.flatMap(_.contentType).toSet
-      override def encodings: Set[MediaType] = ww.flatMap(_.contentType).toSet
+      override def contentType: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
+      override def encodings: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
       override def resultInfo: Option[Type] = Some(t.tpe.dealias)
     }
   }
@@ -418,7 +418,7 @@ object ResultMatcher {
   }
 
   implicit def optionMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[Option[O]] {
-    override val encodings: Set[MediaType] = w.contentType.toSet
+    override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
     override def conv(req: Request, r: Option[O]): Task[Response] = r match {
@@ -428,7 +428,7 @@ object ResultMatcher {
   }
 
   implicit def writableMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[O] {
-    override def encodings: Set[MediaType] = w.contentType.toSet
+    override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
     override def conv(req: Request, r: O): Task[Response] = ResponseGeneratorInstances.Ok.pure(r)
   }

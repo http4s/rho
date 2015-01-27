@@ -14,12 +14,12 @@ class TypedQuerySpec extends Specification {
   "TypedQuery.asUriTemplate" should {
     "convert to {?world}" in {
       val route = param[Int]("world")
-      val q = Some(List(ParamExp("world")))
+      val q = List(ParamExp("world"))
       route.asUriTemplate(request).get must equalTo(UriTemplate(query = q))
     }
     "convert to {?start}{&start}" in {
       val route = param[Int]("start", 0) && param[Int]("limit", 10)
-      val q = Some(List(ParamExp("start"), ParamExp("limit")))
+      val q = List(ParamExp("start"), ParamExp("limit"))
       route.asUriTemplate(request).get must equalTo(UriTemplate(query = q))
     }
   }

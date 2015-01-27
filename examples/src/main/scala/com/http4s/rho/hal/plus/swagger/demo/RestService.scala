@@ -237,10 +237,10 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
     hal.link("self", selfWithFirstAndMax(self, first, max))
     hal.content("total", total)
     if (first + max < total) {
-      hal.link("next", self +? ("firstResult", first + max) +? ("maxResults", max))
+      hal.link("next", self +? (firstResult, first + max) +? ("maxResults", max))
     }
     if (first > 0) {
-      hal.link("prev", self +? ("firstResult", Math.max(first - max, 0)) +? ("maxResults", max))
+      hal.link("prev", self +? (firstResult, Math.max(first - max, 0)) +? ("maxResults", max))
     }
     val res = ListBuffer[ResourceObject[OperatingSystem, Nothing]]()
     operatingSystems.foreach { operatingSystem =>

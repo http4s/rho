@@ -38,14 +38,14 @@ class ResultMatcherSpec extends Specification {
           val a = 0
           a match {
             case 0 => NotFound(s"Not found")
-            case 1 => Ok(<html><body>Hello world</body></html>)
+            case 1 => Ok("Hello world".getBytes())
           }
         }
       }
 
       srvc.statuses.map(_._1) should_== Set(NotFound, Ok)
       srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[String] must_== true
-      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[scala.xml.Elem] must_== true
+      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[Array[Byte]] must_== true
     }
 
     "Match two results with same stat different result type" in {
@@ -54,7 +54,7 @@ class ResultMatcherSpec extends Specification {
           val a = 0
           a match {
             case 0 => Ok(s"Not found")
-            case 1 => Ok(<html><body>Hello world</body></html>)
+            case 1 => Ok("Hello world".getBytes())
           }
         }
       }
@@ -101,7 +101,7 @@ class ResultMatcherSpec extends Specification {
 
       srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted, Created)
     }
-    
+
     "Match results with locally defined types" in {
       import scodec.bits.ByteVector
 

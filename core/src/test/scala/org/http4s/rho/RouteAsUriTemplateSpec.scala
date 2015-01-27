@@ -51,13 +51,13 @@ class RouteAsUriTemplateSpec extends Specification {
     "convert to /hello{?world}" in {
       val route = GET / "hello" +? param[Int]("world")
       val p = List(PathElm("hello"))
-      val q = Some(List(ParamExp("world")))
+      val q = List(ParamExp("world"))
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
     }
     "convert to /hello/world{?start}{&start}" in {
       val route = GET / "hello" / "world" +? param[Int]("start") & param[Int]("limit")
       val p = List(PathElm("hello"), PathElm("world"))
-      val q = Some(List(ParamExp("start"), ParamExp("limit")))
+      val q = List(ParamExp("start"), ParamExp("limit"))
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
     }
   }
@@ -76,19 +76,19 @@ class RouteAsUriTemplateSpec extends Specification {
     "convert to /hello{?world}" in {
       val requestLine = "hello" +? param[Int]("world")
       val p = List(PathElm("hello"))
-      val q = Some(List(ParamExp("world")))
+      val q = List(ParamExp("world"))
       requestLine.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
     }
     "convert to /hello/world{?start}{&limit}" in {
       val requestLine = "hello" / "world" +? param[Int]("start") & param[Int]("limit")
       val p = List(PathElm("hello"), PathElm("world"))
-      val q = Some(List(ParamExp("start"), ParamExp("limit")))
+      val q = List(ParamExp("start"), ParamExp("limit"))
       requestLine.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
     }
     "convert to /hello{/world}{?start}{&limit}" in {
       val requestLine = "hello" / pathVar[String]("world") +? param[Int]("start") & param[Int]("limit")
       val p = List(PathElm("hello"), PathExp("world"))
-      val q = Some(List(ParamExp("start"), ParamExp("limit")))
+      val q = List(ParamExp("start"), ParamExp("limit"))
       requestLine.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
     }
   }

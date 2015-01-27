@@ -33,7 +33,7 @@ case class QueryBuilder[T <: HList](method: Method,
     for {
       p <- UriConverter.createPath(path)
       q <- UriConverter.createQuery(query)
-    } yield UriTemplate(path = p, query = Some(q))
+    } yield UriTemplate(path = p, query = q)
 
   override def asUriTemplate(request: Request) =
     UriConvertible.respectPathInfo(uriTemplate, request)

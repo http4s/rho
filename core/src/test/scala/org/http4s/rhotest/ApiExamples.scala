@@ -6,6 +6,8 @@ import org.http4s.rho._
 import scalaz.concurrent.Task
 
 
+
+
 class ApiExamples extends Specification {
 
   import org.http4s.rho.bits.ResponseGeneratorInstances._
@@ -88,12 +90,12 @@ class ApiExamples extends Specification {
 
         // TODO: this is just a basic example!
         GET /"twoResults" |>> { () =>
-          if (true) Ok("One result")
-          else NotFound(<html><body>Boo... Not found...</body></html>)
+          if (true) Ok("bytes result".getBytes())
+          else NotFound("Boo... Not found...")
         }
 
         // Using decoders you can parse the body as well
-        POST / "postSomething" ^ EntityDecoder.formEncoded |>> { m: Map[String, Seq[String]] =>
+        POST / "postSomething" ^ UrlForm.entityDecoder |>> { m: UrlForm =>
           Ok(s"You posted these things: $m")
         }
       }

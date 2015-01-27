@@ -14,7 +14,7 @@ object UriConvertibleSpec extends Specification {
         uri = Uri(path = "/some"),
         attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 5)))
       val path = List(PathElm("here"))
-      val query = Some(List(ParamVarExp("ref", "path")))
+      val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
       UriConvertible.respectPathInfo(Success(tpl), request).get.toString must equalTo("/some/here?ref={path}")
     }
@@ -28,7 +28,7 @@ object UriConvertibleSpec extends Specification {
     "keep the path if PathInfoCaret is not available" in {
       val request = Request(uri = Uri(path = "/some"))
       val path = List(PathElm("here"))
-      val query = Some(List(ParamVarExp("ref", "path")))
+      val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
       UriConvertible.addPathInfo(request, tpl).toString must equalTo("/here?ref={path}")
     }
@@ -37,7 +37,7 @@ object UriConvertibleSpec extends Specification {
         uri = Uri(path = "/some"),
         attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 0)))
       val path = List(PathElm("here"))
-      val query = Some(List(ParamVarExp("ref", "path")))
+      val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
       UriConvertible.addPathInfo(request, tpl).toString must equalTo("/here?ref={path}")
     }
@@ -46,7 +46,7 @@ object UriConvertibleSpec extends Specification {
         uri = Uri(path = "/some"),
         attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 1)))
       val path = List(PathElm("here"))
-      val query = Some(List(ParamVarExp("ref", "path")))
+      val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
       UriConvertible.addPathInfo(request, tpl).toString must equalTo("/here?ref={path}")
     }
@@ -55,7 +55,7 @@ object UriConvertibleSpec extends Specification {
         uri = Uri(path = "/some"),
         attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 5)))
       val path = List(PathElm("here"))
-      val query = Some(List(ParamVarExp("ref", "path")))
+      val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
       UriConvertible.addPathInfo(request, tpl).toString must equalTo("/some/here?ref={path}")
     }
