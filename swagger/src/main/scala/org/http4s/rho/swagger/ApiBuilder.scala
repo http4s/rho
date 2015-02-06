@@ -2,7 +2,7 @@ package org.http4s
 package rho
 package swagger
 
-import com.wordnik.swagger.model._
+import com.wordnik.swagger.{ models => m }
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
