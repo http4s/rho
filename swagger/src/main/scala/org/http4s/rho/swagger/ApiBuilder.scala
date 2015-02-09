@@ -2,6 +2,8 @@ package org.http4s
 package rho
 package swagger
 
+import com.wordnik.swagger.models.{Operation, Path}
+import com.wordnik.swagger.models.parameters.{PathParameter, QueryParameter, HeaderParameter, Parameter}
 import com.wordnik.swagger.{ models => m }
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
@@ -15,106 +17,68 @@ import org.log4s.getLogger
 import scala.reflect.runtime.universe.{ Type, weakTypeOf }
 
 
-class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
+class ApiBuilder(apiVersion: String, swagger: m.Swagger) {
 
   private[this] val logger = getLogger
 
-  /* swagger-core models
-  case class ApiListing (
-    apiVersion: String,
-    swaggerVersion: String,
-    basePath: String,
-    resourcePath: String,
-    produces: List[String] = List.empty,
-    consumes: List[String] = List.empty,
-    protocols: List[String] = List.empty,
-    authorizations: List[Authorization] = List.empty,
-    apis: List[ApiDescription] = List(),--------
-    models: Option[Map[String, Model]] = None, |
-    description: Option[String] = None,        |
-    position: Int = 0)                         |
-                                               |
-  case class ApiDescription ( -----------------|
-    path: String,
-    description: Option[String],
-    operations: List[Operation] = List()) ----
-                                             |
-  case class Operation ( --------------------|
-    method: String,
-    summary: String,
-    notes: String,
-    responseClass: String,
-    nickname: String,
-    position: Int,
-    produces: List[String] = List.empty,
-    consumes: List[String] = List.empty,
-    protocols: List[String] = List.empty,
-    authorizations: List[Authorization] = List.empty,
-    parameters: List[Parameter] = List.empty, -------------
-    responseMessages: List[ResponseMessage] = List.empty, |
-    `deprecated`: Option[String] = None)                  |
-                                                          |
-  case class Parameter ( ---------------------------------|
-    name: String,
-    description: Option[String],
-    defaultValue: Option[String],
-    required: Boolean,
-    allowMultiple: Boolean,
-    dataType: String,
-    allowableValues: AllowableValues = AnyAllowableValues,
-    paramType: String,
-    paramAccess: Option[String] = None)
-   */
-
-  val swaggerVersion = "1.2"
+  val swaggerVersion = "2.0"
   val basepath = "/"
 
-  def baseOp = Operation("GET", "", "", "void", "temp- will replace", 0)
+  def actionToApiListing(action: RhoAction[_, _]): Unit = {
+    // Add the 'consumes' to the Swagger // TODO: these are wrong, and should be on the Operation
+    action.validMedia.foreach(media => swagger.addConsumes(media.renderString))
+    // Add the 'produces' to the Swagger
+    action.responseEncodings.foreach(enc => swagger.produces(enc.renderString))
 
-  def actionToApiListing(action: RhoAction[_, _]): Seq[ApiListing] = {
-    val consumes = action.validMedia.map(_.renderString).toList
-    val produces = action.responseEncodings.map(_.renderString).toList
+//    // Get the result types and models
+//    val models: m.Model = {
+//      val models = action.resultInfo.collect {
+//        case TypeOnly(tpe) => tpe
+//        case StatusAndType(_, tpe) => tpe
+//      }.foldLeft(Set.empty[m.Model]){(s, tpe) =>
+//        TypeBuilder.collectModels(tpe, s, formats)
+//      }
+//      if (models.isEmpty) None
+//      else Some(models.map(m => m.id -> m).toMap)
+//    }
 
-    // Get the result types and models
-    val models = {
-      val models = action.resultInfo.collect {
-        case TypeOnly(tpe) => tpe
-        case StatusAndType(_, tpe) => tpe
-      }.foldLeft(Set.empty[Model]){(s, tpe) =>
-        TypeBuilder.collectModels(tpe, s, formats)
-      }
-      if (models.isEmpty) None
-      else Some(models.map(m => m.id -> m).toMap)
-    }
+    // Operation.responses = Map("status" -> Response)
 
-    val responseMessages = action.resultInfo.toList.collect {
-      case TypeOnly(tpe) => ResponseMessage(200, "OK", Some(TypeBuilder.DataType(tpe).name))
-      case StatusAndType(s, tpe) => ResponseMessage(s.code, s.reason, Some(TypeBuilder.DataType(tpe).name))
-      case StatusOnly(status) => ResponseMessage(status.code, status.reason)
-    }
-
-    val responseClass = responseMessages match {
-      case ResponseMessage(_, _, Some(tpe))::Nil => tpe
-      case _                                     => "mixed result types"
-    }
+//    val responseMessages = action.resultInfo.toList.collect {
+//      case TypeOnly(tpe) => ResponseMessage(200, "OK", Some(TypeBuilder.DataType(tpe).name))
+//      case StatusAndType(s, tpe) => ResponseMessage(s.code, s.reason, Some(TypeBuilder.DataType(tpe).name))
+//      case StatusOnly(status) => ResponseMessage(status.code, status.reason)
+//    }
+//
+//    val responseClass = responseMessages match {
+//      case ResponseMessage(_, _, Some(tpe))::Nil => tpe
+//      case _                                     => "mixed result types"
+//    }
 
     // Collect the descriptions
-    val descriptions = getDescriptions(action.path, action.query)
-      .map { desc =>
-        desc.copy(operations = desc.operations.map( op =>
-            op.copy(method           = action.method.toString,
-                    nickname         = generateNickname(desc.path, action.method),
-                    responseClass    = responseClass,  // What does this do?
-                    produces         = produces,
-                    consumes         = consumes,
-                    parameters       = op.parameters:::analyzeHeaders(action.headers),
-                    responseMessages = responseMessages
-            )))
-      }
+//    val descriptions = getDescriptions(action.path, action.query)
+//      .map { desc =>
+//        desc.copy(operations = desc.operations.map( op =>
+//            op.copy(method           = action.method.toString,
+//                    nickname         = generateNickname(desc.path, action.method),
+//                    responseClass    = responseClass,  // What does this do?
+//                    produces         = produces,
+//                    consumes         = consumes,
+//                    parameters       = op.parameters:::analyzeHeaders(action.headers),
+//                    responseMessages = responseMessages
+//            )))
+//      }
 
-    descriptions.map { apidesc =>
-      val resourcepath = "/" + apidesc.path.split("/").find(!_.isEmpty).getOrElse("")
-      ApiListing(apiVersion, swaggerVersion, basepath, resourcepath, models = models, apis = List(apidesc))
+    collectOperation(action.path::Nil).foreach{ case (str, path) =>
+      val op = new Operation
+      analyzeQuery(action.query).foreach(op.addParameter)
+      analyzeHeaders(action.headers).foreach(op.addParameter)
+      path.set(action.method.name.toLowerCase, op)
+
+      swagger.getPath(str) match {
+        case p: Path => swagger.path(str, mergePath(p, path))
+        case null    => swagger.path(str, path)
+      }
     }
   }
 
@@ -126,70 +90,112 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
                           .mkString
   }
 
-  // TODO: This method needs documentation
-  private def getDescriptions(path: PathRule, query: QueryRule): List[ApiDescription] = {
-    def go(stack: List[PathRule], desc: ApiDescription): List[ApiDescription] = stack match {
-      case PathAnd(a, b)::xs           => go(a::b::xs, desc)
-      case PathOr(a, b)::xs            => go(a::xs, desc):::go(b::xs, desc)
+  private def mergePath(p1: Path, p2: Path): Path = p1 // TODO: do an actual merge
 
-      case PathMatch("")::Nil          => go(Nil, desc.copy(path = desc.path + "/"))
+//  // TODO: This method needs documentation
+//  private def getDescriptions(method: Method, path: PathRule, query: QueryRule): List[(String, m.Path)] = {
+//    val qparams = analyzeQuery(query)
+//
+//    def go(stack: List[PathRule], basepath: String): List[(String, m.Path)] = stack match {
+//      case PathAnd(a, b)::xs           => go(a::b::xs, basepath)
+//      case PathOr(a, b)::xs            => go(a::xs, basepath):::go(b::xs, basepath)
+//
+//      case PathMatch("")::Nil          => go(Nil, basepath + "/")
+//
+//      case PathMatch("")::xs           => go(xs, basepath)
+//
+//      case PathMatch(s)::xs            => go(xs, basepath + "/" + s)
+//
+//      case stack @ (CaptureTail | PathCapture(_, _, _))::_ =>
+//        val p = new Path
+//        collectOperation(stack, p).foreach { case (path, op) =>
+//          // TODO: what should the path look like?
+//          qparams.foreach(op.addParameter)
+//          p.set(method.toString.toLowerCase, op)
+//        }
+//        List(basepath -> p)
+//
+////      case stack @ MetaCons(a, RouteDesc(meta))::xs =>
+////        go(a::xs, basepath).map(path =>
+////          path.
+////          desc.copy(operations = desc.operations.map(addOpSummary(meta, _)))
+////        )
+//
+//      case stack @ MetaCons(a, _)::xs => go(a::xs, basepath)    // ignore other metadata
+//
+//      case Nil =>
+//        val p = new Path
+//        val ops = collectOperation(Nil, p)
+//        if (!ops.isEmpty) ops.map { case (path, op) =>
+//          val p = new Path
+//
+//          desc.copy(desc.path + path, operations = List(op))
+//        }
+//        else List(basepath -> p)
+//    }
+//
+//    go(path::Nil, "")
+//  }
 
-      case PathMatch("")::xs           => go(xs, desc)
-
-      case PathMatch(s)::xs            => go(xs, desc.copy(path = desc.path + "/" + s))
-
-      case stack @ (CaptureTail | PathCapture(_, _, _))::_ =>
-        collectPaths(stack, query, baseOp).map{ case (path, op) =>
-          desc.copy(desc.path + path, operations = List(op))
-        }
-
-      case stack @ MetaCons(a, RouteDesc(meta))::xs =>
-        go(a::xs, desc).map(desc =>
-          desc.copy(operations = desc.operations.map(addOpSummary(meta, _)))
-        )
-
-      case stack @ MetaCons(a, _)::xs => go(a::xs, desc)    // ignore other metadata
-
-      case Nil =>
-        val ops = collectPaths(Nil, query, baseOp)
-        if (!ops.isEmpty) ops.map { case (path, op) =>
-          desc.copy(desc.path + path, operations = List(op))
-        }
-        else List(desc)
-    }
-
-    go(path::Nil, ApiDescription("", None))
+  private def concatPath(p1: String, p2: String): String = p1 match {
+    case "" => p2
+    case p1 => p1 + "/" + p2
   }
 
-  private[swagger] def collectPaths(stack: List[PathRule], query: QueryRule, op: Operation): List[(String, Operation)] = {
-    def go(stack: List[PathRule], path: String, op: Operation): List[(String, Operation)] = stack match {
-      case PathOr(a, b)::xs     => go(a::xs, path, op):::go(b::xs, path, op)
-      case PathAnd (a, b) :: xs => go(a::b::xs, path, op)
-      case PathMatch("")::Nil   => go(Nil, path + "/", op)
-      case PathMatch(s)::xs     => go(xs, path + "/" + s, op)
+  private[swagger] def collectOperation(stack: List[PathRule]): List[(String, m.Path)] = {
+    val linearized: List[List[PathOperation]] = {
+      def go(stack: List[PathRule], acc: List[PathOperation]): List[List[PathOperation]] = stack match {
+        case PathOr(a, b)::xs           => go(a::xs, acc):::go(b::xs, acc)
+        case PathAnd (a, b) :: xs       => go(a::b::xs, acc)
+        case (m@ MetaCons(a, meta))::xs => go(a::xs, m::acc)
+        case (op: PathOperation)::xs    => go(xs, op::acc)
+
+        case Nil => acc::Nil
+      }
+      go(stack, Nil).map(_.reverse)
+    }
+
+    def go(stack: List[PathOperation], pathstr: String, path: m.Path): (String, m.Path) = stack match {
+      case PathMatch("")::Nil   => go(Nil, pathstr, path)
+      case PathMatch(s)::xs     => go(xs, concatPath(pathstr, s), path)
 
       case PathCapture (id, parser, _) :: xs =>
         val tpe = parser.typeTag.map(tag => getType(tag.tpe)).getOrElse("string")
-        val p = Parameter (id, None, None, true, false, tpe, AnyAllowableValues, "path", None)
-        go(xs, s"$path/{$id}", op.copy(parameters = op.parameters:+p))
+        val p = new PathParameter
+        p.setName(id)
+        p.setRequired(true)
+        p.setType(tpe)
+        path.addParameter(p)
+//        val p2 = Parameter (id, None, None, true, false, tpe, AnyAllowableValues, "path", None)
+        go(xs, s"$pathstr/{$id}", path)
 
       case CaptureTail::xs =>
         if (!xs.isEmpty) logger.warn(s"Warning: path rule after tail capture: $xs")
-        val ps = Parameter ("tail...", None, None, false, true, "string", AnyAllowableValues, "path", None)
-        List(path + "/{tail...}" -> op.copy(parameters = op.parameters:::ps::analyzeQuery(query)))
+        val p = new PathParameter
+        p.setName("tail...")
+        p.setRequired(false)
+        p.setType("string")
+        val path = new Path
+        path.addParameter(p)
+        pathstr + "/{tail...}" -> path
+//        val ps = Parameter ("tail...", None, None, false, true, "string", AnyAllowableValues, "path", None)
+//        List(path + "/{tail...}" -> op.copy(parameters = op.parameters:::ps::analyzeQuery(query)))
 
-      case MetaCons(rule, meta)::xs =>
-        val op2 = meta match {
-          case RouteDesc(meta) => addOpSummary(meta, op)
-          case _               => op
-        }
-        go(rule::xs, path, op2)
+      case MetaCons(_, meta)::xs => // the linearization took care of the consed path
+//        meta match {
+//          case RouteDesc(meta) => addOpSummary(meta, path)
+//          case _               => // NOOP
+//        }
+        go(xs, pathstr, path)
 
-      case Nil =>
-        val qs = analyzeQuery(query)
-        List(path -> op.copy(parameters = op.parameters:::qs))
+      case Nil => pathstr -> new Path
+//        List(path -> op.copy(parameters = op.parameters:::qs))
     }
-    go(stack, "", op)
+
+    linearized.map{ pathstack =>
+      val (pathstr, path) = go(pathstack, "", new Path)
+      (pathstr, path)
+    }
   }
 
   // Adds a note that the params are optional if the other params are satisfied
@@ -197,14 +203,18 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
     if (bs.isEmpty) as      // These two cases shouldn't happen, but just in case something changes down the road
     else if (as.isEmpty) bs
     else {
-      val reqStr = s"Optional if the following $tpe are satisfied: " + bs.map(_.name).mkString("[",", ", "]")
-      as.map(p => p.copy(description = Some({ p.description.map(_ + "; ").getOrElse("") + reqStr})))
+      val reqStr = s"Optional if the following $tpe are satisfied: " + bs.map(_.getName()).mkString("[",", ", "]")
+      as.foreach { p =>
+        if (p.getDescription().length > 0) p.setDescription(p.getDescription() + "; " + reqStr)
+        else p.setDescription(reqStr)
+      }
+      as
     }
   }
 
-  private[swagger] def analyzeQuery(query: QueryRule): List[Parameter] = {
+  private[swagger] def analyzeQuery(query: QueryRule): List[m.parameters.Parameter] = {
     import bits.QueryAST._
-    def go(stack: List[QueryRule]): List[Parameter] = stack match {
+    def go(stack: List[QueryRule]): List[m.parameters.Parameter] = stack match {
       case QueryAnd(a, b)::xs => go(a::b::xs)
       case EmptyQuery::xs => go(xs)
       case QueryOr(a, b)::xs  =>
@@ -216,7 +226,11 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
       case (q @ QueryCapture(_, _, _, _))::xs => gatherParam(q)::go(xs)
 
       case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs => meta match {
-        case m: TextMetaData => gatherParam(q).copy(description = Some(m.msg))::go(xs)
+        case m: TextMetaData =>
+          val p = gatherParam(q)
+          p.setDescription(m.msg)
+          p::go(xs)
+
         case _               => go(q::xs)
       }
 
@@ -228,20 +242,31 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
     go(query::Nil)
   }
 
-  private def gatherParam(rule: QueryCapture[_]): Parameter = {
-    Parameter(rule.name, None, rule.default.map(_.toString), rule.default.isEmpty,
-      false, getType(rule.m.tpe), paramType = "query")
+  private def gatherParam(rule: QueryCapture[_]): m.parameters.Parameter = {
+    val p = new QueryParameter
+    p.setName(rule.name)
+    rule.default.foreach(i => p.setDefaultValue(i.toString))
+    p.setRequired(rule.default.isEmpty)
+    p.setType(getType(rule.m.tpe))
+    p
+//    Parameter(rule.name, None, rule.default.map(_.toString), rule.default.isEmpty,
+//      false, getType(rule.m.tpe), paramType = "query")
   }
 
   // Finds any parameters required for the routes and adds them to the descriptions
-  private[swagger] def analyzeHeaders(rule: HeaderRule): List[Parameter] = {
+  private[swagger] def analyzeHeaders(rule: HeaderRule): List[m.parameters.Parameter] = {
     import bits.HeaderAST._
 
-    def mkParam(key: HeaderKey.Extractable): Parameter = {
-      Parameter(key.name.toString, None, None, true, false, "string", paramType = "header")
+    def mkParam(key: HeaderKey.Extractable): m.parameters.Parameter = {
+      val p = new HeaderParameter
+      p.setName(key.name.toString())
+      p.setRequired(true)
+      p.setType("string") //Parameter(key.name.toString, None, None, true, false, "string", paramType = "header")
+
+      p
     }
 
-    def go(stack: List[HeaderRule]): List[Parameter] = stack match {
+    def go(stack: List[HeaderRule]): List[m.parameters.Parameter] = stack match {
       case HeaderAnd(a, b)::xs        => go(a::b::xs)
       case MetaCons(a, _)::xs         => go(a::xs)
       case EmptyHeaderRule::xs        => go(xs)
@@ -260,10 +285,10 @@ class ApiBuilder(apiVersion: String, formats: SwaggerFormats) {
   }
 
   // Utility methods
-  private def addOpSummary(summary: String, op: Operation): Operation = {
-    if (op.summary != "") logger.warn(s"Overriding route description '${op.summary}' with '$summary'")
-    op.copy(summary = summary)
+  private def addOpSummary(summary: String, op: m.Operation): Unit = {
+    if (op.getSummary != "") logger.warn(s"Overriding route description '${op.getSummary()}' with '$summary'")
+    op.setSummary(summary)
   }
 
-  private def getType(m: Type): String = TypeBuilder.DataType(m).name
+  private def getType(m: Type): String = "string" //TypeBuilder.DataType(m).name
 }

@@ -98,19 +98,19 @@ class ApiBuilderSpec extends Specification {
 
     "find a simple path" in {
       val p = "foo"
-      val List((path, op)) = builder.collectPaths(p.rule :: Nil, q, baseOp)
+      val List((path, op)) = builder.collectOperation(p.rule :: Nil, q, baseOp)
       (path should_== "/foo") && (op should_== baseOp)
     }
 
     "find a simple AND path" in {
       val p = "foo" / "bar"
-      val List((path, op)) = builder.collectPaths(p.rule :: Nil, q, baseOp)
+      val List((path, op)) = builder.collectOperation(p.rule :: Nil, q, baseOp)
       (path should_== "/foo/bar") && (op should_== baseOp)
     }
 
     "find a simple OR path" in {
       val p = "foo" || "bar"
-      val List((path1, op1), (path2, op2)) = builder.collectPaths(p.rule :: Nil, q, baseOp)
+      val List((path1, op1), (path2, op2)) = builder.collectOperation(p.rule :: Nil, q, baseOp)
       (path1 should_== "/foo") && (op1 should_== baseOp) &&
         (path2 should_== "/bar") && (op2 should_== baseOp)
     }
@@ -119,21 +119,21 @@ class ApiBuilderSpec extends Specification {
       val p = pathVar[Int]("foo") || pathVar[Int]("bar")
       val param1 = Parameter("foo", None, None, true, false, "integer", paramType = "path")
       val param2 = Parameter("bar", None, None, true, false, "integer", paramType = "path")
-      val List((path1, op1), (path2, op2)) = builder.collectPaths(p.rule :: Nil, q, baseOp)
+      val List((path1, op1), (path2, op2)) = builder.collectOperation(p.rule :: Nil, q, baseOp)
       (path1 should_== "/{foo}") && (op1.parameters.length should_== 1) && (op1.parameters.head should_== param1)
       (path2 should_== "/{bar}") && (op2.parameters.length should_== 1) && (op2.parameters.head should_== param2)
     }
 
     "find a simple path" in {
       val p = "foo"
-      val List((path, op)) = builder.collectPaths(p.rule :: Nil, q, baseOp)
+      val List((path, op)) = builder.collectOperation(p.rule :: Nil, q, baseOp)
       (path should_== "/foo") && (op should_== baseOp)
     }
 
     "find a simple path with a capture" in {
       val path = "foo" / pathVar[Int]("number")
       val param = Parameter("number", None, None, true, false, "integer", paramType = "path")
-      val List((pathstr, op)) = builder.collectPaths(path.rule :: Nil, q, baseOp)
+      val List((pathstr, op)) = builder.collectOperation(path.rule :: Nil, q, baseOp)
       (pathstr should_== "/foo/{number}") &&
         (op.parameters.length should_== 1) &&
         (op.parameters.head should_== param)

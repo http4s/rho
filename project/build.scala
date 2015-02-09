@@ -135,6 +135,7 @@ object Dependencies {
   lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.2.11"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
   lazy val swaggerModels       = "com.wordnik"                 % "swagger-models"        % "1.5.0-M1"
+  lazy val swaggerCore         = "com.wordnik"                 % "swagger-core"        % "1.5.0-M1"
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
   lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
   lazy val uadetector          = "net.sf.uadetector" % "uadetector-resources" % "2014.09"
@@ -144,13 +145,14 @@ object Dependencies {
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
     swaggerModels,
-    json4sJackson,
-    json4s
+    swaggerCore
   )
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
     http4sBlaze,
     http4sDSL,
+    json4s,
+    json4sJackson,
     http4sJson4sJackson,
     uadetector
   )
