@@ -1,21 +1,22 @@
 package org.http4s
 package rho.bits
 
-import org.http4s.rho.SyncRespBuilder
-import SyncRespBuilder.badRequest
+import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.QueryParser.Params
+import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 
 import scala.language.higherKinds
 
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
+import scalaz.concurrent.Task
 
 trait QueryParser[A] {
   import QueryParser.Params
   def collect(name: String, params: Params, default: Option[A]): ParserResult[A]
 }
 
-final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Response]) extends QueryParser[A] {
+final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Task[BaseResult]]) extends QueryParser[A] {
   override def collect(name: String, params: Params, default: Option[A]): ParserResult[A] = {
     val result = parent.collect(name, params, default)
     result.flatMap{ r => validate(r) match {
@@ -75,11 +76,11 @@ object QueryParser {
 
         case Some(Seq()) => default match {
           case Some(defaultValue) => ParserSuccess(defaultValue)
-          case None => ValidationFailure(badRequest(s"Value of query parameter '$name' missing"))
+          case None => ValidationFailure(BadRequest(s"Value of query parameter '$name' missing"))
         }
         case None => default match {
           case Some(defaultValue) => ParserSuccess(defaultValue)
-          case None => ValidationFailure(badRequest(s"Missing query param: $name"))
+          case None => ValidationFailure(BadRequest(s"Missing query param: $name"))
         }
       }
     }

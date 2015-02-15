@@ -1,5 +1,8 @@
 package org.http4s
 
+import org.http4s.rho.Result.BaseResult
+import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
+
 import scala.language.implicitConversions
 
 import rho.bits.PathAST._
@@ -10,6 +13,7 @@ import shapeless.{HNil, ::}
 import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
+import scalaz.concurrent.Task
 
 package object rho extends Http4s with ResultSyntaxInstances {
 
@@ -31,21 +35,36 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     TypedQuery(QueryCapture(name, parser, default = None, m))
 
-  def param[T](name: String, default: T, validate: T => Boolean = (_: T) => true)
+  /** Define a query parameter with a default value */
+  def param[T](name: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    TypedQuery(QueryCapture(name, parser, default = Some(default), m))
+
+  /** Define a query parameter that will be validated with the predicate
+    *
+    * Failure of the predicate results in a '403: BadRequest' response. */
+  def param[T](name: String, validate: T => Boolean)
                (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    paramR(name, default, {t =>
+    paramR(name, {t =>
       if (validate(t)) None
-      else Some(SyncRespBuilder.badRequest("Invalid query parameter: \"" + t + "\""))
+      else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
     })
 
-  /**
-   * Defines a parameter in query string that should be bound to a route definition.
-   * @param name name of the parameter in query
-   * @param default value that should be used if no or an invalid parameter is available
-   * @param validate analyze the query and give an optional alternative Response
-   */
-  def paramR[T](name: String, default: T, validate: T => Option[Response] = (_: T) => None)
-                                          (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  /** Define a query parameter that will be validated with the predicate
+    *
+    * Failure of the predicate results in a '403: BadRequest' response. */
+  def param[T](name: String, default: T, validate: T => Boolean)
+              (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    paramR(name, default, {t =>
+      if (validate(t)) None
+      else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
+    })
+
+  /** Defines a parameter in query string that should be bound to a route definition. */
+  def paramR[T](name: String, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    TypedQuery(QueryCapture(name, new ValidatingParser(parser, validate), default = None, m))
+
+  /** Defines a parameter in query string that should be bound to a route definition. */
+  def paramR[T](name: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     TypedQuery(QueryCapture(name, new ValidatingParser(parser, validate), default = Some(default), m))
 
   /**
@@ -79,11 +98,11 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
     requireThatR(header){ h =>
       if (f(h)) None
-      else Some(SyncRespBuilder.badRequest("Invalid header: " + h.value))
+      else Some(BadRequest("Invalid header: " + h.value))
     }
 
   /* Check that the header exists and satisfies the condition */
-  def requireThatR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Response]): TypedHeader[HNil] =
+  def requireThatR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
     TypedHeader(HeaderRequire(header, f))
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */

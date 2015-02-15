@@ -3,6 +3,7 @@ package rho
 
 import bits.HeaderAST._
 import bits.QueryAST._
+import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 
 import org.http4s.rho.bits._
 
@@ -10,8 +11,6 @@ import shapeless.{ HNil, HList, :: }
 
 
 trait ExecutableCompiler {
-
-  import SyncRespBuilder.badRequest
 
   def parsePath(path: String): List[String] = path.split("/").toList
 
@@ -31,17 +30,17 @@ trait ExecutableCompiler {
 
       case HeaderCapture(key) => req.headers.get(key) match {
         case Some(h) => ParserSuccess(h::stack)
-        case None => ValidationFailure(badRequest(s"Missing header: ${key.name}"))
+        case None => ValidationFailure(BadRequest(s"Missing header: ${key.name}"))
       }
 
       case HeaderRequire(key, f) => req.headers.get(key) match {
         case Some(h) => f(h).fold[ParserResult[HList]](ParserSuccess(stack))(r =>ValidationFailure(r))
-        case None => ValidationFailure(badRequest(s"Missing header: ${key.name}"))
+        case None => ValidationFailure(BadRequest(s"Missing header: ${key.name}"))
       }
 
       case HeaderMapper(key, f) => req.headers.get(key) match {
         case Some(h) => ParserSuccess(f(h)::stack)
-        case None => ValidationFailure(badRequest(s"Missing header: ${key.name}"))
+        case None => ValidationFailure(BadRequest(s"Missing header: ${key.name}"))
       }
 
       case MetaCons(r, _) => runValidation(req, r, stack)
