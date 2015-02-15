@@ -32,7 +32,7 @@ trait RhoService extends bits.MethodAliases
       case NoMatch              => Task.now(None)
       case ParserSuccess(t)     => attempt(t).map(Some(_))
       case ParserFailure(s)     => onBadRequest(s).map(Some(_))
-      case ValidationFailure(s) => onBadRequest(s).map(Some(_))
+      case ValidationFailure(r) => Task.now(Some(r))
     }
   }
 

@@ -5,6 +5,7 @@ import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST.QueryRule
 import org.http4s.rho.bits.{HeaderAppendable, HListToFunc}
+import headers.`Content-Type`
 
 import shapeless.{::, HList}
 import shapeless.ops.hlist.Prepend
@@ -70,7 +71,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override val headers: HeaderRule = {
     if (!decoder.consumes.isEmpty) {
-      val mt = requireThat(Header.`Content-Type`) { h: Header.`Content-Type`.HeaderT =>
+      val mt = requireThat(`Content-Type`) { h: `Content-Type`.HeaderT =>
         decoder.matchesMediaType(h.mediaType)
       }
 

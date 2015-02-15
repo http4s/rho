@@ -31,13 +31,21 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     TypedQuery(QueryCapture(name, parser, default = None, m))
 
+  def param[T](name: String, default: T, validate: T => Boolean = (_: T) => true)
+               (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    paramR(name, default, {t =>
+      if (validate(t)) None
+      else Some(SyncRespBuilder.badRequest("Invalid query parameter: \"" + t + "\""))
+    })
+
   /**
    * Defines a parameter in query string that should be bound to a route definition.
    * @param name name of the parameter in query
    * @param default value that should be used if no or an invalid parameter is available
-   * @param validate predicate to determine if a parameter is valid
+   * @param validate analyze the query and give an optional alternative Response
    */
-  def param[T](name: String, default: T, validate: T => Boolean = (_: T) => true)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String, default: T, validate: T => Option[Response] = (_: T) => None)
+                                          (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     TypedQuery(QueryCapture(name, new ValidatingParser(parser, validate), default = Some(default), m))
 
   /**
@@ -65,10 +73,17 @@ package object rho extends Http4s with ResultSyntaxInstances {
   /////////////////////////////// Header helpers //////////////////////////////////////
 
   /* Checks that the header exists */
-  def require(header: HeaderKey.Extractable): TypedHeader[HNil] = requireThat(header)(_ => true)
+  def require(header: HeaderKey.Extractable): TypedHeader[HNil] = requireThatR(header)(_ => None)
 
   /* Check that the header exists and satisfies the condition */
   def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
+    requireThatR(header){ h =>
+      if (f(h)) None
+      else Some(SyncRespBuilder.badRequest("Invalid header: " + h.value))
+    }
+
+  /* Check that the header exists and satisfies the condition */
+  def requireThatR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Response]): TypedHeader[HNil] =
     TypedHeader(HeaderRequire(header, f))
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */

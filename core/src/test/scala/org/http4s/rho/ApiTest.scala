@@ -1,11 +1,11 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.MethodAliases._
-import org.http4s.rho.bits.ResponseGeneratorInstances._
+import bits.MethodAliases._
+import bits.ResponseGeneratorInstances._
 
-import org.http4s.rho.bits.HeaderAST.{TypedHeader, HeaderAnd}
-import org.http4s.rho.bits.{RhoPathTree, ParserSuccess, ValidationFailure}
+import bits.HeaderAST.{TypedHeader, HeaderAnd}
+import bits.{RhoPathTree, ParserSuccess, ValidationFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -15,18 +15,18 @@ import scodec.bits.ByteVector
 
 // TODO: these tests are a bit of a mess
 class ApiTest extends Specification {
-  val lenheader = Header.`Content-Length`(4)
-  val etag = Header.ETag("foo")
+  val lenheader = headers.`Content-Length`(4)
+  val etag = headers.ETag("foo")
 
-  val RequireETag = require(Header.ETag)
-  val RequireNonZeroLen = requireThat(Header.`Content-Length`){ h => h.length != 0 }
+  val RequireETag = require(headers.ETag)
+  val RequireNonZeroLen = requireThat(headers.`Content-Length`){ h => h.length != 0 }
 
   def fetchETag(p: Task[Option[Response]]): String = {
     val resp = p.run
 
     val mvalue = for {
       r <- resp
-      h <- r.headers.get(Header.ETag)
+      h <- r.headers.get(headers.ETag)
     } yield h.value
 
     mvalue.getOrElse(sys.error("No ETag: " + resp))
@@ -39,8 +39,10 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
-      RhoPathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq) should_==
-                ValidationFailure(s"Missing header: ${etag.name}")
+      val res = RhoPathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
+
+      res must beAnInstanceOf[ValidationFailure]
+      res.asInstanceOf[ValidationFailure].response.status must_== Status.BadRequest
     }
 
     "Match captureless route" in {

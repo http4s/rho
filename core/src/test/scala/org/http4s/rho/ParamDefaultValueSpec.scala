@@ -205,10 +205,10 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test9")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test9?param1=")) must be equalTo "Invalid parameter: \"\""
+      body(requestGet("/test9?param1=")) must be equalTo "Invalid query parameter: \"\""
     }
     "fail to map parameter with invalid value" in {
-      body(requestGet("/test9?param1=fail")) must be equalTo "Invalid parameter: \"fail\""
+      body(requestGet("/test9?param1=fail")) must be equalTo "Invalid query parameter: \"fail\""
     }
     "map parameter with valid value" in {
       body(requestGet("/test9?param1=pass")) must be equalTo "test9:pass"
@@ -227,7 +227,7 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test10?param1=")) must be equalTo "Invalid Number Format: \"\""
     }
     "fail to map parameter with invalid numeric value" in {
-      body(requestGet("/test10?param1=-4")) must be equalTo "Invalid parameter: \"-4\""
+      body(requestGet("/test10?param1=-4")) must be equalTo "Invalid query parameter: \"-4\""
     }
     "fail to map parameter with non-numeric value" in {
       body(requestGet("/test10?param1=value1")) must be equalTo "Invalid Number Format: \"value1\""
@@ -249,7 +249,7 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test11?param1=")) must be equalTo "Invalid Number Format: \"\""
     }
     "fail to map parameter with invalid numeric value" in {
-      body(requestGet("/test11?param1=0")) must be equalTo "Invalid parameter: \"Some(0)\""
+      body(requestGet("/test11?param1=0")) must be equalTo "Invalid query parameter: \"Some(0)\""
     }
     "fail to map parameter with non-numeric value" in {
       body(requestGet("/test11?param1=value1")) must be equalTo "Invalid Number Format: \"value1\""
@@ -268,10 +268,10 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test12")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test12?param1=")) must be equalTo "Invalid parameter: \"Some()\""
+      body(requestGet("/test12?param1=")) must be equalTo "Invalid query parameter: \"Some()\""
     }
     "fail to map parameter with invalid value" in {
-      body(requestGet("/test12?param1=fail")) must be equalTo "Invalid parameter: \"Some(fail)\""
+      body(requestGet("/test12?param1=fail")) must be equalTo "Invalid query parameter: \"Some(fail)\""
     }
     "map parameter with valid value" in {
       body(requestGet("/test12?param1=pass")) must be equalTo "test12:pass"
@@ -287,13 +287,13 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test13")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test13?param1=")) must be equalTo "Invalid parameter: \"List()\""
+      body(requestGet("/test13?param1=")) must be equalTo "Invalid query parameter: \"List()\""
     }
     "fail to map parameter with one invalid value" in {
-      body(requestGet("/test13?param1=z")) must be equalTo "Invalid parameter: \"List(z)\""
+      body(requestGet("/test13?param1=z")) must be equalTo "Invalid query parameter: \"List(z)\""
     }
     "map parameter with many values and one invalid" in {
-      body(requestGet("/test13?param1=z&param1=aa&param1=bb")) must be equalTo "Invalid parameter: \"List(z, aa, bb)\""
+      body(requestGet("/test13?param1=z&param1=aa&param1=bb")) must be equalTo "Invalid query parameter: \"List(z, aa, bb)\""
     }
     "map parameter with many valid values" in {
       body(requestGet("/test13?param1=c&param1=d")) must be equalTo "test13:c,d"
@@ -312,7 +312,7 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test14?param1=")) must be equalTo "Invalid Number Format: \"\""
     }
     "fail to map parameter with one invalid numeric value" in {
-      body(requestGet("/test14?param1=8&param1=5&param1=3")) must be equalTo "Invalid parameter: \"List(8, 5, 3)\""
+      body(requestGet("/test14?param1=8&param1=5&param1=3")) must be equalTo "Invalid query parameter: \"List(8, 5, 3)\""
     }
     "fail to map parameter with one non-numeric value" in {
       body(requestGet("/test14?param1=test")) must be equalTo "Invalid Number Format: \"test\""

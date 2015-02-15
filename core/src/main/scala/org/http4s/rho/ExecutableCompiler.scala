@@ -11,6 +11,8 @@ import shapeless.{ HNil, HList, :: }
 
 trait ExecutableCompiler {
 
+  import SyncRespBuilder.badRequest
+
   def parsePath(path: String): List[String] = path.split("/").toList
 
   //////////////////////// Stuff for executing the route //////////////////////////////////////
@@ -29,17 +31,17 @@ trait ExecutableCompiler {
 
       case HeaderCapture(key) => req.headers.get(key) match {
         case Some(h) => ParserSuccess(h::stack)
-        case None => ValidationFailure(s"Missing header: ${key.name}")
+        case None => ValidationFailure(badRequest(s"Missing header: ${key.name}"))
       }
 
       case HeaderRequire(key, f) => req.headers.get(key) match {
-        case Some(h) => if (f(h)) ParserSuccess(stack) else ValidationFailure(s"Invalid header: $h")
-        case None => ValidationFailure(s"Missing header: ${key.name}")
+        case Some(h) => f(h).fold[ParserResult[HList]](ParserSuccess(stack))(r =>ValidationFailure(r))
+        case None => ValidationFailure(badRequest(s"Missing header: ${key.name}"))
       }
 
       case HeaderMapper(key, f) => req.headers.get(key) match {
         case Some(h) => ParserSuccess(f(h)::stack)
-        case None => ValidationFailure(s"Missing header: ${key.name}")
+        case None => ValidationFailure(badRequest(s"Missing header: ${key.name}"))
       }
 
       case MetaCons(r, _) => runValidation(req, r, stack)
