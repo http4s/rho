@@ -2,8 +2,8 @@ package org.http4s
 package rho
 package swagger
 
-import com.wordnik.swagger.models.{Swagger, Model, ModelImpl, Operation, Path, Response}
-import com.wordnik.swagger.models.parameters.{PathParameter, QueryParameter, HeaderParameter, Parameter}
+import com.wordnik.swagger.models.{Swagger, Model, ModelImpl, RefModel, Operation, Path, Response}
+import com.wordnik.swagger.models.parameters.{BodyParameter, PathParameter, QueryParameter, HeaderParameter, Parameter}
 import com.wordnik.swagger.models.properties.{RefProperty}
 
 import org.http4s.rho.bits.HeaderAST.HeaderRule
@@ -21,30 +21,35 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
   private[this] val logger = getLogger
 
   val swaggerVersion = "2.0"
-  val basePath = "/"
 
   def actionToApiListing(action: RhoAction[_, _]): Unit = {
 
     val models = {
-      val models = action.resultInfo.collect {
+      val types = action.resultInfo.collect {
         case TypeOnly(tpe) => tpe
         case StatusAndType(_, tpe) => tpe
-      }.foldLeft(Set.empty[Model]){(s, tpe) =>
+      } ++ (action.router match {
+        case r: CodecRouter[_, _] => Set(r.entityType)
+        case _ => Set.empty
+      })
+
+      val models = types.foldLeft(Set.empty[Model]) { (s, tpe) =>
         TypeBuilder.collectModels(tpe, s, formats)
       }
+
       models.map(m => m.getDescription -> m).toMap
     }
 
     models.foreach { case (name, model) => swagger.model(name, model) }
 
-    collectPaths(action.path::Nil).foreach { case (str, path) =>
+    collectPaths(action.path::Nil).foreach { case (pathstr, path) =>
       val method = action.method.name.toLowerCase
-      swagger.getPath(str) match {
+      swagger.getPath(pathstr) match {
         case p: Path =>
-          p.set(method, mkOperation(str, action))
-        case null    =>
-          path.set(method, mkOperation(str, action))
-          swagger.path(str, path)
+          p.set(method, mkOperation(pathstr, action))
+        case null =>
+          path.set(method, mkOperation(pathstr, action))
+          swagger.path(pathstr, path)
       }
     }
   }
@@ -53,14 +58,23 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
     val op = new Operation
 
     analyzeQuery(action.query).foreach(op.addParameter)
-    analyzeHeaders(action.headers).foreach(op.addParameter)    
+    analyzeHeaders(action.headers).foreach(op.addParameter)
     getOpSummary(action.path::Nil).foreach(op.summary)
+
     op.operationId(mkOperationId(pathstr, action.method))
-    op.tag(pathstr.split("/").head)
+    op.tag(pathstr.split("/").filterNot(_ == "").head)
+
     action.validMedia.foreach(media => op.addConsumes(media.renderString))
     action.responseEncodings.foreach(enc => op.produces(enc.renderString))
 
-    action.resultInfo.toList.foreach {
+    action.router match {
+      case r: CodecRouter[_, _] =>
+        val name = r.entityType.simpleName
+        op.addParameter((new BodyParameter).name("body").description(name).schema(new RefModel(name)))
+      case _ =>
+    }
+
+    action.resultInfo.foreach {
       case TypeOnly(tpe) =>
         op.response(200, (new Response).description("OK").schema(new RefProperty(tpe.simpleName)))
       case StatusAndType(s, tpe) =>
@@ -74,7 +88,8 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
   }
 
   private[swagger] def mkOperationId(path: String, method: Method): String = {
-    method.toString.toLowerCase + path.split("/")
+    method.toString.toLowerCase +
+    path.split("/")
       .filter(s => !s.isEmpty && !(s.startsWith("{") && s.endsWith("}")))
       .map(_.capitalize)
       .mkString
@@ -96,7 +111,7 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
     go(stack, Nil).map(_.reverse)
   }
 
-    private[swagger] def collectPaths(stack: List[PathRule]): List[(String, Path)] = {
+  private[swagger] def collectPaths(stack: List[PathRule]): List[(String, Path)] = {
 
     def go(stack: List[PathOperation], pathstr: String, path: Path): (String, Path) = stack match {
       case PathMatch("")::Nil   => go(Nil, pathstr, path)
@@ -126,10 +141,7 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
       case Nil => pathstr -> path
     }
 
-    linearizeStack(stack).map { pathstack =>
-      val (pathstr, path) = go(pathstack, "", new Path)
-      (pathstr, path)
-    }
+    linearizeStack(stack).map(go(_, "", new Path))
   }
 
   private[swagger] def getOpSummary(stack: List[PathRule]): Option[String] = {
@@ -211,7 +223,7 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
 
     def mkParam(key: HeaderKey.Extractable): Parameter = {
       val p = new HeaderParameter
-      p.setName(key.name.toString())
+      p.setName(key.name.toString)
       p.setRequired(true)
       p.setType("string")
       p

@@ -103,36 +103,36 @@ class ApiBuilderSpec extends Spec with ScalazMatchers with SwaggerModelsInstance
   "ApiBuilder.collectPaths" should {
 
     "find a simple path" in {
-      val p0 = "foo"
-      val List((path, p1)) = builder.collectPaths(p0.rule :: Nil)
+      val ps0 = "foo"
+      val List((ps1, p1)) = builder.collectPaths(ps0.rule :: Nil)
 
-     (path should_== "/foo") && (p1 must equal(new m.Path))
+      (ps1 should_== "/foo") && (p1 must equal(new m.Path))
     }
 
     "find a simple AND path" in {
-      val p0 = "foo" / "bar"
-      val List((path, p1)) = builder.collectPaths(p0.rule :: Nil)
+      val ps0 = "foo" / "bar"
+      val List((ps1, p1)) = builder.collectPaths(ps0.rule :: Nil)
 
-      (path should_== "/foo/bar") && (p1 must equal (new m.Path))
+      (ps1 should_== "/foo/bar") && (p1 must equal (new m.Path))
     }
 
     "find a simple OR path" in {
-      val p0 = "foo" || "bar"
-      val List((path1, p1), (path2, p2)) = builder.collectPaths(p0.rule :: Nil)
+      val ps0 = "foo" || "bar"
+      val List((ps1, p1), (ps2, p2)) = builder.collectPaths(ps0.rule :: Nil)
 
-      (path1 should_== "/foo") && (p1 must equal(new m.Path)) &&
-      (path2 should_== "/bar") && (p2 must equal(new m.Path))
+      (ps1 should_== "/foo") && (p1 must equal(new m.Path)) &&
+      (ps2 should_== "/bar") && (p2 must equal(new m.Path))
     }
 
     "find a capture OR path" in {
-      val p0 = pathVar[Int]("foo") || pathVar[Int]("bar")
+      val ps0 = pathVar[Int]("foo") || pathVar[Int]("bar")
       val pp1 = (new PathParameter).name("foo")
       pp1.setType("integer")
       pp1.setRequired(true)
       val pp2 = (new PathParameter).name("bar")
       pp2.setType("integer")
       pp2.setRequired(true)
-      val List((ps1, p1), (ps2, p2)) = builder.collectPaths(p0.rule :: Nil)
+      val List((ps1, p1), (ps2, p2)) = builder.collectPaths(ps0.rule :: Nil)
 
       (ps1 should_== "/{foo}") && (p1.getParameters.size should_== 1) && (p1.getParameters.get(0) must equal(pp1))
       (ps2 should_== "/{bar}") && (p2.getParameters.size should_== 1) && (p2.getParameters.get(0) must equal(pp2))
@@ -186,7 +186,7 @@ class ApiBuilderSpec extends Spec with ScalazMatchers with SwaggerModelsInstance
 
       import scala.collection.JavaConversions._
 
-      swagger.getDefinitions.toList.map(_._1) must_== List("ModelA", "ModelB", "ModelC")
+      swagger.getDefinitions.toList.map(_._1) must_== List("ModelB", "ModelA", "ModelC")
     }
   }
 }

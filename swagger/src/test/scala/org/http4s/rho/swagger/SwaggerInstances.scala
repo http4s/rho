@@ -13,9 +13,41 @@ trait SwaggerModelsInstances {
 
   // I wonder if all this boilerplate could be avoided?
 
-  //
-  // Parameters
-  //
+  implicit val infoInstances: Equal[Info] with Show[Info] =
+    new Equal[Info] with Show[Info] {
+      def equal(i1: Info, i2: Info): Boolean = {
+        i1.getDescription     === i2.getDescription     &&
+        i1.getVersion         === i2.getVersion         &&
+        i1.getTitle           === i2.getTitle           &&
+        i1.getTermsOfService  === i2.getTermsOfService  &&
+        i1.getContact         === i2.getContact         &&
+        i1.getLicense         === i2.getLicense
+      }
+      override def shows(i: Info): String =
+        List(i.getDescription, i.getVersion, i.getTitle, i.getTermsOfService,
+          i.getContact.shows, i.getLicense.shows).mkString("Info(", ",", ")")
+    }
+
+  implicit val contactInstances: Equal[Contact] with Show[Contact] =
+    new Equal[Contact] with Show[Contact] {
+      def equal(i1: Contact, i2: Contact): Boolean = {
+        i1.getName   === i2.getName   &&
+        i1.getUrl    === i2.getUrl    &&
+        i1.getEmail  === i2.getEmail          
+      }
+      override def shows(i: Contact): String =
+        List(i.getName, i.getUrl, i.getEmail).mkString("Contact(", ",", ")")
+    }
+
+  implicit val licenseInstances: Equal[License] with Show[License] =
+    new Equal[License] with Show[License] {
+      def equal(i1: License, i2: License): Boolean = {
+        i1.getName  === i2.getName  &&
+        i1.getUrl   === i2.getUrl
+      }
+      override def shows(i: License): String =
+        List(i.getName, i.getUrl).mkString("License(", ",", ")")
+    }
 
   implicit val parameterInstances: Equal[Parameter] with Show[Parameter] =
     new Equal[Parameter] with Show[Parameter] {
@@ -48,16 +80,16 @@ trait SwaggerModelsInstances {
   implicit val queryParameterInstances: Equal[QueryParameter] with Show[QueryParameter] =
     new Equal[QueryParameter] with Show[QueryParameter] {
       def equal(qp1: QueryParameter, qp2: QueryParameter): Boolean = {
-        qp1.getName         === qp2.getName         &&
-        qp1.getIn           === qp2.getIn           &&
-        qp1.getDescription  === qp2.getDescription  &&
-        qp1.getRequired     === qp2.getRequired     &&
-        qp1.getType         === qp2.getType         &&
-        qp1.getDefaultValue === qp2.getDefaultValue
+        qp1.getName          === qp2.getName         &&
+        qp1.getIn            === qp2.getIn           &&
+        qp1.getDescription   === qp2.getDescription  &&
+        qp1.getRequired      === qp2.getRequired     &&
+        qp1.getType          === qp2.getType         &&
+        qp1.getDefaultValue  === qp2.getDefaultValue
       }
       override def shows(qp: QueryParameter): String =
         List(qp.getName, qp.getIn, qp.getDescription, qp.getRequired.shows,
-          qp.getType, qp.getDefaultValue).mkString("QueryParameter(", ",", ")")      
+          qp.getType, qp.getDefaultValue).mkString("QueryParameter(", ",", ")")
     }
 
   implicit val headerParameterInstances: Equal[HeaderParameter] with Show[HeaderParameter] =
@@ -127,9 +159,14 @@ trait SwaggerModelsInstances {
         List().mkString("FormParameter(", ",", ")")
     }
 
-  //
-  // Operation
-  //
+  implicit val propertyInstances: Equal[Property] with Show[Property] =
+    new Equal[Property] with Show[Property] {
+      def equal(p1: Property, p2: Property): Boolean = {
+        true
+      }
+      override def shows(p: Property): String =
+        List().mkString("Property(", ",", ")")
+    }
 
   implicit val operationInstances: Equal[Operation] with Show[Operation] =
     new Equal[Operation] with Show[Operation] {
@@ -160,10 +197,6 @@ trait SwaggerModelsInstances {
       }
     }
 
-  //
-  // Path
-  //
-
   implicit val pathIntances: Equal[Path] with Show[Path] =
     new Equal[Path] with Show[Path] {
       def equal(p1: Path, p2: Path): Boolean = {
@@ -186,10 +219,6 @@ trait SwaggerModelsInstances {
           p.getParameters.shows).mkString("Path(", ",", ")")
     }
 
-  //
-  // Response
-  //
-
   implicit val responseInstances: Equal[Response] with Show[Response] =
     new Equal[Response] with Show[Response] {
       def equal(r1: Response, r2: Response): Boolean = {
@@ -208,10 +237,6 @@ trait SwaggerModelsInstances {
           List(r.getDescription).mkString("Response(", ",", ")")
       }
     }
-
-  //
-  // Java
-  //
 
   implicit def javaListInstances[A:Equal:Show]: Equal[java.util.List[A]] with Show[java.util.List[A]] =
     new Equal[java.util.List[A]] with Show[java.util.List[A]] {
