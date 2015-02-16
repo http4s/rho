@@ -45,9 +45,8 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
     collectPaths(action.path::Nil).foreach { case (pathstr, path) =>
       val method = action.method.name.toLowerCase
       swagger.getPath(pathstr) match {
-        case p: Path =>
-          p.set(method, mkOperation(pathstr, action))
-        case null =>
+        case p: Path =>  p.set(method, mkOperation(pathstr, action))
+        case null    =>
           path.set(method, mkOperation(pathstr, action))
           swagger.path(pathstr, path)
       }
@@ -62,7 +61,7 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
     getOpSummary(action.path::Nil).foreach(op.summary)
 
     op.operationId(mkOperationId(pathstr, action.method))
-    op.tag(pathstr.split("/").filterNot(_ == "").head)
+    op.tag(pathstr.split("/").filterNot(_ == "").headOption.getOrElse("/"))
 
     action.validMedia.foreach(media => op.addConsumes(media.renderString))
     action.responseEncodings.foreach(enc => op.produces(enc.renderString))
@@ -95,11 +94,6 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
       .mkString
   }
 
-  private def concatPath(p1: String, p2: String): String = p1 match {
-    case "" => p2
-    case p1 => p1 + "/" + p2
-  }
-
   private def linearizeStack(stack: List[PathRule]): List[List[PathOperation]] = {
     def go(stack: List[PathRule], acc: List[PathOperation]): List[List[PathOperation]] = stack match {
       case PathOr(a, b)::xs           => go(a::xs, acc):::go(b::xs, acc)
@@ -114,10 +108,11 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
   private[swagger] def collectPaths(stack: List[PathRule]): List[(String, Path)] = {
 
     def go(stack: List[PathOperation], pathstr: String, path: Path): (String, Path) = stack match {
-      case PathMatch("")::Nil   => go(Nil, pathstr, path)
-      case PathMatch(s)::xs     => go(xs, concatPath(pathstr, s), path)
-
-      case PathCapture(id, parser, _) :: xs =>
+      case Nil                            => (if (pathstr == "") "/" else pathstr) -> path
+      case PathMatch("")::xs              => go(xs, pathstr, path)
+      case PathMatch(s)::xs               => go(xs, pathstr + "/" + s, path)
+      case MetaCons(_, meta)::xs          => go(xs, pathstr, path)
+      case PathCapture(id, parser, _)::xs =>
         val tpe = parser.typeTag.map(tag => getType(tag.tpe)).getOrElse("string")
         val p = new PathParameter
         p.setName(id)
@@ -135,11 +130,7 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
         val path = new Path
         path.addParameter(p)
         pathstr + "/{tail...}" -> path
-
-      case MetaCons(_, meta)::xs => go(xs, pathstr, path)
-
-      case Nil => pathstr -> path
-    }
+    } // stack match
 
     linearizeStack(stack).map(go(_, "", new Path))
   }
