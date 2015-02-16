@@ -14,7 +14,7 @@ import shapeless.HList
 trait SwaggerSupport extends RhoService {
 
   /** Override the `swaggerFormats` to add your own custom serializers */
-//  def swaggerFormats: SwaggerFormats = DefaultSwaggerFormats
+  def swaggerFormats: SwaggerFormats = DefaultSwaggerFormats
 
   def apiPath = "swagger.json"
   def apiVersion: String = "1.0.0"
@@ -42,6 +42,6 @@ trait SwaggerSupport extends RhoService {
 
   override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
     super.append(action)
-    new ApiBuilder(apiVersion, swagger).actionToApiListing(action)
+    new ApiBuilder(apiVersion, swagger, swaggerFormats).actionToApiListing(action)
   }
 }
