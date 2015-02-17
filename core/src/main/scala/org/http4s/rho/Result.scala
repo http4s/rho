@@ -78,8 +78,10 @@ import Result._
 
 trait ResultSyntaxInstances {
 
-  implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends MessageOps {
+  implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends ResponseOps {
     override type Self = T
+
+    def withStatus[S <% Status](status: S): Self = r.copy(resp = r.resp.copy(status = status))
 
     override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
       val t: Task[ParseFailure\/T] = r.resp.attemptAs(decoder).run
@@ -103,8 +105,12 @@ trait ResultSyntaxInstances {
     }
   }
 
-  implicit class TaskResultSyntax[T >: Result.TopResult <: BaseResult](r: Task[T]) extends MessageOps {
+  implicit class TaskResultSyntax[T >: Result.TopResult <: BaseResult](r: Task[T]) extends ResponseOps {
     override type Self = Task[T]
+
+    def withStatus[S <% Status](status: S): Self = r.map{ result =>
+      result.copy(resp = result.resp.copy(status = status))
+    }
 
     override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
       val t: Task[ParseFailure\/T] = r.flatMap { t =>
