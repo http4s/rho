@@ -34,7 +34,7 @@ object MyService extends RhoService with SwaggerSupport {
     hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / pathVar[String] +? param[Int]("id") |>>
+    GET / "result" / 'foo +? param[Int]("id") |>>
     { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **

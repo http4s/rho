@@ -12,6 +12,8 @@ import org.http4s.rho.bits._
 import bits.PathAST._
 import bits.QueryAST.{QueryCapture, QueryRule}
 
+import scala.collection.JavaConversions._
+
 import org.log4s.getLogger
 
 import scala.reflect.runtime.universe.{ Type, weakTypeOf }
@@ -43,11 +45,16 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
     models.foreach { case (name, model) => swagger.model(name, model) }
 
     collectPaths(action.path::Nil).foreach { case (pathstr, path) =>
+
       val method = action.method.name.toLowerCase
+      val op = mkOperation(pathstr, action)
+      Option(path.getParameters()).foreach(_.foreach(op.addParameter))
+      path.setParameters(null)
+
       swagger.getPath(pathstr) match {
-        case p: Path =>  p.set(method, mkOperation(pathstr, action))
+        case p: Path =>  p.set(method, op)
         case null    =>
-          path.set(method, mkOperation(pathstr, action))
+          path.set(method, op)
           swagger.path(pathstr, path)
       }
     }
@@ -55,7 +62,6 @@ class ApiBuilder(apiVersion: String, swagger: Swagger, formats: SwaggerFormats) 
 
   private[swagger] def mkOperation(pathstr: String, action: RhoAction[_, _]): Operation = {
     val op = new Operation
-
     analyzeQuery(action.query).foreach(op.addParameter)
     analyzeHeaders(action.headers).foreach(op.addParameter)
     getOpSummary(action.path::Nil).foreach(op.summary)
