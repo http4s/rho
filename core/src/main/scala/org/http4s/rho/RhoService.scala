@@ -32,7 +32,7 @@ trait RhoService extends bits.MethodAliases
       case NoMatch              => Task.now(None)
       case ParserSuccess(t)     => attempt(t).map(Some(_))
       case ParserFailure(s)     => onBadRequest(s).map(Some(_))
-      case ValidationFailure(s) => onBadRequest(s).map(Some(_))
+      case ValidationFailure(r) => r.map( r => Some(r.resp))
     }
   }
 
@@ -55,7 +55,7 @@ trait RhoService extends bits.MethodAliases
     val w = EntityEncoder.stringEncoder
     w.toEntity(reason).map{ entity =>
       val hs = entity.length match {
-        case Some(l) => w.headers.put(Header.`Content-Length`(l))
+        case Some(l) => w.headers.put(headers.`Content-Length`(l))
         case None    => w.headers
       }
       Response(status, body = entity.body, headers = hs)

@@ -1,8 +1,11 @@
 package org.http4s
 package rho.bits
 
+import org.http4s.rho.Result.BaseResult
 import shapeless.ops.hlist.Prepend
 import shapeless.{::, HList}
+
+import scalaz.concurrent.Task
 
 /** AST representing the Header operations of the DSL */
 object HeaderAST {
@@ -23,7 +26,7 @@ object HeaderAST {
 
   sealed trait HeaderRule
 
-  case class HeaderRequire[T <: HeaderKey.Extractable](key: T, f: T#HeaderT => Boolean) extends HeaderRule
+  case class HeaderRequire[T <: HeaderKey.Extractable](key: T, f: T#HeaderT => Option[Task[BaseResult]]) extends HeaderRule
 
   case class HeaderMapper[T <: HeaderKey.Extractable, R](key: T, f: T#HeaderT => R) extends HeaderRule
 

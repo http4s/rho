@@ -16,7 +16,18 @@ object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
   import org.http4s.rho.swagger._
 
+  import org.http4s.headers
+  import org.http4s.{Request, Headers, DateTime}
+
   case class JsonResult(name: String, number: Int) extends AutoSerializable
+
+  val requireCookie = requireThatR(headers.Cookie){ cookie =>
+    cookie.values.toList.find(c => c.name == "Foo" && c.content == "bar") match {
+      case Some(_) => None   // Cookie found, good to go.
+      case None => // Didn't find cookie
+        Some(TemporaryRedirect(uri("/addcookie")))
+    }
+  }
 
   "We don't want to have a real 'root' route anyway... " **
     GET |>> TemporaryRedirect(Uri(path="/swagger-ui"))
@@ -44,5 +55,29 @@ object MyService extends RhoService with SwaggerSupport {
     GET / "counter" |>> {
       val i = new AtomicInteger(0)
       Task(<html><body><h2>{ s"The number is ${i.getAndIncrement()}" }</h2></body></html>)
+    }
+
+  "Adds the cookie Foo=bar to the client" **
+    GET / "addcookie" |>> {
+      Ok("You now have a good cookie!").addCookie("Foo", "bar")
+    }
+
+  "Sets the cookie Foo=barr to the client" **
+    GET / "addbadcookie" |>> {
+    Ok("You now have an evil cookie!").addCookie("Foo", "barr")
+  }
+
+  "Checks the Foo cookie to make sure its 'bar'" **
+    GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
+
+  "Clears the cookies" **
+    GET / "clearcookies" |>> { req: Request =>
+      val hs = req.headers.get(headers.Cookie) match {
+        case None         => Headers.empty
+        case Some(cookie) =>
+          Headers(cookie.values.toList.map{ c => headers.`Set-Cookie`(c.copy(expires = Some(DateTime.UnixEpoch), maxAge = Some(0))) })
+      }
+
+      Ok("Deleted cookies!").withHeaders(hs)
     }
 }

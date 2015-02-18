@@ -1,5 +1,8 @@
-package org.http4s.rho.bits
+package org.http4s.rho
+package bits
 
+
+import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 import org.specs2.mutable.Specification
 
 
@@ -12,7 +15,7 @@ class ParserResultSpec extends Specification {
     }
 
     "map a ValidationFailure" in {
-      val result: ParserResult[Int] = ValidationFailure("foo")
+      val result: ParserResult[Int] = ValidationFailure(BadRequest("foo"))
       result.map(_.toString) should_== result
     }
 
@@ -26,7 +29,7 @@ class ParserResultSpec extends Specification {
     }
 
     "flatMap a ValidationFailure" in {
-      val result: ParserResult[Int] = ValidationFailure("foo")
+      val result: ParserResult[Int] = ValidationFailure(BadRequest("foo"))
       result.flatMap(i => ParserSuccess(i.toString)) should_== result
     }
 
