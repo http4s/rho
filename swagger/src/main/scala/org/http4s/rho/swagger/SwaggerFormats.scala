@@ -1,17 +1,11 @@
 package org.http4s.rho.swagger
 
-import com.wordnik.swagger.models.Model
-import com.wordnik.swagger.models.properties.Property
 import scala.reflect.runtime.universe._
 
-/**
- * Formats to use when converting to [[Model]].
- * Formats are usually configured by using an implicit parameter:
- * <pre>
- * implicit val formats = org.http4s.rho.DefaultFormats
- * </pre>
- */
+import models._
+
 sealed trait SwaggerFormats { self =>
+
   def customSerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
   def customFieldSerializers: PartialFunction[Type, Property] = PartialFunction.empty
 

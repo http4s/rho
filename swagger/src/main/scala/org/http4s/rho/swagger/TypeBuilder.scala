@@ -2,86 +2,82 @@ package org.http4s.rho.swagger
 
 import java.util.Date
 
-import com.wordnik.swagger.models.{Model, ModelImpl}
-import com.wordnik.swagger.models.properties._
-
 import org.http4s.DateTime
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
+
+import org.log4s.getLogger
 
 import scala.collection.mutable.LinkedHashMap
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
-import org.log4s.getLogger
+import scalaz._, Scalaz._
 
 object TypeBuilder {
+  import models._
 
   private[this] val logger = getLogger
 
-  def collectModels(t: Type, alreadyKnown: Set[Model], formats: SwaggerFormats): Set[Model] =
-    try collectModels(t.dealias, alreadyKnown, Set.empty, formats)
-    catch {
-      case NonFatal(e) =>
-        logger.error(e)(s"Failed to build model for type: ${t.fullName}")
-        Set.empty
-    }
+  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats): Set[Model] =
+    try collectModels(t.dealias, alreadyKnown, Set.empty, sfs)
+    catch { case NonFatal(e) => Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], formats: SwaggerFormats): Set[Model] = {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], sfs: SwaggerFormats): Set[Model] = {
 
-    def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] = t.dealias match {
+    def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] =
+      t.dealias match {
 
-      case tpe if formats.customSerializers.isDefinedAt(tpe) =>
-        formats.customSerializers(tpe)
+        case tpe if sfs.customSerializers.isDefinedAt(tpe) =>
+          sfs.customSerializers(tpe)
 
-      case tpe if tpe =:= weakTypeOf[EmptyRe] =>
-        Set.empty
+        case tpe if tpe =:= weakTypeOf[EmptyRe] =>
+          Set.empty
 
-      // TODO it would be the best if we could pull out the following cases into DefaultFormats
-      case tpe if tpe.isNothingOrNull =>
-        Set.empty
+        case tpe if tpe.isEither || tpe.isMap =>
+          go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
+          go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
 
-      case tpe if tpe.isEither || tpe.isMap =>
-        go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
-        go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
+        case tpe if (tpe.isCollection || tpe.isOption) && tpe.typeArgs.nonEmpty =>
+          val ntpe = tpe.typeArgs.head
+          if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
+          else Set.empty
 
-      case tpe if (tpe.isCollection || tpe.isOption) && tpe.typeArgs.nonEmpty =>
-        val ntpe = tpe.typeArgs.head
-        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
-        else Set.empty
+        case tpe if tpe.isProcess =>
+          val ntpe = tpe.typeArgs.apply(1)
+          if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
+          else Set.empty
 
-      case tpe if tpe.isProcess =>
-        val ntpe = tpe.typeArgs.apply(1)
-        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
-        else Set.empty
+        case tpe if tpe.isTask =>
+          val ntpe = tpe.typeArgs.apply(0)
+          if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
+          else Set.empty
 
-      case tpe if tpe.isTask =>
-        val ntpe = tpe.typeArgs.apply(0)
-        if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
-        else Set.empty
+        case tpe if (alreadyKnown.map(_.description).contains(tpe.fullName) || (tpe.isPrimitive)) =>
+          Set.empty
 
-      case tpe if (alreadyKnown.map(_.getDescription).contains(tpe.simpleName) || (tpe.isPrimitive)) =>        
-        Set.empty
+        case ExistentialType(_, _) =>
+          Set.empty
 
-      case ExistentialType(_, _) =>
-        Set.empty
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
+          val ctor = sym.asClass.primaryConstructor.asMethod
+          val models = alreadyKnown ++ modelToSwagger(tpe, sfs)
+          val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
+            acc ++ go(t, alreadyKnown, tpe.typeArgs.toSet)
+          }
+          val children = ctor.paramLists.flatten.flatMap { paramsym =>
+            val paramType =
+              if (sym.isClass)
+                paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              else
+                sym.typeSignature
+            go(paramType, alreadyKnown, known + tpe)
+          }
 
-      case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
-        val ctor = sym.asClass.primaryConstructor.asMethod
-        val models = alreadyKnown ++ modelToSwagger(tpe, formats)
-        val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
-          acc ++ go(t, alreadyKnown, tpe.typeArgs.toSet)
-        }
-        val children = ctor.paramLists.flatten.flatMap { paramsym =>
-          val paramType = if (sym.isClass) paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-          else sym.typeSignature
-          go(paramType, alreadyKnown, known + tpe)
-        }
+          models ++ generics ++ children
 
-        models ++ generics ++ children
-      case e =>
-        logger.warn(s"TypeBuilder failed to build type. Failing type: ${e.fullName}")
-        Set.empty
-    }
+        case e =>
+          Set.empty
+      }
 
     go(t, alreadyKnown, known)
   }
@@ -95,45 +91,40 @@ object TypeBuilder {
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) =
     (defaultExcluded ++ excludes).exists(_ =:= t)
 
-  private def modelToSwagger(tpe: Type, serializers: SwaggerFormats): Option[Model] =
+  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[Model] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
-
-      val props: Seq[(String, Property)] =
-        tpe.member(termNames.CONSTRUCTOR)
+      val props: Map[String, Property] =
+        tpe
+          .member(termNames.CONSTRUCTOR)
           .typeSignature
           .paramLists
           .flatten
-          .map { paramSymbol =>
-          val paramType = paramSymbol.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-          val name = paramSymbol.name.decodedName.toString
-          val prop =
-            serializers.customFieldSerializers.applyOrElse(paramType, { _: Type =>
-              if (paramType.isCollection && !paramType.isNothingOrNull)
-                new ArrayProperty(new RefProperty(paramType.dealias.typeArgs.head.simpleName))
-              else
-                new AbstractProperty {
-                  DataType.fromType(paramType) match {
-                    case DataType.ValueDataType(name, format, qName) =>
-                      setType(name)
-                      format.foreach(setFormat)
-                    case dt: DataType =>
-                      setType(dt.name)
-                  }
-                }
-            })
-          prop.setRequired(!(paramSymbol.asTerm.isParamWithDefault || paramType.isOption))
-          (paramSymbol.name.decodedName.toString, prop)
-        }
-
-      val m = (new ModelImpl).name(tpe.simpleName).description(tpe.simpleName)
-      props.foreach { case (name, prop) => m.property(name, prop) }
-      Some(m)
+          .map(paramSymToProp(sym, tpeArgs, sfs))
+          .toMap
+      ModelImpl(description = tpe.fullName, properties = props).some
     } catch {
-      case NonFatal(t) =>
-        logger.error(t)("Failed to build Swagger model")
-        None
+      case NonFatal(t) => None
     }
+
+  private def paramSymToProp
+    (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol): (String, Property) = {
+    val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+    val name = pSym.name.decodedName.toString
+    val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
+    val prop = sfs.customFieldSerializers.applyOrElse(pType, { _: Type =>
+      if (pType.isCollection && !pType.isNothingOrNull)
+        ArrayProperty(items = RefProperty(pType.dealias.typeArgs.head.simpleName), uniqueItems = false)
+      else
+        DataType.fromType(pType) match {
+          case DataType.ValueDataType(name, format, qName) =>
+            AbstractProperty(`type` = name, description = qName, format = format)
+          case DataType.ContainerDataType(name, tpe, uniqueItems) =>
+            AbstractProperty(`type` = name)
+        }
+    })
+    (name, prop.withRequired(required))
+  }
 
   sealed trait DataType {
     def name: String
@@ -170,7 +161,6 @@ object TypeBuilder {
       def apply(v: DataType): DataType = new ContainerDataType("Array", Some(v))
     }
 
-    // Methods to get a Datatype
     def apply(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) =
       new ValueDataType(name, format, qualifiedName)
 
@@ -213,20 +203,27 @@ object TypeBuilder {
     }
 
     private[this] val IntTypes =
-      Set[Type](typeOf[Int], typeOf[java.lang.Integer], typeOf[Short], typeOf[java.lang.Short], typeOf[BigInt], typeOf[java.math.BigInteger])
+      Set[Type](
+        typeOf[Int], typeOf[java.lang.Integer], typeOf[Short],
+        typeOf[java.lang.Short], typeOf[BigInt], typeOf[java.math.BigInteger])
+
     private[this] def isInt(t: Type): Boolean = IntTypes.exists(t =:= _)
 
     private[this] val DecimalTypes =
-      Set[Type](typeOf[Double], typeOf[java.lang.Double], typeOf[BigDecimal], typeOf[java.math.BigDecimal])
-    private[this] def isDecimal(t: Type): Boolean = DecimalTypes.exists(t =:= _)
+      Set[Type](
+        typeOf[Double], typeOf[java.lang.Double],
+        typeOf[BigDecimal], typeOf[java.math.BigDecimal])
+
+    private[this] def isDecimal(t: Type): Boolean =
+      DecimalTypes.exists(t =:= _)
 
     private[this] val DateTimeTypes =
       Set[Type](typeOf[Date], typeOf[DateTime])
-    private[this] def isDateTime(t: Type): Boolean = DateTimeTypes.exists(t <:< _)
+
+    private[this] def isDateTime(t: Type): Boolean =
+      DateTimeTypes.exists(t <:< _)
 
     private[this] def isCollection(t: Type): Boolean =
-      t <:< typeOf[collection.Traversable[_]] ||
-    t <:< typeOf[java.util.Collection[_]]
-
+      t <:< typeOf[collection.Traversable[_]] || t <:< typeOf[java.util.Collection[_]]
   }
 }
