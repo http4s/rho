@@ -5,6 +5,8 @@ import scala.reflect.runtime.universe._
 
 import org.specs2.mutable.Specification
 
+import scalaz._, Scalaz._
+
 class SwaggerFormatsSpec extends Specification {
 
   object model {
@@ -16,27 +18,32 @@ class SwaggerFormatsSpec extends Specification {
   }
 
   import model._
+  import models._
 
   "SwaggerFormats" should {
 
     "withSerializers" in {
-      // val swaggerFormats = DefaultSwaggerFormats.withSerializers(typeOf[FruitBox], Set(Model("fruit-box", "FruitBox", "model.FruitBox", LinkedHashMap.empty[String, ModelProperty])))
-      // def models[T](t: TypeTag[T]): Set[Model] = TypeBuilder.collectModels(t.tpe, Set.empty, swaggerFormats)
-      // models(typeTag[FruitBox]).nonEmpty must_== true
-      // models(typeTag[FruitBox]).head.id must_== "fruit-box"
-      // models(typeTag[FruitBox]).head.name must_== "FruitBox"
-      // models(typeTag[FruitBox]).head.qualifiedType must_== "model.FruitBox"
-      // models(typeTag[FruitBox]).head.properties.isEmpty must_== true
-      pending
+      val m = ModelImpl(description = "model.FruitBox")
+      val sfs = DefaultSwaggerFormats.withSerializers(typeOf[FruitBox], Set(m))
+
+      def modelOf[T](t: TypeTag[T]): Set[Model] =
+        TypeBuilder.collectModels(t.tpe, Set.empty, sfs)
+
+      modelOf(typeTag[FruitBox]).nonEmpty must_== true
+      modelOf(typeTag[FruitBox]).head.description must_== "model.FruitBox"
+      modelOf(typeTag[FruitBox]).head.properties.isEmpty must_== true
     }
 
     "withFieldSerializers" in {
-      // val swaggerFormats = DefaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], ModelProperty("List", "array«Fruit»"))
-      // def models[T](t: TypeTag[T]): Set[Model] = TypeBuilder.collectModels(t.tpe, Set.empty, swaggerFormats)
-      // models(typeTag[FruitBox]).nonEmpty must_== true
-      // models(typeTag[FruitBox]).head.properties.head._1 must_== "fruits"
-      // models(typeTag[FruitBox]).head.properties.head._2 must_== ModelProperty("List", "array«Fruit»")
-      pending
+      val arrProp = ArrayProperty(items = RefProperty("Fruit"), required = true, uniqueItems = false)
+      val sfs = DefaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], arrProp)
+
+      def modelOf[T](t: TypeTag[T]): Set[Model] =
+        TypeBuilder.collectModels(t.tpe, Set.empty, DefaultSwaggerFormats)
+
+      modelOf(typeTag[FruitBox]).nonEmpty must_== true
+      modelOf(typeTag[FruitBox]).head.properties.head._1 must_== "fruits"
+      modelOf(typeTag[FruitBox]).head.properties.head._2 must_== arrProp
     }
   }
 }
