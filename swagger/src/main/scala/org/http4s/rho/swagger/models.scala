@@ -5,6 +5,7 @@ import com.wordnik.swagger.{models => jm}
 import scala.collection.JavaConversions._
 
 object models {
+  import JValue._
 
   case class Swagger
     (
@@ -25,16 +26,16 @@ object models {
     def toJModel: jm.Swagger = {
       val s = new jm.Swagger
       s.info(info.toJModel)
-      s.host(host.getOrElse(null))
-      s.basePath(basePath.getOrElse(null))
-      s.setSchemes(schemes.map(_.toJModel))
-      s.setConsumes(consumes)
-      s.setProduces(produces)
-      s.setPaths(paths.mapValues(_.toJModel))
-      s.setSecurityDefinitions(securityDefinitions.mapValues(_.toJModel))
-      s.setDefinitions(definitions.mapValues(_.toJModel))
-      s.setParameters(parameters.mapValues(_.toJModel))
-      s.setExternalDocs(externalDocs.map(_.toJModel).getOrElse(null))
+      s.host(fromOption(host))
+      s.basePath(fromOption(basePath))
+      s.setSchemes(fromList(schemes.map(_.toJModel)))
+      s.setConsumes(fromList(consumes))
+      s.setProduces(fromList(produces))
+      s.setPaths(fromMap(paths.mapValues(_.toJModel)))
+      s.setSecurityDefinitions(fromMap(securityDefinitions.mapValues(_.toJModel)))
+      s.setDefinitions(fromMap(definitions.mapValues(_.toJModel)))
+      s.setParameters(fromMap(parameters.mapValues(_.toJModel)))
+      s.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       s
     }
   }
@@ -54,10 +55,10 @@ object models {
       val i = new jm.Info
       i.title(title)
         .version(version)
-        .description(description.getOrElse(null))
-        .termsOfService(termsOfService.getOrElse(null))
-        .contact(contact.map(_.toJModel).getOrElse(null))
-        .license(license.map(_.toJModel).getOrElse(null))
+        .description(fromOption(description))
+        .termsOfService(fromOption(termsOfService))
+        .contact(fromOption(contact.map(_.toJModel)))
+        .license(fromOption(license.map(_.toJModel)))
       vendorExtensions.foreach { case (key, value) => i.setVendorExtension(key, value) }
       i
     }
@@ -71,7 +72,7 @@ object models {
     ) {
 
     def toJModel: jm.Contact =
-      (new jm.Contact).name(name).url(url.getOrElse(null)).email(email.getOrElse(null))
+      (new jm.Contact).name(name).url(fromOption(url)).email(fromOption(email))
   }
 
   case class License
@@ -115,7 +116,7 @@ object models {
       oa2d.setAuthorizationUrl(authorizationUrl)
       oa2d.setTokenUrl(tokenUrl)
       oa2d.setFlow(flow)
-      oa2d.setScopes(scopes)
+      oa2d.setScopes(fromMap(scopes))
       oa2d
     }
   }
@@ -158,7 +159,7 @@ object models {
     def toJModel: jm.SecurityRequirement = {
       val sr = new jm.SecurityRequirement
       sr.setName(name)
-      sr.setScopes(scopes)
+      sr.setScopes(fromList(scopes))
       sr
     }
   }
@@ -172,7 +173,7 @@ object models {
     def toJModel: jm.SecurityDefinition = {
       val sd = new jm.SecurityDefinition
       sd.setType(`type`)
-      sd.setScopes(scopes)
+      sd.setScopes(fromMap(scopes))
       sd
     }
   }
@@ -201,13 +202,13 @@ object models {
 
     def toJModel: jm.Path = {
       val p = new jm.Path
-      p.setGet(get.map(_.toJModel).getOrElse(null))
-      p.setPut(put.map(_.toJModel).getOrElse(null))
-      p.setPost(post.map(_.toJModel).getOrElse(null))
-      p.setDelete(delete.map(_.toJModel).getOrElse(null))
-      p.setPatch(patch.map(_.toJModel).getOrElse(null))
-      p.setOptions(options.map(_.toJModel).getOrElse(null))
-      p.setParameters(parameters.map(_.toJModel))
+      p.setGet(fromOption(get.map(_.toJModel)))
+      p.setPut(fromOption(put.map(_.toJModel)))
+      p.setPost(fromOption(post.map(_.toJModel)))
+      p.setDelete(fromOption(delete.map(_.toJModel)))
+      p.setPatch(fromOption(patch.map(_.toJModel)))
+      p.setOptions(fromOption(options.map(_.toJModel)))
+      p.setParameters(fromList(parameters.map(_.toJModel)))
       vendorExtensions.foreach { case (key, value) => p.setVendorExtension(key, value) }
       p
     }
@@ -232,19 +233,19 @@ object models {
 
     def toJModel: jm.Operation = {
       val o = new jm.Operation
-      o.tags(tags)
-      o.summary(summary.getOrElse(null))
-      o.description(description.getOrElse(null))
-      o.operationId(operationId.getOrElse(null))
-      o.schemes(schemes.map(_.toJModel))
-      o.consumes(consumes)
-      o.produces(produces)
-      o.setParameters(parameters.map(_.toJModel))
-      o.setResponses(responses.mapValues(_.toJModel))
-      o.setSecurity(security.map { m =>
+      o.setTags(fromList(tags))
+      o.setSummary(fromOption(summary))
+      o.setDescription(fromOption(description))
+      o.setOperationId(fromOption(operationId))
+      o.setSchemes(fromList(schemes.map(_.toJModel)))
+      o.setConsumes(fromList(consumes))
+      o.setProduces(fromList(produces))
+      o.setParameters(fromList(parameters.map(_.toJModel)))
+      o.setResponses(fromMap(responses.mapValues(_.toJModel)))
+      o.setSecurity(fromList(security.map { m =>
         m.mapValues(xs => xs : java.util.List[String]) : java.util.Map[String, java.util.List[String]]
-      })
-      o.setExternalDocs(externalDocs.map(_.toJModel).getOrElse(null))
+      }))
+      o.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       o.setDeprecated(deprecated)
       vendorExtensions.foreach { case (key, value) => o.setVendorExtension(key, value) }
       o
@@ -262,9 +263,9 @@ object models {
     def toJModel: jm.Response = {
       val r = new jm.Response
       r.setDescription(description)
-      r.setSchema(schema.map(_.toJModel).getOrElse(null))
-      r.setExamples(examples)
-      r.setHeaders(headers.mapValues(_.toJModel))
+      r.setSchema(fromOption(schema.map(_.toJModel)))
+      r.setExamples(fromMap(examples))
+      r.setHeaders(fromMap(headers.mapValues(_.toJModel)))
       r
     }
   }
@@ -294,15 +295,15 @@ object models {
 
     def toJModel: jm.Model = {
       val m = new jm.ModelImpl
-      m.setType(`type`.getOrElse(null))
-      m.setName(name.getOrElse(null))
+      m.setType(fromOption(`type`))
+      m.setName(fromOption(name))
       m.setDescription(description)
       m.setRequired(required)
-      m.setExample(example.getOrElse(null))
-      m.setProperties(properties.mapValues(_.toJModel))
-      m.setAdditionalProperties(additionalProperties.map(_.toJModel).getOrElse(null))
-      m.setDiscriminator(discriminator.getOrElse(null))
-      m.setExternalDocs(externalDocs.map(_.toJModel).getOrElse(null))
+      m.setExample(fromOption(example))
+      m.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
+      m.setDiscriminator(fromOption(discriminator))
+      m.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       m
     }
   }
@@ -319,12 +320,12 @@ object models {
 
     def toJModel: jm.Model = {
       val am = new jm.ArrayModel
-      am.setType(`type`.getOrElse(null))
+      am.setType(fromOption(`type`))
       am.setDescription(description)
-      am.setProperties(properties.mapValues(_.toJModel))
-      am.setItems(items.map(_.toJModel).getOrElse(null))
-      am.setExample(example.getOrElse(null))
-      am.setExternalDocs(externalDocs.map(_.toJModel).getOrElse(null))
+      am.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      am.setItems(fromOption(items.map(_.toJModel)))
+      am.setExample(fromOption(example))
+      am.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       am
     }
   }
@@ -344,13 +345,13 @@ object models {
     def toJModel: jm.Model = {
       val cm = new jm.ComposedModel
       cm.setDescription(description)
-      cm.setAllOf(allOf.map(_.toJModel))
-      cm.setParent(parent.map(_.toJModel).getOrElse(null))
-      cm.setChild(child.map(_.toJModel).getOrElse(null))
-      cm.setInterfaces(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel]))
-      cm.setProperties(properties.mapValues(_.toJModel))
-      cm.setExample(example.getOrElse(null))
-      cm.setExternalDocs(externalDocs.map(_.toJModel).getOrElse(null))
+      cm.setAllOf(fromList(allOf.map(_.toJModel)))
+      cm.setParent(fromOption(parent.map(_.toJModel)))
+      cm.setChild(fromOption(child.map(_.toJModel)))
+      cm.setInterfaces(fromList(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel])))
+      cm.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      cm.setExample(fromOption(example))
+      cm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       cm
     }
   }
@@ -367,9 +368,9 @@ object models {
     def toJModel: jm.Model = {
       val rm = new jm.RefModel(ref)
       rm.setDescription(description)
-      rm.setProperties(properties.mapValues(_.toJModel))
-      rm.setExample(example.getOrElse(null))
-      rm.setExternalDocs(externalDocs.map(_.toJModel).getOrElse(null))
+      rm.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      rm.setExample(fromOption(example))
+      rm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       rm
     }
   }
@@ -399,11 +400,11 @@ object models {
 
     def toJModel: jm.parameters.Parameter = {
       val bp = new jm.parameters.BodyParameter
-      bp.setSchema(schema.map(_.toJModel).getOrElse(null))
-      bp.setName(name.getOrElse(null))
-      bp.setDescription(description.getOrElse(null))
+      bp.setSchema(fromOption(schema.map(_.toJModel)))
+      bp.setName(fromOption(name))
+      bp.setDescription(fromOption(description))
       bp.setRequired(required)
-      bp.setAccess(access.getOrElse(null))
+      bp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => bp.setVendorExtension(key, value) }
       bp
     }
@@ -428,13 +429,13 @@ object models {
     def toJModel: jm.parameters.Parameter = {
       val cp = new jm.parameters.CookieParameter
       cp.setType(`type`)
-      cp.setFormat(format.getOrElse(null))
-      cp.setCollectionFormat(collectionFormat.getOrElse(null))
-      cp.setItems(items.map(_.toJModel).getOrElse(null))
-      cp.setName(name.getOrElse(null))
-      cp.setDescription(description.getOrElse(null))
+      cp.setFormat(fromOption(format))
+      cp.setCollectionFormat(fromOption(collectionFormat))
+      cp.setItems(fromOption(items.map(_.toJModel)))
+      cp.setName(fromOption(name))
+      cp.setDescription(fromOption(description))
       cp.setRequired(required)
-      cp.setAccess(access.getOrElse(null))      
+      cp.setAccess(fromOption(access))      
       vendorExtensions.foreach { case (key, value) => cp.setVendorExtension(key, value) }
       cp
     }
@@ -459,14 +460,14 @@ object models {
     def toJModel: jm.parameters.Parameter = {
       val fp = new jm.parameters.FormParameter
       fp.setType(`type`)
-      fp.setFormat(format.getOrElse(null))
-      fp.setCollectionFormat(collectionFormat.getOrElse(null))
-      fp.setItems(items.map(_.toJModel).getOrElse(null))
-      fp.setDefaultValue(defaultValue.getOrElse(null))
-      fp.setName(name.getOrElse(null))
-      fp.setDescription(description.getOrElse(null))
+      fp.setFormat(fromOption(format))
+      fp.setCollectionFormat(fromOption(collectionFormat))
+      fp.setItems(fromOption(items.map(_.toJModel)))
+      fp.setDefaultValue(fromOption(defaultValue))
+      fp.setName(fromOption(name))
+      fp.setDescription(fromOption(description))
       fp.setRequired(required)
-      fp.setAccess(access.getOrElse(null))
+      fp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => fp.setVendorExtension(key, value) }
       fp
     }    
@@ -491,14 +492,14 @@ object models {
     def toJModel: jm.parameters.Parameter = {
       val hp = new jm.parameters.HeaderParameter
       hp.setType(`type`)
-      hp.setFormat(format.getOrElse(null))
-      hp.setCollectionFormat(collectionFormat.getOrElse(null))
-      hp.setItems(items.map(_.toJModel).getOrElse(null))
-      hp.setDefaultValue(defaultValue.getOrElse(null))
-      hp.setName(name.getOrElse(null))
-      hp.setDescription(description.getOrElse(null))
+      hp.setFormat(fromOption(format))
+      hp.setCollectionFormat(fromOption(collectionFormat))
+      hp.setItems(fromOption(items.map(_.toJModel)))
+      hp.setDefaultValue(fromOption(defaultValue))
+      hp.setName(fromOption(name))
+      hp.setDescription(fromOption(description))
       hp.setRequired(required)
-      hp.setAccess(access.getOrElse(null))
+      hp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => hp.setVendorExtension(key, value) }
       hp
     }
@@ -523,14 +524,14 @@ object models {
     def toJModel: jm.parameters.Parameter = {
       val pp = new jm.parameters.PathParameter
       pp.setType(`type`)
-      pp.setFormat(format.getOrElse(null))
-      pp.setCollectionFormat(collectionFormat.getOrElse(null))
-      pp.setItems(items.map(_.toJModel).getOrElse(null))
-      pp.setDefaultValue(defaultValue.getOrElse(null))
-      pp.setName(name.getOrElse(null))
-      pp.setDescription(description.getOrElse(null))
+      pp.setFormat(fromOption(format))
+      pp.setCollectionFormat(fromOption(collectionFormat))
+      pp.setItems(fromOption(items.map(_.toJModel)))
+      pp.setDefaultValue(fromOption(defaultValue))
+      pp.setName(fromOption(name))
+      pp.setDescription(fromOption(description))
       pp.setRequired(required)
-      pp.setAccess(access.getOrElse(null))
+      pp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => pp.setVendorExtension(key, value) }
       pp
     }
@@ -556,14 +557,14 @@ object models {
     def toJModel: jm.parameters.Parameter = {
       val qp = new jm.parameters.QueryParameter
       qp.setType(`type`)
-      qp.setFormat(format.getOrElse(null))
-      qp.setCollectionFormat(collectionFormat.getOrElse(null))
-      qp.setItems(items.map(_.toJModel).getOrElse(null))
-      qp.setDefaultValue(defaultValue.getOrElse(null))
-      qp.setName(name.getOrElse(null))
-      qp.setDescription(description.getOrElse(null))
+      qp.setFormat(fromOption(format))
+      qp.setCollectionFormat(fromOption(collectionFormat))
+      qp.setItems(fromOption(items.map(_.toJModel)))
+      qp.setDefaultValue(fromOption(defaultValue))
+      qp.setName(fromOption(name))
+      qp.setDescription(fromOption(description))
       qp.setRequired(required)
-      qp.setAccess(access.getOrElse(null))
+      qp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => qp.setVendorExtension(key, value) }
       qp
     }      
@@ -583,10 +584,10 @@ object models {
 
     def toJModel: jm.parameters.Parameter = {
       val rp = new jm.parameters.RefParameter(ref)
-      rp.setName(name.getOrElse(null))
-      rp.setDescription(description.getOrElse(null))
+      rp.setName(fromOption(name))
+      rp.setDescription(fromOption(description))
       rp.setRequired(required)
-      rp.setAccess(access.getOrElse(null))
+      rp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => rp.setVendorExtension(key, value) }
       rp
     }
@@ -619,9 +620,9 @@ object models {
       val ap = new jm.properties.AbstractProperty {}
       ap.setType(`type`)
       ap.setRequired(required)
-      ap.setTitle(title.getOrElse(null))
-      ap.setDescription(description.getOrElse(null))
-      ap.setFormat(format.getOrElse(null))
+      ap.setTitle(fromOption(title))
+      ap.setDescription(fromOption(description))
+      ap.setFormat(fromOption(format))
       ap
     }
   }
@@ -645,9 +646,9 @@ object models {
       val ap = new jm.properties.ArrayProperty
       ap.setItems(items.toJModel)
       ap.setUniqueItems(uniqueItems)
-      ap.setTitle(title.getOrElse(null))
-      ap.setDescription(description.getOrElse(null))
-      ap.setFormat(format.getOrElse(null))
+      ap.setTitle(fromOption(title))
+      ap.setDescription(fromOption(description))
+      ap.setFormat(fromOption(format))
       ap
     }
   }
@@ -669,9 +670,9 @@ object models {
     def toJModel: jm.properties.Property = {
       val rp = new jm.properties.RefProperty(ref)
       rp.setRequired(required)
-      rp.setTitle(title.getOrElse(null))
-      rp.setDescription(description.getOrElse(null))
-      rp.setFormat(format.getOrElse(null))
+      rp.setTitle(fromOption(title))
+      rp.setDescription(fromOption(description))
+      rp.setFormat(fromOption(format))
       rp
     }
   }
@@ -688,5 +689,17 @@ object models {
       ed.setUrl(url)
       ed
     }      
+  }
+
+  private object JValue {
+
+    def fromOption[A](oa: Option[A]): A =
+      oa.getOrElse(null.asInstanceOf[A])
+
+    def fromList[A](xs: List[A]): java.util.List[A] =
+      if (xs.isEmpty) null else xs
+
+    def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
+      if (m.isEmpty) null else m
   }
 }
