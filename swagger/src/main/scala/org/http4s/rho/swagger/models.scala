@@ -635,8 +635,8 @@ object models {
   case class ArrayProperty
     (
       items       : Property
-    , uniqueItems : Boolean
-    , required    : Boolean        = false
+    , uniqueItems : Boolean        = false
+    , required    : Boolean        = true
     , title       : Option[String] = None
     , description : Option[String] = None
     , format      : Option[String] = None
@@ -651,6 +651,7 @@ object models {
       val ap = new jm.properties.ArrayProperty
       ap.setItems(items.toJModel)
       ap.setUniqueItems(uniqueItems)
+      ap.setRequired(required)
       ap.setTitle(fromOption(title))
       ap.setDescription(fromOption(description))
       ap.setFormat(fromOption(format))

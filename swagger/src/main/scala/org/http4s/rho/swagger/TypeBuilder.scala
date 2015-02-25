@@ -122,8 +122,13 @@ object TypeBuilder {
     val name = pSym.name.decodedName.toString
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
     val prop = sfs.customFieldSerializers.applyOrElse(pType, { _: Type =>
+
+      val TypeRef(_, ptSym: Symbol, ptTpeArgs: List[Type]) = pType
+
       if (pType.isCollection && !pType.isNothingOrNull)
-        ArrayProperty(items = RefProperty(pType.dealias.typeArgs.head.simpleName), uniqueItems = false)
+        ArrayProperty(items = RefProperty(pType.dealias.typeArgs.head.simpleName))
+      else if (isCaseClass(ptSym))
+        RefProperty(pType.simpleName)
       else
         DataType.fromType(pType) match {
           case DataType.ValueDataType(name, format, qName) =>
