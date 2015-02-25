@@ -15,17 +15,37 @@ import scalaz._, Scalaz._
 class SwaggerModelsBuilder(formats: SwaggerFormats) {
   import models._
 
-  def mkSwagger(info: Info, ra: RhoAction[_, _]): Swagger =
+  def mkSwagger(info: Info, ra: RhoAction[_, _])(os: Option[Swagger]): Swagger =
     Swagger(
       info        = info,
-      paths       = collectPaths(ra),
-      definitions = collectDefinitions(ra))
+      paths       = collectPaths(ra)(os),
+      definitions = collectDefinitions(ra)(os))
 
-  def collectDefinitions(ra: RhoAction[_, _]): Map[String, Model] =
+  def collectPaths(ra: RhoAction[_, _])(os: Option[Swagger]): Map[String, Path] = {
+    val paths = os.map(_.paths).getOrElse(Map.empty)
+    val pairs = mkPathStrs(ra).map { ps =>
+      val o = mkOperation(ps, ra)
+      val p0 = paths.get(ps).getOrElse(Path())
+      val p1 = ra.method.name.toLowerCase match {
+        case "get"     => p0.copy(get = o.some)
+        case "put"     => p0.copy(put = o.some)
+        case "post"    => p0.copy(post = o.some)
+        case "delete"  => p0.copy(delete = o.some)
+        case "patch"   => p0.copy(patch = o.some)
+        case "options" => p0.copy(options = o.some)
+      }
+      ps -> p1
+    }
+    pairs.foldLeft(paths) { case (paths, (s, p)) => paths.alter(s)(_ => p.some) }
+  }
+
+  def collectDefinitions(ra: RhoAction[_, _])(os: Option[Swagger]): Map[String, Model] = {
+    val initial: Set[Model] = os.map(_.definitions.values.toSet).getOrElse(Set.empty[Model])
     (collectResultTypes(ra) ++ collectCodecTypes(ra))
-      .foldLeft(Set.empty[Model])((s, tpe) => TypeBuilder.collectModels(tpe, s, formats))
-      .map(m => m.description -> m)
-      .toMap  
+      .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
+      .map(m => m.id.split("\\.").last -> m)
+      .toMap
+  }
 
   def collectResultTypes(ra: RhoAction[_, _]): Set[Type] =
     ra.resultInfo.collect {
@@ -38,9 +58,6 @@ class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case r: CodecRouter[_, _] => Set(r.entityType)
       case _                    => Set.empty
     }
-
-  def collectPaths(ra: RhoAction[_, _]): Map[String, Path] =
-    mkPathStrs(ra).map(ps => ps -> setPathOp(Path(), ra, mkOperation(ps, ra))).toMap
 
   def mkPathStrs(ra: RhoAction[_, _]): List[String] = {
 
@@ -188,8 +205,11 @@ class SwaggerModelsBuilder(formats: SwaggerFormats) {
   }
 
   def mkBodyParam(r: CodecRouter[_, _]): BodyParameter = {
-    val name = r.entityType.simpleName
-    BodyParameter(name = "body".some, description = name.some, schema = RefModel(name, r.entityType.fullName).some)
+    val tpe = r.entityType
+    BodyParameter(
+      schema      = RefModel(tpe.fullName, tpe.simpleName).some,
+      name        = "body".some,
+      description = tpe.simpleName.some)
   }
 
   def mkPathParam(name: String, parser: StringParser[_]): PathParameter = {
@@ -198,7 +218,7 @@ class SwaggerModelsBuilder(formats: SwaggerFormats) {
   }
 
   def mkResponse(code: String, descr: String, tpe: Option[Type]): (String, Response) =
-    code -> Response(description = descr, schema = tpe.map(t => RefProperty(ref = t.fullName)))
+    code -> Response(description = descr, schema = tpe.map(t => RefProperty(ref = t.simpleName)))
 
   def mkQueryParam(rule: QueryCapture[_]): QueryParameter =
     QueryParameter(
@@ -212,16 +232,6 @@ class SwaggerModelsBuilder(formats: SwaggerFormats) {
       `type`   = "string",
       name     = key.name.toString.some,
       required = true)
-
-  def setPathOp(p: Path, ra: RhoAction[_, _], o: Operation): Path  =
-    ra.method.name.toLowerCase match {
-      case "get"     => p.copy(get = o.some)
-      case "put"     => p.copy(put = o.some)
-      case "post"    => p.copy(post = o.some)
-      case "delete"  => p.copy(delete = o.some)
-      case "patch"   => p.copy(patch = o.some)
-      case "options" => p.copy(options = o.some)
-    }
 
   def linearizeStack(stack: List[PathRule]): List[List[PathOperation]] = {
 

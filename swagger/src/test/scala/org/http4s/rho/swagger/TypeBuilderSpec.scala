@@ -28,8 +28,6 @@ class TypeBuilderSpec extends Spec {
   import model._
   import models.Model
 
-  val prefix = "org.http4s.rho.swagger.model."
-
   def modelOf[T](implicit t: TypeTag[T]): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, DefaultSwaggerFormats)
 
@@ -92,14 +90,14 @@ class TypeBuilderSpec extends Spec {
 
     "Build simple model" in {
       val m = modelOf[Foo].head
-      m.description must_== prefix + "Foo"
+      m.description must_== "Foo".some
       m.properties.get("a").get.`type` must_== "integer"
       m.properties.get("a").get.required must_== true
     }
 
     "Build a model from alias" in {
       val m = modelOf[Bar].head
-      m.description must_== prefix + "Foo"
+      m.description must_== "Foo".some
       m.properties.get("a").get.`type` must_== "integer"
       m.properties.get("a").get.required must_== true
     }
@@ -110,7 +108,7 @@ class TypeBuilderSpec extends Spec {
 
       val m = ms.head
 
-      m.description must_== prefix + "FooDefault"
+      m.description must_== "FooDefault".some
       m.properties.size must_== 1
       m.properties.get("a").get.`type` must_== "integer"
       m.properties.get("a").get.required must_== false
@@ -120,7 +118,7 @@ class TypeBuilderSpec extends Spec {
       val ms = modelOf[FooGeneric[Int]]
       ms.size must_== 1
       val m = ms.head
-      m.description must_== prefix + "FooGeneric«scala.Int»"
+      m.description must_== "FooGeneric«Int»".some
 
       m.properties.size must_== 1
       m.properties.get("a").get.`type` must_== "integer"
@@ -130,7 +128,7 @@ class TypeBuilderSpec extends Spec {
       val ms = modelOf[FooGeneric[Nothing]]
       ms.size must_== 1
       val m = ms.head
-      m.description must_== prefix + "FooGeneric«scala.Nothing»"
+      m.description must_== "FooGeneric«Nothing»".some
 
       m.properties.size must_== 1
       m.properties.get("a").get.`type` must_== "void"
@@ -140,7 +138,7 @@ class TypeBuilderSpec extends Spec {
       val ms = modelOf[FooGeneric[Null]]
       ms.size must_== 1
       val m = ms.head
-      m.description must_== prefix + "FooGeneric«scala.Null»"
+      m.description must_== "FooGeneric«Null»".some
 
       m.properties.size must_== 1
       m.properties.get("a").get.`type` must_== "void"
@@ -150,27 +148,27 @@ class TypeBuilderSpec extends Spec {
       val ms = modelOf[FooComposite]
       ms.size must_== 2
       val m1 = ms.head
-      m1.description must_== prefix + "FooComposite"
+      m1.description must_== "FooComposite".some
       m1.properties.size must_== 2
       m1.properties.get("single").get.`type` must_== "Foo"
       m1.properties.get("many").get.`type` must_== "array"
 
       val m2 = ms.tail.head
-      m2.description must_== prefix + "Foo"
+      m2.description must_== "Foo".some
     }
 
     "Build a composite model with alias" in {
       val ms = modelOf[FooCompositeWithAlias]
       ms.size must_== 2
       val m1 = ms.head
-      m1.description must_== prefix + "FooCompositeWithAlias"
+      m1.description must_== "FooCompositeWithAlias".some
       m1.properties.size must_== 3
       m1.properties.get("single").get.`type` must_== "Foo"
       m1.properties.get("many").get.`type` must_== "array"
       m1.properties.get("manyAlias").get.`type` must_== "array"
 
       val m2 = ms.tail.head
-      m2.description must_== prefix + "Foo"
+      m2.description must_== "Foo".some
     }
 
     "Build a model with a non-basic generic" in {
@@ -199,7 +197,7 @@ class TypeBuilderSpec extends Spec {
       val ms = modelOf[FooWithList]
       ms.size must_== 1
       val m = ms.head
-      m.description must_== prefix + "FooWithList"
+      m.description must_== "FooWithList".some
 
       //val p = m.properties.head._2
       // p.`type` must_== "List"

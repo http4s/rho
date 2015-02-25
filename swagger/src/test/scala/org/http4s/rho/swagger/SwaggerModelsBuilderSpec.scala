@@ -106,42 +106,42 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "find a simple path - GET" in {
       val ra = GET / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)
+      val paths = sb.collectPaths(ra)(None)
       
       paths must havePair("/foo" -> Path(get = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PUT" in {
       val ra = PUT / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)
+      val paths = sb.collectPaths(ra)(None)
       
       paths must havePair("/foo" -> Path(put = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - POST" in {
       val ra = POST / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)
+      val paths = sb.collectPaths(ra)(None)
       
       paths must havePair("/foo" -> Path(post = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PATCH" in {
       val ra = PATCH / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)
+      val paths = sb.collectPaths(ra)(None)
       
       paths must havePair("/foo" -> Path(patch = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - OPTIONS" in {
       val ra = OPTIONS / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)
+      val paths = sb.collectPaths(ra)(None)
       
       paths must havePair("/foo" -> Path(options = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple and-path" in {
       val ra = GET / "foo" / "bar" |>> { () => "" }
-      val paths = sb.collectPaths(ra)
+      val paths = sb.collectPaths(ra)(None)
       
       paths must havePair("/foo/bar" -> Path(get = sb.mkOperation("/foo/bar", ra).some))
     }
@@ -149,7 +149,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a simple or-path" in {
       val ra = GET / ("foo" || "bar") |>> { () => "" }
 
-      sb.collectPaths(ra) must havePairs(
+      sb.collectPaths(ra)(None) must havePairs(
         "/foo" -> Path(get = sb.mkOperation("/foo", ra).some),
         "/bar" -> Path(get = sb.mkOperation("/bar", ra).some))
     }
@@ -157,7 +157,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a capture or-path" in {
       val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> { (i: Int) => "" }
 
-      sb.collectPaths(ra) must havePairs(
+      sb.collectPaths(ra)(None) must havePairs(
         "/{foo}" -> Path(get = sb.mkOperation("{foo}", ra).some),
         "/{bar}" -> Path(get = sb.mkOperation("{bar}", ra).some))
     }
@@ -165,7 +165,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a simple path with a capture" in {
       val ra = GET / "foo" / pathVar[Int]("number") |>> { (i: Int) => "" }
 
-      sb.collectPaths(ra) must havePair(
+      sb.collectPaths(ra)(None) must havePair(
         "/foo/{number}" -> Path(get = sb.mkOperation("foo/{number}", ra).some))
     }
   }
@@ -176,10 +176,14 @@ class SwaggerModelsBuilderSpec extends Specification {
       import dummy._
       import org.http4s.rho.bits.ResponseGeneratorInstances._
 
-      val prefix = "org.http4s.rho.swagger.SwaggerModelsBuilderSpec.dummy"
-      val modelAFullName = prefix + ".ModelA"
-      val modelBFullName = prefix + ".ModelB"
-      val modelCFullName = prefix + ".ModelC"
+      val prefix = "org.http4s.rho.swagger.SwaggerModelsBuilderSpec.dummy."
+      val modelAFullName = prefix + "ModelA"
+      val modelBFullName = prefix + "ModelB"
+      val modelCFullName = prefix + "ModelC"
+
+      val modelASimpleName = "ModelA"
+      val modelBSimpleName = "ModelB"
+      val modelCSimpleName = "ModelC"
 
       implicit def renderableEncoder[T <: Renderable]: EntityEncoder[T] =
         EntityEncoder
@@ -196,25 +200,28 @@ class SwaggerModelsBuilderSpec extends Specification {
         }
       }      
 
-      sb.collectDefinitions(ra) must havePairs(
+      sb.collectDefinitions(ra)(None) must havePairs(
 
-        modelAFullName ->
+        modelASimpleName ->
           ModelImpl(
-            description = modelAFullName,
+            id          = modelAFullName,
+            description = modelASimpleName.some,
             properties  = Map(
               "name"  -> AbstractProperty("string", true),
               "color" -> AbstractProperty("integer", true, format = "int32".some))),
 
-        modelBFullName ->
+        modelBSimpleName ->
           ModelImpl(
-            description = modelBFullName,
+            id          = modelBFullName,
+            description = modelBSimpleName.some,
             properties  = Map(
               "name" -> AbstractProperty("string", true),
               "id"   -> AbstractProperty("integer", true, format = "int64".some))),
 
-        modelCFullName ->
+        modelCSimpleName ->
           ModelImpl(
-            description = modelCFullName,
+            id          = modelCFullName,
+            description = modelCSimpleName.some,
             properties  = Map(
               "name"  -> AbstractProperty("string", true),
               "shape" -> AbstractProperty("string", true)))

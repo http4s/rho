@@ -29,13 +29,6 @@ trait SwaggerSupport extends RhoService {
   override protected def append[T <: HList, F](ra: RhoAction[T, F]): Unit = {
     super.append(ra)
     val sb = new SwaggerModelsBuilder(swaggerFormats)
-    val s = sb.mkSwagger(apiInfo, ra)
-    swagger = swagger.map(merge(_, s)).orElse(Some(s))
+    swagger = Some(sb.mkSwagger(apiInfo, ra)(swagger))
   }
-
-  private def merge(s1: Swagger, s2: Swagger): Swagger =
-    Swagger(
-      info        = s2.info,
-      paths       = s1.paths ++ s2.paths,
-      definitions = s1.definitions ++ s2.definitions)
 }

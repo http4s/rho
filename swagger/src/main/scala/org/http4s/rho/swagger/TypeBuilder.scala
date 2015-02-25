@@ -52,7 +52,7 @@ object TypeBuilder {
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
 
-        case tpe if (alreadyKnown.map(_.description).contains(tpe.fullName) || (tpe.isPrimitive)) =>
+        case tpe if (alreadyKnown.map(_.id).contains(tpe.fullName) || (tpe.isPrimitive)) =>
           Set.empty
 
         case ExistentialType(_, _) =>
@@ -102,7 +102,16 @@ object TypeBuilder {
           .flatten
           .map(paramSymToProp(sym, tpeArgs, sfs))
           .toMap
-      ModelImpl(description = tpe.fullName, properties = props).some
+
+      val id =
+        if (tpe.simpleName.contains("«")) {
+          val xs = tpe.fullName.split("«")
+          List(xs.head, xs.last.split("\\.").last).mkString("«")
+        }
+        else
+          tpe.fullName
+
+      ModelImpl(id = id, description = tpe.simpleName.some, properties = props).some
     } catch {
       case NonFatal(t) => None
     }

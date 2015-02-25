@@ -271,7 +271,8 @@ object models {
   }
 
   sealed trait Model {
-    def description: String
+    def id: String
+    def description: Option[String]
     def properties: Map[String, Property]
     def example: Option[String]
     def externalDocs : Option[ExternalDocs]
@@ -281,7 +282,8 @@ object models {
 
   case class ModelImpl
     (
-      description          : String
+      id                   : String
+    , description          : Option[String]        = None
     , `type`               : Option[String]        = None
     , name                 : Option[String]        = None
     , required             : List[String]          = Nil
@@ -297,7 +299,7 @@ object models {
       val m = new jm.ModelImpl
       m.setType(fromOption(`type`))
       m.setName(fromOption(name))
-      m.setDescription(description)
+      m.setDescription(fromOption(description))
       m.setRequired(required)
       m.setExample(fromOption(example))
       m.setProperties(fromMap(properties.mapValues(_.toJModel)))
@@ -310,7 +312,8 @@ object models {
 
   case class ArrayModel
     (
-      description  : String
+      id           : String
+    , description  : Option[String]        = None
     ,`type`        : Option[String]        = None
     , properties   : Map[String, Property] = Map.empty
     , items        : Option[Property]      = None
@@ -321,7 +324,7 @@ object models {
     def toJModel: jm.Model = {
       val am = new jm.ArrayModel
       am.setType(fromOption(`type`))
-      am.setDescription(description)
+      am.setDescription(fromOption(description))
       am.setProperties(fromMap(properties.mapValues(_.toJModel)))
       am.setItems(fromOption(items.map(_.toJModel)))
       am.setExample(fromOption(example))
@@ -332,7 +335,8 @@ object models {
 
   case class ComposedModel
     (
-      description  : String
+      id           : String
+    , description  : Option[String]        = None
     , allOf        : List[Model]           = Nil
     , parent       : Option[Model]         = None
     , child        : Option[Model]         = None
@@ -344,7 +348,7 @@ object models {
 
     def toJModel: jm.Model = {
       val cm = new jm.ComposedModel
-      cm.setDescription(description)
+      cm.setDescription(fromOption(description))
       cm.setAllOf(fromList(allOf.map(_.toJModel)))
       cm.setParent(fromOption(parent.map(_.toJModel)))
       cm.setChild(fromOption(child.map(_.toJModel)))
@@ -358,8 +362,9 @@ object models {
 
   case class RefModel
     (
-      ref          : String
-    , description  : String
+      id           : String
+    , ref          : String
+    , description  : Option[String]        = None
     , properties   : Map[String, Property] = Map.empty
     , example      : Option[String]        = None
     , externalDocs : Option[ExternalDocs]  = None
@@ -367,7 +372,7 @@ object models {
 
     def toJModel: jm.Model = {
       val rm = new jm.RefModel(ref)
-      rm.setDescription(description)
+      rm.setDescription(fromOption(description))
       rm.setProperties(fromMap(properties.mapValues(_.toJModel)))
       rm.setExample(fromOption(example))
       rm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
