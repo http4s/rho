@@ -26,22 +26,5 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
 
       Set(a, b, c) should_== Set("/swagger.json", "/hello", "/hello/{string}")
     }
-
-    "Expose an API description" in {
-      //val r = Request(GET, Uri(path = "/swagger.json/hello"))
-      //val json = parseJson(checkOk(r))
-
-      //val JArray(List(a, b)) = json \ "apis"
-
-      //(a \ "path" should_== JString("/hello")) &&
-      //(b \ "path" should_== JString("/hello/{string}"))
-      pending
-     }
-
-    "Return a 404 on bad path" in {
-      //val r = Request(GET, Uri(path = "/swagger.json/notfound"))
-      //checkStatus(r)(_ == Status.NotFound) should_== "Api Not Found: swagger.json/notfound"
-      pending
-    }
   }
 }
