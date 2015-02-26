@@ -32,17 +32,6 @@ class CodecRouterSpec extends Specification {
       bb must_== "Received: hello"
     }
 
-    "Fail on missing header" in {
-
-      val b = Process.emit(ByteVector.view("hello".getBytes))
-      val req = Request(Method.POST, Uri(path = "/foo"),body = b)
-      val result = service(req).run.get
-      val (bb, s) = bodyAndStatus(result)
-
-      s must_== Status.BadRequest
-      bb must_== "Missing header: " + Header.`Content-Type`.name
-    }
-
     "Fail on invalid body" in {
       val b = Process.emit(ByteVector.view("hello =".getBytes))
       val h = Headers(Header.`Content-Type`(MediaType.`application/x-www-form-urlencoded`))
