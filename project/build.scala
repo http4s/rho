@@ -38,7 +38,7 @@ object MyBuild extends Build {
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
 
-  lazy val rhoVersion = "0.4.1-SNAPSHOT"
+  lazy val rhoVersion = "0.4.0-SNAPSHOT"
 
   /* Don't publish setting */
   val dontPublish = packagedArtifacts := Map.empty
@@ -144,8 +144,10 @@ object Dependencies {
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
-    swaggerModels,
-    swaggerCore
+    json4s,
+    json4sJackson,
+    swaggerCore,
+    swaggerModels
   )
 
   lazy val exampleDeps = libraryDependencies ++= Seq(

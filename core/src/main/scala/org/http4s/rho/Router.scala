@@ -72,15 +72,8 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
   override def decoding[R2 >: R](decoder2: EntityDecoder[R2])(implicit t: TypeTag[R2]): CodecRouter[T, R2] =
     CodecRouter(router, decoder orElse decoder2)
 
-  override val headers: HeaderRule = {
-    if (!decoder.consumes.isEmpty) {
-      val mt = requireThat(Header.`Content-Type`) { h: Header.`Content-Type`.HeaderT =>
-        decoder.matchesMediaType(h.mediaType)
-      }
-
-      HeaderAnd(router.headers, mt.rule)
-    } else router.headers
-  }
+  override val headers: HeaderRule =
+    router.headers  
 
   def entityType: Type = t.tpe
 }
