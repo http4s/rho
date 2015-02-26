@@ -12,20 +12,19 @@ import scala.reflect.runtime.universe.Type
 
 import scalaz._, Scalaz._
 
-class SwaggerModelsBuilder(formats: SwaggerFormats) {
+private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   import models._
 
-  def mkSwagger(info: Info, ra: RhoAction[_, _])(os: Option[Swagger]): Swagger =
+  def mkSwagger(info: Info, ra: RhoAction[_, _])(s: Swagger): Swagger =
     Swagger(
-      info        = info,
-      paths       = collectPaths(ra)(os),
-      definitions = collectDefinitions(ra)(os))
+      info        = info.some,
+      paths       = collectPaths(ra)(s),
+      definitions = collectDefinitions(ra)(s))
 
-  def collectPaths(ra: RhoAction[_, _])(os: Option[Swagger]): Map[String, Path] = {
-    val paths = os.map(_.paths).getOrElse(Map.empty)
+  def collectPaths(ra: RhoAction[_, _])(s: Swagger): Map[String, Path] = {
     val pairs = mkPathStrs(ra).map { ps =>
       val o = mkOperation(ps, ra)
-      val p0 = paths.get(ps).getOrElse(Path())
+      val p0 = s.paths.get(ps).getOrElse(Path())
       val p1 = ra.method.name.toLowerCase match {
         case "get"     => p0.copy(get = o.some)
         case "put"     => p0.copy(put = o.some)
@@ -36,11 +35,11 @@ class SwaggerModelsBuilder(formats: SwaggerFormats) {
       }
       ps -> p1
     }
-    pairs.foldLeft(paths) { case (paths, (s, p)) => paths.alter(s)(_ => p.some) }
+    pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.alter(s)(_ => p.some) }
   }
 
-  def collectDefinitions(ra: RhoAction[_, _])(os: Option[Swagger]): Map[String, Model] = {
-    val initial: Set[Model] = os.map(_.definitions.values.toSet).getOrElse(Set.empty[Model])
+  def collectDefinitions(ra: RhoAction[_, _])(s: Swagger): Map[String, Model] = {
+    val initial: Set[Model] = s.definitions.values.toSet
     (collectResultTypes(ra) ++ collectCodecTypes(ra))
       .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
       .map(m => m.id.split("\\.").last -> m)

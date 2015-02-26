@@ -10,7 +10,7 @@ object models {
   case class Swagger
     (
       swagger             : String                                = "2.0"
-    , info                : Info
+    , info                : Option[Info]                          = None
     , host                : Option[String]                        = None
     , basePath            : Option[String]                        = None
     , schemes             : List[Scheme]                          = Nil
@@ -25,7 +25,7 @@ object models {
 
     def toJModel: jm.Swagger = {
       val s = new jm.Swagger
-      s.info(info.toJModel)
+      s.info(fromOption(info.map(_.toJModel)))
       s.host(fromOption(host))
       s.basePath(fromOption(basePath))
       s.setSchemes(fromList(schemes.map(_.toJModel)))

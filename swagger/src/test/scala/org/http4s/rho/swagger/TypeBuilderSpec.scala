@@ -150,11 +150,11 @@ class TypeBuilderSpec extends Spec {
       val m1 = ms.head
       m1.description must_== "FooComposite".some
       m1.properties.size must_== 2
-      m1.properties.get("single").get.`type` must_== "Foo"
+      m1.properties.get("single").get.`type` must_== "ref"
       m1.properties.get("many").get.`type` must_== "array"
 
       val m2 = ms.tail.head
-      m2.description must_== "Foo".some
+      m2.description must_== "Foo".some      
     }
 
     "Build a composite model with alias" in {

@@ -12,7 +12,7 @@ import shapeless.HList
 trait SwaggerSupport extends RhoService {
   import models._
 
-  private var swagger: Option[Swagger] = None
+  var swagger: Swagger = Swagger()
 
   /** Override the `swaggerFormats` to add your own custom serializers */
   def swaggerFormats: SwaggerFormats = DefaultSwaggerFormats
@@ -22,13 +22,13 @@ trait SwaggerSupport extends RhoService {
   def apiInfo: Info = Info(title = "My API", version = "1.0.0")
 
   GET / apiPath |>> { () =>
-    val swaggerJson = Json.mapper().writeValueAsString(swagger.map(_.toJModel).get)
+    val swaggerJson = Json.mapper().writeValueAsString(swagger.toJModel)
     Ok(swaggerJson).withHeaders(`Content-Type`(MediaType.`application/json`))
   }
 
   override protected def append[T <: HList, F](ra: RhoAction[T, F]): Unit = {
     super.append(ra)
-    val sb = new SwaggerModelsBuilder(swaggerFormats)
-    swagger = Some(sb.mkSwagger(apiInfo, ra)(swagger))
+    val sb = new SwaggerModelsBuilder(swaggerFormats)    
+    swagger = sb.mkSwagger(apiInfo, ra)(swagger)
   }
 }
