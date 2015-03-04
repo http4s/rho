@@ -3,6 +3,7 @@ package rho
 package swagger
 
 import org.specs2.mutable.Specification
+
 import org.http4s.rho.bits.MethodAliases.GET
 
 class SwaggerSupportSpec extends Specification with RequestRunner {
@@ -16,27 +17,14 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
   }
 
   "SwaggerSupport" should {
+
     "Expose an API listing" in {
-      val r = Request(GET, Uri(path = "/api-info"))
-      val JObject(List((_, JString(a)), (_, JString(b)))) = parseJson(checkOk(r)) \\ "path"
-      Set(a, b) should_== Set("/api-info", "/hello")
-    }
+      val r = Request(GET, Uri(path = "/swagger.json"))
 
-    "Expose an API description" in {
-      val r = Request(GET, Uri(path = "/api-info/hello"))
-      val json = parseJson(checkOk(r))
+      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
+        parseJson(checkOk(r)) \\ "paths"
 
-      val JArray(List(a, b)) = json \ "apis"
-
-      (a \ "path" should_== JString("/hello")) &&
-      (b \ "path" should_== JString("/hello/{string}"))
-    }
-
-    "Return a 404 on bad path" in {
-      val r = Request(GET, Uri(path = "/api-info/notfound"))
-      checkStatus(r)(_ == Status.NotFound) should_== "Api Not Found: api-info/notfound"
+      Set(a, b, c) should_== Set("/swagger.json", "/hello", "/hello/{string}")
     }
   }
-  
-
 }

@@ -1,24 +1,18 @@
 package org.http4s.rho.swagger
 
-import com.wordnik.swagger.model._
-import org.json4s.JsonAST.JValue
 import scala.reflect.runtime.universe._
 
-/**
- * Formats to use when converting to [[Model]].
- * Formats are usually configured by using an implicit parameter:
- * <pre>
- * implicit val formats = org.http4s.rho.DefaultFormats
- * </pre>
- */
+import models._
+
 sealed trait SwaggerFormats { self =>
+
   def customSerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
-  def customFieldSerializers: PartialFunction[Type, ModelProperty] = PartialFunction.empty
+  def customFieldSerializers: PartialFunction[Type, Property] = PartialFunction.empty
 
   /** Construct a new SwaggerFormats with custom model serializers */
   def withSerializers(s: PartialFunction[Type, Set[Model]]): SwaggerFormats = new SwaggerFormats {
     override val customSerializers: PartialFunction[Type, Set[Model]] = s orElse self.customSerializers
-    override val customFieldSerializers: PartialFunction[Type, ModelProperty] = self.customFieldSerializers
+    override val customFieldSerializers: PartialFunction[Type, Property] = self.customFieldSerializers
   }
 
   /** Construct a new SwaggerFormats with custom model serializers */
@@ -27,13 +21,13 @@ sealed trait SwaggerFormats { self =>
   }
 
   /** Construct a new SwaggerFormats with custom field serializers */
-  def withFieldSerializers(f: PartialFunction[Type, ModelProperty]): SwaggerFormats = new SwaggerFormats {
+  def withFieldSerializers(f: PartialFunction[Type, Property]): SwaggerFormats = new SwaggerFormats {
     override val customSerializers: PartialFunction[Type, Set[Model]] = self.customSerializers
-    override val customFieldSerializers: PartialFunction[Type, ModelProperty] = f orElse self.customFieldSerializers
+    override val customFieldSerializers: PartialFunction[Type, Property] = f orElse self.customFieldSerializers
   }
 
   /** Construct a new SwaggerFormats with custom field serializers */
-  def withFieldSerializers(t: Type, ms: ModelProperty): SwaggerFormats = withFieldSerializers {
+  def withFieldSerializers(t: Type, ms: Property): SwaggerFormats = withFieldSerializers {
     case tpe if tpe =:= t => ms
   }
 }
@@ -50,9 +44,5 @@ object DefaultSwaggerFormats extends SwaggerFormats {
     case tpe if tpe.isNothingOrNull => Set.empty
   }
 
-  val jsonSerializers: F = {
-    case tpe if tpe <:< typeOf[JValue] => Set.empty
-  }
-
-  override def customSerializers = jsonSerializers orElse ignoreNothingOrNull orElse ignoreExistentialType
+  override def customSerializers = ignoreNothingOrNull orElse ignoreExistentialType
 }

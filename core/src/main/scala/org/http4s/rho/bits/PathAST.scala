@@ -53,17 +53,19 @@ object PathAST {
 
   /** The root type of the parser AST */
   sealed trait PathRule
+  sealed trait PathRoute extends PathRule
+  sealed trait PathOperation extends PathRule
 
-  case class PathAnd(p1: PathRule, p2: PathRule) extends PathRule
+  case class PathAnd(p1: PathRule, p2: PathRule) extends PathRoute
 
-  case class PathOr(p1: PathRule, p2: PathRule) extends PathRule
+  case class PathOr(p1: PathRule, p2: PathRule) extends PathRoute
 
-  case class PathMatch(s: String) extends PathRule
+  case class PathMatch(s: String) extends PathOperation
 
-  case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathRule
+  case class PathCapture(name: String, parser: StringParser[_], m: TypeTag[_]) extends PathOperation
 
-  case object CaptureTail extends PathRule
+  case object CaptureTail extends PathOperation
 
-  case class MetaCons(path: PathRule, meta: Metadata) extends PathRule
+  case class MetaCons(path: PathRule, meta: Metadata) extends PathOperation
 
 }
