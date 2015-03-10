@@ -38,7 +38,7 @@ object MyBuild extends Build {
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
 
-  lazy val rhoVersion = "0.4.0-SNAPSHOT"
+  lazy val rhoVersion = "0.4.0"
 
   /* Don't publish setting */
   val dontPublish = packagedArtifacts := Map.empty
