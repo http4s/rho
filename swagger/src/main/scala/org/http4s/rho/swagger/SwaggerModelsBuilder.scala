@@ -205,8 +205,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def mkBodyParam(r: CodecRouter[_, _]): BodyParameter = {
     val tpe = r.entityType
+    val model = if (tpe.isPrimitive) {
+      val name = TypeBuilder.DataType(tpe).name
+      ModelImpl(id = name, `type` = name.some, isSimple = true)
+    } else RefModel(tpe.fullName, tpe.simpleName)
     BodyParameter(
-      schema      = RefModel(tpe.fullName, tpe.simpleName).some,
+      schema      = model.some,
       name        = "body".some,
       description = tpe.simpleName.some)
   }
@@ -216,8 +220,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     PathParameter(`type` = tpe, name = name.some, required = true)
   }
 
-  def mkResponse(code: String, descr: String, tpe: Option[Type]): (String, Response) =
-    code -> Response(description = descr, schema = tpe.map(t => RefProperty(ref = t.simpleName)))
+  def mkResponse(code: String, descr: String, tpe: Option[Type]): (String, Response) = {
+    code -> Response(description = descr, schema = tpe.map{ t =>
+      if (t.isPrimitive) AbstractProperty(`type` = TypeBuilder.DataType(t).name)
+      else               RefProperty(ref = t.simpleName)
+    })
+  }
+
 
   def mkQueryParam(rule: QueryCapture[_]): QueryParameter =
     QueryParameter(

@@ -303,7 +303,7 @@ object models {
       m.setRequired(required)
       m.setExample(fromOption(example))
       m.setProperties(fromMap(properties.mapValues(_.toJModel)))
-      m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
+      if (additionalProperties.nonEmpty) m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
       m.setDiscriminator(fromOption(discriminator))
       m.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       m
@@ -706,6 +706,6 @@ object models {
       if (xs.isEmpty) null else xs
 
     def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
-      if (m.isEmpty) null else m
+      if (m.isEmpty) Map.empty[A,B] else m
   }
 }
