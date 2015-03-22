@@ -82,8 +82,15 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "Handle definition without a path but with a parameter" in {
-      val request = Request(Method.GET, Uri.fromString("/?foo=biz").getOrElse(sys.error("Fail.")))
+      val request = Request(Method.GET, uri("/?foo=biz"))
       checkOk(request) should_== "just root with parameter 'foo=biz'"
+    }
+
+    "Return a 405 when a path is defined but the method doesn't match" in {
+      val request = Request(Method.POST, uri("/hello"))
+      val resp = service.toService(request).run.get
+      resp.status must_== Status.MethodNotAllowed
+      resp.headers.get("Allow".ci) must beSome(Header.Raw("Allow".ci, "GET"))
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
