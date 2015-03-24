@@ -205,8 +205,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def mkBodyParam(r: CodecRouter[_, _]): BodyParameter = {
     val tpe = r.entityType
+    val model = if (tpe.isPrimitive) {
+      val name = TypeBuilder.DataType(tpe).name
+      ModelImpl(id = tpe.fullName, id2 = name, `type` = name.some, isSimple = true)
+    } else RefModel(tpe.fullName, tpe.fullName, tpe.simpleName)
     BodyParameter(
-      schema      = RefModel(tpe.fullName, tpe.simpleName, tpe.simpleName).some,
+      schema      = model.some,
       name        = "body".some,
       description = tpe.simpleName.some)
   }
