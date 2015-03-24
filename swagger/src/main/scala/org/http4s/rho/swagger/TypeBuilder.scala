@@ -103,15 +103,11 @@ object TypeBuilder {
           .map(paramSymToProp(sym, tpeArgs, sfs))
           .toMap
 
-      val id =
-        if (tpe.simpleName.contains("«")) {
-          val xs = tpe.fullName.split("«")
-          List(xs.head, xs.last.split("\\.").last).mkString("«")
-        }
-        else
-          tpe.fullName
-
-      ModelImpl(id = id, description = tpe.simpleName.some, properties = props).some
+      ModelImpl(
+        id          = tpe.fullName,
+        id2         = tpe.simpleName,
+        description = tpe.simpleName.some,
+        properties  = props).some
     } catch {
       case NonFatal(t) => None
     }
@@ -119,7 +115,6 @@ object TypeBuilder {
   private def paramSymToProp
     (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol): (String, Property) = {
     val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-    val name = pSym.name.decodedName.toString
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
     val prop = sfs.customFieldSerializers.applyOrElse(pType, { _: Type =>
 
@@ -137,7 +132,7 @@ object TypeBuilder {
             AbstractProperty(`type` = name)
         }
     })
-    (name, prop.withRequired(required))
+    (pSym.name.decodedName.toString, prop.withRequired(required))
   }
 
   sealed trait DataType {
