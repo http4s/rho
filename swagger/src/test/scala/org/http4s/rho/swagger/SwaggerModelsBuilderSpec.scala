@@ -8,17 +8,20 @@ import org.http4s.rho.bits.QueryAST.EmptyQuery
 
 import org.specs2.mutable.Specification
 
+import scodec.bits.ByteVector
+
+import scala.reflect.runtime.universe._
+
 import scalaz._, Scalaz._
 
 class SwaggerModelsBuilderSpec extends Specification {
   import models._, DummyCompiler.compilerInstance
+  import org.http4s.rho.bits.ResponseGeneratorInstances._
 
-  object dummy {
-    sealed abstract class Renderable
-    case class ModelA(name: String, color: Int) extends Renderable
-    case class ModelB(name: String, id: Long) extends Renderable
-    case class ModelC(name: String, shape: String) extends Renderable
-  }
+  sealed abstract class Renderable
+  case class ModelA(name: String, color: Int) extends Renderable
+  case class ModelB(name: String, id: Long) extends Renderable
+  case class ModelC(name: String, shape: String) extends Renderable
 
   val sb = new SwaggerModelsBuilder(DefaultSwaggerFormats)
   val fooPath = GET / "foo"
@@ -172,24 +175,12 @@ class SwaggerModelsBuilderSpec extends Specification {
 
   "SwaggerModelsBuilder.collectDefinitions" should {
 
+    val prefix = "org.http4s.rho.swagger.SwaggerModelsBuilderSpec."
+    val modelAFullName = prefix + "ModelA"
+    val modelBFullName = prefix + "ModelB"
+    val modelCFullName = prefix + "ModelC"
+
     "get available models" in {
-      import dummy._
-      import org.http4s.rho.bits.ResponseGeneratorInstances._
-
-      val prefix = "org.http4s.rho.swagger.SwaggerModelsBuilderSpec.dummy."
-      val modelAFullName = prefix + "ModelA"
-      val modelBFullName = prefix + "ModelB"
-      val modelCFullName = prefix + "ModelC"
-
-      val modelASimpleName = "ModelA"
-      val modelBSimpleName = "ModelB"
-      val modelCSimpleName = "ModelC"
-
-      implicit def renderableEncoder[T <: Renderable]: EntityEncoder[T] =
-        EntityEncoder
-          .stringEncoder(Charset.`UTF-8`)
-          .contramap { r: T => "" }
-          .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
       val ra = "testing models" ** GET / "models" |>> { () =>
         val a = 0
@@ -202,30 +193,137 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectDefinitions(ra)(Swagger()) must havePairs(
 
-        modelASimpleName ->
+        "ModelA" ->
           ModelImpl(
             id          = modelAFullName,
-            description = modelASimpleName.some,
+            id2         = "ModelA",
+            description = "ModelA".some,
             properties  = Map(
               "name"  -> AbstractProperty("string", true),
               "color" -> AbstractProperty("integer", true, format = "int32".some))),
 
-        modelBSimpleName ->
+        "ModelB" ->
           ModelImpl(
             id          = modelBFullName,
-            description = modelBSimpleName.some,
+            id2         = "ModelB",
+            description = "ModelB".some,
             properties  = Map(
               "name" -> AbstractProperty("string", true),
               "id"   -> AbstractProperty("integer", true, format = "int64".some))),
 
-        modelCSimpleName ->
+        "ModelC" ->
           ModelImpl(
             id          = modelCFullName,
-            description = modelCSimpleName.some,
+            id2         = "ModelC",
+            description = "ModelC".some,
             properties  = Map(
               "name"  -> AbstractProperty("string", true),
               "shape" -> AbstractProperty("string", true)))
       )
     }
+
+    "handle models with parameters" in {
+
+      val ra = "testing models" ** GET / "models" |>> { () =>
+        Ok((1, ModelA("modela", 1)))
+      }
+
+      sb.collectDefinitions(ra)(Swagger()) must havePairs(
+
+        "Tuple2«Int,ModelA»" ->
+          ModelImpl(
+            id          = s"scala.Tuple2«scala.Int,$modelAFullName»",
+            id2         = "Tuple2«Int,ModelA»",
+            description = "Tuple2«Int,ModelA»".some,
+            properties  = Map(
+              "_1" -> AbstractProperty("integer", true, format = "int32".some),
+              "_2" -> RefProperty(ref = "ModelA", required = true))))
+    }
   }
+
+  "SwaggerModelsBuilder.collectResponses" should {
+
+    "collect response of primitive types" in {
+      val ra = GET / "test" |>> { () => Ok("") }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
+    }
+
+    "collect response of user-defined types" in {
+      val ra = GET / "test" |>> { () => Ok(ModelA("", 0)) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(description = "OK", schema = RefProperty(ref = "ModelA").some))
+    }
+
+    "collect response of collection of primitive types" in {
+      val ra = GET / "test" |>> { () => Ok(List("")) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = AbstractProperty(`type` = "string")).some))
+    }
+
+    "collect response of collection of user-defined types" in {
+      val ra = GET / "test" |>> { () => Ok(List(ModelA("", 0))) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "ModelA")).some))
+    }
+
+    "collect response of tuples" in {
+      val ra = GET / "test" |>> { () => Ok((0, ModelA("", 0))) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = RefProperty(ref = "Tuple2«Int,ModelA»").some))
+    }
+
+    "collect response of a collection of tuples" in {
+      val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
+    }
+
+    "collect multiple responses" in {
+      val ra = GET / "test" / pathVar[Int] |>> { (i: Int) =>
+
+        i match {
+          case 0 => Ok(List((0, ModelA("A", 0))))
+          case _ => Unauthorized("Unauthorized")
+        }
+      }
+
+      sb.collectResponses(ra) must havePairs(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some),
+        "401" -> Response(
+          description = "Unauthorized",
+          schema      = AbstractProperty(`type` = "string").some))
+    }
+  }
+
+  implicit def renderableEncoder[T <: Renderable]: EntityEncoder[T] =
+    EntityEncoder
+      .stringEncoder(Charset.`UTF-8`)
+      .contramap { r: T => "" }
+      .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
+
+  implicit def tuple2Encoder[T <: Renderable]: EntityEncoder[(Int, T)] =
+    EntityEncoder
+      .stringEncoder(Charset.`UTF-8`)
+      .contramap { r: (Int, T) => "" }
+      .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
+
+  implicit def listEntityEncoder[A]: EntityEncoder[List[A]] =
+    EntityEncoder.simple[List[A]]()(_ => ByteVector.view("A".getBytes))
 }

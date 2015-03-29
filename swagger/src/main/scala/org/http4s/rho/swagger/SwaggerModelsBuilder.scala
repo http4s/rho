@@ -8,7 +8,7 @@ import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 import org.http4s.rho.bits._
 
-import scala.reflect.runtime.universe.Type
+import scala.reflect.runtime.universe._
 
 import scalaz._, Scalaz._
 
@@ -42,7 +42,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     val initial: Set[Model] = s.definitions.values.toSet
     (collectResultTypes(ra) ++ collectCodecTypes(ra))
       .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
-      .map(m => m.id.split("\\.").last -> m)
+      .map(m => m.id2 -> m)
       .toMap
   }
 
@@ -207,8 +207,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     val tpe = r.entityType
     val model = if (tpe.isPrimitive) {
       val name = TypeBuilder.DataType(tpe).name
-      ModelImpl(id = name, `type` = name.some, isSimple = true)
-    } else RefModel(tpe.fullName, tpe.simpleName)
+      ModelImpl(id = tpe.fullName, id2 = name, `type` = name.some, isSimple = true)
+    } else RefModel(tpe.fullName, tpe.fullName, tpe.simpleName)
     BodyParameter(
       schema      = model.some,
       name        = "body".some,
@@ -220,13 +220,41 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     PathParameter(`type` = tpe, name = name.some, required = true)
   }
 
-  def mkResponse(code: String, descr: String, tpe: Option[Type]): (String, Response) = {
-    code -> Response(description = descr, schema = tpe.map{ t =>
-      if (t.isPrimitive) AbstractProperty(`type` = TypeBuilder.DataType(t).name)
-      else               RefProperty(ref = t.simpleName)
-    })
-  }
+  def mkResponse(code: String, descr: String, otpe: Option[Type]): (String, Response) = {
 
+    def typeToProp(tpe: Type): Property =
+      if (tpe.isPrimitive)
+        mkPrimitiveProperty(tpe)
+      else if (tpe.isCollection)
+        mkCollectionProperty(tpe)
+      else
+        RefProperty(ref = tpe.simpleName)      
+
+    def mkPrimitiveProperty(tpe: Type): Property = {
+      import TypeBuilder._
+      DataType.fromType(tpe) match {
+        case DataType.ValueDataType(name, format, qName) =>
+          AbstractProperty(`type` = name, description = qName, format = format)
+        case DataType.ContainerDataType(name, tpe, uniqueItems) =>
+          AbstractProperty(`type` = name)
+      }
+    }
+
+    def mkCollectionProperty(tpe: Type): Property = {
+      val param = tpe.dealias.typeArgs.head
+      val prop =
+        if (param.isPrimitive)
+          mkPrimitiveProperty(param)
+        else if (param.isCollection)
+          typeToProp(param)
+        else
+          RefProperty(ref = param.simpleName)        
+
+      ArrayProperty(items = prop)
+    }
+
+    code -> Response(description = descr, schema = otpe.map(typeToProp))
+  }
 
   def mkQueryParam(rule: QueryCapture[_]): QueryParameter =
     QueryParameter(

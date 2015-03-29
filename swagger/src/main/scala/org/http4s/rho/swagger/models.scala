@@ -255,7 +255,7 @@ object models {
   case class Response
     (
       description : String
-    , schema      : Option[Property]
+    , schema      : Option[Property]      = None
     , examples    : Map[String, String]   = Map.empty
     , headers     : Map[String, Property] = Map.empty
     ) {
@@ -272,6 +272,7 @@ object models {
 
   sealed trait Model {
     def id: String
+    def id2: String
     def description: Option[String]
     def properties: Map[String, Property]
     def example: Option[String]
@@ -283,6 +284,7 @@ object models {
   case class ModelImpl
     (
       id                   : String
+    , id2                  : String
     , description          : Option[String]        = None
     , `type`               : Option[String]        = None
     , name                 : Option[String]        = None
@@ -313,6 +315,7 @@ object models {
   case class ArrayModel
     (
       id           : String
+    , id2          : String
     , description  : Option[String]        = None
     ,`type`        : Option[String]        = None
     , properties   : Map[String, Property] = Map.empty
@@ -336,6 +339,7 @@ object models {
   case class ComposedModel
     (
       id           : String
+    , id2          : String
     , description  : Option[String]        = None
     , allOf        : List[Model]           = Nil
     , parent       : Option[Model]         = None
@@ -363,6 +367,7 @@ object models {
   case class RefModel
     (
       id           : String
+    , id2          : String
     , ref          : String
     , description  : Option[String]        = None
     , properties   : Map[String, Property] = Map.empty

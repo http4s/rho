@@ -23,7 +23,7 @@ class SwaggerFormatsSpec extends Specification {
   "SwaggerFormats" should {
 
     "withSerializers" in {
-      val m = ModelImpl(id = "fruit-box", description = "model.FruitBox".some)
+      val m = ModelImpl(id = "fruit-box", id2 = "fruit-box", description = "model.FruitBox".some)
       val sfs = DefaultSwaggerFormats.withSerializers(typeOf[FruitBox], Set(m))
 
       def modelOf[T](t: TypeTag[T]): Set[Model] =
