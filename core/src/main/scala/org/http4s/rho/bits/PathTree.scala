@@ -2,6 +2,8 @@ package org.http4s
 package rho
 package bits
 
+import org.http4s.rho.bits.ResponseGeneratorInstances.MethodNotAllowed
+
 import scala.language.existentials
 
 import org.http4s.rho.bits.PathAST._
@@ -72,11 +74,11 @@ trait PathTree {
 
     protected def paths: List[Node]
 
-    protected def end: Leaf
+    protected def end: Map[Method, Leaf]
 
-    protected def variadic: Leaf
+    protected def variadic: Map[Method, Leaf]
 
-    protected def clone(paths: List[Node], variadic: Leaf, end: Leaf): Node
+    protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): Node
 
     protected def addNode(n: Node): Node
 
@@ -85,37 +87,39 @@ trait PathTree {
     protected def matchString(s: String, stack: HList): HList
 
     // Appends the action to the tree by walking the PathRule stack, returning a new Node structure
-    final def append(tail: PathRule, action: Leaf): Node = append(tail::Nil, action)
+    final def append(tail: PathRule, method: Method, action: Leaf): Node = append(tail::Nil, method, action)
 
-    final private[Node] def append(tail: List[PathRule], action: Leaf): Node = tail match {
+    final private[Node] def append(tail: List[PathRule], method: Method, action: Leaf): Node = tail match {
       case h::tail => h match {
-        case PathAnd(p1, p2) => append(p1::p2::tail, action)
+        case PathAnd(p1, p2) => append(p1::p2::tail, method, action)
 
-        case PathOr(p1, p2) => append(p1::tail, action).append(p2::tail, action)
+        case PathOr(p1, p2) => append(p1::tail, method, action).append(p2::tail, method, action)
 
-        case MetaCons(r, _) => append(r::tail, action)  // discard metadata
+        case MetaCons(r, _) => append(r::tail, method, action)  // discard metadata
 
-        case PathMatch("") if !tail.isEmpty => append(tail, action) // "" is a NOOP in the middle of a path
+        case PathMatch("") if !tail.isEmpty => append(tail, method, action) // "" is a NOOP in the middle of a path
 
         case PathMatch(s) =>
           paths.collectFirst { case n@MatchNode(s1,_,_,_) if s == s1 => n } match {
-            case Some(n) => replaceNode(n, n.append(tail, action))
-            case None    => addNode(MatchNode(s).append(tail, action))
+            case Some(n) => replaceNode(n, n.append(tail, method, action))
+            case None    => addNode(MatchNode(s).append(tail, method, action))
           }
 
         case PathCapture(_, p, _) =>
           paths.collectFirst{ case n@ CaptureNode(p1,_,_,_) if p1 eq p => n } match {
-            case Some(w) => replaceNode(w, w.append(tail, action))
-            case None    => addNode(CaptureNode(p).append(tail, action))
+            case Some(w) => replaceNode(w, w.append(tail, method, action))
+            case None    => addNode(CaptureNode(p).append(tail, method, action))
           }
 
         case CaptureTail =>
-          val v = if (variadic != null) variadic ++ action else action
+          val l = variadic.get(method).map(_ ++ action).getOrElse(action)
+          val v = variadic.updated(method, l)
           clone(paths, v, end)
       }
 
       case Nil =>  // this is the end of the stack
-        val e = if (end != null) end ++ action else action
+        val l = end.get(method).map(_ ++ action).getOrElse(action)
+        val e = end.updated(method, l)
         clone(paths, variadic, e)
     }
     
@@ -123,24 +127,29 @@ trait PathTree {
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    final def walkTree(req: Key): RouteResult[Value] = {
+    final def walkTree(method: Method, req: Key): RouteResult[Value] = {
       val path = keyToPath(req)
-      walk(req, if (path.nonEmpty) path else ""::Nil, HNil)
+      walk(method, req, if (path.nonEmpty) path else ""::Nil, HNil)
     }
 
-    private[PathTree] def walk(req: Key, path: List[String], stack: HList): RouteResult[Value] = {
+    private[PathTree] def walk(method: Method, req: Key, path: List[String], stack: HList): RouteResult[Value] = {
       val h = matchString(path.head, stack)
       if (h != null) {
         if (path.tail.isEmpty) {
-          if (end != null) end.attempt(req, h)
-          else if (variadic != null) variadic.attempt(req, Nil::h)
-          else NoMatch
+          end.get(method).map(_.attempt(req, h)) orElse
+            variadic.get(method).map(_.attempt(req, Nil::h)) getOrElse {
+              val allowedMethods = end.keys.mkString(", ")
+              val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
+              // TODO: replace Raw with a real Allow header once its in http4s propper.
+              ValidationFailure(MethodNotAllowed(msg).withHeaders(Header.Raw("Allow".ci, allowedMethods)))
+            }
+
         }
         else {
-          @tailrec               // error may be null
+          @tailrec             // warning: `error` may be null
           def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[Value] = {
             if (nodes.isEmpty) error
-            else nodes.head.walk(req, path.tail, h) match {
+            else nodes.head.walk(method, req, path.tail, h) match {
               case NoMatch                 => go(nodes.tail, error)
               case r@ ParserSuccess(_)     => r
               case e@ ParserFailure(_)     => go(nodes.tail, if (error != null) error else e)
@@ -150,8 +159,7 @@ trait PathTree {
 
           val routeMatch = go(paths, null)
           if (routeMatch != null) routeMatch
-          else if(variadic != null) variadic.attempt(req, path.tail::h)
-          else NoMatch
+          else variadic.get(method).map(_.attempt(req, path.tail::h)).getOrElse(NoMatch)
         }
 
       }
@@ -171,20 +179,19 @@ trait PathTree {
   }
 
   protected case class HeadNode(paths: List[Node] = Nil,
-                                variadic: Leaf = null,
-                                end: Leaf = null) extends Node {
+                             variadic: Map[Method,Leaf] = Map.empty,
+                                  end: Map[Method,Leaf] = Map.empty) extends Node {
 
-    private[PathTree] override def walk(req: Key, path: List[String], stack: HList): RouteResult[Value] = {
-      if (path.isEmpty) {
-        if (end != null) end.attempt(req, stack)
-        else if (variadic != null) variadic.attempt(req, Nil::stack)
-        else NoMatch
+    private[PathTree] override def walk(method: Method, req: Key, path: List[String], stack: HList): RouteResult[Value] = {
+      if (path.isEmpty) end.get(method) orElse variadic.get(method) match {
+        case Some(f) => f.attempt(req, stack)
+        case None    => NoMatch
       }
       else {
         @tailrec               // error may be null
         def go(ns: List[Node], error: ParserResult[Nothing]): RouteResult[Value] = ns match {
           case Nil   => error
-          case n::ns => n.walk(req, path, stack) match {
+          case n::ns => n.walk(method, req, path, stack) match {
             case NoMatch                 => go(ns, error)
             case r@ ParserSuccess(_)     => r
             case e@ ParserFailure(_)     => go(ns, if (error != null) error else e)
@@ -194,8 +201,10 @@ trait PathTree {
 
         val routeMatch = go(paths, null)
         if (routeMatch != null) routeMatch
-        else if(variadic != null) variadic.attempt(req, path.tail::stack)
-        else NoMatch
+        else variadic.get(method) match {
+          case Some(f) => f.attempt(req, path.tail::stack)
+          case None    => NoMatch
+        }
       }
     }
 
@@ -207,7 +216,7 @@ trait PathTree {
       case n: HeadNode    => sys.error("Shouldn't get here!")
     }
 
-    override protected def clone(paths: List[Node], variadic: Leaf, end: Leaf): HeadNode =
+    override protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): HeadNode =
       copy(paths = paths, variadic = variadic, end = end)
 
     override protected def matchString(s: String, stack: HList): HList = {
@@ -218,9 +227,9 @@ trait PathTree {
 
   final private case class CaptureNode(parser: StringParser[_],
                                        paths: List[Node] = Nil,
-                                       variadic: Leaf = null,
-                                       end: Leaf = null
-                                        ) extends Node {
+                                       variadic: Map[Method,Leaf] = Map.empty,
+                                       end: Map[Method,Leaf] = Map.empty) extends Node
+  {
 
 
     override protected def replaceNode(o: Node, n: Node): CaptureNode = copy(paths = replace(o, n))
@@ -231,7 +240,7 @@ trait PathTree {
       case n: HeadNode    => sys.error("Shouldn't get here!")
     }
 
-    override protected def clone(paths: List[Node], variadic: Leaf, end: Leaf): CaptureNode =
+    override protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): CaptureNode =
       copy(paths = paths, variadic = variadic, end = end)
 
     override protected def matchString(s: String, h: HList): HList = {
@@ -244,8 +253,8 @@ trait PathTree {
 
   final private case class MatchNode(name: String,
                                      paths: List[Node] = Nil,
-                                     variadic: Leaf = null,
-                                     end: Leaf = null) extends Node {
+                                     variadic: Map[Method,Leaf] = Map.empty,
+                                     end: Map[Method,Leaf] = Map.empty) extends Node {
 
     override protected def replaceNode(o: Node, n: Node): MatchNode = copy(paths = replace(o, n))
 
@@ -255,7 +264,7 @@ trait PathTree {
       case n: HeadNode    => sys.error("Shouldn't get here!")
     }
 
-    override protected def clone(paths: List[Node], variadic: Leaf, end: Leaf): MatchNode =
+    override protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): MatchNode =
       copy(paths = paths, variadic = variadic, end = end)
 
     override protected def matchString(s: String, h: HList): HList = if (s == name) h else null

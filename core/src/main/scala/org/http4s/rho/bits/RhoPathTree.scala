@@ -2,10 +2,8 @@ package org.http4s
 package rho
 package bits
 
-import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 import shapeless.HList
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scalaz.concurrent.Task
 
@@ -13,13 +11,13 @@ import scalaz.concurrent.Task
 final class RhoPathTree extends PathTree {
   import RhoPathTree._
 
-  private val methods: mutable.Map[Method, Node] = mutable.HashMap.empty
+  private var paths: Node = HeadNode()
 
   override type Key = Request
 
   override type Value = () => Task[Response]
 
-  override def toString = methods.toString()
+  override def toString = paths.toString()
 
   /** Generates a list of tokens that represent the path */
   override def keyToPath(key: Key): List[String] = splitPath(key.pathInfo)
@@ -27,16 +25,11 @@ final class RhoPathTree extends PathTree {
   def appendAction[T <: HList, F](action: RhoAction[T, F]): Unit = {
     val m = action.method
     val newLeaf = makeLeaf(action)
-    val newNode = methods.getOrElse(m, HeadNode()).append(action.path, newLeaf)
-    methods(m) = newNode
+    val newNode = paths.append(action.path, m, newLeaf)
+    paths = newNode
   }
 
-  def getResult(req: Request): RouteResult[Value] = {
-    methods.get(req.method) match {
-      case Some(method) => method.walkTree(req)
-      case None => NoMatch
-    }
-  }
+  def getResult(req: Request): RouteResult[Value] = paths.walkTree(req.method, req)
 
   private def makeLeaf[T <: HList, F, O](action: RhoAction[T, F]): Leaf = {
     action.router match {
