@@ -225,7 +225,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     def typeToProp(tpe: Type): Property =
       if (tpe.isPrimitive)
         mkPrimitiveProperty(tpe)
-      else if (tpe.isCollection)
+      else if (tpe.isCollection && tpe.dealias.typeArgs.headOption.isDefined)
         mkCollectionProperty(tpe)
       else
         RefProperty(ref = tpe.simpleName)      
