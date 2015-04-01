@@ -36,7 +36,13 @@ package object swagger {
         typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger])
     }
 
+    private[swagger] val excludes = {
+      Set[Type](typeOf[scala.xml.Elem])
+    }
+
     def isPrimitive(t: Type, extra: Set[Type] = Set.empty) = (primitives ++ extra).exists(t =:= _)
+
+    def isExcluded(t: Type, extra: Set[Type] = Set.empty) = (excludes ++ extra).exists(t <:< _)
   }
 
   implicit class ReflectionHelpers(t: Type) {

@@ -13,6 +13,7 @@ import org.http4s.util.UrlFormCodec
 import scalaz._
 import scalaz.Scalaz._
 import scalaz.concurrent.Task
+import scalaz.stream.Process
 
 object MyService extends RhoService with SwaggerSupport {
   import org.http4s.rho._
@@ -87,5 +88,12 @@ object MyService extends RhoService with SwaggerSupport {
   "This route allows your to post stuff" **
     POST / "post" ^ EntityDecoder.text |>> { body: String =>
       "You posted: " + body
+    }
+
+  "This demonstrates using a process of entities" **
+    GET / "stream" |>> {
+      val s = 0 until 100 map (i => s"Hello $i\n")
+      val p: Process[Task, String] = Process.emitAll(s)
+      Ok(p)
     }
 }

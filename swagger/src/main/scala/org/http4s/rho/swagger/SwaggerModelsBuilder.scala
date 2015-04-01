@@ -8,12 +8,16 @@ import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 import org.http4s.rho.bits._
 
+import org.log4s.getLogger
+
 import scala.reflect.runtime.universe._
 
 import scalaz._, Scalaz._
 
 private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   import models._
+
+  private[this] val logger = getLogger
 
   def mkSwagger(info: Info, ra: RhoAction[_, _])(s: Swagger): Swagger =
     Swagger(
@@ -222,13 +226,19 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def mkResponse(code: String, descr: String, otpe: Option[Type]): (String, Response) = {
 
-    def typeToProp(tpe: Type): Property =
-      if (tpe.isPrimitive)
-        mkPrimitiveProperty(tpe)
+    def typeToProp(tpe: Type): Option[Property] =
+      if (Reflector.isExcluded(tpe))
+        None
+      else if (tpe.isPrimitive)
+        mkPrimitiveProperty(tpe).some
       else if (tpe.isCollection)
         mkCollectionProperty(tpe)
+      else if (tpe.isProcess)
+        typeToProp(tpe.dealias.typeArgs(1))
+      else if (tpe.isTask)
+        typeToProp(tpe.dealias.typeArgs(0))
       else
-        RefProperty(ref = tpe.simpleName)      
+        RefProperty(ref = tpe.simpleName).some      
 
     def mkPrimitiveProperty(tpe: Type): Property = {
       import TypeBuilder._
@@ -240,20 +250,27 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       }
     }
 
-    def mkCollectionProperty(tpe: Type): Property = {
+    def mkCollectionProperty(tpe: Type): Option[Property] = {
       val param = tpe.dealias.typeArgs.head
       val prop =
         if (param.isPrimitive)
-          mkPrimitiveProperty(param)
+          mkPrimitiveProperty(param).some
         else if (param.isCollection)
           typeToProp(param)
         else
-          RefProperty(ref = param.simpleName)        
+          RefProperty(ref = param.simpleName).some 
 
-      ArrayProperty(items = prop)
+      prop.map(p => ArrayProperty(items = p))
     }
 
-    code -> Response(description = descr, schema = otpe.map(typeToProp))
+    val schema = {
+      try otpe.flatMap(typeToProp)
+      catch { case _: Throwable =>
+        logger.warn(s"Failed to build model for type ${otpe.get}")
+        None
+      }
+    }
+    code -> Response(description = descr, schema = schema)
   }
 
   def mkQueryParam(rule: QueryCapture[_]): QueryParameter =
