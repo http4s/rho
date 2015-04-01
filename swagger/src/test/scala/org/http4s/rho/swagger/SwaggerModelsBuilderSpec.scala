@@ -13,6 +13,8 @@ import scodec.bits.ByteVector
 import scala.reflect.runtime.universe._
 
 import scalaz._, Scalaz._
+import scalaz.stream._
+import scalaz.concurrent.Task
 
 class SwaggerModelsBuilderSpec extends Specification {
   import models._, DummyCompiler.compilerInstance
@@ -286,6 +288,48 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "collect response of a collection of tuples" in {
       val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
+    }
+
+    "collect response of a Process of primitives" in {
+      val ra1 = GET / "test" |>> { () => Ok(Process.eval(Task(""))) }
+      val ra2 = GET / "test" |>> { () => Ok(Process.emit("")) }
+
+      sb.collectResponses(ra1) must havePair(
+        "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
+
+      sb.collectResponses(ra2) must havePair(
+        "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
+    }
+
+    "collect response of a Process of non-primitives" in {
+      val ra1 = GET / "test" |>> { () => Ok(Process.eval(Task(List((0, ModelA("", 0)))))) }
+      val ra2 = GET / "test" |>> { () => Ok(Process.emit(List((0, ModelA("", 0))))) }
+
+      sb.collectResponses(ra1) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
+
+      sb.collectResponses(ra2) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
+    }
+
+    "collect response of a Task of a primitive" in {
+      val ra = GET / "test" |>> { () => Ok(Task("")) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
+    }
+
+    "collect response of a Task of a non-primitive" in {
+      val ra = GET / "test" |>> { () => Ok(Task(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
