@@ -11,6 +11,7 @@ import org.http4s.rho.bits._
 import org.log4s.getLogger
 
 import scala.reflect.runtime.universe._
+import scala.util.control.NonFatal
 
 import scalaz._, Scalaz._
 
@@ -265,8 +266,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     val schema = {
       try otpe.flatMap(typeToProp)
-      catch { case _: Throwable =>
-        logger.warn(s"Failed to build model for type ${otpe.get}")
+      catch { case NonFatal(t) =>
+        logger.warn(t)(s"Failed to build model for type ${otpe.get}")
         None
       }
     }
