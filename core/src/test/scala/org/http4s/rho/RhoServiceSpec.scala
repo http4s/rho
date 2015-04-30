@@ -10,7 +10,9 @@ import scalaz.stream.Process
 
 class RhoServiceSpec extends Specification with RequestRunner {
 
-  def Get(s: String, h: Header*): Request = Request(Method.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+  def construct(method: Method, s: String, h: Header*): Request = Request(method, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+  def Get(s: String, h: Header*): Request = construct(Method.GET, s, h:_*)
+  def Put(s: String, h: Header*): Request = construct(Method.PUT, s, h:_*)
 
   val service = new RhoService {
     GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
@@ -72,6 +74,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
     GET / "terminal" / "" |>> "terminal/"
 
     GET / "terminal" |>> "terminal"
+
+    GET / "one" / "two" / "three" |>> "one/two"
   }
 
   "RhoService" should {
@@ -128,6 +132,14 @@ class RhoServiceSpec extends Specification with RequestRunner {
     "Provide 'reverse routing' characteristics" in {
       val req = Get("/hello/reverse")
       checkOk(req) should_== "route0"
+    }
+
+    "NotFound on empty route" in {
+      service.toService(Get("/one/two")).run must_== None
+    }
+
+    "Yield `MethodNotAllowed` when invalid method used" in {
+      service.toService(Put("/one/two/three")).run.get.status must_== Status.MethodNotAllowed
     }
 
     "Fail a route with a missing query" in {

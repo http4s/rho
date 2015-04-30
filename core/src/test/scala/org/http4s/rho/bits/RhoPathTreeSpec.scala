@@ -26,6 +26,9 @@ class RhoPathTreeSpec extends Specification {
     "Interpret '//' as '/'" in {
       splitPath("/test//path") must_== List("test", "path")
     }
+    "Not swallow a trailing '/'" in {
+      splitPath("/test/") must_== List("test", "")
+    }
   }
 
   "Honor UriTranslations" in {

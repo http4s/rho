@@ -138,12 +138,14 @@ trait PathTree {
         if (path.tail.isEmpty) {
           end.get(method).map(_.attempt(req, h)) orElse
             variadic.get(method).map(_.attempt(req, Nil::h)) getOrElse {
-              val allowedMethods = end.keys.mkString(", ")
-              val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-              // TODO: replace Raw with a real Allow header once its in http4s propper.
-              ValidationFailure(MethodNotAllowed(msg).withHeaders(Header.Raw("Allow".ci, allowedMethods)))
+              if (end.keys.isEmpty) NoMatch
+              else {
+                val allowedMethods = end.keys.mkString(", ")
+                val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
+                // TODO: replace Raw with a real Allow header once its in http4s propper.
+                ValidationFailure(MethodNotAllowed(msg).withHeaders(Header.Raw("Allow".ci, allowedMethods)))
+              }
             }
-
         }
         else {
           @tailrec             // warning: `error` may be null
