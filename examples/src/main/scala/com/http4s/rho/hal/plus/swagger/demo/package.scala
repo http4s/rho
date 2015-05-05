@@ -6,26 +6,20 @@ import scala.util.Success
 import scala.util.Try
 
 import org.http4s.Charset
-import org.http4s.Header.`Content-Type`
+import org.http4s.headers.`Content-Type`
 import org.http4s.MediaType
 import org.http4s.EntityEncoder
 import org.http4s.rho.bits.QueryAST.TypedQuery
 import org.http4s.rho.hal.LinkObjectSerializer
 import org.http4s.rho.hal.ResourceObject
 import org.http4s.rho.hal.ResourceObjectSerializer
-import org.json4s.CustomSerializer
 import org.json4s.DefaultFormats
 import org.json4s.Extraction.decompose
 import org.json4s.Formats
-import org.json4s.JString
 import org.json4s.JsonAST.JValue
 import org.json4s.ext.JodaTimeSerializers
 import org.json4s.jackson.JsonMethods.compact
-import org.json4s.jackson.JsonMethods.parse
 import org.json4s.jackson.JsonMethods.render
-import org.json4s.jackson.Serialization.write
-import org.json4s.jvalue2monadic
-import org.json4s.string2JsonInput
 
 package object demo {
 

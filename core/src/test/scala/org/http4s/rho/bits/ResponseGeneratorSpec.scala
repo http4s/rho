@@ -1,6 +1,6 @@
 package org.http4s.rho.bits
 
-import org.http4s.Header.{`Content-Type`, Location, `Transfer-Encoding`, `Content-Length`}
+import org.http4s.headers.{`Content-Type`, Location, `Transfer-Encoding`, `Content-Length`}
 import org.http4s._
 import org.specs2.mutable.Specification
 
