@@ -140,10 +140,11 @@ trait PathTree {
             variadic.get(method).map(_.attempt(req, Nil::h)) getOrElse {
               if (end.keys.isEmpty) NoMatch
               else {
-                val allowedMethods = end.keys.mkString(", ")
+                val ms = end.keys
+                val allowedMethods = ms.mkString(", ")
                 val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-                // TODO: replace Raw with a real Allow header once its in http4s propper.
-                ValidationFailure(MethodNotAllowed(msg).withHeaders(Header.Raw("Allow".ci, allowedMethods)))
+                ValidationFailure(MethodNotAllowed(msg)
+                  .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
               }
             }
         }

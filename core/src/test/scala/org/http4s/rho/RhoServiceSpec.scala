@@ -293,7 +293,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "work with all syntax elements" in {
-      val reqHeader = requireThat(Header.`Content-Length`){ h => h.length <= 3 }
+      val reqHeader = requireThat(headers.`Content-Length`){ h => h.length <= 3 }
 
       val srvc = new RhoService {
         POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text |>> {
@@ -304,8 +304,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
       val uri = Uri.fromString("/foo/1?param=myparam").getOrElse(sys.error("Failed."))
       val req = Request(method = Method.POST, uri = uri, body = body)
-                    .withHeaders(Headers(Header.`Content-Type`(MediaType.`text/plain`),
-                                         Header.`Content-Length`("foo".length)))
+                    .withHeaders(Headers(headers.`Content-Type`(MediaType.`text/plain`),
+                                         headers.`Content-Length`("foo".length)))
 
       val r = srvc.toService(req)
       getBody(r.run.get.body) must_== "success"

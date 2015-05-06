@@ -1,7 +1,7 @@
 package org.http4s.rho
 
 import org.http4s.{AttributeKey, DateTime}
-import org.http4s.Header._
+import org.http4s.headers._
 import org.specs2.mutable.Specification
 
 

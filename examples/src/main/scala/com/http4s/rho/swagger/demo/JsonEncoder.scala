@@ -2,16 +2,10 @@ package com.http4s.rho.swagger.demo
 
 import java.nio.charset.StandardCharsets
 
-import org.http4s.Header.{ `Content-Type` }
-import org.http4s.{MediaType, Headers, EntityEncoder}
+import org.http4s.headers.`Content-Type`
+import org.http4s.{MediaType, EntityEncoder}
 import org.http4s.EntityEncoder.Entity
-import org.json4s.NoTypeHints
-import org.json4s.jackson.Serialization
-import org.json4s.jackson.Serialization.write
 
-import scalaz.concurrent.Task
-import scalaz.stream.Process.emit
-import scodec.bits.ByteVector
 
 // TODO: replace this with http4s json support
 object JsonEncoder {

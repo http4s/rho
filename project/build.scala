@@ -49,7 +49,7 @@ object MyBuild extends Build {
 
   lazy val buildSettings = Defaults.defaultSettings ++ publishing ++
      Seq(
-        scalaVersion := "2.11.5",
+        scalaVersion := "2.11.6",
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
@@ -62,9 +62,10 @@ object MyBuild extends Build {
         license,
 
         libraryDependencies ++= Seq(
-          http4sServer % "provided",
-          logbackClassic % "test",
-          scalazSpecs2 % "test"
+          http4sServer     % "provided",
+          logbackClassic   % "test",
+          scalazSpecs2     % "test",
+          `scala-reflect`  % scalaVersion.value
         )
     )
 
@@ -121,7 +122,7 @@ object MyBuild extends Build {
 }
 
 object Dependencies {
-  lazy val http4sVersion = "0.6.1"
+  lazy val http4sVersion = "0.7.0"
   lazy val http4sServerVersion = if (!http4sVersion.endsWith("SNAPSHOT")) (http4sVersion.dropRight(1) + "0")
                                  else http4sVersion
 
@@ -139,6 +140,8 @@ object Dependencies {
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
   lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
   lazy val uadetector          = "net.sf.uadetector" % "uadetector-resources" % "2014.09"
+
+  lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
 
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)

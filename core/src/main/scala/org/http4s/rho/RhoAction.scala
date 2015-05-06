@@ -9,8 +9,6 @@ import org.http4s.rho.bits.ResultInfo
 
 import shapeless.HList
 
-import scala.reflect.runtime.universe.Type
-
 
 case class RhoAction[T <: HList, F](router: RoutingEntity[T], f: F, hf: HListToFunc[T, F]) {
   final def method: Method = router.method

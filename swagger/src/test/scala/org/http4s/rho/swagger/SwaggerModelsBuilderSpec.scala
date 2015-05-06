@@ -3,7 +3,7 @@ package swagger
 
 import org.http4s._
 import org.http4s.Method._
-import org.http4s.Header._
+import org.http4s.headers._
 import org.http4s.rho.bits.QueryAST.EmptyQuery
 
 import org.specs2.mutable.Specification
