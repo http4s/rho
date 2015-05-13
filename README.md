@@ -28,7 +28,7 @@ libraryDependencies += "org.http4s" %% "rho-swagger" % version
 ρ remains a work in progress.
 
 ### Contributing
-Contributions of all kinds are welcome! Pull requests are greatly appreciated from their original authors, licensed to the http4s project under the project's [open source license](https://github.com/http4s/http4s/blob/develop/LICENSE).
+Contributions of all kinds are welcome! Pull requests are greatly appreciated from their original authors, licensed to the http4s project under the project's [open source license](https://github.com/http4s/http4s/blob/master/LICENSE).
 
 ### License
 ρ is licensed under the terms of the Apache 2.0 license. See the license file in the base directory for more information.
