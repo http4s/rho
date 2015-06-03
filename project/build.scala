@@ -47,7 +47,7 @@ object MyBuild extends Build {
     "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
   )
 
-  lazy val buildSettings = Defaults.defaultSettings ++ publishing ++
+  lazy val buildSettings = publishing ++
      Seq(
         scalaVersion := "2.11.6",
         scalacOptions ++= compileFlags,
@@ -132,14 +132,13 @@ object Dependencies {
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
   lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
   lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
-  lazy val config              = "com.typesafe"                % "config"                % "1.2.1"
   lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.2.11"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
-  lazy val swaggerModels       = "com.wordnik"                 % "swagger-models"        % "1.5.0-M1"
-  lazy val swaggerCore         = "com.wordnik"                 % "swagger-core"        % "1.5.0-M1"
+  lazy val swaggerModels       = "com.wordnik"                 % "swagger-models"        % "1.5.3-M1"
+  lazy val swaggerCore         = "com.wordnik"                 % "swagger-core"          % "1.5.3-M1"
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
   lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
-  lazy val uadetector          = "net.sf.uadetector" % "uadetector-resources" % "2014.09"
+  lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.09"
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
