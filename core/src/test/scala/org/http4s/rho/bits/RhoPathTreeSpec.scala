@@ -11,7 +11,7 @@ import org.specs2.mutable.Specification
 import org.http4s.server.middleware.URITranslation
 
 class RhoPathTreeSpec extends Specification {
-  import RhoPathTree._
+  import PathTree._
 
   "splitPath" should {
     "handle an empty string" in {

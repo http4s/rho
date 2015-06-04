@@ -5,7 +5,7 @@ import bits.MethodAliases._
 import bits.ResponseGeneratorInstances._
 
 import bits.HeaderAST.{TypedHeader, HeaderAnd}
-import bits.{RhoPathTree, ParserSuccess, ValidationFailure}
+import bits.{PathTree, ParserSuccess, ValidationFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -39,7 +39,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
-      val res = RhoPathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
+      val res = PathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
 
       res must beAnInstanceOf[ValidationFailure]
       res.asInstanceOf[ValidationFailure].response.run.resp.status must_== Status.BadRequest
@@ -49,24 +49,24 @@ class ApiTest extends Specification {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      RhoPathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
+      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(headers.`Content-Length`) && RequireETag
-        RhoPathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
+        PathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(headers.ETag)
-        RhoPathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
+        PathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = requireMap(headers.`Content-Length`)(_.length)
-      RhoPathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
+      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
     }
 
     "Append headers to a Route" in {

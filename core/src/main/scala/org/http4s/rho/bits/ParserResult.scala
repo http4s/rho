@@ -1,6 +1,5 @@
 package org.http4s.rho.bits
 
-import org.http4s.Response
 import org.http4s.rho.Result.BaseResult
 
 import scalaz.concurrent.Task

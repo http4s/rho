@@ -2,6 +2,7 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits._
+import PathTree.Action
 import org.http4s.server.{ Service, HttpService }
 
 import org.log4s.getLogger
@@ -13,10 +14,10 @@ trait RhoService extends bits.MethodAliases
 
   final protected val logger = getLogger
 
-  private val __tree = new bits.RhoPathTree
+  private var __tree = PathTree()
 
   protected def append[T <: HList, F](action: RhoAction[T, F]): Unit =
-    __tree.appendAction(action)
+    __tree = __tree.appendAction(action)
 
   implicit protected def compilerSrvc[F] = new CompileService[F, F] {
     override def compile(action: RhoAction[_ <: HList, F]): F = {
@@ -27,7 +28,7 @@ trait RhoService extends bits.MethodAliases
 
   private def findRoute(req: Request): Task[Option[Response]] = {
     logger.trace(s"Request: ${req.method}:${req.uri}")
-    val routeResult: RouteResult[__tree.Value] = __tree.getResult(req)
+    val routeResult: RouteResult[Action] = __tree.getResult(req)
     routeResult match {
       case NoMatch              => Task.now(None)
       case ParserSuccess(t)     => attempt(t).map(Some(_))

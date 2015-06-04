@@ -2,64 +2,122 @@ package org.http4s
 package rho
 package bits
 
-import org.http4s.rho.bits.ResponseGeneratorInstances.MethodNotAllowed
-
 import scala.language.existentials
 
+import org.http4s.rho.bits.HeaderAST.HeaderRule
 import org.http4s.rho.bits.PathAST._
-
-import scala.annotation.tailrec
-
-import QueryAST.QueryRule
-import HeaderAST.HeaderRule
+import org.http4s.rho.bits.QueryAST.QueryRule
+import org.http4s.rho.bits.ResponseGeneratorInstances._
 
 import shapeless.{HNil, HList}
+
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
+import scalaz.concurrent.Task
 
-/** Provides the machinery for walking a path tree */
-trait PathTree {
+/** Rho specific implementation of the PathTree */
+final class PathTree private(paths: PathTree.Node) {
+  import PathTree._
 
-  /** The element that will designate the route through the tree */
-  type Key
+  override def toString = paths.toString()
 
-  /** The result of a successful route */
-  type Value
+  def appendAction[T <: HList, F](action: RhoAction[T, F]): PathTree = {
+    val m = action.method
+    val newLeaf = makeLeaf(action)
+    val newNode = paths.append(action.path, m, newLeaf)
+    new PathTree(newNode)
+  }
+
+  def getResult(req: Request): RouteResult[Action] = paths.walkTree(req.method, req)
+}
+
+private[rho] object PathTree {
+
+  type Action = () => Task[Response]
+
+  def apply(): PathTree = new PathTree(new HeadNode())
+
+  object ValidationTools extends ExecutableCompiler
+
+  def splitPath(path: String): List[String] = {
+    val buff = new ListBuffer[String]
+    val len = path.length
+    @tailrec
+    def go(i: Int, begin: Int): Unit = if (i < len) {
+      if (path.charAt(i) == '/') {
+        if (i > begin) buff += path.substring(begin, i)
+        go(i + 1, i + 1)
+      } else go(i + 1, begin)
+    } else {
+      buff += path.substring(begin, i)
+    }
+
+    val i = if (path.nonEmpty && path.charAt(0) == '/') 1 else 0
+    go(i, i)
+
+    buff.result
+  }
 
   /** Generates a list of tokens that represent the path */
-  def keyToPath(key: Key): List[String]
+  private def keyToPath(key: Request): List[String] = splitPath(key.pathInfo)
 
-  object Leaf {
+  private def makeLeaf[T <: HList, F, O](action: RhoAction[T, F]): Leaf = {
+    action.router match {
+      case Router(method, _, query, vals) =>
+        Leaf(query, vals, None){ (req, pathstack) =>
+          for {
+            i <- ValidationTools.runQuery(req, query, pathstack)
+            j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
+          } yield () => action.hf.conv(action.f)(req, j.asInstanceOf[T])
+        }
+
+      case c @ CodecRouter(_, parser) =>
+        val actionf = action.hf.conv(action.f)
+        Leaf(c.router.query, c.headers, Some(parser)){ (req, pathstack) =>
+          for {
+            i <- ValidationTools.runQuery(req, c.router.query, pathstack)
+            j <- ValidationTools.runValidation(req, c.headers, i)
+          } yield () => parser.decode(req).run.flatMap(_.fold(e =>
+            Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
+          { body =>
+            // `asInstanceOf` to turn the untyped HList to type T
+            actionf(req, (body :: j).asInstanceOf[T])
+          }))
+        }
+    }
+  }
+
+  //////////////////////////////////////////////////////
+
+  private object Leaf {
     def apply(query: QueryRule, vals: HeaderRule, codec: Option[EntityDecoder[_]])
-                      (f: (Key, HList) => ParserResult[Value]): Leaf = SingleLeaf(query, vals, codec, f)
+             (f: (Request, HList) => ParserResult[Action]): Leaf = SingleLeaf(f)
   }
 
   /** Leaves of the PathTree */
-  sealed trait Leaf {
+  private trait Leaf {
     /** Attempt to match this leaf */
-    def attempt(req: Key, stack: HList): ParserResult[Value]
+    def attempt(req: Request, stack: HList): ParserResult[Action]
 
     /** Concatenate this leaf with another, giving the first precedence */
     final def ++(l: Leaf): Leaf = (this, l) match {
-      case (s1@SingleLeaf(_, _, _, _), s2@SingleLeaf(_, _, _, _)) => ListLeaf(s1 :: s2 :: Nil)
-      case (s1@SingleLeaf(_, _, _, _), ListLeaf(l)) => ListLeaf(s1 :: l)
-      case (ListLeaf(l), s2@SingleLeaf(_, _, _, _)) => ListLeaf(l :+ s2)
+      case (s1@SingleLeaf(_), s2@SingleLeaf(_)) => ListLeaf(s1 :: s2 :: Nil)
+      case (s1@SingleLeaf(_), ListLeaf(l)) => ListLeaf(s1 :: l)
+      case (ListLeaf(l), s2@SingleLeaf(_)) => ListLeaf(l :+ s2)
       case (ListLeaf(l1), ListLeaf(l2)) => ListLeaf(l1 ::: l2)
     }
   }
 
-  final private case class SingleLeaf(query: QueryRule,
-                                       vals: HeaderRule, // TODO: For documentation purposes
-                                      codec: Option[EntityDecoder[_]], // For documentation purposes
-                                          f: (Key, HList) => ParserResult[Value]) extends Leaf {
-    override def attempt(req: Key, stack: HList): ParserResult[Value] = f(req, stack)
+  final private case class SingleLeaf(f: (Request, HList) => ParserResult[Action]) extends Leaf {
+    override def attempt(req: Request, stack: HList): ParserResult[Action] = f(req, stack)
   }
 
 
   final private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
-    override def attempt(req: Key, stack: HList): ParserResult[Value] = {
+    override def attempt(req: Request, stack: HList): ParserResult[Action] = {
       @tailrec
-      def go(l: List[SingleLeaf], error: ParserResult[Nothing]): ParserResult[Value] = if (l.nonEmpty) {
+      def go(l: List[SingleLeaf], error: ParserResult[Nothing]): ParserResult[Action] = if (l.nonEmpty) {
         l.head.attempt(req, stack) match {
           case r@ParserSuccess(_) => r
           case e@ParserFailure(_) => go(l.tail, if (error != null) error else e)
@@ -70,7 +128,8 @@ trait PathTree {
     }
   }
 
-  protected sealed abstract class Node {
+  /** Nodes that form the path tree */
+  private abstract class Node {
 
     protected def paths: List[Node]
 
@@ -89,7 +148,7 @@ trait PathTree {
     // Appends the action to the tree by walking the PathRule stack, returning a new Node structure
     final def append(tail: PathRule, method: Method, action: Leaf): Node = append(tail::Nil, method, action)
 
-    final private[Node] def append(tail: List[PathRule], method: Method, action: Leaf): Node = tail match {
+    final protected def append(tail: List[PathRule], method: Method, action: Leaf): Node = tail match {
       case h::tail => h match {
         case PathAnd(p1, p2) => append(p1::p2::tail, method, action)
 
@@ -122,35 +181,35 @@ trait PathTree {
         val e = end.updated(method, l)
         clone(paths, variadic, e)
     }
-    
+
     /** This function traverses the tree, matching paths in order of priority, provided they path the matches function:
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    final def walkTree(method: Method, req: Key): RouteResult[Value] = {
+    final def walkTree(method: Method, req: Request): RouteResult[Action] = {
       val path = keyToPath(req)
       walk(method, req, if (path.nonEmpty) path else ""::Nil, HNil)
     }
 
-    private[PathTree] def walk(method: Method, req: Key, path: List[String], stack: HList): RouteResult[Value] = {
+    def walk(method: Method, req: Request, path: List[String], stack: HList): RouteResult[Action] = {
       val h = matchString(path.head, stack)
       if (h != null) {
         if (path.tail.isEmpty) {
           end.get(method).map(_.attempt(req, h)) orElse
             variadic.get(method).map(_.attempt(req, Nil::h)) getOrElse {
-              if (end.keys.isEmpty) NoMatch
-              else {
-                val ms = end.keys
-                val allowedMethods = ms.mkString(", ")
-                val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-                ValidationFailure(MethodNotAllowed(msg)
-                  .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
-              }
+            if (end.keys.isEmpty) NoMatch
+            else {
+              val ms = end.keys
+              val allowedMethods = ms.mkString(", ")
+              val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
+              ValidationFailure(MethodNotAllowed(msg)
+                .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
             }
+          }
         }
         else {
           @tailrec             // warning: `error` may be null
-          def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[Value] = {
+          def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[Action] = {
             if (nodes.isEmpty) error
             else nodes.head.walk(method, req, path.tail, h) match {
               case NoMatch                 => go(nodes.tail, error)
@@ -181,18 +240,19 @@ trait PathTree {
     }
   }
 
-  protected case class HeadNode(paths: List[Node] = Nil,
-                             variadic: Map[Method,Leaf] = Map.empty,
-                                  end: Map[Method,Leaf] = Map.empty) extends Node {
+  /** Root node */
+  private case class HeadNode(paths: List[Node] = Nil,
+                              variadic: Map[Method,Leaf] = Map.empty,
+                              end: Map[Method,Leaf] = Map.empty) extends Node {
 
-    private[PathTree] override def walk(method: Method, req: Key, path: List[String], stack: HList): RouteResult[Value] = {
+    override def walk(method: Method, req: Request, path: List[String], stack: HList): RouteResult[Action] = {
       if (path.isEmpty) end.get(method) orElse variadic.get(method) match {
         case Some(f) => f.attempt(req, stack)
         case None    => NoMatch
       }
       else {
         @tailrec               // error may be null
-        def go(ns: List[Node], error: ParserResult[Nothing]): RouteResult[Value] = ns match {
+        def go(ns: List[Node], error: ParserResult[Nothing]): RouteResult[Action] = ns match {
           case Nil   => error
           case n::ns => n.walk(method, req, path, stack) match {
             case NoMatch                 => go(ns, error)
@@ -228,6 +288,7 @@ trait PathTree {
     }
   }
 
+  /** Node that parses a segment */
   final private case class CaptureNode(parser: StringParser[_],
                                        paths: List[Node] = Nil,
                                        variadic: Map[Method,Leaf] = Map.empty,
@@ -254,6 +315,7 @@ trait PathTree {
     }
   }
 
+  /** Node that matches a path segment */
   final private case class MatchNode(name: String,
                                      paths: List[Node] = Nil,
                                      variadic: Map[Method,Leaf] = Map.empty,
@@ -273,4 +335,3 @@ trait PathTree {
     override protected def matchString(s: String, h: HList): HList = if (s == name) h else null
   }
 }
-
