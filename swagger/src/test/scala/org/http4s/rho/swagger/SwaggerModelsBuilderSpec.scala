@@ -70,14 +70,14 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectHeaderParams" should {
 
     "handle an action with single header rule" in {
-      val ra = fooPath >>> require(`Content-Length`) |>> { () => "" }
+      val ra = fooPath >>> exists(`Content-Length`) |>> { () => "" }
 
       sb.collectHeaderParams(ra) must_==
       List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = true))
     }
 
     "handle an action with two header rules" in {
-      val ra = fooPath >>> (require(`Content-Length`) && require(`Content-MD5`)) |>> { () => "" }
+      val ra = fooPath >>> (exists(`Content-Length`) && exists(`Content-MD5`)) |>> { () => "" }
 
       sb.collectHeaderParams(ra) must_==
       List(
@@ -89,7 +89,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       def orStr(str: String) = s"Optional if the following headers are satisfied: [$str]".some
 
-      val ra = fooPath >>> (require(`Content-Length`) || require(`Content-MD5`)) |>> { () => "" }
+      val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> { () => "" }
 
       sb.collectHeaderParams(ra) must_==
       List(

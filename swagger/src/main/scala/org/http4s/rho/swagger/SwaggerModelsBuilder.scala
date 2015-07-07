@@ -169,12 +169,11 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[HeaderRule]): List[HeaderParameter] =
       stack match {
-        case HeaderAnd(a, b)::xs        => go(a::b::xs)
-        case MetaCons(a, _)::xs         => go(a::xs)
+        case HeaderAnd(a,b)::xs         => go(a::b::xs)
+        case MetaCons(a,_)::xs          => go(a::xs)
         case EmptyHeaderRule::xs        => go(xs)
-        case HeaderCapture(key)::xs     => mkHeaderParam(key)::go(xs)
-        case HeaderMapper(key, _)::xs   => mkHeaderParam(key)::go(xs)
-        case HeaderRequire(key, _)::xs  => mkHeaderParam(key)::go(xs)
+        case HeaderCapture(key,_,_)::xs  => mkHeaderParam(key)::go(xs)
+        case HeaderExists(key,_)::xs   => mkHeaderParam(key)::go(xs)
 
         case HeaderOr(a, b)::xs         =>
           val as = go(a::xs)

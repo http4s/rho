@@ -293,7 +293,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "work with all syntax elements" in {
-      val reqHeader = requireThat(headers.`Content-Length`){ h => h.length <= 3 }
+      val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length <= 3 }
 
       val srvc = new RhoService {
         POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text |>> {

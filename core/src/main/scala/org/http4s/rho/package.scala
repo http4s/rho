@@ -9,10 +9,11 @@ import rho.bits.PathAST._
 import rho.bits.HeaderAST._
 import rho.bits.QueryAST._
 
-import shapeless.{HNil, ::}
+import shapeless.{HList, HNil, ::}
 import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
+import scalaz.{\/, \/-}
 import scalaz.concurrent.Task
 
 package object rho extends Http4s with ResultSyntaxInstances {
@@ -92,24 +93,28 @@ package object rho extends Http4s with ResultSyntaxInstances {
   /////////////////////////////// Header helpers //////////////////////////////////////
 
   /* Checks that the header exists */
-  def require(header: HeaderKey.Extractable): TypedHeader[HNil] = requireThatR(header)(_ => None)
+  def exists(header: HeaderKey.Extractable): TypedHeader[HNil] = existsAndR(header)(_ => None)
 
   /* Check that the header exists and satisfies the condition */
-  def requireThat[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
-    requireThatR(header){ h =>
+  def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
+    existsAndR(header){ h =>
       if (f(h)) None
       else Some(BadRequest("Invalid header: " + h.value))
     }
 
   /* Check that the header exists and satisfies the condition */
-  def requireThatR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
-    TypedHeader(HeaderRequire(header, f))
+  def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
+    TypedHeader(HeaderExists(header, f))
+
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */
   def capture[H <: HeaderKey.Extractable](key: H): TypedHeader[H#HeaderT :: HNil] =
-    TypedHeader(HeaderCapture(key))
+    captureMap(key)(identity)
 
-  def requireMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
-    TypedHeader(HeaderMapper[H, R](key, f))
+  def captureMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
+    TypedHeader(HeaderCapture[H, R](key, f.andThen(\/-(_)), None))
+
+  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]] = None)(f: H#HeaderT => Task[BaseResult]\/R): TypedHeader[R :: HNil] =
+    TypedHeader(HeaderCapture[H, R](key, f, default))
 
 }
