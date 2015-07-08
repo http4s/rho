@@ -43,14 +43,14 @@ class ApiExamples extends Specification {
         }
 
         // header validation is also composable
-        val v1 = requireThat(headers.`Content-Length`)(_.length > 0)
+        val v1 = existsAnd(headers.`Content-Length`)(_.length > 0)
         val v2 = v1 && capture(headers.ETag)
 
         // Now these two can be combined to make the 'Router'
         val r = path2 >>> v2
 
         // you can continue to add validation actions to a 'Router' but can no longer modify the path
-        val r2 = r >>> require(headers.`Cache-Control`)
+        val r2 = r >>> exists(headers.`Cache-Control`)
         // r2 / "stuff" // Doesn't work
 
         // Now this can be combined with a method to make the 'Action'
@@ -68,8 +68,8 @@ class ApiExamples extends Specification {
         val path6 = "one" / pathVar[Int]
         val path7 = "two" / pathVar[Int]
 
-        val v6 = requireMap(headers.`Content-Length`)(_.length)
-        val v7 = requireMap(headers.ETag)(_ => -1)
+        val v6 = captureMap(headers.`Content-Length`)(_.length)
+        val v7 = captureMap(headers.ETag)(_ => -1)
 
         GET / (path6 || path7) +? param[String]("foo") >>> (v6 || v7) |>> {
           (i: Int, foo: String, v: Int) =>

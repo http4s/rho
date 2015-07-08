@@ -9,6 +9,7 @@ import bits.{PathTree, ParserSuccess, ValidationFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
+import scalaz.{-\/, \/-}
 import scalaz.concurrent.Task
 import scalaz.stream.Process
 import scodec.bits.ByteVector
@@ -18,8 +19,8 @@ class ApiTest extends Specification {
   val lenheader = headers.`Content-Length`(4)
   val etag = headers.ETag("foo")
 
-  val RequireETag = require(headers.ETag)
-  val RequireNonZeroLen = requireThat(headers.`Content-Length`){ h => h.length != 0 }
+  val RequireETag = exists(headers.ETag)
+  val RequireNonZeroLen = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
   def fetchETag(p: Task[Option[Response]]): String = {
     val resp = p.run
@@ -65,14 +66,28 @@ class ApiTest extends Specification {
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
-      val c = requireMap(headers.`Content-Length`)(_.length)
+      val c = captureMap(headers.`Content-Length`)(_.length)
       PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
+    }
+
+    "Map with possible default" in {
+      val req = Request().withHeaders(Headers(etag, lenheader))
+
+      val c1 = captureMapR(headers.`Content-Length`)(r => \/-(r.length))
+      PathTree.ValidationTools.ensureValidHeaders(c1.rule, req) should_== ParserSuccess(4::HNil)
+
+      val r2 = Ok("Foo")
+      val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2))
+      PathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== ValidationFailure(r2)
+
+      val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
+      PathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== ValidationFailure(r2)
     }
 
     "Append headers to a Route" in {
 
       val path = POST / "hello" / 'world +? param[Int]("fav")
-      val validations = requireThat(headers.`Content-Length`){ h => h.length != 0 }
+      val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
 
       val route = (path >>> validations >>> capture(headers.ETag)).decoding(EntityDecoder.text) runWith
@@ -109,7 +124,7 @@ class ApiTest extends Specification {
     "Execute a complicated route" in {
 
       val path = POST / "hello" / 'world +? param[Int]("fav")
-      val validations = requireThat(headers.`Content-Length`){ h => h.length != 0 } &&
+      val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 } &&
         capture(headers.ETag)
 
       val route =
@@ -222,7 +237,7 @@ class ApiTest extends Specification {
 
   "Decoders" should {
     "Decode a body" in {
-      val reqHeader = requireThat(headers.`Content-Length`){ h => h.length < 10 }
+      val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length < 10 }
 
       val path = POST / "hello" >>> reqHeader
 
@@ -263,14 +278,14 @@ class ApiTest extends Specification {
       val req = Request(uri = uri("/hello"))
                   .withHeaders(Headers(headers.`Content-Length`("foo".length)))
 
-      val reqHeader = requireThat(headers.`Content-Length`){ h => h.length < 2}
+      val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length < 2}
       val route1 = path.validate(reqHeader) runWith { () =>
         Ok("shouldn't get here.")
       }
 
       route1(req).run.get.status should_== Status.BadRequest
 
-      val reqHeaderR = requireThatR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
+      val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
       val route2 = path.validate(reqHeaderR) runWith { () =>
         Ok("shouldn't get here.")
       }

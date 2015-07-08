@@ -25,7 +25,7 @@ object MyService extends RhoService with SwaggerSupport {
 
   case class JsonResult(name: String, number: Int) extends AutoSerializable
 
-  val requireCookie = requireThatR(headers.Cookie){ cookie =>
+  val requireCookie = existsAndR(headers.Cookie){ cookie =>
     cookie.values.toList.find(c => c.name == "Foo" && c.content == "bar") match {
       case Some(_) => None   // Cookie found, good to go.
       case None => // Didn't find cookie
