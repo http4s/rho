@@ -438,4 +438,10 @@ object ResultMatcher {
     override def resultInfo: Set[ResultInfo] = r.resultInfo
     override def conv(req: Request, t: Task[R]): Task[Response] = t.flatMap(r.conv(req, _))
   }
+
+  implicit object ResponseMatcher extends ResultMatcher[Response] {
+    override def encodings: Set[MediaType] = Set.empty
+    override def conv(req: Request, r: Response): Task[Response] = Task.now(r)
+    override def resultInfo: Set[ResultInfo] = Set.empty
+  }
 }
