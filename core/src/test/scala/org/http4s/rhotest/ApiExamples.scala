@@ -108,10 +108,13 @@ class ApiExamples extends Specification {
           val exchange: scalaz.stream.Exchange[WebSocketFrame,WebSocketFrame] = null
           WS(exchange)
         }
+
+        // We can add filters to an action with the '^?>' operator
+        val myFilter = RequestFilter.pureFilter(req => if (req.params.get("foo").nonEmpty) None else Some(Conflict("I'm so conflicted...")))
+        GET / "filtered" |>> myFilter ^?> Ok("You had a foo param")
       }
 
-      true should_== true
+      ok
     }
   }
-
 }
