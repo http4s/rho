@@ -17,7 +17,7 @@ class HListToFuncSpec extends Specification {
     Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
 
   val service = new RhoService {
-    GET / "route1" |>> AAction { () => Ok("foo") }
+    GET / "route1" |>> Action { () => Ok("foo") }
   }.toService
 
   "HListToFunc" should {

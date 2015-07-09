@@ -18,16 +18,16 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
   def method: Method
 
 //  /** Create a [[RhoAction]] from this [[RouteExecutable]] with the provided converters */
-  def makeAction(action: AAction[T]): RhoAction[T]
+  def makeAction(action: Action[T]): RhoAction[T]
 
   /** Compiles a HTTP request definition into an action */
-  final def |>>[R](action: AAction[T])(implicit srvc: CompileService[R]): R =
+  final def |>>[R](action: Action[T])(implicit srvc: CompileService[R]): R =
     srvc.compile(makeAction(action))
 
   /** Provide an action from which to generate a complete route
     * @return a function `Request => Option[Task[Response]]` which can be used as a complete route
     */
-  final def runWith(action: AAction[T]): Request => Task[Option[Response]] = {
+  final def runWith(action: Action[T]): Request => Task[Option[Response]] = {
     val srvc = new RhoService { compilerSrvc.compile(makeAction(action)) }.toService
     srvc.apply(_: Request)
   }

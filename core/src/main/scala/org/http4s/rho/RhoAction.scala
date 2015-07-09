@@ -9,7 +9,7 @@ import org.http4s.rho.bits.ResultInfo
 import shapeless.HList
 
 
-final case class RhoAction[T <: HList](router: RoutingEntity[T], action: AAction[T]) {
+final case class RhoAction[T <: HList](router: RoutingEntity[T], action: Action[T]) {
   def method: Method = router.method
   def path: PathRule = router.path
   def query: QueryRule = router.query

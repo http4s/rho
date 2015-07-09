@@ -26,7 +26,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match a single result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> AAction { () => Ok("updated").run }
+        PUT / "foo" |>> Action { () => Ok("updated").run }
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok)
@@ -34,7 +34,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match two results with different status with different result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> AAction { () =>
+        PUT / "foo" |>> Action { () =>
           val a = 0
           a match {
             case 0 => NotFound(s"Not found")
@@ -50,7 +50,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match two results with same stat different result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> AAction { () =>
+        PUT / "foo" |>> Action { () =>
           val a = 0
           a match {
             case 0 => Ok(s"Not found")
@@ -64,7 +64,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match an empty result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> AAction { () => NoContent() }
+        PUT / "foo" |>> Action { () => NoContent() }
       }
 
       srvc.statuses.map(_._1) should_== Set(NoContent)
@@ -73,7 +73,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match three results with different status but same result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> AAction { () =>
+        PUT / "foo" |>> Action { () =>
           val a = 0
           a match {
             case 0 => NotFound(s"Not found")
@@ -88,7 +88,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match four results with different status but same result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> AAction { () =>
+        PUT / "foo" |>> Action { () =>
           val a = 0
           a match {
             case 0 => NotFound(s"Not found")
@@ -112,7 +112,7 @@ class ResultMatcherSpec extends Specification {
       implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => ByteVector.view("B".getBytes))
 
       val srvc = new TRhoService {
-        GET / "foo" |>> AAction { () =>
+        GET / "foo" |>> Action { () =>
           if (true) Ok(ModelA("test ok", 1))
           else NotFound(ModelB("test not found", 234))
         }
@@ -129,7 +129,7 @@ class ResultMatcherSpec extends Specification {
       import Foo._
 
       val srvc = new TRhoService {
-        GET / "foo" |>> AAction { () =>
+        GET / "foo" |>> Action { () =>
           if (true) Ok(FooA("test ok", 1))
           else NotFound(FooB("test not found", 234))
         }
