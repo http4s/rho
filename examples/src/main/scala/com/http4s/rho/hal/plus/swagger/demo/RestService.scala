@@ -32,7 +32,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   // # HTTP Routes
 
   val browsers = "browsers"
-  GET / browsers +? firstResult & maxResults |>> { (request: Request, first: Int, max: Int) =>
+  GET / browsers +? firstResult & maxResults |>> Action { (request: Request, first: Int, max: Int) =>
     val configurations = businessLayer.findBrowsers(first, max)
     val total = businessLayer.countBrowsers
     val hal = browsersAsResource(request, first, max, configurations, total)
@@ -40,7 +40,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val browserById = browsers / id
-  GET / browserById |>> { (request: Request, id: Int) =>
+  GET / browserById |>> Action { (request: Request, id: Int) =>
     val found = for { browser <- businessLayer.findBrowser(id) } yield {
       val b = browserAsResourceObject(browser, request)
       if (businessLayer.hasOperatingSystemsByBrowserId(browser.id))
@@ -53,14 +53,14 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val browserPatternsById = browsers / id / "patterns"
-  GET / browserPatternsById |>> { (request: Request, id: Int) =>
+  GET / browserPatternsById |>> Action { (request: Request, id: Int) =>
     val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
       yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build)
     found getOrElse NotFound(warning(s"Browser $id not found"))
   }
 
   val browserPatterns = "browser-patterns"
-  GET / browserPatterns +? firstResult & maxResults |>> { (request: Request, first: Int, max: Int) =>
+  GET / browserPatterns +? firstResult & maxResults |>> Action { (request: Request, first: Int, max: Int) =>
     val patterns = businessLayer.findBrowserPatterns(first, max)
     val total = businessLayer.countBrowsers
     val hal = browserPatternsAsResource(request, first, max, patterns, total)
@@ -68,7 +68,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val browserPatternById = browserPatterns / id
-  GET / browserPatternById |>> { (request: Request, id: Int) =>
+  GET / browserPatternById |>> Action { (request: Request, id: Int) =>
     val found = for { pattern <- businessLayer.findBrowserPattern(id) } yield {
       val b = browserPatternAsResourceObject(pattern, request)
       for {
@@ -81,14 +81,14 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val browserTypes = "browser-types"
-  GET / browserTypes |>> { (request: Request) =>
+  GET / browserTypes |>> Action { (request: Request) =>
     val types = businessLayer.findBrowserTypes
     val hal = browserTypesAsResource(request, types)
     Ok(hal.build)
   }
 
   val browserTypeById = browserTypes / id
-  GET / browserTypeById |>> { (request: Request, id: Int) =>
+  GET / browserTypeById |>> Action { (request: Request, id: Int) =>
     val found = for { browserType <- businessLayer.findBrowserType(id) } yield {
       val b = browserTypeAsResourceObject(browserType, request)
       for {
@@ -100,7 +100,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
-  GET / browsersByBrowserTypeId +? firstResult & maxResults |>> { (request: Request, id: Int, first: Int, max: Int) =>
+  GET / browsersByBrowserTypeId +? firstResult & maxResults |>> Action { (request: Request, id: Int, first: Int, max: Int) =>
     val browsers = businessLayer.findBrowsersByBrowserTypeId(id, first, max)
     val total = businessLayer.countBrowsersByBrowserTypeId(id)
     if (browsers.nonEmpty)
@@ -110,7 +110,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val operatingSystems = "operating-systems"
-  GET / operatingSystems +? firstResult & maxResults |>> { (request: Request, first: Int, max: Int) =>
+  GET / operatingSystems +? firstResult & maxResults |>> Action { (request: Request, first: Int, max: Int) =>
     val configurations = businessLayer.findOperatingSystems(first, max)
     val total = businessLayer.countOperatingSystems
     val hal = operatingSystemsAsResource(request, first, max, configurations, total)
@@ -118,7 +118,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val operatingSystemById = operatingSystems / id
-  GET / operatingSystemById |>> { (request: Request, id: Int) =>
+  GET / operatingSystemById |>> Action { (request: Request, id: Int) =>
     val found = for { operatingSystem <- businessLayer.findOperatingSystem(id) } yield {
       val b = operatingSystemAsResourceObject(operatingSystem, request)
       if (businessLayer.hasBrowsersByOperatingSystemId(operatingSystem.id))
@@ -130,7 +130,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val browsersByOperatingSystem = operatingSystemById / "browsers"
-  GET / browsersByOperatingSystem |>> { (request: Request, id: Int) =>
+  GET / browsersByOperatingSystem |>> Action { (request: Request, id: Int) =>
     val browsers = businessLayer.findBrowsersByOperatingSystemId(id)
     if (browsers.nonEmpty)
       Ok(browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build)
@@ -139,7 +139,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
   }
 
   val operatingSystemsByBrowser = browserById / "operating-systems"
-  GET / operatingSystemsByBrowser |>> { (request: Request, id: Int) =>
+  GET / operatingSystemsByBrowser |>> Action { (request: Request, id: Int) =>
     val operatingSystems = businessLayer.findOperatingSystemsByBrowserId(id)
     if (operatingSystems.nonEmpty)
       Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build)
@@ -147,7 +147,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService with Swag
       NotFound(warning(s"No operating systems for browser $id found"))
   }
 
-  GET / "" |>> { request: Request =>
+  GET / "" |>> Action { request: Request =>
     val b = new ResObjBuilder[Nothing, Nothing]()
     b.link("self", request.uri)
     for (uri <- browsers.asUri(request)) b.link(browsers, uri.toString, "Lists browsers")
