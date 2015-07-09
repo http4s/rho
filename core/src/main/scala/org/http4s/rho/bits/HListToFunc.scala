@@ -1,8 +1,6 @@
 package org.http4s
 package rho.bits
 
-import org.http4s.Request
-import org.http4s.rho.Result
 import shapeless.{HNil, ::, HList}
 import scalaz.concurrent.Task
 

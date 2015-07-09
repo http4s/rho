@@ -32,21 +32,21 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectQueryParams" should {
 
     "handle an action with one query parameter" in {
-      val ra = fooPath +? param[Int]("id") |>> { (i: Int) => "" }
+      val ra = fooPath +? param[Int]("id") |>> Action { (i: Int) => "" }
 
       sb.collectQueryParams(ra) must_==
       List(QueryParameter(`type` = "integer", name = "id".some, required = true))
     }
 
     "handle an action with one query parameter with default value" in {
-      val ra = fooPath +? param[Int]("id", 6) |>> { (i: Int) => "" }
+      val ra = fooPath +? param[Int]("id", 6) |>> Action { (i: Int) => "" }
 
       sb.collectQueryParams(ra) must_==
       List(QueryParameter(`type` = "integer", name = "id".some, defaultValue = "6".some, required = false))
     }
 
     "handle an action with two query parameters" in {
-      val ra = fooPath +? param[Int]("id") & param[String]("str", "hello") |>> { (i: Int, s: String) => "" }
+      val ra = fooPath +? param[Int]("id") & param[String]("str", "hello") |>> Action { (i: Int, s: String) => "" }
 
       sb.collectQueryParams(ra) must_==
       List(
@@ -58,7 +58,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       def orStr(str: String) = s"Optional if the following params are satisfied: [$str]".some
 
-      val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> { (i: Int) => "" }
+      val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> Action { (i: Int) => "" }
 
       sb.collectQueryParams(ra) must_==
       List(
@@ -70,14 +70,14 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectHeaderParams" should {
 
     "handle an action with single header rule" in {
-      val ra = fooPath >>> exists(`Content-Length`) |>> { () => "" }
+      val ra = fooPath >>> exists(`Content-Length`) |>> Action { () => "" }
 
       sb.collectHeaderParams(ra) must_==
       List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = true))
     }
 
     "handle an action with two header rules" in {
-      val ra = fooPath >>> (exists(`Content-Length`) && exists(`Content-MD5`)) |>> { () => "" }
+      val ra = fooPath >>> (exists(`Content-Length`) && exists(`Content-MD5`)) |>> Action { () => "" }
 
       sb.collectHeaderParams(ra) must_==
       List(
@@ -89,7 +89,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       def orStr(str: String) = s"Optional if the following headers are satisfied: [$str]".some
 
-      val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> { () => "" }
+      val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> Action { () => "" }
 
       sb.collectHeaderParams(ra) must_==
       List(
@@ -101,7 +101,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.mkOperation" should {
 
     "Get a route description" in {
-      val ra = "foo" ** GET / "bar" |>> { () => "" }
+      val ra = "foo" ** GET / "bar" |>> Action { () => "" }
 
       sb.mkOperation("/foo", ra).summary must_== "foo".some
     }
@@ -110,49 +110,49 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectPaths" should {
 
     "find a simple path - GET" in {
-      val ra = GET / "foo" |>> { () => "" }
+      val ra = GET / "foo" |>> Action { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
       
       paths must havePair("/foo" -> Path(get = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PUT" in {
-      val ra = PUT / "foo" |>> { () => "" }
+      val ra = PUT / "foo" |>> Action { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
       
       paths must havePair("/foo" -> Path(put = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - POST" in {
-      val ra = POST / "foo" |>> { () => "" }
+      val ra = POST / "foo" |>> Action { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
       
       paths must havePair("/foo" -> Path(post = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PATCH" in {
-      val ra = PATCH / "foo" |>> { () => "" }
+      val ra = PATCH / "foo" |>> Action { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
       
       paths must havePair("/foo" -> Path(patch = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - OPTIONS" in {
-      val ra = OPTIONS / "foo" |>> { () => "" }
+      val ra = OPTIONS / "foo" |>> Action { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
       
       paths must havePair("/foo" -> Path(options = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple and-path" in {
-      val ra = GET / "foo" / "bar" |>> { () => "" }
+      val ra = GET / "foo" / "bar" |>> Action { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
       
       paths must havePair("/foo/bar" -> Path(get = sb.mkOperation("/foo/bar", ra).some))
     }
 
     "find a simple or-path" in {
-      val ra = GET / ("foo" || "bar") |>> { () => "" }
+      val ra = GET / ("foo" || "bar") |>> Action { () => "" }
 
       sb.collectPaths(ra)(Swagger()) must havePairs(
         "/foo" -> Path(get = sb.mkOperation("/foo", ra).some),
@@ -160,7 +160,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "find a capture or-path" in {
-      val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> { (i: Int) => "" }
+      val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> Action { (i: Int) => "" }
 
       sb.collectPaths(ra)(Swagger()) must havePairs(
         "/{foo}" -> Path(get = sb.mkOperation("{foo}", ra).some),
@@ -168,7 +168,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "find a simple path with a capture" in {
-      val ra = GET / "foo" / pathVar[Int]("number") |>> { (i: Int) => "" }
+      val ra = GET / "foo" / pathVar[Int]("number") |>> Action { (i: Int) => "" }
 
       sb.collectPaths(ra)(Swagger()) must havePair(
         "/foo/{number}" -> Path(get = sb.mkOperation("foo/{number}", ra).some))
@@ -184,7 +184,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "get available models" in {
 
-      val ra = "testing models" ** GET / "models" |>> { () =>
+      val ra = "testing models" ** GET / "models" |>> Action { () =>
         val a = 0
         a match {
           case 0 => Ok(ModelA("modela", 1))
@@ -226,7 +226,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "handle models with parameters" in {
 
-      val ra = "testing models" ** GET / "models" |>> { () =>
+      val ra = "testing models" ** GET / "models" |>> Action { () =>
         Ok((1, ModelA("modela", 1)))
       }
 
@@ -246,21 +246,21 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectResponses" should {
 
     "collect response of primitive types" in {
-      val ra = GET / "test" |>> { () => Ok("") }
+      val ra = GET / "test" |>> Action { () => Ok("") }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of user-defined types" in {
-      val ra = GET / "test" |>> { () => Ok(ModelA("", 0)) }
+      val ra = GET / "test" |>> Action { () => Ok(ModelA("", 0)) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(description = "OK", schema = RefProperty(ref = "ModelA").some))
     }
 
     "collect response of collection of primitive types" in {
-      val ra = GET / "test" |>> { () => Ok(List("")) }
+      val ra = GET / "test" |>> Action { () => Ok(List("")) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -269,7 +269,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of collection of user-defined types" in {
-      val ra = GET / "test" |>> { () => Ok(List(ModelA("", 0))) }
+      val ra = GET / "test" |>> Action { () => Ok(List(ModelA("", 0))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -278,7 +278,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of tuples" in {
-      val ra = GET / "test" |>> { () => Ok((0, ModelA("", 0))) }
+      val ra = GET / "test" |>> Action { () => Ok((0, ModelA("", 0))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -287,7 +287,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a collection of tuples" in {
-      val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
+      val ra = GET / "test" |>> Action { () => Ok(List((0, ModelA("", 0)))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -296,8 +296,8 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a Process of primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Process.eval(Task(""))) }
-      val ra2 = GET / "test" |>> { () => Ok(Process.emit("")) }
+      val ra1 = GET / "test" |>> Action { () => Ok(Process.eval(Task(""))) }
+      val ra2 = GET / "test" |>> Action { () => Ok(Process.emit("")) }
 
       sb.collectResponses(ra1) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
@@ -307,8 +307,8 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a Process of non-primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Process.eval(Task(List((0, ModelA("", 0)))))) }
-      val ra2 = GET / "test" |>> { () => Ok(Process.emit(List((0, ModelA("", 0))))) }
+      val ra1 = GET / "test" |>> Action { () => Ok(Process.eval(Task(List((0, ModelA("", 0)))))) }
+      val ra2 = GET / "test" |>> Action { () => Ok(Process.emit(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra1) must havePair(
         "200" -> Response(
@@ -322,14 +322,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a Task of a primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task("")) }
+      val ra = GET / "test" |>> Action { () => Ok(Task("")) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of a Task of a non-primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task(List((0, ModelA("", 0))))) }
+      val ra = GET / "test" |>> Action { () => Ok(Task(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -338,7 +338,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect multiple responses" in {
-      val ra = GET / "test" / pathVar[Int] |>> { (i: Int) =>
+      val ra = GET / "test" / pathVar[Int] |>> Action { (i: Int) =>
 
         i match {
           case 0 => Ok(List((0, ModelA("A", 0))))
