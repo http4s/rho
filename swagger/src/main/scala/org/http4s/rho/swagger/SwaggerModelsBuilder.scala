@@ -104,7 +104,6 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some).some
       case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some).some
       case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none).some
-      case Empty                 => none
     }.flatten.toMap
 
   def collectSummary(ra: RhoAction[_, _]): Option[String] = {

@@ -8,4 +8,3 @@ sealed trait ResultInfo
 case class TypeOnly(tpe: Type) extends ResultInfo
 case class StatusAndType(status: Status, tpe: Type) extends ResultInfo
 case class StatusOnly(status: Status) extends ResultInfo
-case object Empty extends ResultInfo
