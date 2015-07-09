@@ -1,9 +1,12 @@
 package org.http4s
 package rhotest
 
+import org.http4s.websocket.WebsocketBits.WebSocketFrame
 import org.specs2.mutable.Specification
 import org.http4s.rho._
 import scalaz.concurrent.Task
+
+import server.websocket.WS
 
 
 
@@ -97,6 +100,13 @@ class ApiExamples extends Specification {
         // Using decoders you can parse the body as well
         POST / "postSomething" ^ UrlForm.entityDecoder |>> { m: UrlForm =>
           Ok(s"You posted these things: $m")
+        }
+
+        // We can use a standard http4s.Response, but we don't get any metadata along with it. Useful for things
+        // like Websocket support.
+        GET / "websockets" |>> {
+          val exchange: scalaz.stream.Exchange[WebSocketFrame,WebSocketFrame] = null
+          WS(exchange)
         }
       }
 
