@@ -116,149 +116,149 @@ object HListToFunc {
       m.conv(req, f(req, t1, t2, t3, t4))
     }
   }
-//
-//  implicit def fun5[T1, T2, T3, T4, T5, R](implicit m: ResultMatcher[R]) = new HListToFunc[T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5) => R] {
-//    override def matcher = m
-//    override def conv(f: (T1, T2, T3, T4, T5) => R): (Request, T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h5) =>
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(t1, t2, t3, t4, t5))
-//    }
-//  }
-//
-//  implicit def wReqfun5[T1, T2, T3, T4, T5, R](implicit m: ResultMatcher[R]) = new HListToFunc[T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5) => R] {
-//    override def matcher = m
-//    override def conv(f: (Request, T1, T2, T3, T4, T5) => R): (Request, T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h5) =>
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(req, t1, t2, t3, t4, t5))
-//    }
-//  }
-//
-//  implicit def fun6[T1, T2, T3, T4, T5, T6, R](implicit m: ResultMatcher[R]) = new HListToFunc[T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6) => R] {
-//    override def matcher = m
-//    override def conv(f: (T1, T2, T3, T4, T5, T6) => R): (Request, T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h6) =>
-//      val t6 = h6.head
-//      val h5 = h6.tail
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(t1, t2, t3, t4, t5, t6))
-//    }
-//  }
-//
-//  implicit def wReqfun6[T1, T2, T3, T4, T5, T6, R](implicit m: ResultMatcher[R]) = new HListToFunc[T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6) => R] {
-//    override def matcher = m
-//    override def conv(f: (Request, T1, T2, T3, T4, T5, T6) => R): (Request, T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h6) =>
-//      val t6 = h6.head
-//      val h5 = h6.tail
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(req, t1, t2, t3, t4, t5, t6))
-//    }
-//  }
-//
-//  implicit def fun7[T1, T2, T3, T4, T5, T6, T7, R](implicit m: ResultMatcher[R]) = new HListToFunc[T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6, T7) => R] {
-//    override def matcher = m
-//    override def conv(f: (T1, T2, T3, T4, T5, T6, T7) => R): (Request, T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h7) =>
-//      val t7 = h7.head
-//      val h6 = h7.tail
-//      val t6 = h6.head
-//      val h5 = h6.tail
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(t1, t2, t3, t4, t5, t6, t7))
-//    }
-//  }
-//
-//  implicit def wReqfun7[T1, T2, T3, T4, T5, T6, T7, R](implicit m: ResultMatcher[R]) = new HListToFunc[T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6, T7) => R] {
-//    override def matcher = m
-//    override def conv(f: (Request, T1, T2, T3, T4, T5, T6, T7) => R): (Request, T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h7) =>
-//      val t7 = h7.head
-//      val h6 = h7.tail
-//      val t6 = h6.head
-//      val h5 = h6.tail
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(req, t1, t2, t3, t4, t5, t6, t7))
-//    }
-//  }
-//
-//  implicit def fun8[T1, T2, T3, T4, T5, T6, T7, T8, R](implicit m: ResultMatcher[R]) = new HListToFunc[T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6, T7, T8) => R] {
-//    override def matcher = m
-//    override def conv(f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): (Request, T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h8) =>
-//      val t8 = h8.head
-//      val h7 = h8.tail
-//      val t7 = h7.head
-//      val h6 = h7.tail
-//      val t6 = h6.head
-//      val h5 = h6.tail
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(t1, t2, t3, t4, t5, t6, t7, t8))
-//    }
-//  }
-//
-//  implicit def wReqfun8[T1, T2, T3, T4, T5, T6, T7, T8, R](implicit m: ResultMatcher[R]) = new HListToFunc[T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6, T7, T8) => R] {
-//    override def matcher = m
-//    override def conv(f: (Request, T1, T2, T3, T4, T5, T6, T7, T8) => R): (Request, T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h8) =>
-//      val t8 = h8.head
-//      val h7 = h8.tail
-//      val t7 = h7.head
-//      val h6 = h7.tail
-//      val t6 = h6.head
-//      val h5 = h6.tail
-//      val t5 = h5.head
-//      val h4 = h5.tail
-//      val t4 = h4.head
-//      val h3 = h4.tail
-//      val t3 = h3.head
-//      val h2 = h3.tail
-//      val t2 = h2.head
-//      val t1 = h2.tail.head
-//      m.conv(req, f(req, t1, t2, t3, t4, t5, t6, t7, t8))
-//    }
-//  }
+
+  implicit def fun5[T1, T2, T3, T4, T5, R](implicit m: ResultMatcher[R]): HListToFunc[T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5) => R] = new MatcherHListToFunc[T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5) => R] {
+    override def matcher = m
+    override def conv(f: (T1, T2, T3, T4, T5) => R): (Request, T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h5) =>
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(t1, t2, t3, t4, t5))
+    }
+  }
+
+  implicit def wReqfun5[T1, T2, T3, T4, T5, R](implicit m: ResultMatcher[R]): HListToFunc[T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5) => R] = new MatcherHListToFunc[T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5) => R] {
+    override def matcher = m
+    override def conv(f: (Request, T1, T2, T3, T4, T5) => R): (Request, T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h5) =>
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(req, t1, t2, t3, t4, t5))
+    }
+  }
+
+  implicit def fun6[T1, T2, T3, T4, T5, T6, R](implicit m: ResultMatcher[R]): HListToFunc[T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6) => R] = new MatcherHListToFunc[T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6) => R] {
+    override def matcher = m
+    override def conv(f: (T1, T2, T3, T4, T5, T6) => R): (Request, T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h6) =>
+      val t6 = h6.head
+      val h5 = h6.tail
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(t1, t2, t3, t4, t5, t6))
+    }
+  }
+
+  implicit def wReqfun6[T1, T2, T3, T4, T5, T6, R](implicit m: ResultMatcher[R]): HListToFunc[T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6) => R] = new MatcherHListToFunc[T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6) => R] {
+    override def matcher = m
+    override def conv(f: (Request, T1, T2, T3, T4, T5, T6) => R): (Request, T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h6) =>
+      val t6 = h6.head
+      val h5 = h6.tail
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(req, t1, t2, t3, t4, t5, t6))
+    }
+  }
+
+  implicit def fun7[T1, T2, T3, T4, T5, T6, T7, R](implicit m: ResultMatcher[R]): HListToFunc[T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6, T7) => R] = new MatcherHListToFunc[T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6, T7) => R] {
+    override def matcher = m
+    override def conv(f: (T1, T2, T3, T4, T5, T6, T7) => R): (Request, T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h7) =>
+      val t7 = h7.head
+      val h6 = h7.tail
+      val t6 = h6.head
+      val h5 = h6.tail
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(t1, t2, t3, t4, t5, t6, t7))
+    }
+  }
+
+  implicit def wReqfun7[T1, T2, T3, T4, T5, T6, T7, R](implicit m: ResultMatcher[R]): HListToFunc[T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6, T7) => R] = new MatcherHListToFunc[T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6, T7) => R] {
+    override def matcher = m
+    override def conv(f: (Request, T1, T2, T3, T4, T5, T6, T7) => R): (Request, T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h7) =>
+      val t7 = h7.head
+      val h6 = h7.tail
+      val t6 = h6.head
+      val h5 = h6.tail
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(req, t1, t2, t3, t4, t5, t6, t7))
+    }
+  }
+
+  implicit def fun8[T1, T2, T3, T4, T5, T6, T7, T8, R](implicit m: ResultMatcher[R]): HListToFunc[T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6, T7, T8) => R] = new MatcherHListToFunc[T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (T1, T2, T3, T4, T5, T6, T7, T8) => R] {
+    override def matcher = m
+    override def conv(f: (T1, T2, T3, T4, T5, T6, T7, T8) => R): (Request, T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h8) =>
+      val t8 = h8.head
+      val h7 = h8.tail
+      val t7 = h7.head
+      val h6 = h7.tail
+      val t6 = h6.head
+      val h5 = h6.tail
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(t1, t2, t3, t4, t5, t6, t7, t8))
+    }
+  }
+
+  implicit def wReqfun8[T1, T2, T3, T4, T5, T6, T7, T8, R](implicit m: ResultMatcher[R]): HListToFunc[T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6, T7, T8) => R] = new MatcherHListToFunc[T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil, (Request, T1, T2, T3, T4, T5, T6, T7, T8) => R] {
+    override def matcher = m
+    override def conv(f: (Request, T1, T2, T3, T4, T5, T6, T7, T8) => R): (Request, T8 :: T7 :: T6 :: T5 :: T4 :: T3 :: T2 :: T1 :: HNil) => Task[Response] = { (req, h8) =>
+      val t8 = h8.head
+      val h7 = h8.tail
+      val t7 = h7.head
+      val h6 = h7.tail
+      val t6 = h6.head
+      val h5 = h6.tail
+      val t5 = h5.head
+      val h4 = h5.tail
+      val t4 = h4.head
+      val h3 = h4.tail
+      val t3 = h3.head
+      val h2 = h3.tail
+      val t2 = h2.head
+      val t1 = h2.tail.head
+      m.conv(req, f(req, t1, t2, t3, t4, t5, t6, t7, t8))
+    }
+  }
 }
 

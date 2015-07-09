@@ -24,9 +24,9 @@ trait SwaggerSupport extends RhoService {
   "Swagger documentation" **
     GET / apiPath |>> Action{ () => Ok(swaggerResponse).withHeaders(`Content-Type`(MediaType.`application/json`)) }
 
-  override protected def append[T <: HList](ra: RhoRoute[T]): Unit = {
-    super.append(ra)
+  override protected def append[T <: HList](rr: RhoRoute[T]): Unit = {
+    super.append(rr)
     val sb = new SwaggerModelsBuilder(swaggerFormats)    
-    swaggerSpec = sb.mkSwagger(apiInfo, ra)(swaggerSpec)
+    swaggerSpec = sb.mkSwagger(apiInfo, rr)(swaggerSpec)
   }
 }

@@ -22,10 +22,10 @@ final class PathTree private(paths: PathTree.Node) {
 
   override def toString = paths.toString()
 
-  def appendAction[T <: HList](action: RhoRoute[T]): PathTree = {
-    val m = action.method
-    val newLeaf = makeLeaf(action)
-    val newNode = paths.append(action.path, m, newLeaf)
+  def appendRoute[T <: HList](route: RhoRoute[T]): PathTree = {
+    val m = route.method
+    val newLeaf = makeLeaf(route)
+    val newNode = paths.append(route.path, m, newLeaf)
     new PathTree(newNode)
   }
 
@@ -62,14 +62,14 @@ private[rho] object PathTree {
   /** Generates a list of tokens that represent the path */
   private def keyToPath(key: Request): List[String] = splitPath(key.pathInfo)
 
-  private def makeLeaf[T <: HList](action: RhoRoute[T]): Leaf = {
-    action.router match {
+  private def makeLeaf[T <: HList](route: RhoRoute[T]): Leaf = {
+    route.router match {
       case Router(method, _, query, vals) =>
         Leaf(query, vals, None){ (req, pathstack) =>
           for {
             i <- ValidationTools.runQuery(req, query, pathstack)
             j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
-          } yield () => action.action.act(req, j.asInstanceOf[T])
+          } yield () => route.action.act(req, j.asInstanceOf[T])
         }
 
       case c @ CodecRouter(_, parser) =>
@@ -81,7 +81,7 @@ private[rho] object PathTree {
             Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
           { body =>
             // `asInstanceOf` to turn the untyped HList to type T
-            action.action.act(req, (body :: j).asInstanceOf[T])
+            route.action.act(req, (body :: j).asInstanceOf[T])
           }))
         }
     }

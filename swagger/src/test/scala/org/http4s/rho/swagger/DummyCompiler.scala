@@ -6,6 +6,6 @@ import shapeless.HList
 
 object DummyCompiler {
   implicit def compilerInstance = new CompileService[RhoRoute[_ <: HList]] {
-    override def compile(action: RhoRoute[_ <: HList]) = action
+    override def compile(route: RhoRoute[_ <: HList]) = route
   }
 }

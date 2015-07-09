@@ -8,5 +8,5 @@ import shapeless.HList
   * or any other type of compilation phase.
   */
 trait CompileService[A] {
-  def compile(action: RhoRoute[_ <: HList]): A
+  def compile(route: RhoRoute[_ <: HList]): A
 }

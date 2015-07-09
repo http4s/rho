@@ -16,13 +16,13 @@ trait RhoService extends bits.MethodAliases
 
   private var __tree = PathTree()
 
-  protected def append[T <: HList](action: RhoRoute[T]): Unit =
-    __tree = __tree.appendAction(action)
+  protected def append[T <: HList](route: RhoRoute[T]): Unit =
+    __tree = __tree.appendRoute(route)
 
   implicit protected val compilerSrvc = new CompileService[Action[_]] {
-    override def compile(action: RhoRoute[_ <: HList]): Action[_] = {
-      append(action)
-      action.action
+    override def compile(route: RhoRoute[_ <: HList]): Action[_] = {
+      append(route)
+      route.action
     }
   }
 

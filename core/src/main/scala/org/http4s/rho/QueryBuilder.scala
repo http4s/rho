@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import bits.{HListToFunc, HeaderAppendable, UriConverter }
+import bits.{HeaderAppendable, UriConverter }
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._
