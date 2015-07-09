@@ -22,7 +22,7 @@ final class PathTree private(paths: PathTree.Node) {
 
   override def toString = paths.toString()
 
-  def appendAction[T <: HList](action: RhoAction[T]): PathTree = {
+  def appendAction[T <: HList](action: RhoRoute[T]): PathTree = {
     val m = action.method
     val newLeaf = makeLeaf(action)
     val newNode = paths.append(action.path, m, newLeaf)
@@ -62,7 +62,7 @@ private[rho] object PathTree {
   /** Generates a list of tokens that represent the path */
   private def keyToPath(key: Request): List[String] = splitPath(key.pathInfo)
 
-  private def makeLeaf[T <: HList](action: RhoAction[T]): Leaf = {
+  private def makeLeaf[T <: HList](action: RhoRoute[T]): Leaf = {
     action.router match {
       case Router(method, _, query, vals) =>
         Leaf(query, vals, None){ (req, pathstack) =>
