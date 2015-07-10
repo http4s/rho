@@ -12,8 +12,8 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
   import org.json4s.jackson._
 
   lazy val service = new SwaggerSupport {
-    GET / "hello" |>> Action{ () => Ok("hello world") }
-    GET / "hello"/ pathVar[String] |>> Action{ world: String => Ok("hello " + world) }
+    GET / "hello" |>> { () => Ok("hello world") }
+    GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
   }
 
   "SwaggerSupport" should {

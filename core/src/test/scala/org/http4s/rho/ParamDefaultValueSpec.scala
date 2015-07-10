@@ -15,35 +15,35 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   val service = new RhoService {
-    GET / "test1" +? param[String]("param1") |>> Action { param1: String => Ok("test1:" + param1) }
+    GET / "test1" +? param[String]("param1") |>> { param1: String => Ok("test1:" + param1) }
 
-    GET / "test2" +? param("param1", "default1") |>> Action { param1: String => Ok("test2:" + param1) }
+    GET / "test2" +? param("param1", "default1") |>> { param1: String => Ok("test2:" + param1) }
 
-    GET / "test3" +? param[Int]("param1", 1) |>> Action { param1: Int => Ok("test3:" + param1) }
+    GET / "test3" +? param[Int]("param1", 1) |>> { param1: Int => Ok("test3:" + param1) }
 
-    GET / "test4" +? param[Option[String]]("param1") |>> Action { os: Option[String] => Ok("test4:" + os.getOrElse("")) }
+    GET / "test4" +? param[Option[String]]("param1") |>> { os: Option[String] => Ok("test4:" + os.getOrElse("")) }
 
-    GET / "test5" +? param[Option[Int]]("param1", Some(100)) |>> Action { os: Option[Int] => Ok("test5:" + os.getOrElse("")) }
+    GET / "test5" +? param[Option[Int]]("param1", Some(100)) |>> { os: Option[Int] => Ok("test5:" + os.getOrElse("")) }
 
-    GET / "test6" +? param[Option[String]]("param1", Some("default1")) |>> Action { os: Option[String] => Ok("test6:" + os.getOrElse("")) }
+    GET / "test6" +? param[Option[String]]("param1", Some("default1")) |>> { os: Option[String] => Ok("test6:" + os.getOrElse("")) }
 
-    GET / "test7" +? param[Seq[String]]("param1", Seq("a", "b")) |>> Action { os: Seq[String] => Ok("test7:" + os.mkString(",")) }
+    GET / "test7" +? param[Seq[String]]("param1", Seq("a", "b")) |>> { os: Seq[String] => Ok("test7:" + os.mkString(",")) }
 
-    GET / "test8" +? param[Seq[Int]]("param1", Seq(3, 5, 8)) |>> Action { os: Seq[Int] => Ok("test8:" + os.mkString(",")) }
+    GET / "test8" +? param[Seq[Int]]("param1", Seq(3, 5, 8)) |>> { os: Seq[Int] => Ok("test8:" + os.mkString(",")) }
 
     // with specific validation
 
-    GET / "test9" +? param("param1", "default1", (p: String) => !p.isEmpty && p != "fail") |>> Action { param1: String => Ok("test9:" + param1) }
+    GET / "test9" +? param("param1", "default1", (p: String) => !p.isEmpty && p != "fail") |>> { param1: String => Ok("test9:" + param1) }
 
-    GET / "test10" +? param[Int]("param1", 1, (p: Int) => p >= 0) |>> Action { param1: Int => Ok("test10:" + param1) }
+    GET / "test10" +? param[Int]("param1", 1, (p: Int) => p >= 0) |>> { param1: Int => Ok("test10:" + param1) }
 
-    GET / "test11" +? param[Option[Int]]("param1", Some(100), (p: Option[Int]) => p != Some(0)) |>> Action { os: Option[Int] => Ok("test11:" + os.getOrElse("")) }
+    GET / "test11" +? param[Option[Int]]("param1", Some(100), (p: Option[Int]) => p != Some(0)) |>> { os: Option[Int] => Ok("test11:" + os.getOrElse("")) }
 
-    GET / "test12" +? param[Option[String]]("param1", Some("default1"), (p: Option[String]) => p != Some("fail") && p != Some("")) |>> Action { os: Option[String] => Ok("test12:" + os.getOrElse("")) }
+    GET / "test12" +? param[Option[String]]("param1", Some("default1"), (p: Option[String]) => p != Some("fail") && p != Some("")) |>> { os: Option[String] => Ok("test12:" + os.getOrElse("")) }
 
-    GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => !p.contains("") && !p.contains("z")) |>> Action { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
+    GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => !p.contains("") && !p.contains("z")) |>> { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
 
-    GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p != Seq(8, 5, 3)) |>> Action { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
+    GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p != Seq(8, 5, 3)) |>> { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
   }.toService
 
   def body(r: Request): String = getBody(service(r).run.get.body)

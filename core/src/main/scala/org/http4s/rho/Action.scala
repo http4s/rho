@@ -15,5 +15,5 @@ case class Action[H <: HList](resultInfo: Set[ResultInfo],
                               )
 
 object Action {
-  def apply[H <: HList, F](f: F)(implicit ev: HListToFunc[H, F]): Action[H] = ev.toAction(f)
+//  def apply[H <: HList, F](f: F)(implicit ev: HListToFunc[H, F]): Action[H] = ev.toAction(f)
 }

@@ -34,47 +34,47 @@ object MyService extends RhoService with SwaggerSupport {
   }
 
   "We don't want to have a real 'root' route anyway... " **
-    GET |>> Action(TemporaryRedirect(Uri(path="/swagger-ui")))
+    GET |>> TemporaryRedirect(Uri(path="/swagger-ui"))
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = GET / "hello"
 
   "Simple hello world route" **
-    hello |>> Action(Ok("Hello world!"))
+    hello |>> Ok("Hello world!")
 
   "A variant of the hello route that takes an Int param" **
-    hello / pathVar[Int] |>> Action { i: Int => Ok(s"You returned $i") }
+    hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / 'foo +? param[Int]("id") |>> Action { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
-    GET / "differentstatus" / pathVar[Int] |>> Action { i: Int =>
+    GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
       if (i >= 0) Ok(JsonResult("Good result", i))
       else BadRequest(<html><body>Negative number: { i }</body></html>)
     }
 
   "This gets a simple counter for the number of times this route has been requested" **
-    GET / "counter" |>> Action {
+    GET / "counter" |>> {
       val i = new AtomicInteger(0)
       Task(<html><body><h2>{ s"The number is ${i.getAndIncrement()}" }</h2></body></html>)
     }
 
   "Adds the cookie Foo=bar to the client" **
-    GET / "addcookie" |>> Action {
+    GET / "addcookie" |>> {
       Ok("You now have a good cookie!").addCookie("Foo", "bar")
     }
 
   "Sets the cookie Foo=barr to the client" **
-    GET / "addbadcookie" |>> Action {
+    GET / "addbadcookie" |>> {
     Ok("You now have an evil cookie!").addCookie("Foo", "barr")
   }
 
   "Checks the Foo cookie to make sure its 'bar'" **
-    GET / "checkcookie" >>> requireCookie |>> Action(Ok("Good job, you have the cookie!"))
+    GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
 
   "Clears the cookies" **
-    GET / "clearcookies" |>> Action { req: Request =>
+    GET / "clearcookies" |>> { req: Request =>
     val hs = req.headers.get(headers.Cookie) match {
       case None => Headers.empty
       case Some(cookie) =>
@@ -85,12 +85,12 @@ object MyService extends RhoService with SwaggerSupport {
   }
 
   "This route allows your to post stuff" **
-    POST / "post" ^ EntityDecoder.text |>> Action { body: String =>
+    POST / "post" ^ EntityDecoder.text |>> { body: String =>
       "You posted: " + body
     }
 
   "This demonstrates using a process of entities" **
-    GET / "stream" |>> Action {
+    GET / "stream" |>> {
       val s = 0 until 100 map (i => s"Hello $i\n")
       val p: Process[Task, String] = Process.emitAll(s)
       Ok(p)

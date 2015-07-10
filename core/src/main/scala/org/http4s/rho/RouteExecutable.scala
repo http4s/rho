@@ -21,14 +21,14 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
   def makeRoute(action: Action[T]): RhoRoute[T]
 
   /** Compiles a HTTP request definition into an action */
-  final def |>>[R](action: Action[T])(implicit srvc: CompileService[R]): R =
-    srvc.compile(makeRoute(action))
+  final def |>>[F, R](f: F)(implicit hltf: HListToFunc[T, F], srvc: CompileService[R]): R =
+    srvc.compile(makeRoute(hltf.toAction(f)))
 
   /** Provide an action from which to generate a complete route
     * @return a function `Request => Option[Task[Response]]` which can be used as a complete route
     */
-  final def runWith(action: Action[T]): Request => Task[Option[Response]] = {
-    val srvc = new RhoService { compilerSrvc.compile(makeRoute(action)) }.toService
+  final def runWith[F](f: F)(implicit hltf: HListToFunc[T, F]): Request => Task[Option[Response]] = {
+    val srvc = new RhoService { compilerSrvc.compile(makeRoute(hltf.toAction(f))) }.toService
     srvc.apply(_: Request)
   }
 }
