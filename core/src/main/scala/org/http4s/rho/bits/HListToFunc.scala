@@ -1,6 +1,7 @@
 package org.http4s
 package rho.bits
 
+import org.http4s.rho.Action
 import shapeless.{HNil, ::, HList}
 import scalaz.concurrent.Task
 
@@ -13,16 +14,14 @@ import scalaz.concurrent.Task
  * @tparam F type of element onto which T will be mapped
  */
 trait HListToFunc[T <: HList, -F] {
-  def conv(f: F): (Request, T) => Task[Response]
-  def encodings: Set[MediaType]
-  def resultInfo: Set[ResultInfo]
+  def toAction(f: F): Action[T]
 }
 
 // for convenience
 private trait MatcherHListToFunc[T <: HList, -F] extends HListToFunc[T, F] {
   protected def matcher: ResultMatcher[_]
-  override def encodings: Set[MediaType] = matcher.encodings
-  override def resultInfo: Set[ResultInfo] = matcher.resultInfo
+  protected def conv(f: F): (Request, T) => Task[Response]
+  final override def toAction(f: F) = Action(matcher.resultInfo, matcher.encodings, conv(f))
 }
 
 object HListToFunc {
