@@ -43,7 +43,7 @@ class ApiTest extends Specification {
       val res = PathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
 
       res must beAnInstanceOf[ValidationFailure]
-      res.asInstanceOf[ValidationFailure].response.run.resp.status must_== Status.BadRequest
+      res.asInstanceOf[ValidationFailure].response.run.status must_== Status.BadRequest
     }
 
     "Match captureless route" in {
@@ -76,12 +76,16 @@ class ApiTest extends Specification {
       val c1 = captureMapR(headers.`Content-Length`)(r => \/-(r.length))
       PathTree.ValidationTools.ensureValidHeaders(c1.rule, req) should_== ParserSuccess(4::HNil)
 
-      val r2 = Ok("Foo")
+      val r2 = Gone("Foo")
       val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2))
-      PathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== ValidationFailure(r2)
+      val v1 = PathTree.ValidationTools.ensureValidHeaders(c2.rule, req)
+      v1 must beAnInstanceOf[ValidationFailure]
+      v1.asInstanceOf[ValidationFailure].response.run.status must_== r2.run.resp.status
 
       val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
-      PathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== ValidationFailure(r2)
+      val v2 = PathTree.ValidationTools.ensureValidHeaders(c3.rule, req)
+      v2 must beAnInstanceOf[ValidationFailure]
+      v2.asInstanceOf[ValidationFailure].response.run.status must_== r2.run.resp.status
     }
 
     "Append headers to a Route" in {
@@ -181,9 +185,9 @@ class ApiTest extends Specification {
 
     "Not match a path to long" in {
       val stuff = GET / "hello"
-      val req = Request(uri = Uri.fromString("/hello/world").getOrElse(sys.error("Failed.")))
+      val req = Request(uri = uri("/hello/world"))
 
-      val f = stuff runWith { () => Ok("Cool.").withHeaders(headers.ETag("foo")) }
+      val f = stuff runWith { () => Ok("Shouldn't get here.") }
       val r = f(req).run
       r should_== None
     }

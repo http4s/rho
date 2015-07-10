@@ -1,10 +1,21 @@
 package org.http4s.rho.bits
 
+import org.http4s.Response
 import org.http4s.rho.Result.BaseResult
 
 import scalaz.concurrent.Task
 
-sealed trait RouteResult[+T]
+sealed trait RouteResult[+T] {
+  final def isSuccess: Boolean = this match {
+    case ParserSuccess(_) => true
+    case _                => false
+  }
+
+  final def isEmpty: Boolean = this match {
+    case NoMatch => true
+    case _       => false
+  }
+}
 
 case object NoMatch extends RouteResult[Nothing]
 
@@ -30,6 +41,11 @@ sealed trait ParserResult[+T] extends RouteResult[T] {
 case class ParserSuccess[+T](result: T) extends ParserResult[T]
 
 case class ParserFailure(reason: String) extends ParserResult[Nothing]
+
 // TODO: I think the reason for failure could be made easier to use with specific failure types
-case class ValidationFailure(response: Task[BaseResult]) extends ParserResult[Nothing]
+case class ValidationFailure(response: Task[Response]) extends ParserResult[Nothing]
+
+object ValidationFailure {
+  def result(response: Task[BaseResult]): ValidationFailure = ValidationFailure(response.map(_.resp))
+}
 

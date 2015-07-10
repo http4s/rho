@@ -21,7 +21,7 @@ final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Ta
     val result = parent.collect(name, params, default)
     result.flatMap{ r => validate(r) match {
         case None => result
-        case Some(resp) => ValidationFailure(resp)
+        case Some(resp) => ValidationFailure.result(resp)
       }
     }
   }
@@ -76,11 +76,11 @@ object QueryParser {
 
         case Some(Seq()) => default match {
           case Some(defaultValue) => ParserSuccess(defaultValue)
-          case None => ValidationFailure(BadRequest(s"Value of query parameter '$name' missing"))
+          case None => ValidationFailure.result(BadRequest(s"Value of query parameter '$name' missing"))
         }
         case None => default match {
           case Some(defaultValue) => ParserSuccess(defaultValue)
-          case None => ValidationFailure(BadRequest(s"Missing query param: $name"))
+          case None => ValidationFailure.result(BadRequest(s"Missing query param: $name"))
         }
       }
     }

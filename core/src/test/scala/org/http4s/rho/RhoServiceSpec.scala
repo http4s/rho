@@ -89,9 +89,13 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "Return a 405 when a path is defined but the method doesn't match" in {
       val request = Request(Method.POST, uri("/hello"))
-      val resp = service.toService(request).run.get
-      resp.status must_== Status.MethodNotAllowed
-      resp.headers.get("Allow".ci) must beSome(Header.Raw("Allow".ci, "GET"))
+      val resp = service.toService(request).run
+      resp.map(_.status) must beSome(Status.MethodNotAllowed)
+      resp.flatMap(_.headers.get("Allow".ci)) must beSome(Header.Raw("Allow".ci, "GET"))
+    }
+
+    "Yield `MethodNotAllowed` when invalid method used" in {
+      service.toService(Put("/one/two/three")).run.map(_.status) must beSome(Status.MethodNotAllowed)
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
@@ -128,10 +132,6 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "NotFound on empty route" in {
       service.toService(Get("/one/two")).run must_== None
-    }
-
-    "Yield `MethodNotAllowed` when invalid method used" in {
-      service.toService(Put("/one/two/three")).run.get.status must_== Status.MethodNotAllowed
     }
 
     "Fail a route with a missing query" in {

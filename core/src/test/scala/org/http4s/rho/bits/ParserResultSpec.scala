@@ -15,7 +15,7 @@ class ParserResultSpec extends Specification {
     }
 
     "map a ValidationFailure" in {
-      val result: ParserResult[Int] = ValidationFailure(BadRequest("foo"))
+      val result: ParserResult[Int] = ValidationFailure.result(BadRequest("foo"))
       result.map(_.toString) should_== result
     }
 
@@ -29,7 +29,7 @@ class ParserResultSpec extends Specification {
     }
 
     "flatMap a ValidationFailure" in {
-      val result: ParserResult[Int] = ValidationFailure(BadRequest("foo"))
+      val result: ParserResult[Int] = ValidationFailure.result(BadRequest("foo"))
       result.flatMap(i => ParserSuccess(i.toString)) should_== result
     }
 

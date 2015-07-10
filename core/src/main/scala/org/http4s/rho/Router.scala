@@ -27,9 +27,9 @@ sealed trait RoutingEntity[T <: HList] {
   * @tparam T cumulative type of the required method for executing the router
   */
 case class Router[T <: HList](method: Method,
-                               val path: PathRule,
-                               val query: QueryRule,
-                               val headers: HeaderRule)
+                              path: PathRule,
+                              query: QueryRule,
+                              headers: HeaderRule)
                        extends RouteExecutable[T]
                           with HeaderAppendable[T]
                           with RoutingEntity[T]
