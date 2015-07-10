@@ -10,7 +10,7 @@ import org.specs2.mutable.Specification
 
 import org.http4s.server.middleware.URITranslation
 
-class RhoPathTreeSpec extends Specification {
+class PathTreeSpec extends Specification {
   import PathTree._
 
   "splitPath" should {
@@ -41,5 +41,28 @@ class RhoPathTreeSpec extends Specification {
     resp.status must_== Status.Ok
     val b = new String(resp.body.runLog.run.reduce(_ ++ _).toArray, StandardCharsets.UTF_8)
     b must_== "foo"
+  }
+
+  "PathTree OPTIONS" should {
+    val svc = new RhoService {
+      GET / "foo" |>> "foo"
+
+      OPTIONS / "bar" |>> "foo"
+    }.toService
+
+    "Handle a valid OPTIONS request" in {
+      val req = Request(Method.OPTIONS, uri = uri("/bar"))
+      svc(req).run.map(_.status) must beSome(Status.Ok)
+    }
+
+    "Provide a 405 MethodNotAllowed when an incorrect method is used for a resource" in {
+      val req = Request(Method.POST, uri = uri("/foo"))
+      svc(req).run.map(_.status) must beSome(Status.MethodNotAllowed)
+    }
+
+    "Provide a 404 NotFound when the OPTIONS method is used for a resource without an OPTIONS" in {
+      val req = Request(Method.OPTIONS, uri = uri("/foo"))
+      svc(req).run.map(_.status) must beNone
+    }
   }
 }

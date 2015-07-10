@@ -197,7 +197,7 @@ private[rho] object PathTree {
         if (path.tail.isEmpty) {
           end.get(method).map(_.attempt(req, h)) orElse
             variadic.get(method).map(_.attempt(req, Nil::h)) getOrElse {
-            if (end.keys.isEmpty) NoMatch
+            if (end.keys.isEmpty || method == Method.OPTIONS) NoMatch
             else {
               val ms = end.keys
               val allowedMethods = ms.mkString(", ")
