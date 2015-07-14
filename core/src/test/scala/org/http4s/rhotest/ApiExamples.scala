@@ -15,8 +15,6 @@ class ApiExamples extends Specification {
 
   import org.http4s.rho.bits.ResponseGeneratorInstances._
 
-  def foo(s: String, i: Int): Task[OK[String]] = ???
-
   "mock api" should {
     "Make it easy to compose routes" in {
 
@@ -26,7 +24,6 @@ class ApiExamples extends Specification {
         val path2 = path / 'world +? param[Int]("fav") // the symbol 'world just says 'capture a String'
         path |>> { () => Ok("Empty") } // use the |>> operator to turn a Router into an Action
         path2 |>> { (world: String, fav: Int) => Ok(s"Received $fav, $world") }
-        path2 |>> (foo(_, _))
 
         // It can also be made all at once
         val path3 = POST / "hello" / pathVar[Int] +? param[Int]("fav")

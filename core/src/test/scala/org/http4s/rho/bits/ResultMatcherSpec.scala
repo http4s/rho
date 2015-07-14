@@ -14,11 +14,11 @@ class ResultMatcherSpec extends Specification {
   trait TRhoService extends RhoService {
     var statuses: Set[(Status, Type)] = Set.empty
 
-    override protected def append[T <: HList, F](action: RhoAction[T, F]): Unit = {
-      statuses = action.resultInfo.collect {
+    override protected def append[T <: HList](route: RhoRoute[T]): Unit = {
+      statuses = route.resultInfo.collect {
         case StatusAndType(s, t) => (s,t)
       }
-      super.append(action)
+      super.append(route)
     }
   }
 

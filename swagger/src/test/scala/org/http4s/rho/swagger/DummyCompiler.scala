@@ -1,13 +1,11 @@
 package org.http4s.rho.swagger
 
-import org.http4s.rho.{RhoAction, CompileService}
+import org.http4s.rho.{RhoRoute, CompileService}
 import shapeless.HList
 
 
 object DummyCompiler {
-
-  implicit def compilerInstance[F] = new CompileService[F, RhoAction[_ <: HList, F]] {
-    override def compile(action: RhoAction[_ <: HList, F]) = action
+  implicit def compilerInstance = new CompileService[RhoRoute[_ <: HList]] {
+    override def compile(route: RhoRoute[_ <: HList]) = route
   }
-
 }

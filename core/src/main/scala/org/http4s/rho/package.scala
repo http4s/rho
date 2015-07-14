@@ -9,7 +9,7 @@ import rho.bits.PathAST._
 import rho.bits.HeaderAST._
 import rho.bits.QueryAST._
 
-import shapeless.{HList, HNil, ::}
+import shapeless.{HNil, ::}
 import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag

@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import bits.{HListToFunc, HeaderAppendable, UriConverter }
+import bits.{HeaderAppendable, UriConverter }
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._
@@ -18,8 +18,7 @@ case class QueryBuilder[T <: HList](method: Method,
 {
   override type HeaderAppendResult[T <: HList] = Router[T]
 
-  override def makeAction[F](f: F, hf: HListToFunc[T, F]): RhoAction[T, F] =
-    RhoAction(Router(method, path, query, headers), f, hf)
+  override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, query, headers), action)
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
     Router(method, path, query, v.rule)

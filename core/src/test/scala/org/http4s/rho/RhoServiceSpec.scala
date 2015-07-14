@@ -19,16 +19,13 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     GET / "" +? param("foo", "bar") |>> { foo: String => Ok("this definition should be hidden by the previous definition") }
 
-    GET / "hello" |>> Ok("route1")
+    GET / "hello" |>> (Ok("route1"))
 
     GET / 'hello |>> { hello: String => Ok("route2") }
 
-    GET / "hello" / "world" |>> Ok("route3")
+    GET / "hello" / "world" |>> (Ok("route3"))
 
-    // keep the function for 'reverse routing'
-    val reverseQuery = GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => Ok("route" + foo) }
-
-    GET / "hello" / "reverse" |>> { () => reverseQuery(0) }
+    GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => Ok("route" + foo) }
 
     GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => Ok("some:" + s) }
 
@@ -64,7 +61,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => Ok(s"req $foo") }
 
     val rootSome = root / "some"
-    GET / rootSome |>> Ok("root to some")
+    GET / rootSome |>> (Ok("root to some"))
 
     GET / "directTask" |>> {
       val i = new AtomicInteger(0)
@@ -127,11 +124,6 @@ class RhoServiceSpec extends Specification with RequestRunner {
     "Execute a route with a query" in {
       val req = Get("/hello/headers?foo=4")
       checkOk(req) should_== "route4"
-    }
-
-    "Provide 'reverse routing' characteristics" in {
-      val req = Get("/hello/reverse")
-      checkOk(req) should_== "route0"
     }
 
     "NotFound on empty route" in {
@@ -250,7 +242,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val service = new RhoService {
         GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
         GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
-        GET / "foo" |>> Ok("none")
+        GET / "foo" |>> (Ok("none"))
       }.toService
 
       val req1 = Request(Method.GET, Uri(path = "/foo").+?("bar", "0"))

@@ -2,7 +2,6 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits.QueryAST.{ QueryAnd, TypedQuery, QueryRule }
-import org.http4s.rho.bits.UriConverter
 
 import bits.HeaderAST.{ EmptyHeaderRule, HeaderRule }
 import bits.PathAST.PathRule

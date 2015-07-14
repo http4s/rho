@@ -90,9 +90,8 @@ class ApiTest extends Specification {
       val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
 
-      val route = (path >>> validations >>> capture(headers.ETag)).decoding(EntityDecoder.text) runWith
-        {(world: String, fav: Int, tag: headers.ETag, body: String) =>
-
+      val route = (path >>> validations >>> capture(headers.ETag)).decoding(EntityDecoder.text) runWith {
+        (world: String, fav: Int, tag: headers.ETag, body: String) =>
           Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
             .putHeaders(headers.ETag("foo"))
         }
@@ -299,13 +298,13 @@ class ApiTest extends Specification {
       val req = Request(uri = uri("/hello?foo=bar"))
         .withHeaders(Headers(headers.`Content-Length`("foo".length)))
 
-      val route1 = (path +? param[Int]("foo")).runWith { i: Int =>
+      val route1 = (path +? param[Int]("foo")) runWith { i: Int =>
         Ok("shouldn't get here.")
       }
 
       route1(req).run.get.status should_== Status.BadRequest
 
-      val route2 = (path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))).runWith { str: String =>
+      val route2 = (path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) runWith { str: String =>
         Ok("shouldn't get here.")
       }
 
