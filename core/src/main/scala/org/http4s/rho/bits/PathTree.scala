@@ -4,9 +4,7 @@ package bits
 
 import scala.language.existentials
 
-import org.http4s.rho.bits.HeaderAST.HeaderRule
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.QueryAST.QueryRule
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 
 import shapeless.{HNil, HList}
@@ -20,7 +18,7 @@ import scalaz.concurrent.Task
 import org.log4s.getLogger
 
 /** Rho specific implementation of the PathTree */
-final class PathTree private(paths: PathTree.Node) {
+final class PathTree private(private val paths: PathTree.MatchNode) {
   import PathTree._
 
   override def toString = paths.toString()
@@ -32,12 +30,12 @@ final class PathTree private(paths: PathTree.Node) {
     new PathTree(newNode)
   }
 
+  def merge(other: PathTree): PathTree = new PathTree(paths merge other.paths)
 
   def getResult(req: Request): RouteResult[Task[Response]] = paths.walkTree(req.method, req)
 }
 
 private[rho] object PathTree {
-
 
   private val logger = getLogger
 
@@ -72,7 +70,7 @@ private[rho] object PathTree {
   private def makeLeaf[T <: HList](route: RhoRoute[T]): Leaf = {
     route.router match {
       case Router(method, _, query, vals) =>
-        Leaf(query, vals, None){ (req, pathstack) =>
+        Leaf { (req, pathstack) =>
           for {
             i <- ValidationTools.runQuery(req, query, pathstack)
             j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
@@ -80,7 +78,7 @@ private[rho] object PathTree {
         }
 
       case c @ CodecRouter(_, parser) =>
-        Leaf(c.router.query, c.headers, Some(parser)){ (req, pathstack) =>
+        Leaf { (req, pathstack) =>
           for {
             i <- ValidationTools.runQuery(req, c.router.query, pathstack)
             j <- ValidationTools.runValidation(req, c.headers, i)
@@ -96,12 +94,12 @@ private[rho] object PathTree {
 
   //////////////////////////////////////////////////////
 
-  private object Leaf {
-    def apply(query: QueryRule, vals: HeaderRule, codec: Option[EntityDecoder[_]])(f: (Request, HList) => Action): Leaf = SingleLeaf(f)
+  object Leaf {
+    def apply(f: (Request, HList) => Action): Leaf = SingleLeaf(f)
   }
 
   /** Leaves of the PathTree */
-  private trait Leaf {
+  sealed trait Leaf {
     /** Attempt to match this leaf */
     def attempt(req: Request, stack: HList): Action
 
@@ -139,7 +137,7 @@ private[rho] object PathTree {
     }
   }
 
-  private trait Node {
+  sealed trait Node {
 
     type Self <: Node
 
@@ -153,7 +151,9 @@ private[rho] object PathTree {
 
     def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): Self
 
-    final def append(tail: PathRule, method: Method, action: Leaf): Node = append(tail::Nil, method, action)
+    def merge(other: Self): Self
+
+    final def append(tail: PathRule, method: Method, action: Leaf): Self = append(tail::Nil, method, action)
 
     // Add elements to the tree
     final protected def append(tail: List[PathRule], method: Method, action: Leaf): Self = tail match {
@@ -257,23 +257,67 @@ private[rho] object PathTree {
     }
   }
 
-  private case class MatchNode(name:    String,
-                              matches:  Map[String, MatchNode] = Map.empty,
-                              captures: List[CaptureNode] = Nil,
-                              variadic: Map[Method,Leaf] = Map.empty,
-                              end:      Map[Method,Leaf] = Map.empty) extends Node {
+  final case class MatchNode(name:    String,
+                             matches:  Map[String, MatchNode] = Map.empty,
+                             captures: List[CaptureNode] = Nil,
+                             variadic: Map[Method,Leaf] = Map.empty,
+                             end:      Map[Method,Leaf] = Map.empty) extends Node {
     type Self = MatchNode
     override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
+
+    override def merge(other: Self): Self = {
+      require(other.name == name, s"Matchnodes don't have the same name, this: $name, that: ${other.name}.")
+
+      clone(mergeMatches(matches, other.matches),
+            mergeCaptures(captures, other.captures),
+            mergeLeaves(variadic, other.variadic),
+            mergeLeaves(end, other.end))
+    }
   }
 
-  private case class CaptureNode(parser: StringParser[_],
-                                 matches:  Map[String, MatchNode] = Map.empty,
-                                 captures: List[CaptureNode] = Nil,
-                                 variadic: Map[Method,Leaf] = Map.empty,
-                                 end: Map[Method,Leaf] = Map.empty) extends Node {
+  final case class CaptureNode(parser: StringParser[_],
+                               matches:  Map[String, MatchNode] = Map.empty,
+                               captures: List[CaptureNode] = Nil,
+                               variadic: Map[Method,Leaf] = Map.empty,
+                               end: Map[Method,Leaf] = Map.empty) extends Node {
     type Self = CaptureNode
     override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
+
+    override def merge(other: Self): Self = {
+      require(other.parser eq parser, s"Cannot merge ${this.getClass.getSimpleName}s that have different parsers")
+
+      clone(mergeMatches(matches, other.matches),
+            mergeCaptures(captures, other.captures),
+            mergeLeaves(variadic, other.variadic),
+            mergeLeaves(end, other.end))
+    }
+  }
+
+  // This ordering can get a little funky here. It is defined such that nodes in c2 get promoted in order if
+  // they are also found in c1.
+  private def mergeCaptures(c1: List[CaptureNode], c2: List[CaptureNode]): List[CaptureNode] = {
+    val first = c1.map { c => c2.find(_.parser eq c.parser).map(c merge _).getOrElse(c) }
+    val last  = c2.filterNot { c => c1.exists(_.parser eq c.parser) }
+    first ++ last
+  }
+
+  private def mergeMatches(m1: Map[String, MatchNode], m2: Map[String, MatchNode]): Map[String, MatchNode] =
+    mergeMaps(m1, m2)(_ merge _)
+
+  private def mergeLeaves(l1: Map[Method,Leaf], l2: Map[Method,Leaf]): Map[Method,Leaf] =
+    mergeMaps(l1, l2)(_ ++ _)
+
+  private def mergeMaps[K,V](m1: Map[K,V], m2: Map[K,V])(merge: (V,V) => V): Map[K,V] = {
+    val allMatches = m1.keySet ++ m2.keySet
+    allMatches.toSeq.map{ k =>
+      (m1.get(k), m2.get(k)) match {
+        case (Some(l1), Some(l2)) => (k, merge(l1,l2))
+        case (Some(l1), None)     => (k, l1)
+        case (None, Some(l2))     => (k, l2)
+        case (None, None)         => sys.error("Shouldn't get here: each name should be defined in at least one of the maps")
+      }
+    }.toMap
   }
 }
