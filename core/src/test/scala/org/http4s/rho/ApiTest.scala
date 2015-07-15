@@ -5,7 +5,7 @@ import bits.MethodAliases._
 import bits.ResponseGeneratorInstances._
 
 import bits.HeaderAST.{TypedHeader, HeaderAnd}
-import bits.{PathTree, ParserSuccess, ParserFailure}
+import bits.{PathTree, SuccessResponse, FailureResponse}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -42,50 +42,50 @@ class ApiTest extends Specification {
       val badreq = Request().withHeaders(Headers(lenheader))
       val res = PathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
 
-      res must beAnInstanceOf[ParserFailure]
-      res.asInstanceOf[ParserFailure].toResponse.run.status must_== Status.BadRequest
+      res must beAnInstanceOf[FailureResponse]
+      res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
     }
 
     "Match captureless route" in {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(HNil)
+      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== SuccessResponse(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(headers.`Content-Length`) && RequireETag
-        PathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== ParserSuccess(lenheader::HNil)
+        PathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== SuccessResponse(lenheader::HNil)
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(headers.ETag)
-        PathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== ParserSuccess(etag::lenheader::HNil)
+        PathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== SuccessResponse(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = captureMap(headers.`Content-Length`)(_.length)
-      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== ParserSuccess(4::HNil)
+      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== SuccessResponse(4::HNil)
     }
 
     "Map with possible default" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
 
       val c1 = captureMapR(headers.`Content-Length`)(r => \/-(r.length))
-      PathTree.ValidationTools.ensureValidHeaders(c1.rule, req) should_== ParserSuccess(4::HNil)
+      PathTree.ValidationTools.ensureValidHeaders(c1.rule, req) should_== SuccessResponse(4::HNil)
 
       val r2 = Gone("Foo")
       val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2))
       val v1 = PathTree.ValidationTools.ensureValidHeaders(c2.rule, req)
-      v1 must beAnInstanceOf[ParserFailure]
-      v1.asInstanceOf[ParserFailure].toResponse.run.status must_== r2.run.resp.status
+      v1 must beAnInstanceOf[FailureResponse]
+      v1.asInstanceOf[FailureResponse].toResponse.run.status must_== r2.run.resp.status
 
       val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
       val v2 = PathTree.ValidationTools.ensureValidHeaders(c3.rule, req)
-      v2 must beAnInstanceOf[ParserFailure]
-      v2.asInstanceOf[ParserFailure].toResponse.run.status must_== r2.run.resp.status
+      v2 must beAnInstanceOf[FailureResponse]
+      v2.asInstanceOf[FailureResponse].toResponse.run.status must_== r2.run.resp.status
     }
 
     "Append headers to a Route" in {

@@ -7,48 +7,48 @@ class StringParserSpec extends Specification {
   "StringParser" should {
 
     "parse true" in {
-      new BooleanParser().parse("true") == ParserSuccess(true)
+      new BooleanParser().parse("true") == SuccessResponse(true)
     }
     "parse false" in {
-      new BooleanParser().parse("false") == ParserSuccess(false)
+      new BooleanParser().parse("false") == SuccessResponse(false)
     }
     "not parse non-boolean" in {
-      new BooleanParser().parse("unknown") must haveClass[ParserFailure]
+      new BooleanParser().parse("unknown") must haveClass[FailureResponse]
     }
 
     "parse double" in {
-      new DoubleParser().parse("1.1") == ParserSuccess[Double](1.1)
+      new DoubleParser().parse("1.1") == SuccessResponse[Double](1.1)
     }
     "parse non-double" in {
-      new DoubleParser().parse("unknown") must haveClass[ParserFailure]
+      new DoubleParser().parse("unknown") must haveClass[FailureResponse]
     }
 
     "parse float" in {
-      new FloatParser().parse("1.1") == ParserSuccess[Float](1.1f)
+      new FloatParser().parse("1.1") == SuccessResponse[Float](1.1f)
     }
     "parse non-float" in {
-      new FloatParser().parse("unknown") must haveClass[ParserFailure]
+      new FloatParser().parse("unknown") must haveClass[FailureResponse]
     }
 
     "parse int" in {
-      new IntParser().parse("1") == ParserSuccess[Int](1)
+      new IntParser().parse("1") == SuccessResponse[Int](1)
     }
     "parse non-int" in {
-      new IntParser().parse("12345678901") must haveClass[ParserFailure]
+      new IntParser().parse("12345678901") must haveClass[FailureResponse]
     }
 
     "parse long" in {
-      new LongParser().parse("1") == ParserSuccess[Long](1)
+      new LongParser().parse("1") == SuccessResponse[Long](1)
     }
     "parse non-long" in {
-      new LongParser().parse("12345678901234567890") must haveClass[ParserFailure]
+      new LongParser().parse("12345678901234567890") must haveClass[FailureResponse]
     }
 
     "parse short" in {
-      new ShortParser().parse("1") == ParserSuccess[Short](1)
+      new ShortParser().parse("1") == SuccessResponse[Short](1)
     }
     "parse non-short" in {
-      new ShortParser().parse("12345678") must haveClass[ParserFailure]
+      new ShortParser().parse("12345678") must haveClass[FailureResponse]
     }
 
   }

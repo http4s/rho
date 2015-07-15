@@ -2,7 +2,7 @@ package org.http4s
 package rho
 package bits
 
-import org.http4s.rho.bits.ParserFailure.ResponseReason
+import org.http4s.rho.bits.FailureResponse.ResponseReason
 
 import scala.language.existentials
 
@@ -41,7 +41,7 @@ private[rho] object PathTree {
 
   private val logger = getLogger
 
-  type Action = ParserResult[Task[Response]]
+  type Action = ResultResponse[Task[Response]]
 
   def apply(): PathTree = new PathTree(MatchNode(""))
 
@@ -119,7 +119,7 @@ private[rho] object PathTree {
       try f(req, stack)
       catch { case NonFatal(t) =>
         logger.error(t)("Error in action execution")
-        ParserSuccess(Task.now(Response(status = Status.InternalServerError)))
+        SuccessResponse(Task.now(Response(status = Status.InternalServerError)))
       }
     }
   }
@@ -127,10 +127,10 @@ private[rho] object PathTree {
 
   final private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
     override def attempt(req: Request, stack: HList): Action = {
-      def go(l: List[SingleLeaf], error: ParserResult[Nothing]): Action = {
+      def go(l: List[SingleLeaf], error: ResultResponse[Nothing]): Action = {
         if (l.nonEmpty) l.head.attempt(req, stack) match {
-          case r@ParserSuccess(_)     => r
-          case e@ParserFailure(_)   => go(l.tail, if (error != null) error else e)
+          case r@SuccessResponse(_)     => r
+          case e@FailureResponse(_)   => go(l.tail, if (error != null) error else e)
         }
         else if (error != null) error else sys.error("Leaf was empty!")
       }
@@ -223,13 +223,13 @@ private[rho] object PathTree {
           def go(children: List[CaptureNode], error: RouteResult[Task[Response]]): RouteResult[Task[Response]] = children match {
               case (c@CaptureNode(p,_,cs,_,_))::ns =>
                 p.parse(h) match {
-                  case ParserSuccess(r) =>
+                  case SuccessResponse(r) =>
                     val n = c.walk(method, req, t, r::stack)
                     if (n.isSuccess)        n
                     else if (error.isEmpty) go(ns, n)
                     else                    go(ns, error)
 
-                  case r@ParserFailure(_) => go(ns, if (error.isEmpty) r else error)
+                  case r@FailureResponse(_) => go(ns, if (error.isEmpty) r else error)
                 }
 
               case Nil => tryVariadic(error)// try the variadiac
@@ -248,7 +248,7 @@ private[rho] object PathTree {
                 val ms = end.keys
                 val allowedMethods = ms.mkString(", ")
                 val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-                ParserFailure.pure(MethodNotAllowed.pure(msg)
+                FailureResponse.pure(MethodNotAllowed.pure(msg)
                                     .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
               }
           }

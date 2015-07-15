@@ -30,8 +30,8 @@ trait RhoService extends bits.MethodAliases
     val routeResult: RouteResult[Task[Response]] = __tree.getResult(req)
     routeResult match {
       case NoMatch              => Task.now(None)
-      case ParserSuccess(t)     => t.map(Some(_))
-      case ParserFailure(r)     => r.toResponse.map(Some(_))
+      case SuccessResponse(t)     => t.map(Some(_))
+      case FailureResponse(r)     => r.toResponse.map(Some(_))
     }
   }
 
