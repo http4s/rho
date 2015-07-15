@@ -14,13 +14,13 @@ class ParserResultSpec extends Specification {
       ParserSuccess(3).map(_.toString) should_== ParserSuccess("3")
     }
 
-    "map a ValidationFailure" in {
-      val result: ParserResult[Int] = ValidationFailure.result(BadRequest("foo"))
+    "map a ParserFailure" in {
+      val result: ParserResult[Int] = ParserFailure.badRequest("foo")
       result.map(_.toString) should_== result
     }
 
     "map a ParseFailure" in {
-      val result: ParserResult[Int] = ParserFailure("foo")
+      val result: ParserResult[Int] = ParserFailure.badRequest("foo")
       result.map(_.toString) should_== result
     }
 
@@ -28,13 +28,13 @@ class ParserResultSpec extends Specification {
       ParserSuccess(3).flatMap(i => ParserSuccess(i.toString)) should_== ParserSuccess("3")
     }
 
-    "flatMap a ValidationFailure" in {
-      val result: ParserResult[Int] = ValidationFailure.result(BadRequest("foo"))
+    "flatMap a ParserFailure" in {
+      val result: ParserResult[Int] = ParserFailure.result(BadRequest("foo"))
       result.flatMap(i => ParserSuccess(i.toString)) should_== result
     }
 
     "flatMap a ParseFailure" in {
-      val result: ParserResult[Int] = ParserFailure("foo")
+      val result: ParserResult[Int] = ParserFailure.badRequest("foo")
       result.flatMap(i => ParserSuccess(i.toString)) should_== result
     }
 
@@ -50,7 +50,7 @@ class ParserResultSpec extends Specification {
     }
 
     "work in a failing for comprehensions" in {
-      val a: ParserResult[String] = ParserFailure("boo")
+      val a: ParserResult[String] = ParserFailure.badRequest("boo")
       val b: ParserResult[String] = ParserSuccess("bar")
       val result1 = for {
         foo <- a
@@ -62,8 +62,7 @@ class ParserResultSpec extends Specification {
         foo <- a
       } yield (foo + bar)
 
-      (result1 should_== ParserFailure("boo")) and
-      (result2 should_== ParserFailure("boo"))
+      (result1 should_== a) and (result2 should_== a)
     }
   }
 

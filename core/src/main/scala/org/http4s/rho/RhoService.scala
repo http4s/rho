@@ -31,8 +31,7 @@ trait RhoService extends bits.MethodAliases
     routeResult match {
       case NoMatch              => Task.now(None)
       case ParserSuccess(t)     => t.map(Some(_))
-      case ParserFailure(s)     => onBadRequest(s).map(Some(_))
-      case ValidationFailure(r) => r.map(Some(_))
+      case ParserFailure(r)     => r.toResponse.map(Some(_))
     }
   }
 

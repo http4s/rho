@@ -29,17 +29,17 @@ trait ExecutableCompiler {
       case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
 
       case HeaderExists(key, f) => req.headers.get(key) match {
-        case Some(h) => f(h).fold[ParserResult[HList]](ParserSuccess(stack))(ValidationFailure.result)
-        case None => ValidationFailure.result(BadRequest(s"Missing header: ${key.name}"))
+        case Some(h) => f(h).fold[ParserResult[HList]](ParserSuccess(stack))(ParserFailure.result)
+        case None => ParserFailure.badRequest(s"Missing header: ${key.name}")
       }
 
       case HeaderCapture(key, f, default) => req.headers.get(key) match {
         case Some(h) =>
-          f(h).fold(f => ValidationFailure.result(f), r => ParserSuccess(r::stack))
+          f(h).fold(f => ParserFailure.result(f), r => ParserSuccess(r::stack))
 
         case None => default match {
-          case Some(r) => ValidationFailure.result(r)
-          case None    => ValidationFailure.result(BadRequest(s"Missing header: ${key.name}"))
+          case Some(r) => ParserFailure.result(r)
+          case None    => ParserFailure.badRequest(s"Missing header: ${key.name}")
         }
       }
 

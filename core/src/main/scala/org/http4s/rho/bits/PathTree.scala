@@ -2,6 +2,8 @@ package org.http4s
 package rho
 package bits
 
+import org.http4s.rho.bits.ParserFailure.ResponseReason
+
 import scala.language.existentials
 
 import org.http4s.rho.bits.PathAST._
@@ -128,8 +130,7 @@ private[rho] object PathTree {
       def go(l: List[SingleLeaf], error: ParserResult[Nothing]): Action = {
         if (l.nonEmpty) l.head.attempt(req, stack) match {
           case r@ParserSuccess(_)     => r
-          case e@ParserFailure(_)     => go(l.tail, if (error != null) error else e)
-          case e@ValidationFailure(_) => go(l.tail, if (error != null) error else e)
+          case e@ParserFailure(_)   => go(l.tail, if (error != null) error else e)
         }
         else if (error != null) error else sys.error("Leaf was empty!")
       }
@@ -228,9 +229,7 @@ private[rho] object PathTree {
                     else if (error.isEmpty) go(ns, n)
                     else                    go(ns, error)
 
-                  case r@ParserFailure(_)     if error.isEmpty => go(ns, r)
-                  case r@ValidationFailure(_) if error.isEmpty => go(ns, r)
-                  case _                                       => go(ns, error)
+                  case r@ParserFailure(_) => go(ns, if (error.isEmpty) r else error)
                 }
 
               case Nil => tryVariadic(error)// try the variadiac
@@ -249,8 +248,8 @@ private[rho] object PathTree {
                 val ms = end.keys
                 val allowedMethods = ms.mkString(", ")
                 val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-                ValidationFailure.result(MethodNotAllowed(msg)
-                  .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
+                ParserFailure.pure(MethodNotAllowed.pure(msg)
+                                    .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
               }
           }
       }

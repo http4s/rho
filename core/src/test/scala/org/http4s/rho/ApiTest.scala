@@ -5,7 +5,7 @@ import bits.MethodAliases._
 import bits.ResponseGeneratorInstances._
 
 import bits.HeaderAST.{TypedHeader, HeaderAnd}
-import bits.{PathTree, ParserSuccess, ValidationFailure}
+import bits.{PathTree, ParserSuccess, ParserFailure}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -42,8 +42,8 @@ class ApiTest extends Specification {
       val badreq = Request().withHeaders(Headers(lenheader))
       val res = PathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
 
-      res must beAnInstanceOf[ValidationFailure]
-      res.asInstanceOf[ValidationFailure].response.run.status must_== Status.BadRequest
+      res must beAnInstanceOf[ParserFailure]
+      res.asInstanceOf[ParserFailure].toResponse.run.status must_== Status.BadRequest
     }
 
     "Match captureless route" in {
@@ -79,13 +79,13 @@ class ApiTest extends Specification {
       val r2 = Gone("Foo")
       val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2))
       val v1 = PathTree.ValidationTools.ensureValidHeaders(c2.rule, req)
-      v1 must beAnInstanceOf[ValidationFailure]
-      v1.asInstanceOf[ValidationFailure].response.run.status must_== r2.run.resp.status
+      v1 must beAnInstanceOf[ParserFailure]
+      v1.asInstanceOf[ParserFailure].toResponse.run.status must_== r2.run.resp.status
 
       val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
       val v2 = PathTree.ValidationTools.ensureValidHeaders(c3.rule, req)
-      v2 must beAnInstanceOf[ValidationFailure]
-      v2.asInstanceOf[ValidationFailure].response.run.status must_== r2.run.resp.status
+      v2 must beAnInstanceOf[ParserFailure]
+      v2.asInstanceOf[ParserFailure].toResponse.run.status must_== r2.run.resp.status
     }
 
     "Append headers to a Route" in {

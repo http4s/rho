@@ -3,7 +3,6 @@ package rho.bits
 
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.QueryParser.Params
-import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 
 import scala.language.higherKinds
 
@@ -20,8 +19,8 @@ final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Ta
   override def collect(name: String, params: Params, default: Option[A]): ParserResult[A] = {
     val result = parent.collect(name, params, default)
     result.flatMap{ r => validate(r) match {
-        case None => result
-        case Some(resp) => ValidationFailure.result(resp)
+        case None       => result
+        case Some(resp) => ParserFailure.pure(resp.map(_.resp))
       }
     }
   }
@@ -76,11 +75,11 @@ object QueryParser {
 
         case Some(Seq()) => default match {
           case Some(defaultValue) => ParserSuccess(defaultValue)
-          case None => ValidationFailure.result(BadRequest(s"Value of query parameter '$name' missing"))
+          case None => ParserFailure.badRequest(s"Value of query parameter '$name' missing")
         }
         case None => default match {
           case Some(defaultValue) => ParserSuccess(defaultValue)
-          case None => ValidationFailure.result(BadRequest(s"Missing query param: $name"))
+          case None => ParserFailure.badRequest(s"Missing query param: $name")
         }
       }
     }
