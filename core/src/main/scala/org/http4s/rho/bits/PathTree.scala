@@ -244,13 +244,14 @@ private[rho] object PathTree {
             case None =>
               val result = tryVariadic(NoMatch)
               if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
-              else {
+              else FailureResponse.pure {
                 val ms = end.keys
                 val allowedMethods = ms.mkString(", ")
                 val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-                FailureResponse.pure(MethodNotAllowed.pure(msg)
-                                    .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
+                MethodNotAllowed.pure(msg)
+                  .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*))
               }
+
           }
       }
     }

@@ -1,6 +1,8 @@
 package org.http4s
 package rho.bits
 
+import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
+
 import scala.reflect.runtime.universe.TypeTag
 
 trait StringParser[T] {
@@ -11,9 +13,9 @@ trait StringParser[T] {
 class BooleanParser extends StringParser[Boolean] {
   override val typeTag: Some[TypeTag[Boolean]] = Some(implicitly[TypeTag[Boolean]])
   override def parse(s: String): ResultResponse[Boolean] = s match {
-    case "true" => SuccessResponse(true)
+    case "true"  => SuccessResponse(true)
     case "false" => SuccessResponse(false)
-    case _ => StringParser.invalidBooleanFormat
+    case _       => FailureResponse.pure { BadRequest.pure(s"Invalid boolean format: '$s'") }
   }
 }
 
@@ -21,35 +23,35 @@ class DoubleParser extends StringParser[Double] {
   override val typeTag: Some[TypeTag[Double]] = Some(implicitly[TypeTag[Double]])
   override def parse(s: String): ResultResponse[Double] =
     try SuccessResponse(s.toDouble)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
 }
 
 class FloatParser extends StringParser[Float] {
   override val typeTag: Some[TypeTag[Float]] = Some(implicitly[TypeTag[Float]])
   override def parse(s: String): ResultResponse[Float] =
     try SuccessResponse(s.toFloat)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
 }
 
 class IntParser extends StringParser[Int] {
   override val typeTag: Some[TypeTag[Int]] = Some(implicitly[TypeTag[Int]])
   override def parse(s: String): ResultResponse[Int] =
     try SuccessResponse(s.toInt)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
 }
 
 class LongParser extends StringParser[Long] {
   override val typeTag: Some[TypeTag[Long]] = Some(implicitly[TypeTag[Long]])
   override def parse(s: String): ResultResponse[Long] =
     try SuccessResponse(s.toLong)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
 }
 
 class ShortParser extends StringParser[Short] {
   override val typeTag: Some[TypeTag[Short]] = Some(implicitly[TypeTag[Short]])
   override def parse(s: String): ResultResponse[Short] =
     try SuccessResponse(s.toShort)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
 }
 
 object StringParser {
@@ -68,7 +70,7 @@ object StringParser {
     override def parse(s: String): ResultResponse[String] = SuccessResponse(s)
   }
 
-  private[bits] val invalidNumberFormat = FailureResponse.badRequest("Invalid number format.")
-  private[bits] val invalidBooleanFormat = FailureResponse.badRequest("Invalid Boolean Format. Use 'true' or 'false'")
-
+  def invalidNumberFormat(n : String) = FailureResponse.pure {
+    BadRequest.pure(s"Invalid number format: '$n'")
+  }
 }

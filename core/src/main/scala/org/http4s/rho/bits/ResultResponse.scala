@@ -45,17 +45,17 @@ case class FailureResponse(reason: FailureReason) extends ResultResponse[Nothing
 }
 
 object FailureResponse {
-  def badRequest(reason: String): FailureResponse = FailureResponse(ResponseReason(BadRequest.pure(reason)))
+  def badRequest(reason: String): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
 
-  def pure(response: Task[Response]): FailureResponse = FailureResponse(ResponseReason(response))
+  def pure(response: =>Task[Response]): FailureResponse = FailureResponse(new ResponseReason(response))
 
-  def result(result: Task[BaseResult]): FailureResponse = pure(result.map(_.resp))
+  def result(result: =>Task[BaseResult]): FailureResponse = pure(result.map(_.resp))
 
   trait FailureReason {
     def toResponse: Task[Response]
   }
   
-  case class ResponseReason(response: Task[Response]) extends FailureReason {
+  class ResponseReason(response: =>Task[Response]) extends FailureReason {
     def toResponse = response
   }
 }

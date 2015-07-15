@@ -29,7 +29,7 @@ trait ExecutableCompiler {
       case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
 
       case HeaderExists(key, f) => req.headers.get(key) match {
-        case Some(h) => f(h).fold[ResultResponse[HList]](SuccessResponse(stack))(FailureResponse.result)
+        case Some(h) => f(h).fold[ResultResponse[HList]](SuccessResponse(stack))(f => FailureResponse.result(f))
         case None => FailureResponse.badRequest(s"Missing header: ${key.name}")
       }
 
