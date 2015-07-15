@@ -40,16 +40,8 @@ trait RhoService extends bits.MethodAliases
 
   override def toString(): String = s"RhoService(${__tree.toString()})"
 
-  private def attempt(f: () => Task[Response]): Task[Response] = {
-    try f()
-    catch { case t: Throwable => onError(t) }
-  }
-
-  private def onBadRequest(s: String): Task[Response] =
+  protected def onBadRequest(s: String): Task[Response] =
     genMessage(Status.BadRequest, s)
-
-  def onError(t: Throwable): Task[Response] =
-    genMessage(Status.InternalServerError, t.getMessage)
 
   private def genMessage(status: Status, reason: String): Task[Response] = {
     val w = EntityEncoder.stringEncoder

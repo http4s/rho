@@ -244,7 +244,7 @@ private[rho] object PathTree {
             case Some(l) => l.attempt(req, stack)
             case None =>
               val result = tryVariadic(NoMatch)
-              if (!result.isEmpty || end.keys.isEmpty || method == Method.OPTIONS) result
+              if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
               else {
                 val ms = end.keys
                 val allowedMethods = ms.mkString(", ")
@@ -257,7 +257,7 @@ private[rho] object PathTree {
     }
   }
 
-  final case class MatchNode(name:    String,
+  final case class MatchNode(name:     String,
                              matches:  Map[String, MatchNode] = Map.empty,
                              captures: List[CaptureNode] = Nil,
                              variadic: Map[Method,Leaf] = Map.empty,
@@ -276,11 +276,11 @@ private[rho] object PathTree {
     }
   }
 
-  final case class CaptureNode(parser: StringParser[_],
+  final case class CaptureNode(parser:   StringParser[_],
                                matches:  Map[String, MatchNode] = Map.empty,
                                captures: List[CaptureNode] = Nil,
                                variadic: Map[Method,Leaf] = Map.empty,
-                               end: Map[Method,Leaf] = Map.empty) extends Node {
+                               end:      Map[Method,Leaf] = Map.empty) extends Node {
     type Self = CaptureNode
     override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
@@ -297,6 +297,7 @@ private[rho] object PathTree {
 
   // This ordering can get a little funky here. It is defined such that nodes in c2 get promoted in order if
   // they are also found in c1.
+  // TODO: should we just concat the lists and be done with it? That would make captures a linear search...
   private def mergeCaptures(c1: List[CaptureNode], c2: List[CaptureNode]): List[CaptureNode] = {
     val first = c1.map { c => c2.find(_.parser eq c.parser).map(c merge _).getOrElse(c) }
     val last  = c2.filterNot { c => c1.exists(_.parser eq c.parser) }
