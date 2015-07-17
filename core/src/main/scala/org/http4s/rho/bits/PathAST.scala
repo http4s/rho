@@ -13,6 +13,8 @@ import scala.reflect.runtime.universe.TypeTag
 
 import org.http4s.rho.UriConvertible
 
+import scalaz.concurrent.Task
+
 /** Actual elements which build up the AST */
 object PathAST {
 

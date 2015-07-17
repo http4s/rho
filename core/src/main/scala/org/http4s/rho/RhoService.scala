@@ -2,7 +2,6 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits._
-import PathTree.ResponseAction
 import org.http4s.server.{ Service, HttpService }
 
 import org.log4s.getLogger
@@ -28,12 +27,11 @@ trait RhoService extends bits.MethodAliases
 
   private def findRoute(req: Request): Task[Option[Response]] = {
     logger.trace(s"Request: ${req.method}:${req.uri}")
-    val routeResult: RouteResult[ResponseAction] = __tree.getResult(req)
+    val routeResult: RouteResult[Task[Response]] = __tree.getResult(req)
     routeResult match {
       case NoMatch              => Task.now(None)
-      case ParserSuccess(t)     => attempt(t).map(Some(_))
-      case ParserFailure(s)     => onBadRequest(s).map(Some(_))
-      case ValidationFailure(r) => r.map( r => Some(r.resp))
+      case SuccessResponse(t)     => t.map(Some(_))
+      case FailureResponse(r)     => r.toResponse.map(Some(_))
     }
   }
 
@@ -41,16 +39,8 @@ trait RhoService extends bits.MethodAliases
 
   override def toString(): String = s"RhoService(${__tree.toString()})"
 
-  private def attempt(f: () => Task[Response]): Task[Response] = {
-    try f()
-    catch { case t: Throwable => onError(t) }
-  }
-
-  private def onBadRequest(s: String): Task[Response] =
+  protected def onBadRequest(s: String): Task[Response] =
     genMessage(Status.BadRequest, s)
-
-  def onError(t: Throwable): Task[Response] =
-    genMessage(Status.InternalServerError, t.getMessage)
 
   private def genMessage(status: Status, reason: String): Task[Response] = {
     val w = EntityEncoder.stringEncoder

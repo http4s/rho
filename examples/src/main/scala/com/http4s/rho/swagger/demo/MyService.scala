@@ -3,14 +3,10 @@ package com.http4s.rho.swagger.demo
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.http4s.Uri
-import org.http4s.UrlForm
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
-import org.http4s.scalaxml._
 
 import JsonEncoder.AutoSerializable
-import org.http4s.util.UrlFormCodec
-import scalaz._
 import scalaz.Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream.Process
@@ -51,13 +47,13 @@ object MyService extends RhoService with SwaggerSupport {
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
       if (i >= 0) Ok(JsonResult("Good result", i))
-      else BadRequest(<html><body>Negative number: { i }</body></html>)
+      else BadRequest(s"Negative number: $i")
     }
 
   "This gets a simple counter for the number of times this route has been requested" **
     GET / "counter" |>> {
       val i = new AtomicInteger(0)
-      Task(<html><body><h2>{ s"The number is ${i.getAndIncrement()}" }</h2></body></html>)
+      Task(s"The number is ${i.getAndIncrement()}")
     }
 
   "Adds the cookie Foo=bar to the client" **
@@ -67,22 +63,22 @@ object MyService extends RhoService with SwaggerSupport {
 
   "Sets the cookie Foo=barr to the client" **
     GET / "addbadcookie" |>> {
-    Ok("You now have an evil cookie!").addCookie("Foo", "barr")
-  }
+      Ok("You now have an evil cookie!").addCookie("Foo", "barr")
+    }
 
   "Checks the Foo cookie to make sure its 'bar'" **
     GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
 
   "Clears the cookies" **
     GET / "clearcookies" |>> { req: Request =>
-    val hs = req.headers.get(headers.Cookie) match {
-      case None => Headers.empty
-      case Some(cookie) =>
-        Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(DateTime.UnixEpoch), maxAge = Some(0)))})
-    }
+      val hs = req.headers.get(headers.Cookie) match {
+        case None => Headers.empty
+        case Some(cookie) =>
+          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(DateTime.UnixEpoch), maxAge = Some(0)))})
+      }
 
-    Ok("Deleted cookies!").withHeaders(hs)
-  }
+      Ok("Deleted cookies!").withHeaders(hs)
+    }
 
   "This route allows your to post stuff" **
     POST / "post" ^ EntityDecoder.text |>> { body: String =>

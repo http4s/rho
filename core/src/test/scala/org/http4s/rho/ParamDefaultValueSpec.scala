@@ -91,13 +91,13 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test3")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test3?param1=")) must be equalTo "Invalid Number Format: \"\""
+      body(requestGet("/test3?param1=")) must be equalTo "Invalid number format: ''"
     }
     "map parameter with numeric value" in {
       body(requestGet("/test3?param1=12345")) must be equalTo "test3:12345"
     }
     "fail to map parameter with non-numeric value" in {
-      body(requestGet("/test3?param1=value1")) must be equalTo "Invalid Number Format: \"value1\""
+      body(requestGet("/test3?param1=value1")) must be equalTo "Invalid number format: 'value1'"
     }
     "map parameter without value" in {
       body(requestGet("/test3?param1")) must be equalTo default
@@ -126,13 +126,13 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test5")) must be equalTo default
     }
     "fail on parameter with empty value" in {
-      body(requestGet("/test5?param1=")) must be equalTo "Invalid Number Format: \"\""
+      body(requestGet("/test5?param1=")) must be equalTo "Invalid number format: ''"
     }
     "map parameter with numeric value" in {
       body(requestGet("/test5?param1=12345")) must be equalTo "test5:12345"
     }
     "fail on parameter with non-numeric value" in {
-      body(requestGet("/test5?param1=value1")) must be equalTo "Invalid Number Format: \"value1\""
+      body(requestGet("/test5?param1=value1")) must be equalTo "Invalid number format: 'value1'"
     }
     "map parameter without value" in {
       body(requestGet("/test5?param1")) must be equalTo default
@@ -180,19 +180,19 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test8")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test8?param1=")) must be equalTo "Invalid Number Format: \"\""
+      body(requestGet("/test8?param1=")) must be equalTo "Invalid number format: ''"
     }
     "map parameter with one numeric value" in {
       body(requestGet("/test8?param1=12345")) must be equalTo "test8:12345"
     }
     "fail to map parameter with one non-numeric value" in {
-      body(requestGet("/test8?param1=test")) must be equalTo "Invalid Number Format: \"test\""
+      body(requestGet("/test8?param1=test")) must be equalTo "Invalid number format: 'test'"
     }
     "map parameter with many numeric values" in {
       body(requestGet("/test8?param1=123&param1=456&param1=789")) must be equalTo "test8:123,456,789"
     }
     "fail to map parameter with many non-numeric values" in {
-      body(requestGet("/test8?param1=abc&param1=def")) must be equalTo "Invalid Number Format: \"abc\""
+      body(requestGet("/test8?param1=abc&param1=def")) must be equalTo "Invalid number format: 'abc'"
     }
     "map parameter without value" in {
       body(requestGet("/test8?param1")) must be equalTo default
@@ -224,13 +224,13 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test10")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test10?param1=")) must be equalTo "Invalid Number Format: \"\""
+      body(requestGet("/test10?param1=")) must be equalTo "Invalid number format: ''"
     }
     "fail to map parameter with invalid numeric value" in {
       body(requestGet("/test10?param1=-4")) must be equalTo "Invalid query parameter: \"-4\""
     }
     "fail to map parameter with non-numeric value" in {
-      body(requestGet("/test10?param1=value1")) must be equalTo "Invalid Number Format: \"value1\""
+      body(requestGet("/test10?param1=value1")) must be equalTo "Invalid number format: 'value1'"
     }
     "map parameter with valid numeric value" in {
       body(requestGet("/test10?param1=10")) must be equalTo "test10:10"
@@ -246,13 +246,13 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test11")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test11?param1=")) must be equalTo "Invalid Number Format: \"\""
+      body(requestGet("/test11?param1=")) must be equalTo "Invalid number format: ''"
     }
     "fail to map parameter with invalid numeric value" in {
       body(requestGet("/test11?param1=0")) must be equalTo "Invalid query parameter: \"Some(0)\""
     }
     "fail to map parameter with non-numeric value" in {
-      body(requestGet("/test11?param1=value1")) must be equalTo "Invalid Number Format: \"value1\""
+      body(requestGet("/test11?param1=value1")) must be equalTo "Invalid number format: 'value1'"
     }
     "map parameter with valid numeric value" in {
       body(requestGet("/test11?param1=1")) must be equalTo "test11:1"
@@ -309,16 +309,16 @@ class ParamDefaultValueSpec extends Specification {
       body(requestGet("/test14")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(requestGet("/test14?param1=")) must be equalTo "Invalid Number Format: \"\""
+      body(requestGet("/test14?param1=")) must be equalTo "Invalid number format: ''"
     }
     "fail to map parameter with one invalid numeric value" in {
       body(requestGet("/test14?param1=8&param1=5&param1=3")) must be equalTo "Invalid query parameter: \"List(8, 5, 3)\""
     }
     "fail to map parameter with one non-numeric value" in {
-      body(requestGet("/test14?param1=test")) must be equalTo "Invalid Number Format: \"test\""
+      body(requestGet("/test14?param1=test")) must be equalTo "Invalid number format: 'test'"
     }
     "fail to map parameter with many non-numeric values" in {
-      body(requestGet("/test14?param1=abc&param1=def")) must be equalTo "Invalid Number Format: \"abc\""
+      body(requestGet("/test14?param1=abc&param1=def")) must be equalTo "Invalid number format: 'abc'"
     }
     "map parameter with many valid numeric values" in {
       body(requestGet("/test14?param1=1&param1=2&param1=3")) must be equalTo "test14:1,2,3"

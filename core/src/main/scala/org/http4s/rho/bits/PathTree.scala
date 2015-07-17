@@ -2,22 +2,25 @@ package org.http4s
 package rho
 package bits
 
+import org.http4s.rho.bits.FailureResponse.ResponseReason
+
 import scala.language.existentials
 
-import org.http4s.rho.bits.HeaderAST.HeaderRule
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.QueryAST.QueryRule
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 
 import shapeless.{HNil, HList}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.util.control.NonFatal
 
 import scalaz.concurrent.Task
 
+import org.log4s.getLogger
+
 /** Rho specific implementation of the PathTree */
-final class PathTree private(paths: PathTree.Node) {
+final class PathTree private(private val paths: PathTree.MatchNode) {
   import PathTree._
 
   override def toString = paths.toString()
@@ -29,14 +32,18 @@ final class PathTree private(paths: PathTree.Node) {
     new PathTree(newNode)
   }
 
-  def getResult(req: Request): RouteResult[ResponseAction] = paths.walkTree(req.method, req)
+  def merge(other: PathTree): PathTree = new PathTree(paths merge other.paths)
+
+  def getResult(req: Request): RouteResult[Task[Response]] = paths.walkTree(req.method, req)
 }
 
 private[rho] object PathTree {
 
-  type ResponseAction = () => Task[Response]
+  private val logger = getLogger
 
-  def apply(): PathTree = new PathTree(new HeadNode())
+  type Action = ResultResponse[Task[Response]]
+
+  def apply(): PathTree = new PathTree(MatchNode(""))
 
   object ValidationTools extends ExecutableCompiler
 
@@ -65,19 +72,19 @@ private[rho] object PathTree {
   private def makeLeaf[T <: HList](route: RhoRoute[T]): Leaf = {
     route.router match {
       case Router(method, _, query, vals) =>
-        Leaf(query, vals, None){ (req, pathstack) =>
+        Leaf { (req, pathstack) =>
           for {
             i <- ValidationTools.runQuery(req, query, pathstack)
             j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
-          } yield () => route.action.act(req, j.asInstanceOf[T])
+          } yield route.action.act(req, j.asInstanceOf[T])
         }
 
       case c @ CodecRouter(_, parser) =>
-        Leaf(c.router.query, c.headers, Some(parser)){ (req, pathstack) =>
+        Leaf { (req, pathstack) =>
           for {
             i <- ValidationTools.runQuery(req, c.router.query, pathstack)
             j <- ValidationTools.runValidation(req, c.headers, i)
-          } yield () => parser.decode(req).run.flatMap(_.fold(e =>
+          } yield parser.decode(req).run.flatMap(_.fold(e =>
             Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
           { body =>
             // `asInstanceOf` to turn the untyped HList to type T
@@ -89,15 +96,14 @@ private[rho] object PathTree {
 
   //////////////////////////////////////////////////////
 
-  private object Leaf {
-    def apply(query: QueryRule, vals: HeaderRule, codec: Option[EntityDecoder[_]])
-             (f: (Request, HList) => ParserResult[ResponseAction]): Leaf = SingleLeaf(f)
+  object Leaf {
+    def apply(f: (Request, HList) => Action): Leaf = SingleLeaf(f)
   }
 
   /** Leaves of the PathTree */
-  private trait Leaf {
+  sealed trait Leaf {
     /** Attempt to match this leaf */
-    def attempt(req: Request, stack: HList): ParserResult[ResponseAction]
+    def attempt(req: Request, stack: HList): Action
 
     /** Concatenate this leaf with another, giving the first precedence */
     final def ++(l: Leaf): Leaf = (this, l) match {
@@ -108,229 +114,211 @@ private[rho] object PathTree {
     }
   }
 
-  final private case class SingleLeaf(f: (Request, HList) => ParserResult[ResponseAction]) extends Leaf {
-    override def attempt(req: Request, stack: HList): ParserResult[ResponseAction] = f(req, stack)
+  final private case class SingleLeaf(f: (Request, HList) => Action) extends Leaf {
+    override def attempt(req: Request, stack: HList): Action = {
+      try f(req, stack)
+      catch { case NonFatal(t) =>
+        logger.error(t)("Error in action execution")
+        SuccessResponse(Task.now(Response(status = Status.InternalServerError)))
+      }
+    }
   }
 
 
   final private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
-    override def attempt(req: Request, stack: HList): ParserResult[ResponseAction] = {
-      @tailrec
-      def go(l: List[SingleLeaf], error: ParserResult[Nothing]): ParserResult[ResponseAction] = if (l.nonEmpty) {
-        l.head.attempt(req, stack) match {
-          case r@ParserSuccess(_) => r
-          case e@ParserFailure(_) => go(l.tail, if (error != null) error else e)
-          case e@ValidationFailure(_) => go(l.tail, if (error != null) error else e)
+    override def attempt(req: Request, stack: HList): Action = {
+      def go(l: List[SingleLeaf], error: ResultResponse[Nothing]): Action = {
+        if (l.nonEmpty) l.head.attempt(req, stack) match {
+          case r@SuccessResponse(_)     => r
+          case e@FailureResponse(_)   => go(l.tail, if (error != null) error else e)
         }
-      } else if (error != null) error else sys.error("Leaf was empty!")
+        else if (error != null) error else sys.error("Leaf was empty!")
+      }
       go(leaves, null)
     }
   }
 
-  /** Nodes that form the path tree */
-  private abstract class Node {
+  sealed trait Node {
 
-    protected def paths: List[Node]
+    type Self <: Node
 
-    protected def end: Map[Method, Leaf]
+    def matches: Map[String, MatchNode]
 
-    protected def variadic: Map[Method, Leaf]
+    def captures: List[CaptureNode]
 
-    protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): Node
+    def variadic: Map[Method,Leaf]
 
-    protected def addNode(n: Node): Node
+    def end: Map[Method,Leaf]
 
-    protected def replaceNode(o: Node, n: Node): Node
+    def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): Self
 
-    protected def matchString(s: String, stack: HList): HList
+    def merge(other: Self): Self
 
-    // Appends the action to the tree by walking the PathRule stack, returning a new Node structure
-    final def append(tail: PathRule, method: Method, action: Leaf): Node = append(tail::Nil, method, action)
+    final def append(tail: PathRule, method: Method, action: Leaf): Self = append(tail::Nil, method, action)
 
-    final protected def append(tail: List[PathRule], method: Method, action: Leaf): Node = tail match {
+    // Add elements to the tree
+    final protected def append(tail: List[PathRule], method: Method, action: Leaf): Self = tail match {
       case h::tail => h match {
         case PathAnd(p1, p2) => append(p1::p2::tail, method, action)
 
-        case PathOr(p1, p2) => append(p1::tail, method, action).append(p2::tail, method, action)
+        case PathOr(p1, p2) => append(p1::tail, method, action).append(p2::tail, method, action).asInstanceOf[Self]
 
         case MetaCons(r, _) => append(r::tail, method, action)  // discard metadata
 
         case PathMatch("") if !tail.isEmpty => append(tail, method, action) // "" is a NOOP in the middle of a path
 
+          // the rest of the types need to rewrite a node
         case PathMatch(s) =>
-          paths.collectFirst { case n@MatchNode(s1,_,_,_) if s == s1 => n } match {
-            case Some(n) => replaceNode(n, n.append(tail, method, action))
-            case None    => addNode(MatchNode(s).append(tail, method, action))
-          }
+          val next = matches.getOrElse(s, MatchNode(s)).append(tail, method, action)
+          clone(matches.updated(s, next), captures, variadic, end)
 
         case PathCapture(_, p, _) =>
-          paths.collectFirst{ case n@ CaptureNode(p1,_,_,_) if p1 eq p => n } match {
-            case Some(w) => replaceNode(w, w.append(tail, method, action))
-            case None    => addNode(CaptureNode(p).append(tail, method, action))
+          val exists = captures.exists{ case CaptureNode(p1,_,_,_,_) => p1 eq p }
+          val all = if (exists) captures.map {
+            case n@ CaptureNode(p1,_,_,_,_) if p1 eq p => n.append(tail, method, action)
+            case n => n
           }
+          else CaptureNode(p).append(tail, method, action)::captures
+
+          clone(matches, all, variadic, end)
 
         case CaptureTail =>
           val l = variadic.get(method).map(_ ++ action).getOrElse(action)
           val v = variadic.updated(method, l)
-          clone(paths, v, end)
+          clone(matches, captures, v, end)
       }
 
       case Nil =>  // this is the end of the stack
         val l = end.get(method).map(_ ++ action).getOrElse(action)
         val e = end.updated(method, l)
-        clone(paths, variadic, e)
+        clone(matches, captures, variadic, e)
     }
+
 
     /** This function traverses the tree, matching paths in order of priority, provided they path the matches function:
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    final def walkTree(method: Method, req: Request): RouteResult[ResponseAction] = {
+    final def walkTree(method: Method, req: Request): RouteResult[Task[Response]] = {
       val path = keyToPath(req)
-      walk(method, req, if (path.nonEmpty) path else ""::Nil, HNil)
+      walk(method, req, path, HNil)
     }
 
-    def walk(method: Method, req: Request, path: List[String], stack: HList): RouteResult[ResponseAction] = {
-      val h = matchString(path.head, stack)
-      if (h != null) {
-        if (path.tail.isEmpty) {
-          end.get(method).map(_.attempt(req, h)) orElse
-            variadic.get(method).map(_.attempt(req, Nil::h)) getOrElse {
-            if (end.keys.isEmpty || method == Method.OPTIONS) NoMatch
-            else {
-              val ms = end.keys
-              val allowedMethods = ms.mkString(", ")
-              val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-              ValidationFailure(MethodNotAllowed(msg)
-                .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
-            }
-          }
+    // This should scan all forward paths.
+    final protected def walk(method: Method, req: Request, path: List[String], stack: HList): RouteResult[Task[Response]] = {
+      def tryVariadic(result: RouteResult[Task[Response]]): RouteResult[Task[Response]] =
+        variadic.get(method) match {
+          case None    => result
+          case Some(l) => l.attempt(req, path::stack)
         }
-        else {
-          @tailrec             // warning: `error` may be null
-          def go(nodes: List[Node], error: ParserResult[Nothing]): ParserResult[ResponseAction] = {
-            if (nodes.isEmpty) error
-            else nodes.head.walk(method, req, path.tail, h) match {
-              case NoMatch                 => go(nodes.tail, error)
-              case r@ ParserSuccess(_)     => r
-              case e@ ParserFailure(_)     => go(nodes.tail, if (error != null) error else e)
-              case e@ ValidationFailure(_) => go(nodes.tail, if (error != null) error else e)
-            }
+
+      path match {
+        case h::t =>
+          val exact = matches.get(h) match {
+            case Some(n) => n.walk(method, req, t, stack)
+            case None    => NoMatch
           }
 
-          val routeMatch = go(paths, null)
-          if (routeMatch != null) routeMatch
-          else variadic.get(method).map(_.attempt(req, path.tail::h)).getOrElse(NoMatch)
-        }
+          @tailrec
+          def go(children: List[CaptureNode], error: RouteResult[Task[Response]]): RouteResult[Task[Response]] = children match {
+              case (c@CaptureNode(p,_,cs,_,_))::ns =>
+                p.parse(h) match {
+                  case SuccessResponse(r) =>
+                    val n = c.walk(method, req, t, r::stack)
+                    if (n.isSuccess)        n
+                    else if (error.isEmpty) go(ns, n)
+                    else                    go(ns, error)
 
-      }
-      else NoMatch
-    }
+                  case r@FailureResponse(_) => go(ns, if (error.isEmpty) r else error)
+                }
 
-    // Searches the available nodes and replaces the current one
-    protected def replace(o: Node, n: Node): List[Node] = {
-      val b = new ListBuffer[Node]
-      def go(l: List[Node]): List[Node] = l match {
-        case h::tail if h eq o => b += n; b.prependToList(tail)
-        case h::tail           => b += h; go(tail)
-        case _                 => sys.error("Shouldn't get here!")
-      }
-      go(paths)
-    }
-  }
-
-  /** Root node */
-  private case class HeadNode(paths: List[Node] = Nil,
-                              variadic: Map[Method,Leaf] = Map.empty,
-                              end: Map[Method,Leaf] = Map.empty) extends Node {
-
-    override def walk(method: Method, req: Request, path: List[String], stack: HList): RouteResult[ResponseAction] = {
-      if (path.isEmpty) end.get(method) orElse variadic.get(method) match {
-        case Some(f) => f.attempt(req, stack)
-        case None    => NoMatch
-      }
-      else {
-        @tailrec               // error may be null
-        def go(ns: List[Node], error: ParserResult[Nothing]): RouteResult[ResponseAction] = ns match {
-          case Nil   => error
-          case n::ns => n.walk(method, req, path, stack) match {
-            case NoMatch                 => go(ns, error)
-            case r@ ParserSuccess(_)     => r
-            case e@ ParserFailure(_)     => go(ns, if (error != null) error else e)
-            case e@ ValidationFailure(_) => go(ns, if (error != null) error else e)
+              case Nil => tryVariadic(error)// try the variadiac
           }
-        }
 
-        val routeMatch = go(paths, null)
-        if (routeMatch != null) routeMatch
-        else variadic.get(method) match {
-          case Some(f) => f.attempt(req, path.tail::stack)
-          case None    => NoMatch
-        }
-      }
-    }
+          if (exact.isSuccess) exact
+          else go(captures, exact)
 
-    override protected def replaceNode(o: Node, n: Node): HeadNode = copy(paths = replace(o, n))
+        case Nil =>
+          end.get(method) match {
+            case Some(l) => l.attempt(req, stack)
+            case None =>
+              val result = tryVariadic(NoMatch)
+              if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
+              else FailureResponse.pure {
+                val ms = end.keys
+                val allowedMethods = ms.mkString(", ")
+                val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
+                MethodNotAllowed.pure(msg)
+                  .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*))
+              }
 
-    override protected def addNode(n: Node): HeadNode = n match {
-      case n: CaptureNode => copy(paths = paths:+n)
-      case n: MatchNode   => copy(paths = n::paths)
-      case n: HeadNode    => sys.error("Shouldn't get here!")
-    }
-
-    override protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): HeadNode =
-      copy(paths = paths, variadic = variadic, end = end)
-
-    override protected def matchString(s: String, stack: HList): HList = {
-      if (s.length == 0) stack
-      else sys.error("Invalid start string")
-    }
-  }
-
-  /** Node that parses a segment */
-  final private case class CaptureNode(parser: StringParser[_],
-                                       paths: List[Node] = Nil,
-                                       variadic: Map[Method,Leaf] = Map.empty,
-                                       end: Map[Method,Leaf] = Map.empty) extends Node
-  {
-
-
-    override protected def replaceNode(o: Node, n: Node): CaptureNode = copy(paths = replace(o, n))
-
-    override protected def addNode(n: Node): CaptureNode = n match {
-      case n: CaptureNode => copy(paths = paths:+n)
-      case n: MatchNode   => copy(paths = n::paths)
-      case n: HeadNode    => sys.error("Shouldn't get here!")
-    }
-
-    override protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): CaptureNode =
-      copy(paths = paths, variadic = variadic, end = end)
-
-    override protected def matchString(s: String, h: HList): HList = {
-      parser.parse(s) match {
-        case ParserSuccess(v) => v::h
-        case _ => null
+          }
       }
     }
   }
 
-  /** Node that matches a path segment */
-  final private case class MatchNode(name: String,
-                                     paths: List[Node] = Nil,
-                                     variadic: Map[Method,Leaf] = Map.empty,
-                                     end: Map[Method,Leaf] = Map.empty) extends Node {
+  final case class MatchNode(name:     String,
+                             matches:  Map[String, MatchNode] = Map.empty,
+                             captures: List[CaptureNode] = Nil,
+                             variadic: Map[Method,Leaf] = Map.empty,
+                             end:      Map[Method,Leaf] = Map.empty) extends Node {
+    type Self = MatchNode
+    override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
+      copy(matches = matches, captures = captures, variadic = variadic, end = end)
 
-    override protected def replaceNode(o: Node, n: Node): MatchNode = copy(paths = replace(o, n))
+    override def merge(other: Self): Self = {
+      require(other.name == name, s"Matchnodes don't have the same name, this: $name, that: ${other.name}.")
 
-    override protected def addNode(n: Node): MatchNode = n match {
-      case n: CaptureNode => copy(paths = paths:+n)
-      case n: MatchNode   => copy(paths = n::paths)
-      case n: HeadNode    => sys.error("Shouldn't get here!")
+      clone(mergeMatches(matches, other.matches),
+            mergeCaptures(captures, other.captures),
+            mergeLeaves(variadic, other.variadic),
+            mergeLeaves(end, other.end))
     }
+  }
 
-    override protected def clone(paths: List[Node], variadic: Map[Method,Leaf], end: Map[Method,Leaf]): MatchNode =
-      copy(paths = paths, variadic = variadic, end = end)
+  final case class CaptureNode(parser:   StringParser[_],
+                               matches:  Map[String, MatchNode] = Map.empty,
+                               captures: List[CaptureNode] = Nil,
+                               variadic: Map[Method,Leaf] = Map.empty,
+                               end:      Map[Method,Leaf] = Map.empty) extends Node {
+    type Self = CaptureNode
+    override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
+      copy(matches = matches, captures = captures, variadic = variadic, end = end)
 
-    override protected def matchString(s: String, h: HList): HList = if (s == name) h else null
+    override def merge(other: Self): Self = {
+      require(other.parser eq parser, s"Cannot merge ${this.getClass.getSimpleName}s that have different parsers")
+
+      clone(mergeMatches(matches, other.matches),
+            mergeCaptures(captures, other.captures),
+            mergeLeaves(variadic, other.variadic),
+            mergeLeaves(end, other.end))
+    }
+  }
+
+  // This ordering can get a little funky here. It is defined such that nodes in c2 get promoted in order if
+  // they are also found in c1.
+  // TODO: should we just concat the lists and be done with it? That would make captures a linear search...
+  private def mergeCaptures(c1: List[CaptureNode], c2: List[CaptureNode]): List[CaptureNode] = {
+    val first = c1.map { c => c2.find(_.parser eq c.parser).map(c merge _).getOrElse(c) }
+    val last  = c2.filterNot { c => c1.exists(_.parser eq c.parser) }
+    first ++ last
+  }
+
+  private def mergeMatches(m1: Map[String, MatchNode], m2: Map[String, MatchNode]): Map[String, MatchNode] =
+    mergeMaps(m1, m2)(_ merge _)
+
+  private def mergeLeaves(l1: Map[Method,Leaf], l2: Map[Method,Leaf]): Map[Method,Leaf] =
+    mergeMaps(l1, l2)(_ ++ _)
+
+  private def mergeMaps[K,V](m1: Map[K,V], m2: Map[K,V])(merge: (V,V) => V): Map[K,V] = {
+    val allMatches = m1.keySet ++ m2.keySet
+    allMatches.toSeq.map{ k =>
+      (m1.get(k), m2.get(k)) match {
+        case (Some(l1), Some(l2)) => (k, merge(l1,l2))
+        case (Some(l1), None)     => (k, l1)
+        case (None, Some(l2))     => (k, l2)
+        case (None, None)         => sys.error("Shouldn't get here: each name should be defined in at least one of the maps")
+      }
+    }.toMap
   }
 }

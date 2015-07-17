@@ -89,9 +89,13 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "Return a 405 when a path is defined but the method doesn't match" in {
       val request = Request(Method.POST, uri("/hello"))
-      val resp = service.toService(request).run.get
-      resp.status must_== Status.MethodNotAllowed
-      resp.headers.get("Allow".ci) must beSome(Header.Raw("Allow".ci, "GET"))
+      val resp = service.toService(request).run
+      resp.map(_.status) must beSome(Status.MethodNotAllowed)
+      resp.flatMap(_.headers.get("Allow".ci)) must beSome(Header.Raw("Allow".ci, "GET"))
+    }
+
+    "Yield `MethodNotAllowed` when invalid method used" in {
+      service.toService(Put("/one/two/three")).run.map(_.status) must beSome(Status.MethodNotAllowed)
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
@@ -130,10 +134,6 @@ class RhoServiceSpec extends Specification with RequestRunner {
       service.toService(Get("/one/two")).run must_== None
     }
 
-    "Yield `MethodNotAllowed` when invalid method used" in {
-      service.toService(Put("/one/two/three")).run.get.status must_== Status.MethodNotAllowed
-    }
-
     "Fail a route with a missing query" in {
       val req = Get("/hello/headers")
       checkError(req) should_== "Missing query param: foo"
@@ -141,7 +141,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "Fail a route with an invalid query" in {
       val req = Get("/hello/headers?foo=bar")
-      checkError(req) should_== "Invalid Number Format: \"bar\""
+      checkError(req) should_== "Invalid number format: 'bar'"
     }
 
     "Execute a route with multiple query with parameters" in {
@@ -168,7 +168,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "Fail a route with an invalid parameter type" in {
       val req = Get("/hello/default/parameter?some=a")
-      checkError(req) should_== "Invalid Number Format: \"a\""
+      checkError(req) should_== "Invalid number format: 'a'"
     }
 
     "Execute a route with a competing query" in {
