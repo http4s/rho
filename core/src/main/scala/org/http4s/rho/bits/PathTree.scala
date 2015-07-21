@@ -2,8 +2,6 @@ package org.http4s
 package rho
 package bits
 
-import org.http4s.rho.bits.FailureResponse.ResponseReason
-
 import scala.language.existentials
 
 import org.http4s.rho.bits.PathAST._
@@ -138,9 +136,7 @@ private[rho] object PathTree {
     }
   }
 
-  sealed trait Node {
-
-    type Self <: Node
+  sealed trait Node[Self <: Node[Self]] {
 
     def matches: Map[String, MatchNode]
 
@@ -161,7 +157,7 @@ private[rho] object PathTree {
       case h::tail => h match {
         case PathAnd(p1, p2) => append(p1::p2::tail, method, action)
 
-        case PathOr(p1, p2) => append(p1::tail, method, action).append(p2::tail, method, action).asInstanceOf[Self]
+        case PathOr(p1, p2) => append(p1::tail, method, action).append(p2::tail, method, action)
 
         case MetaCons(r, _) => append(r::tail, method, action)  // discard metadata
 
@@ -261,13 +257,13 @@ private[rho] object PathTree {
                              matches:  Map[String, MatchNode] = Map.empty,
                              captures: List[CaptureNode] = Nil,
                              variadic: Map[Method,Leaf] = Map.empty,
-                             end:      Map[Method,Leaf] = Map.empty) extends Node {
-    type Self = MatchNode
-    override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
+                             end:      Map[Method,Leaf] = Map.empty) extends Node[MatchNode] {
+
+    override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): MatchNode =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
 
-    override def merge(other: Self): Self = {
-      require(other.name == name, s"Matchnodes don't have the same name, this: $name, that: ${other.name}.")
+    override def merge(other: MatchNode): MatchNode = {
+      require(other.name == name, s"${this.getClass.getSimpleName}s don't have the same name, this: $name, that: ${other.name}.")
 
       clone(mergeMatches(matches, other.matches),
             mergeCaptures(captures, other.captures),
@@ -280,12 +276,12 @@ private[rho] object PathTree {
                                matches:  Map[String, MatchNode] = Map.empty,
                                captures: List[CaptureNode] = Nil,
                                variadic: Map[Method,Leaf] = Map.empty,
-                               end:      Map[Method,Leaf] = Map.empty) extends Node {
-    type Self = CaptureNode
-    override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): Self =
+                               end:      Map[Method,Leaf] = Map.empty) extends Node[CaptureNode] {
+
+    override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): CaptureNode =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
 
-    override def merge(other: Self): Self = {
+    override def merge(other: CaptureNode): CaptureNode = {
       require(other.parser eq parser, s"Cannot merge ${this.getClass.getSimpleName}s that have different parsers")
 
       clone(mergeMatches(matches, other.matches),
