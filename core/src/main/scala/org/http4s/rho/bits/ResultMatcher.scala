@@ -7,10 +7,16 @@ import scala.reflect.runtime.universe.{ Type, WeakTypeTag }
 import scalaz.concurrent.Task
 
 
-trait ResultMatcher[-R] {
-  def encodings: Set[MediaType]
-  def resultInfo: Set[ResultInfo]
+trait ResultMatcher[-R] { self =>
+  val encodings: Set[MediaType]
+  val resultInfo: Set[ResultInfo]
   def conv(req: Request, r: R): Task[Response]
+
+  def addInfo(moreEncodings: Set[MediaType], moreResultInfo: Set[ResultInfo]): ResultMatcher[R] = new ResultMatcher[R] {
+    override val encodings: Set[MediaType] = self.encodings ++ moreEncodings
+    override val resultInfo: Set[ResultInfo] = self.resultInfo ++ moreResultInfo
+    override def conv(req: Request, r: R): Task[Response] = self.conv(req, r)
+  }
 }
 
 object ResultMatcher {
@@ -347,7 +353,7 @@ object ResultMatcher {
       NOTEXTENDED,
       NETWORKAUTHENTICATIONREQUIRED]): Task[Response] = Task.now(r.resp)
 
-    override def resultInfo: Set[ResultInfo] = {
+    override val resultInfo: Set[ResultInfo] = {
       allTpes.flatMap { case (s, mw) =>
         mw.resultInfo.map( t => StatusAndType(s, t))
       }.toSet
@@ -428,20 +434,20 @@ object ResultMatcher {
   }
 
   implicit def writableMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[O] {
-    override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
-    override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
+    override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
+    override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
     override def conv(req: Request, r: O): Task[Response] = ResponseGeneratorInstances.Ok.pure(r)
   }
 
   implicit def taskMatcher[R](implicit r: ResultMatcher[R]): ResultMatcher[Task[R]] = new ResultMatcher[Task[R]] {
-    override def encodings: Set[MediaType] = r.encodings
-    override def resultInfo: Set[ResultInfo] = r.resultInfo
+    override val encodings: Set[MediaType] = r.encodings
+    override val resultInfo: Set[ResultInfo] = r.resultInfo
     override def conv(req: Request, t: Task[R]): Task[Response] = t.flatMap(r.conv(req, _))
   }
 
   implicit object ResponseMatcher extends ResultMatcher[Response] {
-    override def encodings: Set[MediaType] = Set.empty
+    override val encodings: Set[MediaType] = Set.empty
     override def conv(req: Request, r: Response): Task[Response] = Task.now(r)
-    override def resultInfo: Set[ResultInfo] = Set.empty
+    override val resultInfo: Set[ResultInfo] = Set.empty
   }
 }

@@ -300,7 +300,6 @@ class ApiTest extends Specification {
       val path = GET / "hello"
 
       val req = Request(uri = uri("/hello?foo=bar"))
-        .withHeaders(Headers(headers.`Content-Length`("foo".length)))
 
       val route1 = (path +? param[Int]("foo")) runWith { i: Int =>
         Ok("shouldn't get here.")
