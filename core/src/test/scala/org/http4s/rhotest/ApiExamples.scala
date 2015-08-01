@@ -107,7 +107,7 @@ class ApiExamples extends Specification {
         }
       }
 
-      true should_== true
+      ok
     }
   }
 

@@ -17,10 +17,10 @@ object HeaderAST {
 
     def ||(v: TypedHeader[T]): TypedHeader[T] = or(v)
 
-    def and[T1 <: HList](v: TypedHeader[T1])(implicit prepend: Prepend[T, T1]): TypedHeader[prepend.Out] =
+    def and[T1 <: HList](v: TypedHeader[T1])(implicit prepend: Prepend[T1, T]): TypedHeader[prepend.Out] =
       TypedHeader(HeaderAnd(this.rule, v.rule))
 
-    def &&[T1 <: HList](v: TypedHeader[T1])(implicit prepend: Prepend[T, T1]): TypedHeader[prepend.Out] = and(v)
+    def &&[T1 <: HList](v: TypedHeader[T1])(implicit prepend: Prepend[T1, T]): TypedHeader[prepend.Out] = and(v)
   }
 
   ///////////////// Header and body AST ///////////////////////
