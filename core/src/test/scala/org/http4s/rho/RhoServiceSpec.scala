@@ -37,7 +37,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     GET / "hello" / "compete" |>> Ok("route7")
 
     // Testing query params
-    GET / "query" / "twoparams" +? param[Int]("foo") & param[String]("bar") |>> { (foo: Int, bar: String) =>
+    GET / "query" / "twoparams" +? (param[Int]("foo") and param[String]("bar")) |>> { (foo: Int, bar: String) =>
       Ok("twoparams" + foo + bar)
     }
 

@@ -111,6 +111,33 @@ class ApiTest extends Specification {
 
     }
 
+    "accept compound or sequential header rules" in {
+
+      val path = POST / "hello" / 'world
+      val lplus1 = captureMap(headers.`Content-Length`)(_.length + 1)
+
+
+      val route1 = (path >>> lplus1 >>> capture(headers.ETag)).decoding(EntityDecoder.text) runWith {
+        (world: String, lplus1: Int, tag: headers.ETag, body: String) =>
+          Ok("")
+      }
+
+      val route2 = (path >>> (lplus1 && capture(headers.ETag))).decoding(EntityDecoder.text) runWith {
+        (world: String, lplus1: Int, tag: headers.ETag, body: String) =>
+          Ok("")
+      }
+
+      val body = Process.emit(ByteVector("cool".getBytes))
+      val req = Request(POST, uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail")))
+        .putHeaders(headers.ETag("foo"))
+        .withBody("cool")
+        .run
+
+      route1(req).run.get.status should_== Status.Ok
+      route2(req).run.get.status should_== Status.Ok
+
+    }
+
     "Run || routes" in {
       val p1 = "one" / 'two
       val p2 = "three" / 'four
@@ -234,7 +261,24 @@ class ApiTest extends Specification {
       val route = path runWith { i: Int => Ok("stuff").withHeaders(headers.ETag((i + 1).toString)) }
 
       fetchETag(route(req)) should_== "33"
+    }
 
+    "accept compound or sequential query rules" in {
+      val path = GET / "hello"
+
+      val req = Request(uri = uri("/hello?foo=bar&baz=1"))
+
+      val route1 = (path +? param[String]("foo") & param[Int]("baz")) runWith { (_: String, _: Int) =>
+        Ok("")
+      }
+
+      route1(req).run.get.status should_== Status.Ok
+
+      val route2 = (path +? (param[String]("foo") and param[Int]("baz"))) runWith { (_: String, _: Int) =>
+        Ok("")
+      }
+
+      route2(req).run.get.status should_== Status.Ok
     }
   }
 
