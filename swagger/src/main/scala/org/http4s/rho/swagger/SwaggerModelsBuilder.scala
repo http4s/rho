@@ -45,7 +45,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def collectDefinitions(rr: RhoRoute[_])(s: Swagger): Map[String, Model] = {
     val initial: Set[Model] = s.definitions.values.toSet
-    (collectResultTypes(rr) ++ collectCodecTypes(rr))
+    (collectResultTypes(rr) ++ collectCodecTypes(rr) ++ collectQueryTypes(rr))
       .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
       .map(m => m.id2 -> m)
       .toMap
@@ -56,13 +56,39 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case TypeOnly(tpe)         => tpe
       case StatusAndType(_, tpe) => tpe
     }
-
+    
   def collectCodecTypes(rr: RhoRoute[_]): Set[Type] =
     rr.router match {
       case r: CodecRouter[_, _] => Set(r.entityType)
       case _                    => Set.empty
     }
+  
+  def collectQueryTypes(rr: RhoRoute[_]): Seq[Type] = {
+    import bits.QueryAST._
+    
+    def go(stack: List[QueryRule]): List[Type] =
+      stack match {
+        case QueryAnd(a, b)::xs => go(a :: b :: xs)
+        case QueryOr(a, b)::xs => go(a :: b :: xs)
+        case EmptyQuery::xs => go(xs)
+        case MetaCons(x, _)::xs => go(x::xs)
+        case Nil => Nil
+        case (q @ QueryCapture(_, _, _, _)) ::xs =>
+          val tpe = q.m.tpe
+          TypeBuilder.DataType.fromType(tpe) match {
+            case _ : TypeBuilder.DataType.ComplexDataType =>
+              tpe :: go(xs)
+            case TypeBuilder.DataType.ContainerDataType(_, Some(_: TypeBuilder.DataType.ComplexDataType), _) =>
+              q.m.tpe.typeArgs.head :: go(xs)
+            case _ => go(xs)
+          }
+      }
 
+    go(rr.query::Nil)
+  }
+  
+  def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???    
+  
   def mkPathStrs(rr: RhoRoute[_]): List[String] = {
 
     def go(stack: List[PathOperation], pathStr: String): String =
@@ -130,19 +156,19 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   def collectOperationParams(rr: RhoRoute[_]): List[Parameter] =
     collectPathParams(rr) ::: collectQueryParams(rr) ::: collectHeaderParams(rr) ::: collectBodyParams(rr).toList
 
-  def collectQueryParams(rr: RhoRoute[_]): List[QueryParameter] = {
+  def collectQueryParams(rr: RhoRoute[_]): List[Parameter] = {
     import bits.QueryAST._
 
-    def go(stack: List[QueryRule]): List[QueryParameter] =
+    def go(stack: List[QueryRule]): List[Parameter] =
       stack match {
         case QueryAnd(a, b)::xs => go(a::b::xs)
         case EmptyQuery::xs     => go(xs)
 
         case QueryOr(a, b)::xs =>
           val as = go(a::xs)
-          val bs = go(b::xs)
-          val set: (QueryParameter, String) => QueryParameter =
-            (p, s) => p.copy(description = p.description.map(_ + s).orElse(s.some))
+          val bs = go(b::xs)                   
+          val set: (Parameter, String) => Parameter =
+            (p, s) => p.withDesc(p.description.map(_ + s).orElse(s.some))
 
           addOrDescriptions(set)(as, bs, "params") :::
           addOrDescriptions(set)(bs, as, "params")
@@ -151,7 +177,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
         case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs =>
           meta match {
-            case m: TextMetaData => mkQueryParam(q).copy(description = m.msg.some) :: go(xs)
+            case m: TextMetaData => mkQueryParam(q).withDesc(m.msg.some) :: go(xs)
             case _               => go(q::xs)
           }
 
@@ -244,6 +270,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       DataType.fromType(tpe) match {
         case DataType.ValueDataType(name, format, qName) =>
           AbstractProperty(`type` = name, description = qName, format = format)
+        case DataType.ComplexDataType(name, qName) =>
+          AbstractProperty(`type` = name, description = qName)
         case DataType.ContainerDataType(name, tpe, uniqueItems) =>
           AbstractProperty(`type` = name)
       }
@@ -272,12 +300,44 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     code -> Response(description = descr, schema = schema)
   }
 
-  def mkQueryParam(rule: QueryCapture[_]): QueryParameter =
-    QueryParameter(
-      `type`       = getType(rule.m.tpe),
-      name         = rule.name.some,
-      required     = rule.default.isEmpty,
-      defaultValue = rule.default.map(_.toString))
+  def mkQueryParam(rule: QueryCapture[_]): Parameter = {
+    TypeBuilder.DataType(rule.m.tpe) match {
+      case TypeBuilder.DataType.ComplexDataType(nm, _) =>
+        QueryParameter(
+          $ref          = nm.some,
+          name         = rule.name.some,
+          required     = rule.default.isEmpty,
+          defaultValue = rule.default.map(_ => "") // TODO ideally need to use the parser to serialize it into string
+        )
+      // XXX uniqueItems is indeed part of `parameter` api, 
+      // see here: http://swagger.io/specification/#parameterObject
+      // however the java api does not include it...
+      case TypeBuilder.DataType.ContainerDataType(_, dt, _) =>
+        val itemTpe = dt match {
+          case Some(TypeBuilder.DataType.ComplexDataType(nm, _)) =>
+            models.AbstractProperty($ref = nm.some).some
+          // XXX need to revisit to take care of recursive array type
+          case Some(tpe: TypeBuilder.DataType) =>
+            models.AbstractProperty(tpe.name).some
+          case None => None
+        }
+        
+        QueryParameter(
+          name         = rule.name.some,
+          items        = itemTpe,
+          required     = rule.default.isEmpty,
+          defaultValue = rule.default.map(_ => ""), // TODO ideally need to put something like [...] here
+          isArray      = true
+        )
+      case TypeBuilder.DataType.ValueDataType(nm, _, _) => 
+        QueryParameter(
+          `type`       = nm.some,
+          name         = rule.name.some,
+          required     = rule.default.isEmpty,
+          defaultValue = rule.default.map(_.toString)              
+        )
+    }
+  }
 
   def mkHeaderParam(key: HeaderKey.Extractable): HeaderParameter =
     HeaderParameter(
@@ -308,6 +368,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     else
       as.map(set(_, s"Optional if the following $tpe are satisfied: " + bs.flatMap(_.name).mkString("[",", ", "]")))
 
-  def getType(m: Type): String =
+  def getType(m: Type): String = {
     TypeBuilder.DataType(m).name
+  }
 }

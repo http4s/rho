@@ -5,21 +5,47 @@ import org.http4s._
 import org.http4s.Method._
 import org.http4s.headers._
 import org.http4s.rho.bits.QueryAST.EmptyQuery
+import org.http4s.rho.bits.{ StringParser, ResultResponse, SuccessResponse, FailureResponse }
 
 import org.specs2.mutable.Specification
 
 import scodec.bits.ByteVector
 
+import scala.reflect._
 import scala.reflect.runtime.universe._
 
 import scalaz._, Scalaz._
 import scalaz.stream._
 import scalaz.concurrent.Task
 
+object SwaggerModelsBuilderSpec {
+  
+  case class Foo(a: String, b: Int)
+  case class Bar(c: Long, d: List[Foo])
+  
+  import org.json4s._
+  import org.json4s.jackson.JsonMethods
+  
+  private implicit val format = DefaultFormats
+  
+  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[A] = new StringParser[A] {
+    override val typeTag = implicitly[TypeTag[A]].some
+    override def parse(s: String): ResultResponse[A] = {
+      
+      \/.fromTryCatchNonFatal(JsonMethods.parse(s).extract[A]) match {
+        case -\/(t) => FailureResponse.badRequest(t.getMessage())
+        case \/-(t) => SuccessResponse(t)
+      }
+    }
+  }
+}
+
 class SwaggerModelsBuilderSpec extends Specification {
   import models._, DummyCompiler.compilerInstance
   import org.http4s.rho.bits.ResponseGeneratorInstances._
 
+  import SwaggerModelsBuilderSpec._
+  
   sealed abstract class Renderable
   case class ModelA(name: String, color: Int) extends Renderable
   case class ModelB(name: String, id: Long) extends Renderable
@@ -35,14 +61,14 @@ class SwaggerModelsBuilderSpec extends Specification {
       val ra = fooPath +? param[Int]("id") |>> { (i: Int) => "" }
 
       sb.collectQueryParams(ra) must_==
-      List(QueryParameter(`type` = "integer", name = "id".some, required = true))
+      List(QueryParameter(`type` = "integer".some, name = "id".some, required = true))
     }
 
     "handle an action with one query parameter with default value" in {
       val ra = fooPath +? param[Int]("id", 6) |>> { (i: Int) => "" }
 
       sb.collectQueryParams(ra) must_==
-      List(QueryParameter(`type` = "integer", name = "id".some, defaultValue = "6".some, required = false))
+      List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false))
     }
 
     "handle an action with two query parameters" in {
@@ -50,8 +76,8 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectQueryParams(ra) must_==
       List(
-        QueryParameter(`type` = "integer", name = "id".some,  required = true),
-        QueryParameter(`type` = "string",  name = "str".some, defaultValue = "hello".some, required = false))
+        QueryParameter(`type` = "integer".some, name = "id".some,  required = true),
+        QueryParameter(`type` = "string".some,  name = "str".some, defaultValue = "hello".some, required = false))
     }
 
     "handle an action with query or-structure" in {
@@ -62,8 +88,25 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectQueryParams(ra) must_==
       List(
-        QueryParameter(`type` = "integer", name = "id".some,  description = orStr("id2"), required = true),
-        QueryParameter(`type` = "integer", name = "id2".some, description = orStr("id"),  required = true))
+        QueryParameter(`type` = "integer".some, name = "id".some,  description = orStr("id2"), required = true),
+        QueryParameter(`type` = "integer".some, name = "id2".some, description = orStr("id"),  required = true))
+    }
+    
+    "handle an action with one query parameter of complex data type" in {
+       val ra = fooPath +? param[Foo]("foo") |>> { (_: Foo) => "" }
+       
+       sb.collectQueryParams(ra) must_==
+       List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
+    }
+    
+    "handle and action with two query paramters of complex data type" in {
+      val ra = fooPath +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (_: Foo, _: Seq[Bar]) => "" }
+      
+      sb.collectQueryParams(ra) must_==
+      List(
+        QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true),
+        QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty($ref = "Bar".some)), defaultValue = "".some, isArray = true)
+      )
     }
   }
 
@@ -201,8 +244,8 @@ class SwaggerModelsBuilderSpec extends Specification {
             id2         = "ModelA",
             description = "ModelA".some,
             properties  = Map(
-              "name"  -> AbstractProperty("string", true),
-              "color" -> AbstractProperty("integer", true, format = "int32".some))),
+              "name"  -> AbstractProperty("string", None, true),
+              "color" -> AbstractProperty("integer", None, true, format = "int32".some))),
 
         "ModelB" ->
           ModelImpl(
@@ -210,8 +253,8 @@ class SwaggerModelsBuilderSpec extends Specification {
             id2         = "ModelB",
             description = "ModelB".some,
             properties  = Map(
-              "name" -> AbstractProperty("string", true),
-              "id"   -> AbstractProperty("integer", true, format = "int64".some))),
+              "name" -> AbstractProperty("string", None, true),
+              "id"   -> AbstractProperty("integer", None, true, format = "int64".some))),
 
         "ModelC" ->
           ModelImpl(
@@ -219,8 +262,8 @@ class SwaggerModelsBuilderSpec extends Specification {
             id2         = "ModelC",
             description = "ModelC".some,
             properties  = Map(
-              "name"  -> AbstractProperty("string", true),
-              "shape" -> AbstractProperty("string", true)))
+              "name"  -> AbstractProperty("string", None, true),
+              "shape" -> AbstractProperty("string", None, true)))
       )
     }
 
@@ -238,7 +281,7 @@ class SwaggerModelsBuilderSpec extends Specification {
             id2         = "Tuple2«Int,ModelA»",
             description = "Tuple2«Int,ModelA»".some,
             properties  = Map(
-              "_1" -> AbstractProperty("integer", true, format = "int32".some),
+              "_1" -> AbstractProperty("integer", None, true, format = "int32".some),
               "_2" -> RefProperty(ref = "ModelA", required = true))))
     }
   }

@@ -91,4 +91,33 @@ object MyService extends RhoService with SwaggerSupport {
       val p: Process[Task, String] = Process.emitAll(s)
       Ok(p)
     }
+    
+  import scala.reflect._
+  import scala.reflect.runtime.universe._
+    
+  import org.json4s._
+  import org.json4s.jackson.JsonMethods
+  
+  import org.http4s.rho.bits._
+  
+  private implicit val format = DefaultFormats
+  
+  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[A] = new StringParser[A] {
+    override val typeTag = implicitly[TypeTag[A]].some
+    override def parse(s: String): ResultResponse[A] = {
+      
+      scalaz.\/.fromTryCatchNonFatal(JsonMethods.parse(s).extract[A]) match {
+        case scalaz.-\/(t) => FailureResponse.badRequest(t.getMessage())
+        case scalaz.\/-(t) => SuccessResponse(t)
+      }
+    }
+  }
+    
+  case class Foo(k: String, v: Int)
+  case class Bar(id: Long, foo: Foo)
+  
+  "This route demonstrates how to use a complex data type as parameters in route" **
+  GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
+    Ok(s"Received foo: $foo, bars: $bars")
+  }
 }
