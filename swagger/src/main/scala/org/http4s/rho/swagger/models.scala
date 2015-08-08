@@ -396,6 +396,21 @@ object models {
     def toJModel: jm.parameters.Parameter
   }
 
+  object Parameter {
+    implicit class Ops(val parameter: Parameter) extends AnyVal {
+      def withDesc(desc: Option[String]): Parameter = 
+        parameter match {
+          case p : BodyParameter => p.copy(description = desc)
+          case p : CookieParameter => p.copy(description = desc)
+          case p : FormParameter => p.copy(description = desc)
+          case p : HeaderParameter => p.copy(description = desc)
+          case p : PathParameter => p.copy(description = desc)
+          case p : QueryParameter => p.copy(description = desc)
+          case p : RefParameter => p.copy(description = desc)
+        }
+    }
+  }
+  
   case class BodyParameter
     (
       schema           : Option[Model]    = None
@@ -550,7 +565,8 @@ object models {
 
   case class QueryParameter
     (
-      `type`           : String
+      `type`           : Option[String]   = None
+    , $ref             : Option[String]   = None
     , format           : Option[String]   = None
     , collectionFormat : Option[String]   = None
     , items            : Option[Property] = None
@@ -560,13 +576,35 @@ object models {
     , required         : Boolean          = false
     , access           : Option[String]   = None
     , vendorExtensions : Map[String, Any] = Map.empty
+    , isArray          : Boolean          = false
     ) extends Parameter {
 
     override val in = Some("query")
-
-    def toJModel: jm.parameters.Parameter = {
-      val qp = new jm.parameters.QueryParameter
-      qp.setType(`type`)
+    
+    import com.fasterxml.jackson.annotation.JsonPropertyOrder
+    
+    @JsonPropertyOrder(Array("name", "in", "description", "required", "type", "$ref", "items", "collectionFormat", "default"))
+    private class QueryRefParameter extends jm.parameters.QueryParameter {
+      protected var $ref: String = _ 
+   
+      def $ref($ref: String) = { 
+        this.set$ref($ref)
+        this
+      }
+      
+      def get$ref() = $ref
+      def set$ref($ref: String) { this.$ref = $ref }
+      
+      override def setArray(isArray: Boolean) {
+        // there is a bug in the library that whenever this method is called, `type` of the query parameter is set to "array"
+        if (isArray) super.setArray(isArray)
+      }
+    }
+    
+    def toJModel: jm.parameters.Parameter = {      
+      val qp = new QueryRefParameter
+      qp.setType(fromOption(`type`))
+      qp.set$ref(fromOption($ref))
       qp.setFormat(fromOption(format))
       qp.setCollectionFormat(fromOption(collectionFormat))
       qp.setItems(fromOption(items.map(_.toJModel)))
@@ -576,6 +614,7 @@ object models {
       qp.setRequired(required)
       qp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => qp.setVendorExtension(key, value) }
+      qp.setArray(isArray) 
       qp
     }      
   }
@@ -593,7 +632,7 @@ object models {
     override val in = None
 
     def toJModel: jm.parameters.Parameter = {
-      val rp = new jm.parameters.RefParameter(ref)
+      val rp = new jm.parameters.RefParameter(ref) { override def get$ref() = ref }
       rp.setName(fromOption(name))
       rp.setDescription(fromOption(description))
       rp.setRequired(required)
@@ -602,7 +641,7 @@ object models {
       rp
     }
   }
-
+  
   sealed trait Property {
     def `type`: String
     def required: Boolean
@@ -616,19 +655,33 @@ object models {
 
   case class AbstractProperty
     (
-      `type`      : String
+      `type`      : String         = null
+    , $ref        : Option[String] = None
     , required    : Boolean        = false
     , title       : Option[String] = None
     , description : Option[String] = None
     , format      : Option[String] = None
     ) extends Property {
-
+    
+    class RefProperty extends jm.properties.AbstractProperty {
+      protected var $ref: String = _
+        
+      def $ref($ref: String) = { 
+        this.set$ref($ref)
+        this
+      }
+      
+      def get$ref() = $ref
+      def set$ref($ref: String) { this.$ref = $ref }              
+    }
+    
     def withRequired(required: Boolean): AbstractProperty =
       copy(required = required)
-
+      
     def toJModel: jm.properties.Property = {
-      val ap = new jm.properties.AbstractProperty {}
+      val ap = new RefProperty
       ap.setType(`type`)
+      ap.set$ref(fromOption($ref))
       ap.setRequired(required)
       ap.setTitle(fromOption(title))
       ap.setDescription(fromOption(description))

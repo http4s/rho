@@ -128,6 +128,8 @@ object TypeBuilder {
         DataType.fromType(pType) match {
           case DataType.ValueDataType(name, format, qName) =>
             AbstractProperty(`type` = name, description = qName, format = format)
+          case DataType.ComplexDataType(name, qName) =>
+            AbstractProperty(`type` = name, description = qName)
           case DataType.ContainerDataType(name, tpe, uniqueItems) =>
             AbstractProperty(`type` = name)
         }
@@ -143,6 +145,7 @@ object TypeBuilder {
 
     case class ValueDataType(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) extends DataType
     case class ContainerDataType(name: String, typeArg: Option[DataType] = None, uniqueItems: Boolean = false) extends DataType
+    case class ComplexDataType(name: String, qualifiedName: Option[String] = None) extends DataType
 
     val Void = DataType("void")
     val String = DataType("string")
@@ -207,7 +210,7 @@ object TypeBuilder {
         else GenArray()
       } else {
         val stt = if (t.isOption) t.typeArgs.head else t
-        new ValueDataType(stt.simpleName, qualifiedName = Option(stt.fullName))
+        ComplexDataType(stt.simpleName, qualifiedName = Option(stt.fullName))
       }
     }
 
