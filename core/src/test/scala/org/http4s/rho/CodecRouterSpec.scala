@@ -25,7 +25,7 @@ class CodecRouterSpec extends Specification {
       val b = Process.emit(ByteVector.view("hello".getBytes))
       val h = Headers(headers.`Content-Type`(MediaType.`text/plain`))
       val req = Request(Method.POST, Uri(path = "/foo"), headers = h, body = b)
-      val result = service(req).run.get
+      val result = service(req).run
       val (bb, s) = bodyAndStatus(result)
 
       s must_== Status.Ok
@@ -37,7 +37,7 @@ class CodecRouterSpec extends Specification {
       val h = Headers(headers.`Content-Type`(MediaType.`application/x-www-form-urlencoded`))
       val req = Request(Method.POST, Uri(path = "/form"), headers = h, body = b)
 
-      service(req).run.map(_.status) must beSome(Status.BadRequest)
+      service(req).run.status must_== Status.BadRequest
     }
   }
 

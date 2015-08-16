@@ -22,13 +22,9 @@ class ApiTest extends Specification {
   val RequireETag = exists(headers.ETag)
   val RequireNonZeroLen = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
-  def fetchETag(p: Task[Option[Response]]): String = {
+  def fetchETag(p: Task[Response]): String = {
     val resp = p.run
-
-    val mvalue = for {
-      r <- resp
-      h <- r.headers.get(headers.ETag)
-    } yield h.value
+    val mvalue = resp.headers.get(headers.ETag).map(_.value)
 
     mvalue.getOrElse(sys.error("No ETag: " + resp))
   }
@@ -106,7 +102,7 @@ class ApiTest extends Specification {
         .withBody("cool")
         .run
 
-      val resp = route(req).run.get
+      val resp = route(req).run
       resp.headers.get(headers.ETag).get.value should_== "foo"
 
     }
@@ -133,8 +129,8 @@ class ApiTest extends Specification {
         .withBody("cool")
         .run
 
-      route1(req).run.get.status should_== Status.Ok
-      route2(req).run.get.status should_== Status.Ok
+      route1(req).run.status should_== Status.Ok
+      route2(req).run.status should_== Status.Ok
 
     }
 
@@ -169,7 +165,7 @@ class ApiTest extends Specification {
         .withBody("cool")
         .run
 
-      val resp = route(req).run.get
+      val resp = route(req).run
       resp.headers.get(headers.ETag).get.value should_== "foo"
     }
 
@@ -177,7 +173,7 @@ class ApiTest extends Specification {
       val route = GET / "foo" runWith { () => SwitchingProtocols() }
       val req = Request(GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
 
-      val result = route(req).run.get
+      val result = route(req).run
       result.headers.size must_== 0
       result.status must_== Status.SwitchingProtocols
     }
@@ -198,8 +194,8 @@ class ApiTest extends Specification {
 
   "PathValidator" should {
 
-    def check(p: Task[Option[Response]], s: String) = {
-      p.run.get.headers.get(headers.ETag).get.value should_== s
+    def check(p: Task[Response], s: String) = {
+      p.run.headers.get(headers.ETag).get.value should_== s
     }
 
     "traverse a captureless path" in {
@@ -216,7 +212,7 @@ class ApiTest extends Specification {
 
       val f = stuff runWith { () => Ok("Shouldn't get here.") }
       val r = f(req).run
-      r should_== None
+      r.status should_== Status.NotFound
     }
 
     "capture a variable" in {
@@ -272,13 +268,13 @@ class ApiTest extends Specification {
         Ok("")
       }
 
-      route1(req).run.get.status should_== Status.Ok
+      route1(req).run.status should_== Status.Ok
 
       val route2 = (path +? (param[String]("foo") and param[Int]("baz"))) runWith { (_: String, _: Int) =>
         Ok("")
       }
 
-      route2(req).run.get.status should_== Status.Ok
+      route2(req).run.status should_== Status.Ok
     }
   }
 
@@ -302,7 +298,7 @@ class ApiTest extends Specification {
       }
 
       fetchETag(route(req1)) should_== "foo"
-      route(req2).run.get.status should_== Status.BadRequest
+      route(req2).run.status should_== Status.BadRequest
     }
 
     "Allow the infix operator syntax" in {
@@ -330,14 +326,14 @@ class ApiTest extends Specification {
         Ok("shouldn't get here.")
       }
 
-      route1(req).run.get.status should_== Status.BadRequest
+      route1(req).run.status should_== Status.BadRequest
 
       val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
       val route2 = path.validate(reqHeaderR) runWith { () =>
         Ok("shouldn't get here.")
       }
 
-      route2(req).run.get.status should_== Status.Unauthorized
+      route2(req).run.status should_== Status.Unauthorized
     }
 
     "Fail on a query" in {
@@ -350,13 +346,13 @@ class ApiTest extends Specification {
         Ok("shouldn't get here.")
       }
 
-      route1(req).run.get.status should_== Status.BadRequest
+      route1(req).run.status should_== Status.BadRequest
 
       val route2 = (path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) runWith { str: String =>
         Ok("shouldn't get here.")
       }
 
-      route2(req).run.get.status should_== Status.Unauthorized
+      route2(req).run.status should_== Status.Unauthorized
     }
   }
 }
