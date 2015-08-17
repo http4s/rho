@@ -16,7 +16,7 @@ class ServerApp(port: Int) {
     .mountService(routes.dynamicContent, "")
     .bindLocal(port)
 
-  def run(): Unit = server.start.run
+  def run(): Unit = server.start.run.awaitShutdown()
 }
 
 object ServerApp {

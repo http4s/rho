@@ -9,4 +9,5 @@ object Main extends App {
     .bindLocal(8080)
     .start
     .run
+    .awaitShutdown()
 }
