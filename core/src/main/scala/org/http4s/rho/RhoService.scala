@@ -25,13 +25,13 @@ trait RhoService extends bits.MethodAliases
     }
   }
 
-  private def findRoute(req: Request): Task[Option[Response]] = {
+  private def findRoute(req: Request): Task[Response] = {
     logger.trace(s"Request: ${req.method}:${req.uri}")
     val routeResult: RouteResult[Task[Response]] = __tree.getResult(req)
     routeResult match {
-      case NoMatch              => Task.now(None)
-      case SuccessResponse(t)     => t.map(Some(_))
-      case FailureResponse(r)     => r.toResponse.map(Some(_))
+      case SuccessResponse(t) => t
+      case NoMatch            => HttpService.notFound
+      case FailureResponse(r) => r.toResponse
     }
   }
 

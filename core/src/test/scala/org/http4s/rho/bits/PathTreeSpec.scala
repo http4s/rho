@@ -4,6 +4,7 @@ package bits
 
 import java.nio.charset.StandardCharsets
 
+import org.http4s.server.HttpService
 import org.specs2.mutable.Specification
 
 import org.http4s.server.middleware.URITranslation
@@ -34,7 +35,7 @@ class PathTreeSpec extends Specification {
       GET / "foo" |>> "foo"
     }.toService)
     val req = Request(Method.GET, uri = Uri(path = "/bar/foo"))
-    val resp = svc(req).run.get
+    val resp = svc(req).run
 
     resp.status must_== Status.Ok
     val b = new String(resp.body.runLog.run.reduce(_ ++ _).toArray, StandardCharsets.UTF_8)
@@ -50,17 +51,17 @@ class PathTreeSpec extends Specification {
 
     "Handle a valid OPTIONS request" in {
       val req = Request(Method.OPTIONS, uri = uri("/bar"))
-      svc(req).run.map(_.status) must beSome(Status.Ok)
+      svc(req).run.status must_== Status.Ok
     }
 
     "Provide a 405 MethodNotAllowed when an incorrect method is used for a resource" in {
       val req = Request(Method.POST, uri = uri("/foo"))
-      svc(req).run.map(_.status) must beSome(Status.MethodNotAllowed)
+      svc(req).run.status must_== Status.MethodNotAllowed
     }
 
     "Provide a 404 NotFound when the OPTIONS method is used for a resource without an OPTIONS" in {
       val req = Request(Method.OPTIONS, uri = uri("/foo"))
-      svc(req).run.map(_.status) must beNone
+      svc(req).run.status must_== Status.NotFound
     }
   }
 
