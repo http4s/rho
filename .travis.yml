@@ -3,6 +3,11 @@ scala:
 - 2.11.7
 jdk: oraclejdk8
 
+sudo: false
+cache:
+  directories:
+  - $HOME/.ivy2/cache
+
 script: sbt ++$TRAVIS_SCALA_VERSION test
 env:
   global:
