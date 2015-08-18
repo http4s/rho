@@ -38,7 +38,7 @@ object MyBuild extends Build {
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
 
-  lazy val rhoVersion = "0.6.0-SNAPSHOT"
+  lazy val rhoVersion = "0.6.0"
 
   /* Don't publish setting */
   val dontPublish = packagedArtifacts := Map.empty
@@ -122,7 +122,7 @@ object MyBuild extends Build {
 }
 
 object Dependencies {
-  lazy val http4sVersion = "0.7.0"
+  lazy val http4sVersion = "0.8.4"
   lazy val http4sServerVersion = if (!http4sVersion.endsWith("SNAPSHOT")) (http4sVersion.dropRight(1) + "0")
                                  else http4sVersion
 
