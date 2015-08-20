@@ -34,7 +34,6 @@ object StaticContentService {
       fetchResource(swaggerUiDir + "/index.html", req)
     case req @ GET -> Root / "swagger-ui.js" =>
       fetchResource(swaggerUiDir + "/swagger-ui.min.js", req)
-
   }
 
 }
