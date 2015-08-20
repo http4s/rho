@@ -22,6 +22,8 @@ class ApiTest extends Specification {
   val RequireETag = exists(headers.ETag)
   val RequireNonZeroLen = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
+  val RequireThrowException = existsAnd(headers.`Content-Length`){ h => throw new RuntimeException("this could happen") }
+
   def fetchETag(p: Task[Response]): String = {
     val resp = p.run
     val mvalue = resp.headers.get(headers.ETag).map(_.value)
@@ -40,6 +42,14 @@ class ApiTest extends Specification {
 
       res must beAnInstanceOf[FailureResponse]
       res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
+    }
+                                                                                        
+    "Fail on a bad request 2" in {
+      val req = Request().withHeaders(Headers(lenheader))
+      val res = PathTree.ValidationTools.ensureValidHeaders(RequireThrowException.rule, req)                                                            
+      res must beAnInstanceOf[FailureResponse]                                                                                                          
+      res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
+      res.asInstanceOf[FailureResponse].toResponse.run.as[String].run must_== "this could happen"
     }
 
     "Match captureless route" in {
@@ -64,6 +74,12 @@ class ApiTest extends Specification {
       val req = Request().withHeaders(Headers(etag, lenheader))
       val c = captureMap(headers.`Content-Length`)(_.length)
       PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== SuccessResponse(4::HNil)
+    }
+
+    "Map header params with exception" in {
+      val req = Request().withHeaders(Headers(etag, lenheader))
+      val c = captureMap(headers.`Content-Length`)(_.length / 0)
+      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) must beAnInstanceOf[FailureResponse]
     }
 
     "Map with possible default" in {

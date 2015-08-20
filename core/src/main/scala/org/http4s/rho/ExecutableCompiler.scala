@@ -29,13 +29,20 @@ trait ExecutableCompiler {
       case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
 
       case HeaderExists(key, f) => req.headers.get(key) match {
-        case Some(h) => f(h).fold[ResultResponse[HList]](SuccessResponse(stack))(f => FailureResponse.result(f))
+        case Some(h) => 
+          scalaz.\/.fromTryCatchNonFatal( f(h) ) match {
+            case scalaz.-\/(t) => FailureResponse.badRequest(t.getMessage())
+            case scalaz.\/-(option) => option.fold[ResultResponse[HList]](SuccessResponse(stack))(f => FailureResponse.result(f))
+          }
         case None => FailureResponse.badRequest(s"Missing header: ${key.name}")
       }
 
       case HeaderCapture(key, f, default) => req.headers.get(key) match {
         case Some(h) =>
-          f(h).fold(f => FailureResponse.result(f), r => SuccessResponse(r::stack))
+          scalaz.\/.fromTryCatchNonFatal( f(h) ) match {
+            case scalaz.-\/(t) => FailureResponse.badRequest(t.getMessage())
+            case scalaz.\/-(option) => option.fold(f => FailureResponse.result(f), r => SuccessResponse(r::stack))
+          }
 
         case None => default match {
           case Some(r) => FailureResponse.result(r)
