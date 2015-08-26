@@ -36,11 +36,14 @@ object MyService extends RhoService with SwaggerSupport {
   val hello = GET / "hello"
 
   "Simple hello world route" **
-    hello |>> Ok("Hello world!")
-
+    hello |>> Ok("Hello world!")    
+    
   "A variant of the hello route that takes an Int param" **
     hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
 
+  "This route allows you to send head request" **
+    HEAD / "hello" |>> { Ok("Hello head!") }    
+    
   "Generates some JSON data from a route param, and a query Int" **
     GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
