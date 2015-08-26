@@ -1,6 +1,6 @@
 package org.http4s.rho.swagger
 
-import com.wordnik.swagger.{models => jm}
+import io.swagger.{models => jm}
 
 import scala.collection.JavaConversions._
 
@@ -48,7 +48,7 @@ object models {
     , termsOfService   : Option[String]   = None
     , contact          : Option[Contact]  = None
     , license          : Option[License]  = None
-    , vendorExtensions : Map[String, Any] = Map.empty 
+    , vendorExtensions : Map[String, Any] = Map.empty
     ) {
 
     def toJModel: jm.Info = {
@@ -98,7 +98,7 @@ object models {
   sealed trait SecuritySchemeDefinition {
     def `type`: String
 
-    def toJModel: jm.auth.SecuritySchemeDefinition      
+    def toJModel: jm.auth.SecuritySchemeDefinition
   }
 
   case class OAuth2Definition
@@ -121,7 +121,7 @@ object models {
     }
   }
 
-  case class ApiKeyAuthDefinition 
+  case class ApiKeyAuthDefinition
     (
       name : String
     , in   : In
@@ -138,7 +138,7 @@ object models {
   case object BasicAuthDefinition extends SecuritySchemeDefinition {
     override val `type` = "basic"
 
-    def toJModel: jm.auth.BasicAuthDefinition = 
+    def toJModel: jm.auth.BasicAuthDefinition =
       new jm.auth.BasicAuthDefinition
   }
 
@@ -164,27 +164,13 @@ object models {
     }
   }
 
-  case class SecurityDefinition
-    (
-      `type` : String
-    , scopes : Map[String, String]
-    ) {
-
-    def toJModel: jm.SecurityDefinition = {
-      val sd = new jm.SecurityDefinition
-      sd.setType(`type`)
-      sd.setScopes(fromMap(scopes))
-      sd
-    }
-  }
-
   case class SecurityScope
     (
       name        : String
     , description : String
     ) {
 
-    def toJModel: jm.SecurityScope = 
+    def toJModel: jm.SecurityScope =
       new jm.SecurityScope(name, description)
   }
 
@@ -200,42 +186,9 @@ object models {
     , parameters       : List[Parameter]   = Nil
     , vendorExtensions : Map[String, Any]  = Map.empty
     ) {
-    
-    import com.fasterxml.jackson.annotation.{ JsonPropertyOrder, JsonIgnore }
-    
-    @JsonPropertyOrder(Array("get", "post", "put", "delete", "options", "patch", "head"))
-    class ComplementaryPath extends jm.Path {
-      import com.wordnik.swagger.models.{ Operation => JOperation }
-      
-      private var head: JOperation = _ 
-   
-      def head(head: JOperation): jm.Path = {
-        this.head = head
-        this
-      }
-      
-      def getHead(): JOperation = head
-      def setHead(head: JOperation): Unit = {
-        this.head = head
-      }
-         
-      @JsonIgnore
-      override def getOperations: java.util.List[JOperation] = {
-        val all = super.getOperations()
-        
-        if (head ne null) all.add(head)
-        
-        all
-      }
-      
-      @JsonIgnore
-      override def isEmpty(): Boolean = {
-        super.isEmpty() && (head eq null)
-      }
-    }
-    
+
     def toJModel: jm.Path = {
-      val p = new ComplementaryPath
+      val p = new jm.Path
       p.setGet(fromOption(get.map(_.toJModel)))
       p.setPut(fromOption(put.map(_.toJModel)))
       p.setPost(fromOption(post.map(_.toJModel)))
@@ -620,25 +573,21 @@ object models {
     
     @JsonPropertyOrder(Array("name", "in", "description", "required", "type", "$ref", "items", "collectionFormat", "default"))
     private class QueryRefParameter extends jm.parameters.QueryParameter {
-      protected var $ref: String = _ 
-   
-      def $ref($ref: String) = { 
+      protected var $ref: String = _
+
+      def $ref($ref: String) = {
         this.set$ref($ref)
         this
       }
-      
+
       def get$ref() = $ref
       def set$ref($ref: String) { this.$ref = $ref }
-      
-      override def setArray(isArray: Boolean) {
-        // there is a bug in the library that whenever this method is called, `type` of the query parameter is set to "array"
-        if (isArray) super.setArray(isArray)
-      }
     }
     
     def toJModel: jm.parameters.Parameter = {      
-      val qp = new QueryRefParameter
-      qp.setType(fromOption(`type`))
+      val qp = new QueryRefParameter()
+      qp.setIn("query")
+      qp.setType(if (isArray) "array" else fromOption(`type`))
       qp.set$ref(fromOption($ref))
       qp.setFormat(fromOption(format))
       qp.setCollectionFormat(fromOption(collectionFormat))
@@ -649,7 +598,6 @@ object models {
       qp.setRequired(required)
       qp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => qp.setVendorExtension(key, value) }
-      qp.setArray(isArray) 
       qp
     }      
   }
