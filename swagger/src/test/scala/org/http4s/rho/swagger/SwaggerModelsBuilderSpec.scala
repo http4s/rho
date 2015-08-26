@@ -56,7 +56,12 @@ class SwaggerModelsBuilderSpec extends Specification {
   val barPath = GET / "bar"
 
   "SwaggerModelsBuilder.collectQueryParams" should {
-
+    
+    "handle head request" in {
+      val ra = HEAD / "foobar" |>> { "" }
+      sb.collectPaths(ra)(Swagger()).get("/foobar").flatMap(_.head) must beSome[Operation]
+    }
+    
     "handle an action with one query parameter" in {
       val ra = fooPath +? param[Int]("id") |>> { (i: Int) => "" }
 

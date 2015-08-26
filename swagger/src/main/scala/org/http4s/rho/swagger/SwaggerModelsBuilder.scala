@@ -37,6 +37,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case "delete"  => p0.copy(delete = o.some)
         case "patch"   => p0.copy(patch = o.some)
         case "options" => p0.copy(options = o.some)
+        case "head"    => p0.copy(head = o.some)
+        case unknown   => 
+          logger.warn("unrecognized method: " + unknown)
+          p0
       }
       ps -> p1
     }

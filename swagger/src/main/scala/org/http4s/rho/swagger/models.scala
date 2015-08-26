@@ -196,18 +196,53 @@ object models {
     , delete           : Option[Operation] = None
     , patch            : Option[Operation] = None
     , options          : Option[Operation] = None
+    , head             : Option[Operation] = None
     , parameters       : List[Parameter]   = Nil
     , vendorExtensions : Map[String, Any]  = Map.empty
     ) {
-
+    
+    import com.fasterxml.jackson.annotation.{ JsonPropertyOrder, JsonIgnore }
+    
+    @JsonPropertyOrder(Array("get", "post", "put", "delete", "options", "patch", "head"))
+    class ComplementaryPath extends jm.Path {
+      import com.wordnik.swagger.models.{ Operation => JOperation }
+      
+      private var head: JOperation = _ 
+   
+      def head(head: JOperation): jm.Path = {
+        this.head = head
+        this
+      }
+      
+      def getHead(): JOperation = head
+      def setHead(head: JOperation): Unit = {
+        this.head = head
+      }
+         
+      @JsonIgnore
+      override def getOperations: java.util.List[JOperation] = {
+        val all = super.getOperations()
+        
+        if (head ne null) all.add(head)
+        
+        all
+      }
+      
+      @JsonIgnore
+      override def isEmpty(): Boolean = {
+        super.isEmpty() && (head eq null)
+      }
+    }
+    
     def toJModel: jm.Path = {
-      val p = new jm.Path
+      val p = new ComplementaryPath
       p.setGet(fromOption(get.map(_.toJModel)))
       p.setPut(fromOption(put.map(_.toJModel)))
       p.setPost(fromOption(post.map(_.toJModel)))
       p.setDelete(fromOption(delete.map(_.toJModel)))
       p.setPatch(fromOption(patch.map(_.toJModel)))
       p.setOptions(fromOption(options.map(_.toJModel)))
+      p.setHead(fromOption(head.map(_.toJModel)))
       p.setParameters(fromList(parameters.map(_.toJModel)))
       vendorExtensions.foreach { case (key, value) => p.setVendorExtension(key, value) }
       p
