@@ -2,7 +2,7 @@ package org.http4s
 package rho
 package swagger
 
-import com.wordnik.swagger.util.Json
+import io.swagger.util.Json
 
 import headers.`Content-Type`
 
