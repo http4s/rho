@@ -1,9 +1,8 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
+import org.http4s.server.Service
 import org.http4s.server.blaze.BlazeBuilder
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
-
-import com.http4s.rho.Helpers._
 
 import org.log4s.getLogger
 
@@ -14,7 +13,7 @@ class ServerApp(port: Int) {
   val routes = new Routes(businessLayer)
 
   val server = BlazeBuilder
-    .mountService(routes.staticContent orElse routes.dynamicContent, "")
+    .mountService(Service.withFallback(routes.staticContent)(routes.dynamicContent), "")
     .bindLocal(port)
 
   def run(): Unit = server.start.run.awaitShutdown()

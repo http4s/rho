@@ -91,8 +91,8 @@ trait ResultSyntaxInstances {
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
       Result(r.resp.withAttribute(key, value))
 
-    override def withHeaders(headers: Headers): Self =
-      Result(r.resp.withHeaders(headers))
+    override def replaceAllHeaders(headers: Headers): Self =
+      Result(r.resp.replaceAllHeaders(headers))
 
     override def putHeaders(headers: Header*): Self =
       Result(r.resp.putHeaders(headers:_*))
@@ -122,8 +122,8 @@ trait ResultSyntaxInstances {
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
       r.map(r => Result(r.resp.withAttribute(key, value)))
 
-    override def withHeaders(headers: Headers): Self =
-      r.map(r => Result(r.resp.withHeaders(headers)))
+    override def replaceAllHeaders(headers: Headers): Self =
+      r.map(r => Result(r.resp.replaceAllHeaders(headers)))
 
     override def putHeaders(headers: Header*): Self =
       r.map(r => Result(r.resp.putHeaders(headers:_*)))

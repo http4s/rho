@@ -1,11 +1,11 @@
 package com.http4s.rho.swagger.demo
 
+import org.http4s.server.Service
 import org.http4s.server.blaze.BlazeBuilder
-import com.http4s.rho.Helpers._
 
 object Main extends App {
   BlazeBuilder
-    .mountService(StaticContentService.routes orElse MyService.toService)
+    .mountService(Service.withFallback(StaticContentService.routes)(MyService.toService))
     .bindLocal(8080)
     .start
     .run
