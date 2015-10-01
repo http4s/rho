@@ -18,7 +18,7 @@ class HListToFuncSpec extends Specification {
 
   val service = new RhoService {
     GET / "route1" |>> { () => Ok("foo") }
-  }.toService
+  }.toService()
 
   "HListToFunc" should {
     "Work for methods of type _ => Task[Response]" in {

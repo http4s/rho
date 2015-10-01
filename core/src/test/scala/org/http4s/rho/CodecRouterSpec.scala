@@ -18,7 +18,7 @@ class CodecRouterSpec extends Specification {
     val service = new RhoService {
       (POST / "foo" decoding(EntityDecoder.text)) |>> { s: String => Ok(s"Received: $s") }
       (POST / "form" decoding(UrlForm.entityDecoder)) |>> { m: UrlForm => Ok("success")}
-    }.toService
+    }.toService()
 
     "Decode a valid body" in {
 

@@ -7,6 +7,8 @@ import scala.language.existentials
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 
+import org.log4s.getLogger
+
 import shapeless.{HNil, HList}
 
 import scala.annotation.tailrec
@@ -15,7 +17,6 @@ import scala.util.control.NonFatal
 
 import scalaz.concurrent.Task
 
-import org.log4s.getLogger
 
 /** Rho specific implementation of the PathTree */
 final class PathTree private(private val paths: PathTree.MatchNode) {
@@ -36,7 +37,6 @@ final class PathTree private(private val paths: PathTree.MatchNode) {
 }
 
 private[rho] object PathTree {
-
   private val logger = getLogger
 
   type Action = ResultResponse[Task[Response]]

@@ -13,7 +13,7 @@ import org.http4s.rho.swagger._
 
 import scalaz.{ -\/, \/- }
 
-class RestService(val businessLayer: BusinessLayer) extends RhoService with SwaggerSupport {
+class RestService(val businessLayer: BusinessLayer) extends RhoService {
 
   // # Query Parameters
 
