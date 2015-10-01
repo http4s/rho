@@ -10,3 +10,9 @@ import shapeless.HList
 trait CompileService[T <: HList, A] {
   def compile(route: RhoRoute[T]): A
 }
+
+object CompileService {
+  def identity[T <: HList] = new CompileService[T, RhoRoute[T]] {
+    def compile(route: RhoRoute[T]) = route
+  }
+}

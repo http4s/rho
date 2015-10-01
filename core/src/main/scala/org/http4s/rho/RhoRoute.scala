@@ -26,3 +26,7 @@ final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T
     case _ => Set.empty
   }
 }
+
+object RhoRoute {
+  type Tpe = RhoRoute[_ <: HList]
+}

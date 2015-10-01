@@ -8,10 +8,12 @@ import org.http4s.rho.bits.MethodAliases.GET
 
 class SwaggerSupportSpec extends Specification with RequestRunner {
 
+  override def transforms: RouteMiddleWare = SwaggerSupport().middleware
+
   import org.json4s.JsonAST._
   import org.json4s.jackson._
 
-  lazy val service = new SwaggerSupport {
+  lazy val service = new RhoService {
     GET / "hello" |>> { () => Ok("hello world") }
     GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
   }

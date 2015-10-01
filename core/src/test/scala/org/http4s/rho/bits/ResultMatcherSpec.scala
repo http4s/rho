@@ -16,8 +16,8 @@ class ResultMatcherSpec extends Specification {
 
     override implicit protected def compilerSrvc[T <: HList] = {
       val parentCS = super.compilerSrvc[T]
-      new CompileService[T, Action[T]] {
-        override def compile(route: RhoRoute[T]): Action[T] = {
+      new CompileService[T, RhoRoute[T]] {
+        override def compile(route: RhoRoute[T]): RhoRoute[T] = {
           statuses = route.resultInfo.collect { case StatusAndType(s, t) => (s, t) }
           parentCS.compile(route)
         }

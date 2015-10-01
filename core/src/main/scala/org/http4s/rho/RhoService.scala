@@ -16,10 +16,10 @@ class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Nil) extends bits.MethodAli
   private val internalRoutes = Vector.newBuilder[RhoRoute[_ <: HList]]
   internalRoutes ++= routes
 
-  implicit protected def compilerSrvc[T <: HList] = new CompileService[T, Action[T]] {
-    override def compile(route: RhoRoute[T]): Action[T] = internalRoutes.synchronized {
+  implicit protected def compilerSrvc[T <: HList] = new CompileService[T, RhoRoute[T]] {
+    override def compile(route: RhoRoute[T]): RhoRoute[T] = internalRoutes.synchronized {
       internalRoutes += route
-      route.action
+      route
     }
   }
 
