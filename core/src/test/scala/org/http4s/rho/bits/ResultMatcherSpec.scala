@@ -14,11 +14,14 @@ class ResultMatcherSpec extends Specification {
   trait TRhoService extends RhoService {
     var statuses: Set[(Status, Type)] = Set.empty
 
-    override protected def append[T <: HList](route: RhoRoute[T]): Unit = {
-      statuses = route.resultInfo.collect {
-        case StatusAndType(s, t) => (s,t)
+    override implicit protected def compilerSrvc[T <: HList] = {
+      val parentCS = super.compilerSrvc[T]
+      new CompileService[T, Action[T]] {
+        override def compile(route: RhoRoute[T]): Action[T] = {
+          statuses = route.resultInfo.collect { case StatusAndType(s, t) => (s, t) }
+          parentCS.compile(route)
+        }
       }
-      super.append(route)
     }
   }
 

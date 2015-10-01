@@ -7,6 +7,6 @@ import shapeless.HList
   * This can be a stateful operation, storing the action for later execution
   * or any other type of compilation phase.
   */
-trait CompileService[A] {
-  def compile(route: RhoRoute[_ <: HList]): A
+trait CompileService[T <: HList, A] {
+  def compile(route: RhoRoute[T]): A
 }

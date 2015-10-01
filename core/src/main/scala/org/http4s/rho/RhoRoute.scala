@@ -8,8 +8,13 @@ import org.http4s.rho.bits.ResultInfo
 
 import shapeless.HList
 
+import scalaz.concurrent.Task
+
 /** A shortcut type to bundle everything needed to define a route */
 final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T]) {
+
+  def apply(req: Request, hlist: T): Task[Response] = action.act(req, hlist)
+
   def method: Method = router.method
   def path: PathRule = router.path
   def query: QueryRule = router.query

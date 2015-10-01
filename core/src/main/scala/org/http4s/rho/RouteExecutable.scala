@@ -13,7 +13,7 @@ import scalaz.concurrent.Task
   * @tparam T the HList representation of the types the route expects to extract
   *           from a [[Request]]
   */
-trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
+trait RouteExecutable[T <: HList] extends TypedBuilder[T] { exec =>
 
   /** [[Method]] of the incoming HTTP [[Request]] */
   def method: Method
@@ -22,14 +22,14 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] {
   def makeRoute(action: Action[T]): RhoRoute[T]
 
   /** Compiles a HTTP request definition into an action */
-  final def |>>[F, R](f: F)(implicit hltf: HListToFunc[T, F], srvc: CompileService[R]): R =
+  final def |>>[F, R](f: F)(implicit hltf: HListToFunc[T, F], srvc: CompileService[T, R]): R =
     srvc.compile(makeRoute(hltf.toAction(f)))
 
   /** Provide an action from which to generate a complete route
     * @return a function `Request => Option[Task[Response]]` which can be used as a complete route
     */
   final def runWith[F](f: F)(implicit hltf: HListToFunc[T, F]): Request => Task[Response] = {
-    val srvc = new RhoService { compilerSrvc.compile(makeRoute(hltf.toAction(f))) }.toService
+    val srvc = new RhoService { exec |>> f }.toService()
     srvc.apply(_: Request)
   }
 }

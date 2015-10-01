@@ -11,7 +11,7 @@ import scalaz.Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream.Process
 
-object MyService extends RhoService with SwaggerSupport {
+object MyService extends RhoService {
   import org.http4s.rho._
   import org.http4s.rho.swagger._
   import org.http4s.EntityDecoder
