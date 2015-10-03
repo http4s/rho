@@ -7,12 +7,12 @@ import org.specs2.mutable.Specification
 class CompileServiceSpec extends Specification {
 
   def getFoo(implicit c: CompileService[_]): Unit = {
-    import c.dsl._
+    import dsl._
     GET / "hello" |>> "GetFoo"
   }
 
   def putFoo(implicit c: CompileService[_]): Unit = {
-    import c.dsl._
+    import dsl._
     PUT / "hello" |>> "PutFoo"
   }
 
@@ -31,6 +31,19 @@ class CompileServiceSpec extends Specification {
 
       "GetFoo" === new RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === new RRunner(c.toService()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
+    }
+
+    "Make routes from a collection of RhoRoutes" in {
+      import dsl._
+      import CompileService.Implicit.compiler
+
+      val routes =
+        (GET / "hello" |>> "GetFoo") ::
+        (PUT / "hello" |>> "PutFoo") :: Nil
+
+      val srvc = CompileService.makeService(routes)
+      "GetFoo" === new RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
+      "PutFoo" === new RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
   }
 

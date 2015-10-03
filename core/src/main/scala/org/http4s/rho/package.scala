@@ -18,6 +18,8 @@ import scalaz.concurrent.Task
 
 package object rho extends Http4s with ResultSyntaxInstances {
 
+  object dsl extends bits.MethodAliases with bits.ResponseGeneratorInstances
+
   type RouteMiddleWare = Seq[RhoRoute[_ <: HList]] => Seq[RhoRoute[_ <: HList]]
 
   private val stringTag = implicitly[TypeTag[String]]
