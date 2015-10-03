@@ -18,13 +18,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   private[this] val logger = getLogger
 
-  def mkSwagger(info: Info, rr: RhoRoute[_])(s: Swagger): Swagger =
+  def mkSwagger(info: Info, rr: RhoRoute)(s: Swagger): Swagger =
     Swagger(
       info        = info.some,
       paths       = collectPaths(rr)(s),
       definitions = collectDefinitions(rr)(s))
 
-  def collectPaths(rr: RhoRoute[_])(s: Swagger): Map[String, Path] = {
+  def collectPaths(rr: RhoRoute)(s: Swagger): Map[String, Path] = {
     val pairs = mkPathStrs(rr).map { ps =>
       val o = mkOperation(ps, rr)
       val p0 = s.paths.get(ps).getOrElse(Path())
@@ -45,7 +45,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.alter(s)(_ => p.some) }
   }
 
-  def collectDefinitions(rr: RhoRoute[_])(s: Swagger): Map[String, Model] = {
+  def collectDefinitions(rr: RhoRoute)(s: Swagger): Map[String, Model] = {
     val initial: Set[Model] = s.definitions.values.toSet
     (collectResultTypes(rr) ++ collectCodecTypes(rr) ++ collectQueryTypes(rr))
       .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
@@ -53,19 +53,16 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       .toMap
   }
 
-  def collectResultTypes(rr: RhoRoute[_]): Set[Type] =
+  def collectResultTypes(rr: RhoRoute): Set[Type] =
     rr.resultInfo.collect {
       case TypeOnly(tpe)         => tpe
       case StatusAndType(_, tpe) => tpe
     }
     
-  def collectCodecTypes(rr: RhoRoute[_]): Set[Type] =
-    rr.router match {
-      case r: CodecRouter[_, _] => Set(r.entityType)
-      case _                    => Set.empty
-    }
+  def collectCodecTypes(rr: RhoRoute): Set[Type] =
+    rr.router.entityType.toSet
   
-  def collectQueryTypes(rr: RhoRoute[_]): Seq[Type] = {
+  def collectQueryTypes(rr: RhoRoute): Seq[Type] = {
     import bits.QueryAST._
     
     def go(stack: List[QueryRule]): List[Type] =
@@ -88,10 +85,11 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     go(rr.query::Nil)
   }
+
+  // TODO: why is this here? It appears unused.
+  def collectQueryParamTypes(rr: RhoRoute): Set[Type] = ???
   
-  def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???    
-  
-  def mkPathStrs(rr: RhoRoute[_]): List[String] = {
+  def mkPathStrs(rr: RhoRoute): List[String] = {
 
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
@@ -106,7 +104,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).map(go(_, ""))
   }
 
-  def collectPathParams(rr: RhoRoute[_]): List[PathParameter] = {
+  def collectPathParams(rr: RhoRoute): List[PathParameter] = {
 
     def go(stack: List[PathOperation], pps: List[PathParameter]): List[PathParameter] =
       stack match {
@@ -121,20 +119,17 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).map(go(_, Nil)).flatten
   }
 
-  def collectBodyParams(rr: RhoRoute[_]): Option[BodyParameter] =
-    rr.router match {
-      case r: CodecRouter[_, _] => mkBodyParam(r).some
-      case _                    => none
-    }  
+  def collectBodyParams(rr: RhoRoute): Option[BodyParameter] =
+    rr.router.entityType.map(mkBodyParam)
 
-  def collectResponses(rr: RhoRoute[_]): Map[String, Response] =
+  def collectResponses(rr: RhoRoute): Map[String, Response] =
     rr.resultInfo.collect {
       case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some).some
       case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some).some
       case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none).some
     }.flatten.toMap
 
-  def collectSummary(rr: RhoRoute[_]): Option[String] = {
+  def collectSummary(rr: RhoRoute): Option[String] = {
 
     def go(stack: List[PathOperation], summary: Option[String]): Option[String] =
       stack match {
@@ -155,10 +150,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).flatMap(go(_, None)).headOption
   }
 
-  def collectOperationParams(rr: RhoRoute[_]): List[Parameter] =
+  def collectOperationParams(rr: RhoRoute): List[Parameter] =
     collectPathParams(rr) ::: collectQueryParams(rr) ::: collectHeaderParams(rr) ::: collectBodyParams(rr).toList
 
-  def collectQueryParams(rr: RhoRoute[_]): List[Parameter] = {
+  def collectQueryParams(rr: RhoRoute): List[Parameter] = {
     import bits.QueryAST._
 
     def go(stack: List[QueryRule]): List[Parameter] =
@@ -191,7 +186,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.query::Nil)
   }
 
-  def collectHeaderParams(rr: RhoRoute[_]): List[HeaderParameter] = {
+  def collectHeaderParams(rr: RhoRoute): List[HeaderParameter] = {
     import bits.HeaderAST._
 
     def go(stack: List[HeaderRule]): List[HeaderParameter] =
@@ -216,7 +211,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.headers::Nil)
   }
 
-  def mkOperation(pathStr: String, rr: RhoRoute[_]): Operation =
+  def mkOperation(pathStr: String, rr: RhoRoute): Operation =
     Operation(
       tags        = pathStr.split("/").filterNot(_ == "").headOption.getOrElse("/") :: Nil,
       summary     = collectSummary(rr),
@@ -234,8 +229,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       .mkString
   }
 
-  def mkBodyParam(r: CodecRouter[_, _]): BodyParameter = {
-    val tpe = r.entityType
+  def mkBodyParam(tpe: Type): BodyParameter = {
     val model = if (tpe.isPrimitive) {
       val name = TypeBuilder.DataType(tpe).name
       ModelImpl(id = tpe.fullName, id2 = name, `type` = name.some, isSimple = true)

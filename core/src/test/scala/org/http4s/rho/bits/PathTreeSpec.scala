@@ -67,7 +67,7 @@ class PathTreeSpec extends Specification {
 
   "PathTree mergers" >> {
 
-    val l = Leaf((r, b) => null)
+    val l = Leaf(null)
 
     "MatchNodes" should {
       "Merge empty nodes" in {

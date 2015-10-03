@@ -24,9 +24,9 @@ final class PathTree private(private val paths: PathTree.MatchNode) {
 
   override def toString = paths.toString()
 
-  def appendRoute[T <: HList](route: RhoRoute[T]): PathTree = {
+  def appendRoute(route: RhoRoute): PathTree = {
     val m = route.method
-    val newLeaf = makeLeaf(route)
+    val newLeaf = Leaf(route)
     val newNode = paths.append(route.path, m, newLeaf)
     new PathTree(newNode)
   }
@@ -67,40 +67,19 @@ private[rho] object PathTree {
   /** Generates a list of tokens that represent the path */
   private def keyToPath(key: Request): List[String] = splitPath(key.pathInfo)
 
-  private def makeLeaf[T <: HList](route: RhoRoute[T]): Leaf = {
-    route.router match {
-      case Router(method, _, query, vals) =>
-        Leaf { (req, pathstack) =>
-          for {
-            i <- ValidationTools.runQuery(req, query, pathstack)
-            j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
-          } yield route.action.act(req, j.asInstanceOf[T])
-        }
-
-      case c @ CodecRouter(_, parser) =>
-        Leaf { (req, pathstack) =>
-          for {
-            i <- ValidationTools.runQuery(req, c.router.query, pathstack)
-            j <- ValidationTools.runValidation(req, c.headers, i)
-          } yield parser.decode(req).run.flatMap(_.fold(e =>
-            Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
-          { body =>
-            // `asInstanceOf` to turn the untyped HList to type T
-            route.action.act(req, (body :: j).asInstanceOf[T])
-          }))
-        }
-    }
-  }
-
   //////////////////////////////////////////////////////
 
   object Leaf {
-    def apply(f: (Request, HList) => Action): Leaf = SingleLeaf(f)
+    def apply(route: RhoRoute): Leaf = SingleLeaf(route)
   }
 
   /** Leaves of the PathTree */
   sealed trait Leaf {
-    /** Attempt to match this leaf */
+    /** Attempt to match this leaf
+      *
+      * @param req `Request` being matched
+      * @param stack the path params that lead to this leaf
+      */
     def attempt(req: Request, stack: HList): Action
 
     /** Concatenate this leaf with another, giving the first precedence */
@@ -112,9 +91,9 @@ private[rho] object PathTree {
     }
   }
 
-  final private case class SingleLeaf(f: (Request, HList) => Action) extends Leaf {
+  final private case class SingleLeaf(route: RhoRoute) extends Leaf {
     override def attempt(req: Request, stack: HList): Action = {
-      try f(req, stack)
+      try route.act(req, stack)
       catch { case NonFatal(t) =>
         logger.error(t)("Error in action execution")
         SuccessResponse(Task.now(Response(status = Status.InternalServerError)))

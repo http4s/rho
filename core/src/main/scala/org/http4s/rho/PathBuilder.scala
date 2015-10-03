@@ -58,7 +58,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
     CodecRouter(toAction, decoder)
 
-  override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, EmptyQuery, EmptyHeaderRule), action)
+  override def makeRoute(action: Action[T]): RhoRoute = RhoRoute(Router(method, path, EmptyQuery, EmptyHeaderRule), action)
 
   private val uriTemplate =
     for (p <- UriConverter.createPath(path))

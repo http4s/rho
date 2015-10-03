@@ -4,9 +4,8 @@ package rho
 import org.http4s.server.HttpService
 
 import org.log4s.getLogger
-import shapeless.HList
 
-class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
+class RhoService(routes: Seq[RhoRoute] = Vector.empty)
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances
 {
@@ -14,13 +13,13 @@ class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
 
   final protected val logger = getLogger
 
-  implicit protected def compilerSrvc: CompileService[RhoRoute.Tpe] = _srvc
+  implicit protected def compilerSrvc: CompileService[RhoRoute] = _srvc
 
   final def and(other: RhoService): RhoService = and(other.getRoutes())
 
-  final def and(routes: Seq[RhoRoute[_ <: HList]]): RhoService = new RhoService(getRoutes() ++ routes)
+  final def and(routes: Seq[RhoRoute]): RhoService = new RhoService(getRoutes() ++ routes)
 
-  final def getRoutes(): Seq[RhoRoute[_ <: HList]] = _srvc.routes()
+  final def getRoutes(): Seq[RhoRoute] = _srvc.routes()
 
   final def toService(filter: RouteMiddleWare = identity): HttpService = _srvc.toService(filter)
 
