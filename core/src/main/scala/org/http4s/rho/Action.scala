@@ -6,9 +6,10 @@ import shapeless.HList
 
 import scalaz.concurrent.Task
 
-case class Action[T <: HList](
-                               resultInfo: Set[ResultInfo],
-                               responseEncodings: Set[MediaType],
-                               act: (Request, T) => Task[Response]
-                             )
+final case class Action[T <: HList](
+                   resultInfo: Set[ResultInfo],
+                   responseEncodings: Set[MediaType],
+                   act: (Request, T) => Task[Response]
+                 )
+{ type Tpe = T }
 
