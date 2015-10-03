@@ -25,6 +25,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     GET / "hello" / "world" |>> (Ok("route3"))
 
+    GET / "hello/world2" |>> (Ok("/hello/world2"))
+
     GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => Ok("route" + foo) }
 
     GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => Ok("some:" + s) }
@@ -118,6 +120,11 @@ class RhoServiceSpec extends Specification with RequestRunner {
     "Execute a route with a single param" in {
       val req = Get("/world")
       checkOk(req) should_== "route2"
+    }
+
+    "Execute a route with concatonated path" in {
+      val req = Get("/hello/world2")
+      checkOk(req) === "/hello/world2"
     }
 
     "Execute a route with a single param" in {
