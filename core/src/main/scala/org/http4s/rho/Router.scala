@@ -16,7 +16,6 @@ import shapeless.ops.hlist.Prepend
 import scalaz.concurrent.Task
 
 sealed trait RoutingEntity[T <: HList] {
-  type Tpe <: HList
   def method: Method
   def path: PathRule
   def query: QueryRule
@@ -75,7 +74,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 {
   override type HeaderAppendResult[T <: HList] = CodecRouter[T, R]
 
-  def validMedia: Set[MediaRange] = decoder.consumes
+  override def validMedia: Set[MediaRange] = decoder.consumes
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
