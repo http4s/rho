@@ -34,7 +34,10 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /(t: CaptureTail.type): Router[List[String] :: T] = new Router(method, PathAnd(path, t), EmptyQuery, EmptyHeaderRule)
 
-  def /(s: String): PathBuilder[T] = new PathBuilder(method, PathAnd(path, PathMatch(s)))
+  def /(s: String): PathBuilder[T] = {
+    val newPath = s.split("/").foldLeft(path)((p,s) => PathAnd(p, PathMatch(s)))
+    new PathBuilder[T](method, newPath)
+  }
 
   def /(s: Symbol): PathBuilder[String :: T] = {
     val capture = PathCapture(s.name, StringParser.strParser, implicitly[TypeTag[String]])
