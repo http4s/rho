@@ -44,7 +44,7 @@ class ParamDefaultValueSpec extends Specification {
     GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => !p.contains("") && !p.contains("z")) |>> { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
 
     GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p != Seq(8, 5, 3)) |>> { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
-  }.toService
+  }.toService()
 
   def body(r: Request): String = getBody(service(r).run.body)
 

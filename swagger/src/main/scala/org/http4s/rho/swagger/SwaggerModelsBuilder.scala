@@ -2,10 +2,8 @@ package org.http4s
 package rho
 package swagger
 
-import org.http4s.rho.bits.HeaderAST.HeaderRule
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.QueryAST.{QueryCapture, QueryRule}
-import org.http4s.rho.bits.ResponseGenerator.EmptyRe
+import org.http4s.rho.bits.QueryAST.QueryCapture
 import org.http4s.rho.bits._
 
 import org.log4s.getLogger

@@ -4,6 +4,7 @@ import org.http4s.rho.bits.FailureResponse._
 import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 import org.http4s.Response
 import org.http4s.rho.Result.BaseResult
+import org.http4s.server.HttpService
 
 import scalaz.concurrent.Task
 
@@ -17,6 +18,12 @@ sealed trait RouteResult[+T] {
     case NoMatch => true
     case _       => false
   }
+
+  final def toResponse(implicit ev: T<:<Task[Response]): Task[Response] = this match {
+      case SuccessResponse(t) => ev(t)
+      case NoMatch            => HttpService.notFound
+      case FailureResponse(r) => r.toResponse
+    }
 }
 
 case object NoMatch extends RouteResult[Nothing]

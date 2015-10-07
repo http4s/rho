@@ -9,7 +9,7 @@ import rho.bits.PathAST._
 import rho.bits.HeaderAST._
 import rho.bits.QueryAST._
 
-import shapeless.{HNil, ::}
+import shapeless.{HList, HNil, ::}
 import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
@@ -17,6 +17,10 @@ import scalaz.{\/, \/-}
 import scalaz.concurrent.Task
 
 package object rho extends Http4s with ResultSyntaxInstances {
+
+  object dsl extends bits.MethodAliases with bits.ResponseGeneratorInstances
+
+  type RhoMiddleware = Seq[RhoRoute[_ <: HList]] => Seq[RhoRoute[_ <: HList]]
 
   private val stringTag = implicitly[TypeTag[String]]
 

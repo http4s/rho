@@ -11,7 +11,7 @@ import scalaz.Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream.Process
 
-object MyService extends RhoService with SwaggerSupport {
+object MyService extends RhoService {
   import org.http4s.rho._
   import org.http4s.rho.swagger._
   import org.http4s.EntityDecoder
@@ -80,7 +80,7 @@ object MyService extends RhoService with SwaggerSupport {
           Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(DateTime.UnixEpoch), maxAge = Some(0)))})
       }
 
-      Ok("Deleted cookies!").withHeaders(hs)
+      Ok("Deleted cookies!").replaceAllHeaders(hs)
     }
 
   "This route allows your to post stuff" **
