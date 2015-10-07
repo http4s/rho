@@ -15,7 +15,7 @@ The primary goal of ρ is to provide an easy to use AST with which to build HTTP
 * HAL documentation
 
 ### Get ρ
-Right now 0.1.0 is available at Maven Central and snapshots are available from the Sonatype repositories
+Rho artifacts are available at Maven Central and snapshots are available from the Sonatype repositories
 
 ```scala
 resolvers += Resolver.sonatypeRepo("snapshots")
