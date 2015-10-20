@@ -33,7 +33,7 @@ class PathTreeSpec extends Specification {
   "Honor UriTranslations" in {
     val svc = URITranslation.translateRoot("/bar")(new RhoService {
       GET / "foo" |>> "foo"
-    }.toService)
+    }.toService())
     val req = Request(Method.GET, uri = Uri(path = "/bar/foo"))
     val resp = svc(req).run
 
@@ -47,7 +47,7 @@ class PathTreeSpec extends Specification {
       GET / "foo" |>> "foo"
 
       OPTIONS / "bar" |>> "foo"
-    }.toService
+    }.toService()
 
     "Handle a valid OPTIONS request" in {
       val req = Request(Method.OPTIONS, uri = uri("/bar"))

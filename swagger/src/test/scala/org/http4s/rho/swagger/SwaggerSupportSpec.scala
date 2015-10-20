@@ -11,10 +11,10 @@ class SwaggerSupportSpec extends Specification with RequestRunner {
   import org.json4s.JsonAST._
   import org.json4s.jackson._
 
-  lazy val service = new SwaggerSupport {
+  val service = new RhoService {
     GET / "hello" |>> { () => Ok("hello world") }
     GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
-  }
+  }.toService(SwaggerSupport())
 
   "SwaggerSupport" should {
 

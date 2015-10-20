@@ -5,28 +5,31 @@ package swagger
 import io.swagger.util.Json
 
 import headers.`Content-Type`
+import org.http4s.rho.bits.PathAST.TypedPath
+import org.http4s.rho.swagger.models.{Swagger, Info}
 
-import shapeless.HList
+import shapeless.HNil
 
-trait SwaggerSupport extends RhoService {
-  import models._
+object SwaggerSupport {
+  def apply(
+    swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
+    apiPath: TypedPath[HNil] = "swagger.json",
+    apiInfo: Info = Info(title = "My API", version = "1.0.0")): RhoMiddleware = { routes =>
+    val sb = new SwaggerModelsBuilder(swaggerFormats)
+    var swaggerSpec: Swagger = Swagger()
 
-  private var swaggerSpec: Swagger = Swagger()
-  private lazy val swaggerResponse = Json.mapper().writeValueAsString(swaggerSpec.toJModel)
+    val swaggerRoutes = new RhoService {
+      lazy val swaggerResponse =
+      Ok(Json.mapper().writeValueAsString(swaggerSpec.toJModel))
+        .putHeaders(`Content-Type`(MediaType.`application/json`))
 
-  /** Override the `swaggerFormats` to add your own custom serializers */
-  def swaggerFormats: SwaggerFormats = DefaultSwaggerFormats
+      "Swagger documentation" ** GET / apiPath |>> { () => swaggerResponse }
+    }.getRoutes()
 
-  def apiPath = "swagger.json"
+    val rs = routes ++ swaggerRoutes
+    swaggerSpec = rs.foldLeft(swaggerSpec) { (s, r) => sb.mkSwagger(apiInfo, r)(s) }
 
-  def apiInfo: Info = Info(title = "My API", version = "1.0.0")
-
-  "Swagger documentation" **
-    GET / apiPath |>> { () => Ok(swaggerResponse).withHeaders(`Content-Type`(MediaType.`application/json`)) }
-
-  override protected def append[T <: HList](rr: RhoRoute[T]): Unit = {
-    super.append(rr)
-    val sb = new SwaggerModelsBuilder(swaggerFormats)    
-    swaggerSpec = sb.mkSwagger(apiInfo, rr)(swaggerSpec)
+    rs
   }
 }
+

@@ -1,11 +1,13 @@
 package com.http4s.rho.swagger.demo
 
+import org.http4s.rho.swagger.SwaggerSupport
+import org.http4s.server.Service
 import org.http4s.server.blaze.BlazeBuilder
-import com.http4s.rho.Helpers._
 
 object Main extends App {
+  val middleware = SwaggerSupport()
   BlazeBuilder
-    .mountService(StaticContentService.routes orElse MyService.toService)
+    .mountService(Service.withFallback(StaticContentService.routes)(MyService.toService(middleware)))
     .bindLocal(8080)
     .start
     .run

@@ -10,6 +10,7 @@ import org.http4s.rho.bits.{ StringParser, ResultResponse, SuccessResponse, Fail
 import org.specs2.mutable.Specification
 
 import scodec.bits.ByteVector
+import shapeless.HList
 
 import scala.reflect._
 import scala.reflect.runtime.universe._
@@ -41,10 +42,12 @@ object SwaggerModelsBuilderSpec {
 }
 
 class SwaggerModelsBuilderSpec extends Specification {
-  import models._, DummyCompiler.compilerInstance
+  import models._
   import org.http4s.rho.bits.ResponseGeneratorInstances._
 
   import SwaggerModelsBuilderSpec._
+
+  implicit def defaultCompiler: CompileService[RhoRoute.Tpe] = CompileService.identityCompiler
   
   sealed abstract class Renderable
   case class ModelA(name: String, color: Int) extends Renderable

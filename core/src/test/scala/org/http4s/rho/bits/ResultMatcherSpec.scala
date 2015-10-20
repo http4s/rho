@@ -2,6 +2,7 @@ package org.http4s
 package rho
 package bits
 
+import org.http4s.rho
 import org.specs2.mutable.Specification
 
 import scala.reflect.runtime.universe._
@@ -11,14 +12,19 @@ import Status._
 
 class ResultMatcherSpec extends Specification {
 
-  trait TRhoService extends RhoService {
+  class TRhoService
+    extends bits.MethodAliases
+    with bits.ResponseGeneratorInstances
+  {
     var statuses: Set[(Status, Type)] = Set.empty
 
-    override protected def append[T <: HList](route: RhoRoute[T]): Unit = {
-      statuses = route.resultInfo.collect {
-        case StatusAndType(s, t) => (s,t)
+    implicit final protected val compileSrvc: CompileService[RhoRoute.Tpe] = {
+      new CompileService[RhoRoute.Tpe] {
+        override def compile[T <: HList](route: RhoRoute[T]): RhoRoute.Tpe = {
+          statuses = route.resultInfo.collect { case StatusAndType(s, t) => (s, t) }
+          route
+        }
       }
-      super.append(route)
     }
   }
 
