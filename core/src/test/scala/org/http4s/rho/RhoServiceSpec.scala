@@ -47,7 +47,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
       Ok("twoparams2_" + foo + bar.getOrElse("cat"))
     }
 
-    GET / "variadic" / * |>> { tail: Seq[String] => Ok("route8_" + tail.mkString("/")) }
+    GET / "variadic" / * |>> { tail: List[String] => Ok("route8_" + tail.mkString("/")) }
 
     val or = "or1" || "or2"
     GET / or |>> { () => Ok("route9") }
