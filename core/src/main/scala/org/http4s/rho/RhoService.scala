@@ -2,14 +2,16 @@ package org.http4s
 package rho
 
 import org.http4s.rho.CompileService.ServiceBuilder
+import org.http4s.rho.bits.PathAST.TypedPath
 import org.http4s.server.HttpService
 
 import org.log4s.getLogger
-import shapeless.HList
+import shapeless.{HNil, HList}
 
 class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances
+    with RoutePrependable[RhoService]
 {
   final protected val logger = getLogger
 
@@ -27,5 +29,9 @@ class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
   final def toService(filter: RhoMiddleware = identity): HttpService = compileService.toService(filter)
 
   final override def toString(): String = s"RhoService(${compileService.routes().toString()})"
+
+  final override def /:(prefix: TypedPath[HNil]): RhoService = {
+    new RhoService(compileService.routes().map { prefix /: _ })
+  }
 }
 

@@ -7,7 +7,7 @@ import bits.QueryAST._
 import bits.HeaderAST._
 
 import shapeless.ops.hlist.Prepend
-import shapeless.{ ::, HList }
+import shapeless.{HNil, ::, HList}
 
 case class QueryBuilder[T <: HList](method: Method,
                                       path: PathRule,
@@ -15,7 +15,11 @@ case class QueryBuilder[T <: HList](method: Method,
   extends RouteExecutable[T]
   with HeaderAppendable[T]
   with UriConvertible
+  with RoutePrependable[QueryBuilder[T]]
 {
+  override def /:(prefix: TypedPath[HNil]): QueryBuilder[T] =
+    new QueryBuilder[T](method, PathAnd(prefix.rule, path), query)
+  
   override type HeaderAppendResult[T <: HList] = Router[T]
 
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, query, headers), action)

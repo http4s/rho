@@ -4,12 +4,11 @@ package rho
 import bits.PathAST._
 import bits.HeaderAST._
 import bits.QueryAST.QueryRule
-import org.http4s.rho.bits.{HeaderAppendable, HListToFunc}
-import headers.`Content-Type`
+import org.http4s.rho.bits.HeaderAppendable
 
 import scala.reflect.runtime.universe.{Type, TypeTag}
 
-import shapeless.{::, HList}
+import shapeless.{HNil, ::, HList}
 import shapeless.ops.hlist.Prepend
 
 sealed trait RoutingEntity[T <: HList] {
@@ -17,6 +16,8 @@ sealed trait RoutingEntity[T <: HList] {
   def path: PathRule
   def query: QueryRule
   def headers: HeaderRule
+
+  def /:(path: TypedPath[HNil]): RoutingEntity[T]
 }
 
 /** Provides the operations for generating a router
@@ -34,8 +35,13 @@ case class Router[T <: HList](method: Method,
                           with HeaderAppendable[T]
                           with RoutingEntity[T]
                           with Decodable[T, Nothing]
+                          with RoutePrependable[Router[T]]
 {
   override type HeaderAppendResult[T <: HList] = Router[T]
+
+  override def /:(prefix: TypedPath[HNil]): Router[T] = {
+    copy(path = PathAnd(prefix.rule, path))
+  }
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
     Router(method, path, query, HeaderAnd(headers, v.rule))
@@ -56,6 +62,9 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
+
+  override def /:(prefix: TypedPath[HNil]): CodecRouter[T, R] =
+    copy(router = prefix /: router)
 
   /** Append the header to the builder, generating a new typed representation of the route */
 //  override def >>>[T2 <: HList](header: TypedHeader[T2])(implicit prep: Prepend[T2, T]): CodecRouter[prep.Out, R] = ???
