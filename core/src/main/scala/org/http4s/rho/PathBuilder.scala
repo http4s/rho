@@ -22,6 +22,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   with Decodable[T, Nothing]
   with UriConvertible
   with HeaderAppendable[T]
+  with RoutePrependable[PathBuilder[T]]
 {
   type HeaderAppendResult[T <: HList] = Router[T]
 
@@ -52,6 +53,9 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T2, T]): QueryBuilder[prep.Out] =
     QueryBuilder(method, PathAnd(path, t.path), t.query)
+
+  override def /:(prefix: TypedPath[HNil]): PathBuilder[T] =
+    new PathBuilder(method, PathAnd(prefix.rule, path))
 
   def toAction: Router[T] = >>>(TypedHeader[HNil](EmptyHeaderRule))
 

@@ -24,4 +24,4 @@ trait RequestRunner {
   }
 }
 
-class RRunner(val service: HttpService) extends RequestRunner
+case class RRunner(val service: HttpService) extends RequestRunner

@@ -349,4 +349,17 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
   }
 
+  "RhoService prefixation" should {
+    "Prefix a RhoService" in {
+      val srvc1 = new RhoService {
+        GET / "bar" |>> "bar"
+      }
+
+      val srvc2 = "foo" /: srvc1 toService()
+
+      val req1 = Request(uri = Uri(path ="/foo/bar"))
+      getBody(srvc2(req1).run.body) === "bar"
+    }
+  }
+
 }

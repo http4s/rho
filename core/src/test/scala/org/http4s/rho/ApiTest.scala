@@ -356,7 +356,7 @@ class ApiTest extends Specification {
       val path = GET / "hello"
 
       val req = Request(uri = uri("/hello?foo=bar"))
-        .withHeaders(Headers(headers.`Content-Length`("foo".length)))
+        .replaceAllHeaders(Headers(headers.`Content-Length`("foo".length)))
 
       val route1 = (path +? param[Int]("foo")) runWith { i: Int =>
         Ok("shouldn't get here.")
@@ -369,6 +369,30 @@ class ApiTest extends Specification {
       }
 
       route2(req).run.status should_== Status.Unauthorized
+    }
+  }
+
+  "Path prepending" should {
+
+    val req = Request(uri=uri("/foo/bar"))
+    val respMsg = "Result"
+
+    "Work for a PathBuilder" in {
+      val tail = GET / "bar"
+      val all = "foo" /: tail
+      all.runWith(respMsg).apply(req).run.as[String].run === respMsg
+    }
+
+    "Work for a QueryBuilder" in {
+      val tail = GET / "bar" +? param[String]("str")
+      val all = "foo" /: tail
+      all.runWith{ q: String => respMsg + q}.apply(req.copy(uri=uri("/foo/bar?str=answer"))).run.as[String].run === respMsg + "answer"
+    }
+
+    "Work for a Router" in {
+      val tail = GET / "bar" >>> RequireETag
+      val all = "foo" /: tail
+      all.runWith(respMsg).apply(req.copy(uri=uri("/foo/bar")).putHeaders(etag)).run.as[String].run === respMsg
     }
   }
 }

@@ -18,7 +18,7 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] { exec =>
   /** [[Method]] of the incoming HTTP [[Request]] */
   def method: Method
 
-//  /** Create a [[RhoAction]] from this [[RouteExecutable]] with the provided converters */
+//  /** Create a [[RhoRoute]] from this [[RouteExecutable]] with the provided converters */
   def makeRoute(action: Action[T]): RhoRoute[T]
 
   /** Compiles a HTTP request definition into an action */
