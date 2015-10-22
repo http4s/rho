@@ -36,12 +36,12 @@ object HListToFunc {
   }
 
   implicit def instance[T <: HList, TR <: HList, F, R](implicit fp: FnToProduct.Aux[F, TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[R]]): HListToFunc[T, F] = new MatcherHListToFunc[T, F] {
-    override def matcher = m.value
+    override val matcher = m.value
     override def conv(f: F): (Request, T) => Task[Response] = (req: Request, h: T) => { matcher.conv(req, f.toProduct(rev(h))) }
   }  
   
   implicit def instance1[T <: HList, TR <: HList, F, R](implicit fp: FnToProduct.Aux[F, Request :: TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[R]]): HListToFunc[T, F] = new MatcherHListToFunc[T, F] {
-    override def matcher = m.value
+    override val matcher = m.value
     override def conv(f: F): (Request, T) => Task[Response] = (req: Request, h: T) => { matcher.conv(req, f.toProduct(req :: rev(h))) }
   }
 }
