@@ -364,7 +364,7 @@ class ApiTest extends Specification {
 
       route1(req).run.status should_== Status.BadRequest
 
-      val route2 = (path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) runWith { str: String =>
+      val route2 = (path +? paramR[String]("foo"){ _: String => Some(Unauthorized("foo")) })  runWith { str: String =>
         Ok("shouldn't get here.")
       }
 

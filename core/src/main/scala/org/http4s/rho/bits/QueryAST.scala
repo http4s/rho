@@ -5,16 +5,14 @@ import scala.language.existentials
 
 import org.http4s.rho.UriConvertible
 
-import scala.reflect.runtime.universe.TypeTag
 import shapeless.HList
 import shapeless.ops.hlist.Prepend
-
-import scalaz.Applicative
 
 object QueryAST {
 
   /** A TypedQuery acts as a shell to maintain type safety of the [[QueryRule]] construction and evaluation. */
   case class TypedQuery[T <: HList](rule: QueryRule) extends UriConvertible {
+
     final def or(v: TypedQuery[T]): TypedQuery[T] = TypedQuery(QueryOr(this.rule, v.rule))
 
     final def ||(v: TypedQuery[T]): TypedQuery[T] = or(v)

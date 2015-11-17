@@ -33,17 +33,17 @@ class ParamDefaultValueSpec extends Specification {
 
     // with specific validation
 
-    GET / "test9" +? param("param1", "default1", (p: String) => !p.isEmpty && p != "fail") |>> { param1: String => Ok("test9:" + param1) }
+    GET / "test9"  +? paramV("param1", "default1"){ p: String => !p.isEmpty && p != "fail" } |>> { param1: String => Ok("test9:" + param1) }
 
-    GET / "test10" +? param[Int]("param1", 1, (p: Int) => p >= 0) |>> { param1: Int => Ok("test10:" + param1) }
+    GET / "test10" +? paramV[Int]("param1", 1){ p: Int => p >= 0 } |>> { param1: Int => Ok("test10:" + param1) }
 
-    GET / "test11" +? param[Option[Int]]("param1", Some(100), (p: Option[Int]) => p != Some(0)) |>> { os: Option[Int] => Ok("test11:" + os.getOrElse("")) }
+    GET / "test11" +? paramV[Option[Int]]("param1", Some(100)){ p: Option[Int] => p != Some(0) } |>> { os: Option[Int] => Ok("test11:" + os.getOrElse("")) }
 
-    GET / "test12" +? param[Option[String]]("param1", Some("default1"), (p: Option[String]) => p != Some("fail") && p != Some("")) |>> { os: Option[String] => Ok("test12:" + os.getOrElse("")) }
+    GET / "test12" +? paramV[Option[String]]("param1", Some("default1")){ p: Option[String] => p != Some("fail") && p != Some("") } |>> { os: Option[String] => Ok("test12:" + os.getOrElse("")) }
 
-    GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => !p.contains("") && !p.contains("z")) |>> { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
+    GET / "test13" +? paramV[Seq[String]]("param1", Seq("a", "b")){ p: Seq[String] => !p.contains("") && !p.contains("z") } |>> { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
 
-    GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p != Seq(8, 5, 3)) |>> { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
+    GET / "test14" +? paramV[Seq[Int]]("param1", Seq(3, 5, 8)){ p: Seq[Int] => p != Seq(8, 5, 3) } |>> { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
   }.toService()
 
   def body(r: Request): String = getBody(service(r).run.body)
