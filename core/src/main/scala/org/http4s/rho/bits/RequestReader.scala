@@ -36,7 +36,9 @@ object RequestReader {
     private val valueResp = SuccessResponse(value)
   }
 
-  implicit val requestReaderInstance: Applicative[RequestReader] = new Applicative[RequestReader] {
+  def point[A](a: A): RequestReader[A] = PureRequestReader(a)
+
+  implicit val instance: Applicative[RequestReader] = new Applicative[RequestReader] {
     override def point[A](a: => A): RequestReader[A] = PureRequestReader(a)
 
     override def ap[A, B](fa: => RequestReader[A])(f: => RequestReader[(A) => B]): RequestReader[B] = {

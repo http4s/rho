@@ -5,8 +5,10 @@ import scala.language.existentials
 
 import org.http4s.rho.UriConvertible
 
-import shapeless.HList
+import shapeless.{HNil, HList, :: => :#:}
 import shapeless.ops.hlist.Prepend
+
+import scalaz.Applicative
 
 object QueryAST {
 
@@ -51,6 +53,14 @@ object QueryAST {
 //        case EmptyQuery            => None                       // shouldn't get here
 //      }
 //    }
+
+    def typeQueryApplicativeInstance[T]: Applicative[({type t[A] = TypedQuery[A:#:HNil]})#t] = new Applicative[({type t[A] = TypedQuery[A:#:HNil]})#t] {
+      override def point[A](a: => A): TypedQuery[A:#:HNil] = TypedQuery(QueryCapture(RequestReader.point(a)))
+
+      override def ap[A, B](fa: => TypedQuery[A:#:HNil])(f: => TypedQuery[(A => B):#:HNil]): TypedQuery[B:#:HNil] = {
+        ??? // TODO: this is will be nasty due to 'or' rules...
+      }
+    }
   }
 
   sealed trait QueryRule
