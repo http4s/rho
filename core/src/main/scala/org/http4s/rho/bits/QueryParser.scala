@@ -15,23 +15,22 @@ trait QueryParser[A] {
   def collect(name: String, params: Params, default: Option[A]): ResultResponse[A]
 }
 
-final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Task[BaseResult]]) extends QueryParser[A] {
-  override def collect(name: String, params: Params, default: Option[A]): ResultResponse[A] = {
-    val result = parent.collect(name, params, default)
-    result.flatMap{ r => validate(r) match {
-        case None       => result
-        case Some(resp) => FailureResponse.pure(resp.map(_.resp))
-      }
-    }
-  }
-}
+//final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Task[BaseResult]]) extends QueryParser[A] {
+//  override def collect(name: String, params: Params, default: Option[A]): ResultResponse[A] = {
+//    val result = parent.collect(name, params, default)
+//    result.flatMap{ r => validate(r) match {
+//        case None       => result
+//        case Some(resp) => FailureResponse.pure(resp.map(_.resp))
+//      }
+//    }
+//  }
+//}
 
 object QueryParser {
   type Params = Map[String, Seq[String]]
 
   implicit def optionParse[A](implicit p: StringParser[A]) = new QueryParser[Option[A]] {
     override def collect(name: String, params: Params, default: Option[Option[A]]): ResultResponse[Option[A]] = {
-      val defaultValue = default.getOrElse(None)
       params.get(name) match {
         case Some(Seq(value, _*)) =>
           p.parse(value) match {

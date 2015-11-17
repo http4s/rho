@@ -1,14 +1,19 @@
 package org.http4s
 package rho.bits
 
+import scala.language.existentials
+
 import org.http4s.rho.UriConvertible
 
 import scala.reflect.runtime.universe.TypeTag
 import shapeless.HList
 import shapeless.ops.hlist.Prepend
 
+import scalaz.Applicative
+
 object QueryAST {
 
+  /** A TypedQuery acts as a shell to maintain type safety of the [[QueryRule]] construction and evaluation. */
   case class TypedQuery[T <: HList](rule: QueryRule) extends UriConvertible {
     final def or(v: TypedQuery[T]): TypedQuery[T] = TypedQuery(QueryOr(this.rule, v.rule))
 
@@ -35,24 +40,24 @@ object QueryAST {
   }
 
   object TypedQuery {
-    import shapeless.{HNil, ::}
-    implicit def queryParamKeyLike[T]: QueryParamKeyLike[TypedQuery[T::HNil]] = new QueryParamKeyLike[TypedQuery[T::HNil]] {
-      override def getKey(t: TypedQuery[T::HNil]): QueryParameterKey =
-        getKey(t.rule).getOrElse(sys.error("Empty Query doesn't have a key name"))
-
-      private def getKey(rule: QueryRule): Option[QueryParameterKey] = rule match {
-        case QueryCapture(n,_,_,_) => Some(QueryParameterKey(n))
-        case QueryOr(a, b)         => getKey(a) orElse getKey(b)
-        case MetaCons(r,_)         => getKey(r)
-        case QueryAnd(a, b)        => getKey(a) orElse getKey(b) // shouldn't get here
-        case EmptyQuery            => None                       // shouldn't get here
-      }
-    }
+//    import shapeless.{HNil, ::}
+//    implicit def queryParamKeyLike[T]: QueryParamKeyLike[TypedQuery[T::HNil]] = new QueryParamKeyLike[TypedQuery[T::HNil]] {
+//      override def getKey(t: TypedQuery[T::HNil]): QueryParameterKey =
+//        getKey(t.rule).getOrElse(sys.error("Empty Query doesn't have a key name"))
+//
+//      private def getKey(rule: QueryRule): Option[QueryParameterKey] = rule match {
+//        case QueryCapture(n,_,_,_) => Some(QueryParameterKey(n))
+//        case QueryOr(a, b)         => getKey(a) orElse getKey(b)
+//        case MetaCons(r,_)         => getKey(r)
+//        case QueryAnd(a, b)        => getKey(a) orElse getKey(b) // shouldn't get here
+//        case EmptyQuery            => None                       // shouldn't get here
+//      }
+//    }
   }
 
   sealed trait QueryRule
 
-  case class QueryCapture[T](name: String, p: QueryParser[T], default: Option[T], m: TypeTag[T]) extends QueryRule
+  case class QueryCapture(reader: RequestReader[_]) extends QueryRule
 
   case class QueryAnd(a: QueryRule, b: QueryRule) extends QueryRule
 
@@ -63,12 +68,20 @@ object QueryAST {
   case object EmptyQuery extends QueryRule
 
   private def collectNames(rule: QueryRule): List[String] = {
+
+    def fastPrepend[A](a: Seq[A], b: List[A]): List[A] = {
+      import scala.collection.mutable.ListBuffer
+      val buff = new ListBuffer[A]
+      buff ++= a
+      buff.prependToList(b)
+    }
+
     @scala.annotation.tailrec
     def go(r: List[QueryRule], acc: List[String]): List[String] = r match {
       case Nil => acc
       case MetaCons(query, _) :: rs => go(rs, acc)
       case QueryAnd(a, b) :: rs => go(a :: b :: rs, acc)
-      case QueryCapture(name, _, _, _) :: rs => go(rs, name :: acc)
+      case QueryCapture(reader) :: rs => go(rs, fastPrepend(RequestReader.queryNames(reader),acc))
       case QueryOr(a, _) :: rs => go(a :: rs, acc)
       case EmptyQuery :: rs => go(rs, acc)
     }
