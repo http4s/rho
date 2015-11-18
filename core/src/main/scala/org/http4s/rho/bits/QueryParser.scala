@@ -1,30 +1,15 @@
 package org.http4s
 package rho.bits
 
-import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.bits.QueryParser.Params
 
 import scala.language.higherKinds
 
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
-import scalaz.concurrent.Task
 
 trait QueryParser[A] {
-  import QueryParser.Params
-  def collect(name: String, params: Params, default: Option[A]): ResultResponse[A]
+  def collect(name: String, params: Map[String, Seq[String]], default: Option[A]): ResultResponse[A]
 }
-
-//final class ValidatingParser[A](parent: QueryParser[A], validate: A => Option[Task[BaseResult]]) extends QueryParser[A] {
-//  override def collect(name: String, params: Params, default: Option[A]): ResultResponse[A] = {
-//    val result = parent.collect(name, params, default)
-//    result.flatMap{ r => validate(r) match {
-//        case None       => result
-//        case Some(resp) => FailureResponse.pure(resp.map(_.resp))
-//      }
-//    }
-//  }
-//}
 
 object QueryParser {
   type Params = Map[String, Seq[String]]

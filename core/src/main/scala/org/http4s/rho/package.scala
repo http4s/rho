@@ -134,13 +134,13 @@ package object rho extends Http4s with ResultSyntaxInstances {
 
   /** Define a query parameter with a default value */
   private def _param[T](name: String, default: Option[T])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] = {
-    val captureParams = QueryCaptureParams(name, true, m)
+    val captureParams = QueryCaptureParams(name, default, m)
 //    ExtractingReader[T](req => parser.collect(name, req.uri.multiParams, default), captureParams)
     QueryReader(captureParams::Nil)(parser.collect(name, _, default))
   }
 
   private def _paramR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =  {
-    val captureParams = QueryCaptureParams(name, true, m)
+    val captureParams = QueryCaptureParams(name, default, m)
 
     QueryReader(captureParams::Nil){ params =>
       val result = parser.collect(name, params, default)

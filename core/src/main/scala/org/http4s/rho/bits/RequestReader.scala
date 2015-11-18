@@ -2,7 +2,7 @@ package org.http4s.rho
 package bits
 
 
-import org.http4s.rho.bits.QueryAST.{QueryOr, QueryAnd, QueryCapture, TypedQuery}
+import org.http4s.rho.bits.QueryAST.{QueryCapture, TypedQuery}
 import org.http4s.rho.bits.RequestReader.ExtractingReader
 import shapeless.{ HNil, :: => :#: }
 
@@ -21,11 +21,11 @@ final class QueryReader[T](private val run: RequestReader[T, QueryCaptureParams]
 {
   def read(req: Request): ResultResponse[T] = run.read(req)
 
-  def parameters: Seq[QueryCaptureParams] = run.parameters
+  def parameters: List[QueryCaptureParams] = run.parameters
 
   def asRule: TypedQuery[T:#:HNil] = TypedQuery(QueryCapture(this))
 
-  def names: List[String] = parameters.map(_.name).toList
+  def names: List[String] = parameters.map(_.name)
 
   override def asUriTemplate(request: Request) =
     UriConvertible.respectPathInfo(uriTemplate, request)
@@ -36,9 +36,9 @@ final class QueryReader[T](private val run: RequestReader[T, QueryCaptureParams]
 }
 
 object QueryReader {
-  final case class QueryCaptureParams(name: String, optional: Boolean, tag: TypeTag[_])
+  final case class QueryCaptureParams(name: String, default: Option[_], tag: TypeTag[_])
 
-  def apply[T](params: Seq[QueryCaptureParams])(f: Map[String, Seq[String]] => ResultResponse[T]): QueryReader[T] = {
+  def apply[T](params: List[QueryCaptureParams])(f: Map[String, Seq[String]] => ResultResponse[T]): QueryReader[T] = {
     new QueryReader[T](ExtractingReader(req => f(req.uri.multiParams), params))
   }
 
@@ -54,17 +54,17 @@ object QueryReader {
 private[bits] sealed trait RequestReader[T, +P] {
   def read(req: Request): ResultResponse[T]
 
-  def parameters: Seq[P]
+  def parameters: List[P]
 }
 
 private[bits] object RequestReader {
-  final case class ExtractingReader[T, P](f: Request => ResultResponse[T], parameters: Seq[P]) extends RequestReader[T, P] {
+  final case class ExtractingReader[T, P](f: Request => ResultResponse[T], parameters: List[P]) extends RequestReader[T, P] {
     override def read(req: Request): ResultResponse[T] = f(req)
   }
 
   private case class PureRequestReader[T](value: T) extends RequestReader[T, Nothing] {
     override def read(req: Request): ResultResponse[T] = valueResp
-    override def parameters: Seq[Nothing] = Nil
+    override def parameters: List[Nothing] = Nil
 
     private val valueResp = SuccessResponse(value)
   }
@@ -80,7 +80,7 @@ private[bits] object RequestReader {
         sf.read(req).flatMap(f => sfa.read(req).map(f))
       }
 
-      override val parameters: Seq[P] = sfa.parameters ++ sf.parameters
+      override val parameters: List[P] = sfa.parameters ::: sf.parameters
     }
   }
 }

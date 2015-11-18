@@ -65,7 +65,7 @@ object QueryAST {
       case Nil => acc
       case MetaCons(query, _) :: rs => go(rs, acc)
       case QueryAnd(a, b) :: rs => go(a :: b :: rs, acc)
-      case QueryCapture(reader) :: rs => go(rs, reader.parameters.map(_.name).toList ::: acc)
+      case QueryCapture(reader) :: rs => go(rs, reader.parameters.map(_.name) ::: acc)
       case QueryOr(a, _) :: rs => go(a :: rs, acc)
       case EmptyQuery :: rs => go(rs, acc)
     }

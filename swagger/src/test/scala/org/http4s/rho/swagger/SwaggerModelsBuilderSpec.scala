@@ -4,13 +4,11 @@ package swagger
 import org.http4s._
 import org.http4s.Method._
 import org.http4s.headers._
-import org.http4s.rho.bits.QueryAST.EmptyQuery
 import org.http4s.rho.bits.{ StringParser, ResultResponse, SuccessResponse, FailureResponse }
 
 import org.specs2.mutable.Specification
 
 import scodec.bits.ByteVector
-import shapeless.HList
 
 import scala.reflect._
 import scala.reflect.runtime.universe._
@@ -105,6 +103,15 @@ class SwaggerModelsBuilderSpec extends Specification {
        
        sb.collectQueryParams(ra) must_==
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
+    }
+
+    "handle an action with one query parameter of complex data type constructed from an applicative" in {
+      val p = (param[String]("foo") |@| param[Int]("bar"))(Foo.apply)
+      val ra = fooPath +? p |>> { (_: Foo) => "" }
+
+      sb.collectQueryParams(ra) must_==
+        List(QueryParameter(`type` = "integer".some, name = "bar".some, required = true),
+             QueryParameter(`type` = "string".some, name = "foo".some, required = true))
     }
     
     "handle and action with two query paramters of complex data type" in {

@@ -293,6 +293,22 @@ class ApiTest extends Specification {
 
       route2(req).run.status should_== Status.Ok
     }
+
+    "Work as applicatives" in {
+      import scalaz._
+      import Scalaz._
+
+      val path = GET / "hello"
+      val req = Request(uri = uri("/hello?foo=bar&baz=1"))
+
+      case class FooBar(foo: String, baz: Int)
+
+      val p = (param[String]("foo") |@| param[Int]("baz"))(FooBar.apply)
+
+      val route1 = (path +? p) runWith { _: FooBar => Ok("") }
+
+      route1(req).run.status should_== Status.Ok
+    }
   }
 
   "Decoders" should {
