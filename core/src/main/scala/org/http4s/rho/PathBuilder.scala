@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.QueryAST.{ TypedQuery, QueryRule, EmptyQuery }
+import org.http4s.rho.bits.QueryAST.{QueryCapture, TypedQuery, QueryRule, EmptyQuery}
 import bits.HeaderAST._
 import bits.PathAST._
 import bits._
@@ -30,8 +30,8 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
 
   override def query: QueryRule = EmptyQuery
 
-  def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
-    QueryBuilder(method, path, q.rule)
+  final def +?[QueryType, T1 <: HList](q: QueryType)(implicit ev: AsTypedQuery[QueryType, T1], prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
+    QueryBuilder(method, path, ev(q).rule)
 
   def /(t: CaptureTail.type): Router[List[String] :: T] = new Router(method, PathAnd(path, t), EmptyQuery, EmptyHeaderRule)
 

@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import bits.{HeaderAppendable, UriConverter }
+import org.http4s.rho.bits.{AsTypedQuery, QueryReader, HeaderAppendable, UriConverter}
 import bits.PathAST._
 import bits.QueryAST._
 import bits.HeaderAST._
@@ -27,8 +27,8 @@ case class QueryBuilder[T <: HList](method: Method,
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
     Router(method, path, query, v.rule)
 
-  def &[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
-    QueryBuilder(method, path, QueryAnd(query, q.rule))
+  final def &[QueryType, T1 <: HList](q: QueryType)(implicit ev: AsTypedQuery[QueryType, T1], prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
+    QueryBuilder(method, path, QueryAnd(query, ev(q).rule))
 
   override def headers: HeaderRule = EmptyHeaderRule
 

@@ -1,7 +1,7 @@
 package org.http4s
 
 import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.bits.RequestReader._
+import org.http4s.rho.bits.QueryReader._
 import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 
 import scala.language.implicitConversions
@@ -34,24 +34,21 @@ package object rho extends Http4s with ResultSyntaxInstances {
 
   /////////////////// begin Query construction helpers ////////////////////////////////////////////
 
-  def query[T](reader: RequestReader[T]): TypedQuery[T :: HNil] =
-    TypedQuery(QueryCapture(reader))
-
   /**
    * Defines a parameter in query string that should be bound to a route definition.
    * @param name name of the parameter in query
    */
-  def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
     _param(name, None)
 
   /** Define a query parameter with a default value */
-  def param[T](name: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def param[T](name: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
     _param(name, Some(default))
 
   /** Define a query parameter that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
-  def paramV[T](name: String)(validate: T => Boolean)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramV[T](name: String)(validate: T => Boolean)(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
     paramR(name){ t =>
       if (validate(t)) None
       else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
@@ -61,18 +58,18 @@ package object rho extends Http4s with ResultSyntaxInstances {
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
   def paramV[T](name: String, default: T)(validate: T => Boolean)
-              (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+              (implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
     paramR(name, default){ t =>
       if (validate(t)) None
       else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
     }
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  def paramR[T](name: String)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
     _paramR(name, None, validate)
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  def paramR[T](name: String, default: T)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String, default: T)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
     _paramR(name, Some(default), validate)
 
   /////////////////// End Query construction helpers //////////////////////////////////////////////
@@ -136,15 +133,17 @@ package object rho extends Http4s with ResultSyntaxInstances {
   private val stringTag = implicitly[TypeTag[String]]
 
   /** Define a query parameter with a default value */
-  private def _param[T](name: String, default: Option[T])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] = {
+  private def _param[T](name: String, default: Option[T])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] = {
     val captureParams = QueryCaptureParams(name, true, m)
-    TypedQuery(QueryCapture(ExtractingReader[T](req => parser.collect(name, req.uri.multiParams, default), captureParams)))
+//    ExtractingReader[T](req => parser.collect(name, req.uri.multiParams, default), captureParams)
+    QueryReader(captureParams::Nil)(parser.collect(name, _, default))
   }
 
-  private def _paramR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =  {
+  private def _paramR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =  {
     val captureParams = QueryCaptureParams(name, true, m)
-    def extract(req: Request): ResultResponse[T] = {
-      val result = parser.collect(name, req.uri.multiParams, default)
+
+    QueryReader(captureParams::Nil){ params =>
+      val result = parser.collect(name, params, default)
       result.flatMap { t =>
         validate(t) match {
           case None       => result
@@ -152,6 +151,5 @@ package object rho extends Http4s with ResultSyntaxInstances {
         }
       }
     }
-    TypedQuery(QueryCapture(ExtractingReader[T](extract, captureParams)))
   }
 }

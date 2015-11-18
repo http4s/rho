@@ -3,20 +3,18 @@ package rho.bits
 
 import scala.language.existentials
 
-import rho.RequestLineBuilder
-import rho.bits.QueryAST.TypedQuery
+import org.http4s.rho.{QueryBuilder, RequestLineBuilder, UriConvertible}
+import org.http4s.rho.bits.QueryAST.{QueryCapture, TypedQuery}
 
 import shapeless.ops.hlist.Prepend
 import shapeless.{ ::, HList }
 
 import scala.reflect.runtime.universe.TypeTag
 
-import org.http4s.rho.UriConvertible
-
 /** Actual elements which build up the AST */
 object PathAST {
 
-  case class TypedPath[T <: HList](rule: PathRule) extends UriConvertible {
+  final case class TypedPath[T <: HList](rule: PathRule) extends UriConvertible {
     /** These methods differ in their return type */
     def and[T2 <: HList](p2: TypedPath[T2])(implicit prep: Prepend[T2, T]): TypedPath[prep.Out] =
       TypedPath(PathAnd(this.rule, p2.rule))
@@ -40,8 +38,8 @@ object PathAST {
     def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T, T2]): RequestLineBuilder[prep.Out] =
       RequestLineBuilder(PathAnd(this.rule, t.path), t.query)
 
-    def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
-      RequestLineBuilder(rule, q.rule)
+    def +?[QueryType, T1 <: HList](q: QueryType)(implicit ev: AsTypedQuery[QueryType, T1], prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
+      RequestLineBuilder(rule, ev(q).rule)
 
     private val uriTemplate =
       for (p <- UriConverter.createPath(rule))
