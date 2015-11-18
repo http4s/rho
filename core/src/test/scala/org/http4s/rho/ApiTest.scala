@@ -6,6 +6,7 @@ import bits.ResponseGeneratorInstances._
 
 import bits.HeaderAST.{TypedHeader, HeaderAnd}
 import bits.{PathTree, SuccessResponse, FailureResponse}
+import org.http4s.rho.bits.QueryAST.QueryCapture
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -199,7 +200,7 @@ class ApiTest extends Specification {
     "be made from TypedPath and TypedQuery" in {
       val path = pathMatch("foo")
       val q = param[Int]("bar")
-      path +? q should_== RequestLineBuilder(path.rule, q.rule)
+      path +? q should_== RequestLineBuilder(path.rule, QueryCapture(q))
     }
 
     "append to a TypedPath" in {
@@ -292,6 +293,22 @@ class ApiTest extends Specification {
 
       route2(req).run.status should_== Status.Ok
     }
+
+    "Work as applicatives" in {
+      import scalaz._
+      import Scalaz._
+
+      val path = GET / "hello"
+      val req = Request(uri = uri("/hello?foo=bar&baz=1"))
+
+      case class FooBar(foo: String, baz: Int)
+
+      val p = (param[String]("foo") |@| param[Int]("baz"))(FooBar.apply)
+
+      val route1 = (path +? p) runWith { _: FooBar => Ok("") }
+
+      route1(req).run.status should_== Status.Ok
+    }
   }
 
   "Decoders" should {
@@ -364,7 +381,7 @@ class ApiTest extends Specification {
 
       route1(req).run.status should_== Status.BadRequest
 
-      val route2 = (path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) runWith { str: String =>
+      val route2 = (path +? paramR[String]("foo"){ _: String => Some(Unauthorized("foo")) })  runWith { str: String =>
         Ok("shouldn't get here.")
       }
 

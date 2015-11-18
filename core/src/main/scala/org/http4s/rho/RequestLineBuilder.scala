@@ -1,7 +1,8 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.QueryAST.{ QueryAnd, TypedQuery, QueryRule }
+import org.http4s.rho.bits.AsTypedQuery
+import org.http4s.rho.bits.QueryAST.{ QueryAnd, QueryRule }
 
 import bits.HeaderAST.{ EmptyHeaderRule, HeaderRule }
 import org.http4s.rho.bits.PathAST.{PathAnd, TypedPath, PathRule}
@@ -18,6 +19,6 @@ case class RequestLineBuilder[T <: HList](path: PathRule, query: QueryRule)
   override def /:(prefix: TypedPath[HNil]): RequestLineBuilder[T] =
     copy(path = PathAnd(prefix.rule, path))
 
-  def &[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
-    RequestLineBuilder(path, QueryAnd(query, q.rule))
+  def &[QueryType, T1 <: HList](q: QueryType)(implicit ev: AsTypedQuery[QueryType, T1], prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
+    RequestLineBuilder(path, QueryAnd(query, ev(q).rule))
 }

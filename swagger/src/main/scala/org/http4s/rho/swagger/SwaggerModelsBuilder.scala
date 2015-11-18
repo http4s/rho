@@ -75,15 +75,18 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case EmptyQuery::xs => go(xs)
         case MetaCons(x, _)::xs => go(x::xs)
         case Nil => Nil
-        case (q @ QueryCapture(_, _, _, _)) ::xs =>
-          val tpe = q.m.tpe
-          TypeBuilder.DataType.fromType(tpe) match {
-            case _ : TypeBuilder.DataType.ComplexDataType =>
-              tpe :: go(xs)
-            case TypeBuilder.DataType.ContainerDataType(_, Some(_: TypeBuilder.DataType.ComplexDataType), _) =>
-              q.m.tpe.typeArgs.head :: go(xs)
-            case _ => go(xs)
-          }
+        case (q @ QueryCapture(_)) ::xs =>
+          q.reader.parameters.flatMap { qparams =>
+            TypeBuilder.DataType.fromType(qparams.tag.tpe) match {
+              case _ : TypeBuilder.DataType.ComplexDataType =>
+                qparams.tag.tpe :: Nil
+
+              case TypeBuilder.DataType.ContainerDataType(_, Some(_: TypeBuilder.DataType.ComplexDataType), _) =>
+                qparams.tag.tpe.typeArgs.head :: Nil
+
+              case _ => Nil
+            }
+          } ::: go(xs)
       }
 
     go(rr.query::Nil)
@@ -175,11 +178,11 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           addOrDescriptions(set)(as, bs, "params") :::
           addOrDescriptions(set)(bs, as, "params")
 
-        case (q @ QueryCapture(_, _, _, _))::xs => mkQueryParam(q)::go(xs)
+        case (q @ QueryCapture(_))::xs => mkQueryParams(q):::go(xs)
 
-        case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs =>
+        case MetaCons(q @ QueryCapture(_), meta)::xs =>
           meta match {
-            case m: TextMetaData => mkQueryParam(q).withDesc(m.msg.some) :: go(xs)
+            case m: TextMetaData => mkQueryParams(q).map(_.withDesc(m.msg.some)) ::: go(xs)
             case _               => go(q::xs)
           }
 
@@ -302,42 +305,44 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     code -> Response(description = descr, schema = schema)
   }
 
-  def mkQueryParam(rule: QueryCapture[_]): Parameter = {
-    TypeBuilder.DataType(rule.m.tpe) match {
-      case TypeBuilder.DataType.ComplexDataType(nm, _) =>
-        QueryParameter(
-          $ref          = nm.some,
-          name         = rule.name.some,
-          required     = rule.default.isEmpty,
-          defaultValue = rule.default.map(_ => "") // TODO ideally need to use the parser to serialize it into string
-        )
-      // XXX uniqueItems is indeed part of `parameter` api, 
-      // see here: http://swagger.io/specification/#parameterObject
-      // however the java api does not include it...
-      case TypeBuilder.DataType.ContainerDataType(_, dt, _) =>
-        val itemTpe = dt match {
-          case Some(TypeBuilder.DataType.ComplexDataType(nm, _)) =>
-            models.AbstractProperty($ref = nm.some).some
-          // XXX need to revisit to take care of recursive array type
-          case Some(tpe: TypeBuilder.DataType) =>
-            models.AbstractProperty(tpe.name).some
-          case None => None
-        }
-        
-        QueryParameter(
-          name         = rule.name.some,
-          items        = itemTpe,
-          required     = rule.default.isEmpty,
-          defaultValue = rule.default.map(_ => ""), // TODO ideally need to put something like [...] here
-          isArray      = true
-        )
-      case TypeBuilder.DataType.ValueDataType(nm, _, _) => 
-        QueryParameter(
-          `type`       = nm.some,
-          name         = rule.name.some,
-          required     = rule.default.isEmpty,
-          defaultValue = rule.default.map(_.toString)              
-        )
+  def mkQueryParams(rule: QueryCapture): List[Parameter] = {
+    rule.reader.parameters.map { param =>
+      TypeBuilder.DataType(param.tag) match {
+        case TypeBuilder.DataType.ComplexDataType(nm, _) =>
+          QueryParameter(
+            $ref          = nm.some,
+            name         = param.name.some,
+            required     = param.default.isEmpty,
+            defaultValue = param.default.map(_ => "") // TODO ideally need to use the parser to serialize it into string
+          )
+        // XXX uniqueItems is indeed part of `parameter` api,
+        // see here: http://swagger.io/specification/#parameterObject
+        // however the java api does not include it...
+        case TypeBuilder.DataType.ContainerDataType(_, dt, _) =>
+          val itemTpe = dt match {
+            case Some(TypeBuilder.DataType.ComplexDataType(nm, _)) =>
+              models.AbstractProperty($ref = nm.some).some
+            // XXX need to revisit to take care of recursive array type
+            case Some(tpe: TypeBuilder.DataType) =>
+              models.AbstractProperty(tpe.name).some
+            case None => None
+          }
+
+          QueryParameter(
+            name         = param.name.some,
+            items        = itemTpe,
+            required     = param.default.isEmpty,
+            defaultValue = param.default.map(_ => ""), // TODO ideally need to put something like [...] here
+            isArray      = true
+          )
+        case TypeBuilder.DataType.ValueDataType(nm, _, _) =>
+          QueryParameter(
+            `type`       = nm.some,
+            name         = param.name.some,
+            required     = param.default.isEmpty,
+            defaultValue = param.default.map(_.toString)
+          )
+      }
     }
   }
 
