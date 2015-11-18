@@ -8,7 +8,7 @@ import shapeless.{ HNil, :: => :#: }
 
 import scala.language.existentials
 
-import org.http4s.{UriTemplate, HeaderKey, Request}
+import org.http4s.{UriTemplate, Request}
 
 import scalaz.Applicative
 
@@ -23,7 +23,7 @@ final class QueryReader[T](private val run: RequestReader[T, QueryCaptureParams]
 
   def parameters: List[QueryCaptureParams] = run.parameters
 
-  def asRule: TypedQuery[T:#:HNil] = TypedQuery(QueryCapture(this))
+  def asQueryRule: TypedQuery[T:#:HNil] = TypedQuery(QueryCapture(this))
 
   def names: List[String] = parameters.map(_.name)
 
@@ -37,6 +37,10 @@ final class QueryReader[T](private val run: RequestReader[T, QueryCaptureParams]
 
 object QueryReader {
   final case class QueryCaptureParams(name: String, default: Option[_], tag: TypeTag[_])
+
+  implicit def queryReaderInstance[T]: AsTypedQuery[QueryReader[T], T:#:HNil] = new AsTypedQuery[QueryReader[T], T:#:HNil] {
+    override def toQuery(t: QueryReader[T]): TypedQuery[T:#:HNil] = t.asQueryRule
+  }
 
   def apply[T](params: List[QueryCaptureParams])(f: Map[String, Seq[String]] => ResultResponse[T]): QueryReader[T] = {
     new QueryReader[T](ExtractingReader(req => f(req.uri.multiParams), params))
