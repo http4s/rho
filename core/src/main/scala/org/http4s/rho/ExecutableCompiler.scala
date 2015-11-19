@@ -1,13 +1,11 @@
 package org.http4s
 package rho
 
-import bits.HeaderAST._
-import bits.QueryAST._
-import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
+import bits.RequestRuleAST._
 
 import org.http4s.rho.bits._
 
-import shapeless.{ HNil, HList, :: }
+import shapeless.{HNil, HList}
 
 
 trait ExecutableCompiler {
@@ -16,58 +14,22 @@ trait ExecutableCompiler {
 
   //////////////////////// Stuff for executing the route //////////////////////////////////////
 
+  def runRequestRules(rules: RequestRule, req: Request): ResultResponse[HList] =
+    runRequestRules(req, rules, HNil)
+
   /** Walks the validation tree */
-  def ensureValidHeaders(v: HeaderRule, req: Request): ResultResponse[HList] =
-    runValidation(req, v, HNil)
-
-  /** The untyped guts of ensureValidHeaders and friends */
-  def runValidation(req: Request, v: HeaderRule, stack: HList): ResultResponse[HList] = {
-    import bits.HeaderAST.MetaCons
+  def runRequestRules(req: Request, v: RequestRule, stack: HList): ResultResponse[HList] = {
+    import RequestRuleAST.MetaCons
     v match {
-      case HeaderAnd(a, b) => runValidation(req, a, stack).flatMap(runValidation(req, b, _))
+      case RequestAnd(a, b) => runRequestRules(req, a, stack).flatMap(runRequestRules(req, b, _))
 
-      case HeaderOr(a, b) => runValidation(req, a, stack).orElse(runValidation(req, b, stack))
+      case RequestOr(a, b) => runRequestRules(req, a, stack).orElse(runRequestRules(req, b, stack))
 
-      case HeaderExists(key, f) => req.headers.get(key) match {
-        case Some(h) => 
-          scalaz.\/.fromTryCatchNonFatal( f(h) ) match {
-            case scalaz.-\/(t) => FailureResponse.badRequest(t.getMessage())
-            case scalaz.\/-(option) => option.fold[ResultResponse[HList]](SuccessResponse(stack))(f => FailureResponse.result(f))
-          }
-        case None => FailureResponse.badRequest(s"Missing header: ${key.name}")
-      }
+      case RequestCapture(reader) => reader.read(req).map(_ :: stack)
 
-      case HeaderCapture(key, f, default) => req.headers.get(key) match {
-        case Some(h) =>
-          scalaz.\/.fromTryCatchNonFatal( f(h) ) match {
-            case scalaz.-\/(t) => FailureResponse.badRequest(t.getMessage())
-            case scalaz.\/-(option) => option.fold(f => FailureResponse.result(f), r => SuccessResponse(r::stack))
-          }
+      case MetaCons(r, _) => runRequestRules(req, r, stack)
 
-        case None => default match {
-          case Some(r) => FailureResponse.result(r)
-          case None    => FailureResponse.badRequest(s"Missing header: ${key.name}")
-        }
-      }
-
-      case MetaCons(r, _) => runValidation(req, r, stack)
-
-      case EmptyHeaderRule => SuccessResponse(stack)
-    }
-  }
-
-  def runQuery(req: Request, v: QueryRule, stack: HList): ResultResponse[HList] = {
-    import QueryAST.MetaCons
-    v match {
-      case QueryAnd(a, b) => runQuery(req, a, stack).flatMap(runQuery(req, b, _))
-
-      case QueryOr(a, b) => runQuery(req, a, stack).orElse(runQuery(req, b, stack))
-
-      case QueryCapture(reader) => reader.read(req).map(_ :: stack)
-
-      case MetaCons(r, _) => runQuery(req, r, stack)
-
-      case EmptyQuery => SuccessResponse(stack)
+      case EmptyRule => SuccessResponse(stack)
     }
   }
 }

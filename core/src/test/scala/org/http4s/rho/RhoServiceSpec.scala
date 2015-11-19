@@ -296,7 +296,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
       val srvc = new RhoService {
         POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text |>> {
-          (p1: Int, param: String, body: String) => Ok("success")
+          (p1: Int, param: String, _: Unit, body: String) => Ok("success")
         }
       }
 

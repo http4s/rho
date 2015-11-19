@@ -69,24 +69,22 @@ private[rho] object PathTree {
 
   private def makeLeaf[T <: HList](route: RhoRoute[T]): Leaf = {
     route.router match {
-      case Router(method, _, query, vals) =>
+      case Router(method, _, query) =>
         Leaf { (req, pathstack) =>
           for {
-            i <- ValidationTools.runQuery(req, query, pathstack)
-            j <- ValidationTools.runValidation(req, vals, i) // `asInstanceOf` to turn the untyped HList to type T
-          } yield route.action.act(req, j.asInstanceOf[T])
+            i <- ValidationTools.runRequestRules(req, query, pathstack)
+          } yield route.action.act(req, i.asInstanceOf[T])
         }
 
       case c @ CodecRouter(_, parser) =>
         Leaf { (req, pathstack) =>
           for {
-            i <- ValidationTools.runQuery(req, c.router.query, pathstack)
-            j <- ValidationTools.runValidation(req, c.headers, i)
+            i <- ValidationTools.runRequestRules(req, c.router.requestRules, pathstack)
           } yield parser.decode(req).run.flatMap(_.fold(e =>
             Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
           { body =>
             // `asInstanceOf` to turn the untyped HList to type T
-            route.action.act(req, (body :: j).asInstanceOf[T])
+            route.action.act(req, (body :: i).asInstanceOf[T])
           }))
         }
     }

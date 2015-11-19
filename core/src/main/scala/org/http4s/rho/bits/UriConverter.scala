@@ -4,7 +4,9 @@ import org.http4s.UriTemplate.Path
 import org.http4s.UriTemplate.Query
 
 import PathAST.PathRule
-import QueryAST.QueryRule
+import RequestRuleAST.RequestRule
+import org.http4s.rho.RequestReader
+import RequestReader.QueryCaptureParams
 
 import scala.util.Success
 import scala.util.Try
@@ -30,17 +32,17 @@ object UriConverter {
     Success(go(List(rule), Nil).reverse)
   }
 
-  def createQuery(rule: QueryRule): Try[Query] = {
-    import QueryAST._
+  def createQuery(rule: RequestRule): Try[Query] = {
+    import RequestRuleAST._
     import org.http4s.UriTemplate.ParamExp
     @scala.annotation.tailrec
-    def go(r: List[QueryRule], acc: Query): Query = r match {
+    def go(r: List[RequestRule], acc: Query): Query = r match {
       case Nil                               => acc
       case MetaCons(query, _) :: rs          => go(rs, acc)
-      case QueryAnd(a, b) :: rs              => go(a :: b :: rs, acc)
-      case QueryCapture(reader) :: rs        => go(rs, reader.parameters.map(p => ParamExp(p.name)) ::: acc)
-      case QueryOr(a, _) :: rs               => go(a :: rs, acc) // we decided to take the first root
-      case EmptyQuery :: rs                  => go(rs, acc)
+      case RequestAnd(a, b) :: rs              => go(a :: b :: rs, acc)
+      case RequestCapture(reader) :: rs        => go(rs, reader.parameters.collect{ case QueryCaptureParams(name,_,_) => ParamExp(name)} ::: acc)
+      case RequestOr(a, _) :: rs               => go(a :: rs, acc) // we decided to take the first root
+      case EmptyRule :: rs                  => go(rs, acc)
     }
     Success(go(List(rule), Nil).reverse)
   }

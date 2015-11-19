@@ -2,9 +2,8 @@ package org.http4s
 package rho
 
 import bits.PathAST._
-import bits.HeaderAST._
-import bits.QueryAST.QueryRule
-import org.http4s.rho.bits.HeaderAppendable
+import org.http4s.rho.bits.AsRequestRule
+import org.http4s.rho.bits.RequestRuleAST.{ RequestAnd, RequestRule }
 
 import scala.reflect.runtime.universe.{Type, TypeTag}
 
@@ -14,8 +13,7 @@ import shapeless.ops.hlist.Prepend
 sealed trait RoutingEntity[T <: HList] {
   def method: Method
   def path: PathRule
-  def query: QueryRule
-  def headers: HeaderRule
+  def requestRules: RequestRule
 
   def /:(path: TypedPath[HNil]): RoutingEntity[T]
 }
@@ -24,27 +22,26 @@ sealed trait RoutingEntity[T <: HList] {
   *
   * @param method request methods to match
   * @param path path matching stack
-  * @param headers header validation stack
+  * @param requestRules request extraction rules
   * @tparam T cumulative type of the required method for executing the router
   */
 case class Router[T <: HList](method: Method,
                               path: PathRule,
-                              query: QueryRule,
-                              headers: HeaderRule)
+                              requestRules: RequestRule)
                        extends RouteExecutable[T]
-                          with HeaderAppendable[T]
                           with RoutingEntity[T]
                           with Decodable[T, Nothing]
                           with RoutePrependable[Router[T]]
 {
-  override type HeaderAppendResult[T <: HList] = Router[T]
-
   override def /:(prefix: TypedPath[HNil]): Router[T] = {
     copy(path = PathAnd(prefix.rule, path))
   }
 
-  override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
-    Router(method, path, query, HeaderAnd(headers, v.rule))
+  def &[ReqRule, T1 <: HList](rule: ReqRule)(implicit ev: AsRequestRule[ReqRule, T1], prep: Prepend[T1, T]): Router[prep.Out] =
+    Router(method, path, RequestAnd(requestRules, ev(rule).rule))
+
+  def >>>[ReqRule, T1 <: HList](rule: ReqRule)(implicit ev: AsRequestRule[ReqRule, T1], prep: Prepend[T1, T]): Router[prep.Out] =
+    this & rule
 
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(this, action)
 
@@ -53,15 +50,16 @@ case class Router[T <: HList](method: Method,
 }
 
 case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])(implicit t: TypeTag[R])
-           extends HeaderAppendable[T]
-           with RouteExecutable[R::T]
+           extends RouteExecutable[R::T]
            with RoutingEntity[R::T]
            with Decodable[T, R]
 {
-  override type HeaderAppendResult[T <: HList] = CodecRouter[T, R]
 
-  override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): CodecRouter[prep1.Out,R] =
-    CodecRouter(router >>> v, decoder)
+  def &[ReqRule, T1 <: HList](rule: ReqRule)(implicit ev: AsRequestRule[ReqRule, T1], prep: Prepend[T1, T]): CodecRouter[prep.Out, R] =
+    CodecRouter(router & rule, decoder)
+
+  def >>>[ReqRule, T1 <: HList](rule: ReqRule)(implicit ev: AsRequestRule[ReqRule, T1], prep1: Prepend[T1, T]): CodecRouter[prep1.Out,R] =
+    this & rule
 
   override def /:(prefix: TypedPath[HNil]): CodecRouter[T, R] =
     copy(router = prefix /: router)
@@ -75,12 +73,10 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override def method: Method = router.method
 
-  override def query: QueryRule = router.query
+  override def requestRules: RequestRule = router.requestRules
 
   override def decoding[R2 >: R](decoder2: EntityDecoder[R2])(implicit t: TypeTag[R2]): CodecRouter[T, R2] =
     CodecRouter(router, decoder orElse decoder2)
-
-  override val headers: HeaderRule = router.headers
 
   def entityType: Type = t.tpe
 }

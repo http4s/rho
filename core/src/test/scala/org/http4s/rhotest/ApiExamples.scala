@@ -8,7 +8,7 @@ import scalaz.concurrent.Task
 
 import server.websocket.WS
 
-
+import scalaz._, Scalaz._
 
 
 class ApiExamples extends Specification {
@@ -44,7 +44,7 @@ class ApiExamples extends Specification {
 
         // header validation is also composable
         val v1 = existsAnd(headers.`Content-Length`)(_.length > 0)
-        val v2 = v1 && capture(headers.ETag)
+        val v2 = v1 *> capture(headers.ETag) // *> ignores the a result of the first rule but maintains its side effects
 
         // Now these two can be combined to make the 'Router'
         val r = path2 >>> v2
@@ -55,7 +55,7 @@ class ApiExamples extends Specification {
 
         // Now this can be combined with a method to make the 'Action'
         val action = r2 |>> {
-          (world: String, fav: Int, tag: headers.ETag) =>
+          (world: String, fav: Int, tag: headers.ETag, _: Unit) =>
             Ok("Success").withHeaders(headers.ETag(fav.toString))
         }
 

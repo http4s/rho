@@ -7,6 +7,8 @@ import scala.language.higherKinds
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
 
+
+// TODO: it looks like the default value is _never_ used.
 trait QueryParser[A] {
   def collect(name: String, params: Map[String, Seq[String]], default: Option[A]): ResultResponse[A]
 }

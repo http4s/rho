@@ -1,20 +1,19 @@
 package org.http4s
 
+import org.http4s.rho.RequestReader
 import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.bits.QueryReader._
+import RequestReader.{HeaderCaptureParams, QueryCaptureParams}
 import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 
 import scala.language.implicitConversions
 
 import rho.bits.PathAST._
-import rho.bits.HeaderAST._
-import rho.bits.QueryAST._
 
 import shapeless.{HList, HNil, ::}
 import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
-import scalaz.{\/, \/-}
+import scalaz.{-\/, \/, \/-}
 import scalaz.concurrent.Task
 
 package object rho extends Http4s with ResultSyntaxInstances {
@@ -38,17 +37,17 @@ package object rho extends Http4s with ResultSyntaxInstances {
    * Defines a parameter in query string that should be bound to a route definition.
    * @param name name of the parameter in query
    */
-  def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
-    _param(name, None)
+  def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =
+    _queryParam(name, None)
 
   /** Define a query parameter with a default value */
-  def param[T](name: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
-    _param(name, Some(default))
+  def param[T](name: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =
+    _queryParam(name, Some(default))
 
   /** Define a query parameter that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
-  def paramV[T](name: String)(validate: T => Boolean)(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
+  def paramV[T](name: String)(validate: T => Boolean)(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =
     paramR(name){ t =>
       if (validate(t)) None
       else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
@@ -58,19 +57,19 @@ package object rho extends Http4s with ResultSyntaxInstances {
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
   def paramV[T](name: String, default: T)(validate: T => Boolean)
-              (implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
+              (implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =
     paramR(name, default){ t =>
       if (validate(t)) None
       else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
     }
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  def paramR[T](name: String)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
-    _paramR(name, None, validate)
+  def paramR[T](name: String)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =
+    _queryParamR(name, None, validate)
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  def paramR[T](name: String, default: T)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =
-    _paramR(name, Some(default), validate)
+  def paramR[T](name: String, default: T)(validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =
+    _queryParamR(name, Some(default), validate)
 
   /////////////////// End Query construction helpers //////////////////////////////////////////////
 
@@ -103,29 +102,50 @@ package object rho extends Http4s with ResultSyntaxInstances {
   /////////////////// Begin Header construction helpers ///////////////////////////////////////////
 
   /* Checks that the header exists */
-  def exists(header: HeaderKey.Extractable): TypedHeader[HNil] = existsAndR(header)(_ => None)
+  def exists(header: HeaderKey.Extractable): RequestReader[Unit] = existsAndR(header)(_ => None)
 
   /* Check that the header exists and satisfies the condition */
-  def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
+  def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): RequestReader[Unit] =
     existsAndR(header){ h =>
       if (f(h)) None
       else Some(BadRequest("Invalid header: " + h.value))
     }
 
   /* Check that the header exists and satisfies the condition */
-  def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
-    TypedHeader(HeaderExists(header, f))
+  def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): RequestReader[Unit] =
+    captureMapR(header){ hdr => f(hdr) match {
+        case Some(r) => -\/(r)
+        case None    => \/-(())
+      }
+    }
 
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */
-  def capture[H <: HeaderKey.Extractable](key: H): TypedHeader[H#HeaderT :: HNil] =
+  def capture[H <: HeaderKey.Extractable](key: H)(implicit tag: TypeTag[H#HeaderT]): RequestReader[H#HeaderT] =
     captureMap(key)(identity)
 
-  def captureMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
-    TypedHeader(HeaderCapture[H, R](key, f.andThen(\/-(_)), None))
+  // TODO: It seems this could be redefined in terms of Applicative map
+  def captureMap[H <: HeaderKey.Extractable, R: TypeTag](key: H)(f: H#HeaderT => R): RequestReader[R] =
+    captureMapR(key, None){ h => \/-(f(h)) }
 
-  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]] = None)(f: H#HeaderT => Task[BaseResult]\/R): TypedHeader[R :: HNil] =
-    TypedHeader(HeaderCapture[H, R](key, f, default))
+  def captureMapR[H <: HeaderKey.Extractable, R](key: H, defaultResponse: Option[Task[BaseResult]] = None)(f: H#HeaderT => Task[BaseResult]\/R)(implicit tag: TypeTag[R]): RequestReader[R] = {
+
+    HeaderReader(HeaderCaptureParams(key, tag)::Nil){ headers =>
+      headers.get(key) match {
+        case Some(h) => f(h) match {
+          case \/-(r) => SuccessResponse(r)
+          case -\/(r) => FailureResponse.result(r)
+        }
+
+        case None => defaultResponse match {
+          case Some(r) => FailureResponse.result(r)
+          case None    => FailureResponse.badRequest(s"Missing header: ${key.name}")
+        }
+      }
+    }
+  }
+
+  // TypedHeader(HeaderCapture[H, R](key, f, default))
 
   /////////////////// End Header construction helpers /////////////////////////////////////////////
 
@@ -133,13 +153,13 @@ package object rho extends Http4s with ResultSyntaxInstances {
   private val stringTag = implicitly[TypeTag[String]]
 
   /** Define a query parameter with a default value */
-  private def _param[T](name: String, default: Option[T])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] = {
+  private def _queryParam[T](name: String, default: Option[T])(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] = {
     val captureParams = QueryCaptureParams(name, default, m)
 //    ExtractingReader[T](req => parser.collect(name, req.uri.multiParams, default), captureParams)
     QueryReader(captureParams::Nil)(parser.collect(name, _, default))
   }
 
-  private def _paramR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): QueryReader[T] =  {
+  private def _queryParamR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): RequestReader[T] =  {
     val captureParams = QueryCaptureParams(name, default, m)
 
     QueryReader(captureParams::Nil){ params =>

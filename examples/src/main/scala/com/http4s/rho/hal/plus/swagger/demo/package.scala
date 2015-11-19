@@ -9,7 +9,7 @@ import org.http4s.Charset
 import org.http4s.headers.`Content-Type`
 import org.http4s.MediaType
 import org.http4s.EntityEncoder
-import org.http4s.rho.bits.QueryAST.TypedQuery
+import org.http4s.rho.bits.RequestRuleAST.TypedRequestRule
 import org.http4s.rho.hal.LinkObjectSerializer
 import org.http4s.rho.hal.ResourceObject
 import org.http4s.rho.hal.ResourceObjectSerializer
@@ -45,7 +45,7 @@ package object demo {
       .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
   /** Extracts the name of the first query parameter as string */
-  implicit def paramName(q: TypedQuery[_]): String = q.names.head
+  implicit def paramName(q: TypedRequestRule[_]): String = q.queryNames.head
 
   ///// regular helper functions ///// 
 

@@ -4,9 +4,8 @@ package rho
 import bits.MethodAliases._
 import bits.ResponseGeneratorInstances._
 
-import bits.HeaderAST.{TypedHeader, HeaderAnd}
 import bits.{PathTree, SuccessResponse, FailureResponse}
-import org.http4s.rho.bits.QueryAST.QueryCapture
+import org.http4s.rho.bits.RequestRuleAST.{RequestAnd, TypedRequestRule, RequestCapture}
 
 import org.specs2.mutable._
 import shapeless.HNil
@@ -34,12 +33,12 @@ class ApiTest extends Specification {
 
   "RhoDsl bits" should {
     "Combine validators" in {
-      RequireETag && RequireNonZeroLen should_== TypedHeader(HeaderAnd(RequireETag.rule, RequireNonZeroLen.rule))
+      RequireETag && RequireNonZeroLen should_== TypedRequestRule(RequestAnd(RequireETag.asQueryRule.rule, RequireNonZeroLen.asQueryRule.rule))
     }
 
     "Fail on a bad request" in {
       val badreq = Request().withHeaders(Headers(lenheader))
-      val res = PathTree.ValidationTools.ensureValidHeaders((RequireETag && RequireNonZeroLen).rule,badreq)
+      val res = PathTree.ValidationTools.runRequestRules((RequireETag && RequireNonZeroLen).rule,badreq)
 
       res must beAnInstanceOf[FailureResponse]
       res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
@@ -47,7 +46,7 @@ class ApiTest extends Specification {
                                                                                         
     "Fail on a bad request 2" in {
       val req = Request().withHeaders(Headers(lenheader))
-      val res = PathTree.ValidationTools.ensureValidHeaders(RequireThrowException.rule, req)                                                            
+      val res = PathTree.ValidationTools.runRequestRules(RequireThrowException.asQueryRule.rule, req)
       res must beAnInstanceOf[FailureResponse]                                                                                                          
       res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
       res.asInstanceOf[FailureResponse].toResponse.run.as[String].run must_== "this could happen"
@@ -57,46 +56,46 @@ class ApiTest extends Specification {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().withHeaders(Headers(etag, lenheader))
-      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== SuccessResponse(HNil)
+      PathTree.ValidationTools.runRequestRules(c.rule, req) should_== SuccessResponse(HNil)
     }
 
     "Capture params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
       Seq({
         val c2 = capture(headers.`Content-Length`) && RequireETag
-        PathTree.ValidationTools.ensureValidHeaders(c2.rule, req) should_== SuccessResponse(lenheader::HNil)
+        PathTree.ValidationTools.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader::HNil)
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(headers.ETag)
-        PathTree.ValidationTools.ensureValidHeaders(c3.rule, req) should_== SuccessResponse(etag::lenheader::HNil)
+        PathTree.ValidationTools.runRequestRules(c3.rule, req) should_== SuccessResponse(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
-      val c = captureMap(headers.`Content-Length`)(_.length)
-      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) should_== SuccessResponse(4::HNil)
+      val c = captureMap(headers.`Content-Length`)(_.length).asQueryRule
+      PathTree.ValidationTools.runRequestRules(c.rule, req) should_== SuccessResponse(4::HNil)
     }
 
     "Map header params with exception" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
-      val c = captureMap(headers.`Content-Length`)(_.length / 0)
-      PathTree.ValidationTools.ensureValidHeaders(c.rule, req) must beAnInstanceOf[FailureResponse]
+      val c = captureMap(headers.`Content-Length`)(_.length / 0).asQueryRule
+      PathTree.ValidationTools.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse]
     }
 
     "Map with possible default" in {
       val req = Request().withHeaders(Headers(etag, lenheader))
 
-      val c1 = captureMapR(headers.`Content-Length`)(r => \/-(r.length))
-      PathTree.ValidationTools.ensureValidHeaders(c1.rule, req) should_== SuccessResponse(4::HNil)
+      val c1 = captureMapR(headers.`Content-Length`)(r => \/-(r.length)).asQueryRule
+      PathTree.ValidationTools.runRequestRules(c1.rule, req) should_== SuccessResponse(4::HNil)
 
       val r2 = Gone("Foo")
-      val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2))
-      val v1 = PathTree.ValidationTools.ensureValidHeaders(c2.rule, req)
+      val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2)).asQueryRule
+      val v1 = PathTree.ValidationTools.runRequestRules(c2.rule, req)
       v1 must beAnInstanceOf[FailureResponse]
       v1.asInstanceOf[FailureResponse].toResponse.run.status must_== r2.run.resp.status
 
-      val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
-      val v2 = PathTree.ValidationTools.ensureValidHeaders(c3.rule, req)
+      val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???).asQueryRule
+      val v2 = PathTree.ValidationTools.runRequestRules(c3.rule, req)
       v2 must beAnInstanceOf[FailureResponse]
       v2.asInstanceOf[FailureResponse].toResponse.run.status must_== r2.run.resp.status
     }
@@ -108,7 +107,7 @@ class ApiTest extends Specification {
 
 
       val route = (path >>> validations >>> capture(headers.ETag)).decoding(EntityDecoder.text) runWith {
-        (world: String, fav: Int, tag: headers.ETag, body: String) =>
+        (world: String, fav: Int, _: Unit, tag: headers.ETag, body: String) =>
           Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
             .putHeaders(headers.ETag("foo"))
         }
@@ -171,7 +170,7 @@ class ApiTest extends Specification {
         capture(headers.ETag)
 
       val route =
-        (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, tag: headers.ETag, body: String) =>
+        (path >>> validations).decoding(EntityDecoder.text) runWith {(world: String, fav: Int, _: Unit, tag: headers.ETag, body: String) =>
 
           Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
             .putHeaders(headers.ETag("foo"))
@@ -200,7 +199,7 @@ class ApiTest extends Specification {
     "be made from TypedPath and TypedQuery" in {
       val path = pathMatch("foo")
       val q = param[Int]("bar")
-      path +? q should_== RequestLineBuilder(path.rule, QueryCapture(q))
+      path +? q should_== RequestLineBuilder(path.rule, RequestCapture(q))
     }
 
     "append to a TypedPath" in {
@@ -326,7 +325,7 @@ class ApiTest extends Specification {
         .withBody("0123456789") // length 10
         .run
 
-      val route = path.decoding(EntityDecoder.text) runWith { str: String =>
+      val route = path.decoding(EntityDecoder.text) runWith { (_: Unit, str: String) =>
         Ok("stuff").withHeaders(headers.ETag(str))
       }
 
@@ -355,14 +354,14 @@ class ApiTest extends Specification {
                   .withHeaders(Headers(headers.`Content-Length`("foo".length)))
 
       val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length < 2}
-      val route1 = path.validate(reqHeader) runWith { () =>
+      val route1 = (path >>> reqHeader) runWith { (_: Unit) =>
         Ok("shouldn't get here.")
       }
 
       route1(req).run.status should_== Status.BadRequest
 
       val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
-      val route2 = path.validate(reqHeaderR) runWith { () =>
+      val route2 = (path >>> reqHeaderR) runWith { (_: Unit) =>
         Ok("shouldn't get here.")
       }
 
@@ -409,7 +408,7 @@ class ApiTest extends Specification {
     "Work for a Router" in {
       val tail = GET / "bar" >>> RequireETag
       val all = "foo" /: tail
-      all.runWith(respMsg).apply(req.copy(uri=uri("/foo/bar")).putHeaders(etag)).run.as[String].run === respMsg
+      all.runWith((_: Unit) => respMsg).apply(req.copy(uri=uri("/foo/bar")).putHeaders(etag)).run.as[String].run === respMsg
     }
   }
 }

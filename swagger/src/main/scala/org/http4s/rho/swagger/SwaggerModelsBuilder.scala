@@ -3,7 +3,7 @@ package rho
 package swagger
 
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.QueryAST.QueryCapture
+import org.http4s.rho.bits.RequestRuleAST.RequestCapture
 import org.http4s.rho.bits._
 
 import org.log4s.getLogger
@@ -66,16 +66,16 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     }
   
   def collectQueryTypes(rr: RhoRoute[_]): Seq[Type] = {
-    import bits.QueryAST._
+    import bits.RequestRuleAST._
     
-    def go(stack: List[QueryRule]): List[Type] =
+    def go(stack: List[RequestRule]): List[Type] =
       stack match {
-        case QueryAnd(a, b)::xs => go(a :: b :: xs)
-        case QueryOr(a, b)::xs => go(a :: b :: xs)
-        case EmptyQuery::xs => go(xs)
+        case RequestAnd(a, b)::xs => go(a :: b :: xs)
+        case RequestOr(a, b)::xs => go(a :: b :: xs)
+        case EmptyRule::xs => go(xs)
         case MetaCons(x, _)::xs => go(x::xs)
         case Nil => Nil
-        case (q @ QueryCapture(_)) ::xs =>
+        case (q @ RequestCapture(_)) ::xs =>
           q.reader.parameters.flatMap { qparams =>
             TypeBuilder.DataType.fromType(qparams.tag.tpe) match {
               case _ : TypeBuilder.DataType.ComplexDataType =>
@@ -89,7 +89,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           } ::: go(xs)
       }
 
-    go(rr.query::Nil)
+    go(rr.requestRules::Nil)
   }
   
   def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???    
@@ -162,14 +162,14 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     collectPathParams(rr) ::: collectQueryParams(rr) ::: collectHeaderParams(rr) ::: collectBodyParams(rr).toList
 
   def collectQueryParams(rr: RhoRoute[_]): List[Parameter] = {
-    import bits.QueryAST._
+    import bits.RequestRuleAST._
 
-    def go(stack: List[QueryRule]): List[Parameter] =
+    def go(stack: List[RequestRule]): List[Parameter] =
       stack match {
-        case QueryAnd(a, b)::xs => go(a::b::xs)
-        case EmptyQuery::xs     => go(xs)
+        case RequestAnd(a, b)::xs => go(a::b::xs)
+        case EmptyRule::xs     => go(xs)
 
-        case QueryOr(a, b)::xs =>
+        case RequestOr(a, b)::xs =>
           val as = go(a::xs)
           val bs = go(b::xs)                   
           val set: (Parameter, String) => Parameter =
@@ -178,9 +178,9 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           addOrDescriptions(set)(as, bs, "params") :::
           addOrDescriptions(set)(bs, as, "params")
 
-        case (q @ QueryCapture(_))::xs => mkQueryParams(q):::go(xs)
+        case (q @ RequestCapture(_))::xs => mkQueryParams(q):::go(xs)
 
-        case MetaCons(q @ QueryCapture(_), meta)::xs =>
+        case MetaCons(q @ RequestCapture(_), meta)::xs =>
           meta match {
             case m: TextMetaData => mkQueryParams(q).map(_.withDesc(m.msg.some)) ::: go(xs)
             case _               => go(q::xs)
@@ -191,7 +191,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case Nil => Nil
       }
 
-    go(rr.query::Nil)
+    go(rr.requestRules::Nil)
   }
 
   def collectHeaderParams(rr: RhoRoute[_]): List[HeaderParameter] = {
@@ -305,7 +305,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     code -> Response(description = descr, schema = schema)
   }
 
-  def mkQueryParams(rule: QueryCapture): List[Parameter] = {
+  def mkQueryParams(rule: RequestCapture): List[Parameter] = {
     rule.reader.parameters.map { param =>
       TypeBuilder.DataType(param.tag) match {
         case TypeBuilder.DataType.ComplexDataType(nm, _) =>

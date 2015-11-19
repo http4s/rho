@@ -1,8 +1,7 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.QueryAST.{QueryCapture, TypedQuery, QueryRule, EmptyQuery}
-import bits.HeaderAST._
+import org.http4s.rho.bits.RequestRuleAST.{ TypedRequestRule, RequestRule, EmptyRule }
 import bits.PathAST._
 import bits._
 
@@ -21,19 +20,16 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   extends RouteExecutable[T]
   with Decodable[T, Nothing]
   with UriConvertible
-  with HeaderAppendable[T]
   with RoutePrependable[PathBuilder[T]]
 {
   type HeaderAppendResult[T <: HList] = Router[T]
 
-  override def headers: HeaderRule = EmptyHeaderRule
+  override def requestRules: RequestRule = EmptyRule
 
-  override def query: QueryRule = EmptyQuery
+  final def +?[QueryType, T1 <: HList](q: QueryType)(implicit ev: AsRequestRule[QueryType, T1], prep: Prepend[T1, T]): Router[prep.Out] =
+    Router(method, path, ev(q).rule)
 
-  final def +?[QueryType, T1 <: HList](q: QueryType)(implicit ev: AsTypedQuery[QueryType, T1], prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
-    QueryBuilder(method, path, ev(q).rule)
-
-  def /(t: CaptureTail.type): Router[List[String] :: T] = new Router(method, PathAnd(path, t), EmptyQuery, EmptyHeaderRule)
+  def /(t: CaptureTail.type): Router[List[String] :: T] = Router(method, PathAnd(path, t), EmptyRule)
 
   def /(s: String): PathBuilder[T] = {
     val newPath = s.split("/").foldLeft(path)((p,s) => PathAnd(p, PathMatch(s)))
@@ -51,26 +47,19 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   def /[T2 <: HList](t: PathBuilder[T2])(implicit prep: Prepend[T2, T]): PathBuilder[prep.Out] =
     new PathBuilder(method, PathAnd(path, t.path))
 
-  def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T2, T]): QueryBuilder[prep.Out] =
-    QueryBuilder(method, PathAnd(path, t.path), t.query)
+  def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T2, T]): Router[prep.Out] =
+    Router(method, PathAnd(path, t.path), t.requestRules)
 
   override def /:(prefix: TypedPath[HNil]): PathBuilder[T] =
     new PathBuilder(method, PathAnd(prefix.rule, path))
 
-  def toAction: Router[T] = >>>(TypedHeader[HNil](EmptyHeaderRule))
+  def toAction: Router[T] = >>>[TypedRequestRule[HNil], HNil](TypedRequestRule[HNil](EmptyRule))
 
-  override def >>>[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
-    Router(method, path, EmptyQuery, h2.rule)
+  def >>>[O, T1 <: HList](h2: O)(implicit ev: AsRequestRule[O, T1], prep: Prepend[T1, T]): Router[prep.Out] =
+    Router(method, path, ev(h2).rule)
 
   override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
     CodecRouter(toAction, decoder)
 
-  override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, EmptyQuery, EmptyHeaderRule), action)
-
-  private val uriTemplate =
-    for (p <- UriConverter.createPath(path))
-      yield UriTemplate(path = p)
-
-  override def asUriTemplate(request: Request) =
-    UriConvertible.respectPathInfo(uriTemplate, request)
+  override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, EmptyRule), action)
 }
