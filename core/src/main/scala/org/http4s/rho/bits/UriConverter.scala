@@ -4,10 +4,9 @@ import org.http4s.UriTemplate.Path
 import org.http4s.UriTemplate.Query
 
 import PathAST.PathRule
-import QueryAST.QueryRule
+import org.http4s.rho.bits.RequestAST._
 
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /** Helps to convert different parts of a route into an `UriTemplate` */
 object UriConverter {
@@ -30,19 +29,19 @@ object UriConverter {
     Success(go(List(rule), Nil).reverse)
   }
 
-  def createQuery(rule: QueryRule): Try[Query] = {
-    import QueryAST._
+  def createQuery(rule: RequestRule): Try[Query] = {
     import org.http4s.UriTemplate.ParamExp
     @scala.annotation.tailrec
-    def go(r: List[QueryRule], acc: Query): Query = r match {
-      case Nil                               => acc
-      case MetaCons(query, _) :: rs          => go(rs, acc)
-      case QueryAnd(a, b) :: rs              => go(a :: b :: rs, acc)
-      case QueryCapture(name, _, _, _) :: rs => go(rs, ParamExp(name) :: acc)
-      case QueryOr(a, _) :: rs               => go(a :: rs, acc) // we decided to take the first root
-      case EmptyQuery :: rs                  => go(rs, acc)
+    def go(r: List[RequestRule], acc: Query): Try[Query] = r match {
+      case Nil                                          => Success(acc.reverse)
+      case MetaRule(r, QueryMetaData(n, _, _, _)) :: rs => go(r :: rs, ParamExp(n) :: acc)
+      case MetaRule(r, _) :: rs                         => go(r :: rs, acc)
+      case AndRule(a, b) :: rs                          => go(a :: b :: rs, acc)
+      case (EmptyRule | CaptureRule(_)) :: rs           => go(rs, acc)
+      case IgnoreRule(r) :: rs                          => go(r :: rs, acc)
+      case OrRule(a, _) :: rs                           => Failure(new Exception("Cannot create a query from 'or'ed paths"))
     }
-    Success(go(List(rule), Nil).reverse)
+    go(List(rule), Nil)
   }
 
 }

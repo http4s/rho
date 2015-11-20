@@ -1,9 +1,8 @@
 package org.http4s
 package rho
 
-import bits.HeaderAST.HeaderRule
 import org.http4s.rho.bits.PathAST.{TypedPath, PathRule}
-import org.http4s.rho.bits.QueryAST.QueryRule
+import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits.ResultInfo
 
 import shapeless.{HNil, HList}
@@ -23,8 +22,7 @@ final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T
 
   def method: Method = router.method
   def path: PathRule = router.path
-  def query: QueryRule = router.query
-  def headers: HeaderRule = router.headers
+  def rules: RequestRule = router.rules
   def responseEncodings: Set[MediaType] = action.responseEncodings
   def resultInfo: Set[ResultInfo] = action.resultInfo
   def validMedia: Set[MediaRange] = router match {

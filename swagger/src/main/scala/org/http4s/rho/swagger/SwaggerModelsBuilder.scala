@@ -3,7 +3,7 @@ package rho
 package swagger
 
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.QueryAST.QueryCapture
+import org.http4s.rho.bits.RequestAST._
 import org.http4s.rho.bits._
 
 import org.log4s.getLogger
@@ -66,27 +66,27 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     }
   
   def collectQueryTypes(rr: RhoRoute[_]): Seq[Type] = {
-    import bits.QueryAST._
-    
-    def go(stack: List[QueryRule]): List[Type] =
+    def go(stack: List[RequestRule]): List[Type] =
       stack match {
-        case QueryAnd(a, b)::xs => go(a :: b :: xs)
-        case QueryOr(a, b)::xs => go(a :: b :: xs)
-        case EmptyQuery::xs => go(xs)
-        case MetaCons(x, _)::xs => go(x::xs)
-        case Nil => Nil
-        case (q @ QueryCapture(_, _, _, _)) ::xs =>
+        case Nil                              => Nil
+        case AndRule(a, b)::xs                => go(a::b::xs)
+        case OrRule(a, b)::xs                 => go(a::b::xs)
+        case (EmptyRule | CaptureRule(_))::xs => go(xs)
+        case IgnoreRule(r)::xs                => go(r::xs)
+        case MetaRule(x, q@QueryMetaData(_,_,_,_))::xs =>
           val tpe = q.m.tpe
           TypeBuilder.DataType.fromType(tpe) match {
             case _ : TypeBuilder.DataType.ComplexDataType =>
-              tpe :: go(xs)
+              tpe :: go(x::xs)
             case TypeBuilder.DataType.ContainerDataType(_, Some(_: TypeBuilder.DataType.ComplexDataType), _) =>
-              q.m.tpe.typeArgs.head :: go(xs)
-            case _ => go(xs)
+              q.m.tpe.typeArgs.head :: go(x::xs)
+            case _ => go(x::xs)
           }
+
+        case MetaRule(x, _)::xs => go(x::xs)
       }
 
-    go(rr.query::Nil)
+    go(rr.rules::Nil)
   }
   
   def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???    
@@ -159,14 +159,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     collectPathParams(rr) ::: collectQueryParams(rr) ::: collectHeaderParams(rr) ::: collectBodyParams(rr).toList
 
   def collectQueryParams(rr: RhoRoute[_]): List[Parameter] = {
-    import bits.QueryAST._
-
-    def go(stack: List[QueryRule]): List[Parameter] =
+    def go(stack: List[RequestRule]): List[Parameter] =
       stack match {
-        case QueryAnd(a, b)::xs => go(a::b::xs)
-        case EmptyQuery::xs     => go(xs)
+        case AndRule(a, b)::xs => go(a::b::xs)
+        case (EmptyRule | CaptureRule(_))::xs => go(xs)
 
-        case QueryOr(a, b)::xs =>
+        case OrRule(a, b)::xs =>
           val as = go(a::xs)
           val bs = go(b::xs)                   
           val set: (Parameter, String) => Parameter =
@@ -175,45 +173,40 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           addOrDescriptions(set)(as, bs, "params") :::
           addOrDescriptions(set)(bs, as, "params")
 
-        case (q @ QueryCapture(_, _, _, _))::xs => mkQueryParam(q)::go(xs)
+        case MetaRule(rs, q@QueryMetaData(_,_,_,_))::xs => mkQueryParam(q)::go(rs::xs)
 
-        case MetaCons(q @ QueryCapture(_, _, _, _), meta)::xs =>
-          meta match {
-            case m: TextMetaData => mkQueryParam(q).withDesc(m.msg.some) :: go(xs)
-            case _               => go(q::xs)
-          }
+        case MetaRule(rs, m: TextMetaData)::xs =>
+          go(rs::Nil).map(_.withDesc(m.msg.some)) ::: go(xs)
 
-        case MetaCons(a, _)::xs => go(a::xs)
+        case MetaRule(a, _)::xs => go(a::xs)
+
+        case IgnoreRule(r)::xs => go(r::xs)
 
         case Nil => Nil
       }
 
-    go(rr.query::Nil)
+    go(rr.rules::Nil)
   }
 
   def collectHeaderParams(rr: RhoRoute[_]): List[HeaderParameter] = {
-    import bits.HeaderAST._
-
-    def go(stack: List[HeaderRule]): List[HeaderParameter] =
+    def go(stack: List[RequestRule]): List[HeaderParameter] =
       stack match {
-        case HeaderAnd(a,b)::xs         => go(a::b::xs)
-        case MetaCons(a,_)::xs          => go(a::xs)
-        case EmptyHeaderRule::xs        => go(xs)
-        case HeaderCapture(key,_,_)::xs  => mkHeaderParam(key)::go(xs)
-        case HeaderExists(key,_)::xs   => mkHeaderParam(key)::go(xs)
-
-        case HeaderOr(a, b)::xs         =>
+        case Nil                                   => Nil
+        case AndRule(a,b)::xs                      => go(a::b::xs)
+        case MetaRule(a,HeaderMetaData(key,_))::xs => mkHeaderParam(key)::go(a::xs)
+        case MetaRule(a,_)::xs                     => go(a::xs)
+        case (EmptyRule | CaptureRule(_))::xs      => go(xs)
+        case IgnoreRule(r)::xs                     => go(r::xs)
+        case OrRule(a, b)::xs =>
           val as = go(a::xs)
           val bs = go(b::xs)
           val set: (HeaderParameter, String) => HeaderParameter =
             (p, s) => p.copy(description = p.description.map(_ + s).orElse(s.some))
           addOrDescriptions(set)(as, bs, "headers") :::
           addOrDescriptions(set)(bs, as, "headers")
-
-        case Nil                        => Nil
       }
 
-    go(rr.headers::Nil)
+    go(rr.rules::Nil)
   }
 
   def mkOperation(pathStr: String, rr: RhoRoute[_]): Operation =
@@ -302,7 +295,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     code -> Response(description = descr, schema = schema)
   }
 
-  def mkQueryParam(rule: QueryCapture[_]): Parameter = {
+  def mkQueryParam(rule: QueryMetaData[_]): Parameter = {
     TypeBuilder.DataType(rule.m.tpe) match {
       case TypeBuilder.DataType.ComplexDataType(nm, _) =>
         QueryParameter(

@@ -1,5 +1,7 @@
 package org.http4s.rho
 
+import scala.language.existentials
+
 import org.http4s.{Method, Request, Uri}
 import org.http4s.rho.CompileService.ServiceBuilder
 import org.specs2.mutable.Specification

@@ -38,7 +38,7 @@ object PathAST {
       TypedPath(PathAnd(this.rule, t.rule))
 
     def /[T2 <: HList](t: RequestLineBuilder[T2])(implicit prep: Prepend[T, T2]): RequestLineBuilder[prep.Out] =
-      RequestLineBuilder(PathAnd(this.rule, t.path), t.query)
+      RequestLineBuilder(PathAnd(this.rule, t.path), t.rules)
 
     def +?[T1 <: HList](q: TypedQuery[T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[prep.Out] =
       RequestLineBuilder(rule, q.rule)

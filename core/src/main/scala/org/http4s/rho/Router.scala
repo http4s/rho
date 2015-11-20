@@ -3,8 +3,8 @@ package rho
 
 import bits.PathAST._
 import bits.HeaderAST._
-import bits.QueryAST.QueryRule
 import org.http4s.rho.bits.HeaderAppendable
+import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
 
 import scala.reflect.runtime.universe.{Type, TypeTag}
 
@@ -14,8 +14,7 @@ import shapeless.ops.hlist.Prepend
 sealed trait RoutingEntity[T <: HList] {
   def method: Method
   def path: PathRule
-  def query: QueryRule
-  def headers: HeaderRule
+  def rules: RequestRule
 
   def /:(path: TypedPath[HNil]): RoutingEntity[T]
 }
@@ -24,13 +23,12 @@ sealed trait RoutingEntity[T <: HList] {
   *
   * @param method request methods to match
   * @param path path matching stack
-  * @param headers header validation stack
+  * @param rules header validation stack
   * @tparam T cumulative type of the required method for executing the router
   */
 case class Router[T <: HList](method: Method,
                               path: PathRule,
-                              query: QueryRule,
-                              headers: HeaderRule)
+                              rules: RequestRule)
                        extends RouteExecutable[T]
                           with HeaderAppendable[T]
                           with RoutingEntity[T]
@@ -44,7 +42,7 @@ case class Router[T <: HList](method: Method,
   }
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
-    Router(method, path, query, HeaderAnd(headers, v.rule))
+    Router(method, path, AndRule(rules, v.rule))
 
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(this, action)
 
@@ -71,16 +69,14 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override def makeRoute(action: Action[R::T]): RhoRoute[R::T] = RhoRoute(this, action)
 
-  override def path: PathRule = router.path
+  override val path: PathRule = router.path
 
   override def method: Method = router.method
 
-  override def query: QueryRule = router.query
+  override val rules: RequestRule = router.rules
 
   override def decoding[R2 >: R](decoder2: EntityDecoder[R2])(implicit t: TypeTag[R2]): CodecRouter[T, R2] =
     CodecRouter(router, decoder orElse decoder2)
-
-  override val headers: HeaderRule = router.headers
 
   def entityType: Type = t.tpe
 }
