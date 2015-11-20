@@ -1,7 +1,7 @@
 package org.http4s.rho.bits
 
 import org.http4s.rho.bits.FailureResponse._
-import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
+import org.http4s.rho.bits.ResponseGeneratorInstances.{InternalServerError, BadRequest}
 import org.http4s.Response
 import org.http4s.rho.Result.BaseResult
 import org.http4s.server.HttpService
@@ -53,6 +53,8 @@ case class FailureResponse(reason: FailureReason) extends ResultResponse[Nothing
 
 object FailureResponse {
   def badRequest(reason: String): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
+
+  def error(message: String): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(message)))
 
   def pure(response: =>Task[Response]): FailureResponse = FailureResponse(new ResponseReason(response))
 
