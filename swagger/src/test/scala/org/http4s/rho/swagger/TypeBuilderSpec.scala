@@ -3,7 +3,7 @@ package org.http4s.rho.swagger
 import java.sql.Timestamp
 import java.util.Date
 
-import org.specs2.scalaz.{Spec, ScalazMatchers}
+import org.specs2.mutable.Specification
 
 import scalaz.concurrent.Task
 import scalaz.stream.Process
@@ -24,7 +24,7 @@ package object model {
   case class FooWithMap(l: Map[String, Int])
 }
 
-class TypeBuilderSpec extends Spec {
+class TypeBuilderSpec extends Specification {
   import model._
   import models.Model
 

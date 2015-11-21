@@ -64,7 +64,7 @@ object MyBuild extends Build {
         libraryDependencies ++= Seq(
           http4sServer     % "provided",
           logbackClassic   % "test",
-          scalazSpecs2     % "test",
+          specs2           % "test",
           `scala-reflect`  % scalaVersion.value
         )
     )
@@ -136,8 +136,8 @@ object Dependencies {
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.5.3"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
-  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.2"
-  lazy val scalazSpecs2        = "org.typelevel"              %% "scalaz-specs2"         % "0.3.0"
+  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.3"
+  lazy val specs2              = "org.specs2"                 %% "specs2-core"           % "3.6.5"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.09"
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
