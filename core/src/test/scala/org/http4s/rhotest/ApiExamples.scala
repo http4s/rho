@@ -6,6 +6,7 @@ import org.specs2.mutable.Specification
 import org.http4s.rho._
 import scalaz.concurrent.Task
 
+import headers.ETag
 import server.websocket.WS
 
 
@@ -56,7 +57,7 @@ class ApiExamples extends Specification {
         // Now this can be combined with a method to make the 'Action'
         val action = r2 |>> {
           (world: String, fav: Int, tag: headers.ETag) =>
-            Ok("Success").withHeaders(headers.ETag(fav.toString))
+            Ok("Success").putHeaders(ETag(ETag.EntityTag(fav.toString)))
         }
 
         /**

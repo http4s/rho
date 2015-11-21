@@ -84,8 +84,8 @@ trait ResultSyntaxInstances {
     def withStatus[S <% Status](status: S): Self = r.copy(resp = r.resp.copy(status = status))
 
     override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[ParseFailure\/T] = r.resp.attemptAs(decoder).run
-      EitherT[Task, ParseFailure, T](t)
+      val t: Task[DecodeFailure\/T] = r.resp.attemptAs(decoder).run
+      EitherT[Task, DecodeFailure, T](t)
     }
 
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =
@@ -113,10 +113,10 @@ trait ResultSyntaxInstances {
     }
 
     override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[ParseFailure\/T] = r.flatMap { t =>
+      val t: Task[DecodeFailure\/T] = r.flatMap { t =>
         t.resp.attemptAs(decoder).run
       }
-      EitherT[Task, ParseFailure, T](t)
+      EitherT[Task, DecodeFailure, T](t)
     }
 
     override def withAttribute[A](key: AttributeKey[A], value: A): Self =

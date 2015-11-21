@@ -1,6 +1,7 @@
 package org.http4s
 package rho
 
+import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.specs2.mutable.Specification
 import java.util.concurrent.atomic.AtomicInteger
 import scodec.bits.ByteVector
@@ -303,8 +304,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val body = Process.emit(ByteVector.apply("foo".getBytes()))
       val uri = Uri.fromString("/foo/1?param=myparam").getOrElse(sys.error("Failed."))
       val req = Request(method = Method.POST, uri = uri, body = body)
-                    .withHeaders(Headers(headers.`Content-Type`(MediaType.`text/plain`),
-                                         headers.`Content-Length`("foo".length)))
+                    .putHeaders(`Content-Type`(MediaType.`text/plain`),
+                                `Content-Length`("foo".length))
 
       val r = srvc.toService()(req)
       getBody(r.run.body) must_== "success"

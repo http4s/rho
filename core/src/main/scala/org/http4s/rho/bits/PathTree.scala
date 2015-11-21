@@ -79,8 +79,8 @@ private[rho] object PathTree {
       case c @ CodecRouter(_, parser) =>
         Leaf { (req, pathstack) =>
           ValidationTools.runRequestRules(req, c.router.rules, pathstack).map{ i =>
-            parser.decode(req).run.flatMap(_.fold(e =>
-              Response(Status.BadRequest, req.httpVersion).withBody(e.sanitized),
+            parser.decode(req, false).run.flatMap(_.fold(e =>
+              Response(Status.BadRequest, req.httpVersion).withBody(e.msg),
               { body =>
                 // `asInstanceOf` to turn the untyped HList to type T
                 route.action.act(req, (body :: i).asInstanceOf[T])
@@ -243,7 +243,7 @@ private[rho] object PathTree {
                 val allowedMethods = ms.mkString(", ")
                 val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
                 MethodNotAllowed.pure(msg)
-                  .withHeaders(headers.Allow(ms.head, ms.tail.toList:_*))
+                  .putHeaders(headers.Allow(ms.head, ms.tail.toList:_*))
               }
 
           }
