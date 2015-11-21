@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -e
+
+SBT_COMMAND=";test"
+
+if [[ $TRAVIS_BRANCH = "master" || $TRAVIS_BRANCH = "release-"* ]] && [[ $TRAVIS_PULL_REQUEST = "false" ]]; then
+  
+  # execute deployment
+  bash bin/deployprep
+
+  echo 'Publishing artifacts and documentation.'
+  SBT_COMMAND="$SBT_COMMAND ;publish"
+
+  export GIT_AUTHOR_NAME="Travis CI"
+  export GIT_AUTHOR_EMAIL="travis-ci@http4s.org"
+  export GIT_COMMITTER_NAME=$GIT_AUTHOR_NAME
+  export GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
+  SBT_COMMAND="$SBT_COMMAND ;docs/ghpagesPushSite"
+fi
+
+sbt $SBT_COMMAND
+

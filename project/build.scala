@@ -1,6 +1,15 @@
 import sbt._
 import Keys._
 import spray.revolver.RevolverPlugin._
+
+import com.typesafe.sbt.SbtGhPages.ghpages
+import com.typesafe.sbt.SbtSite.site
+import com.typesafe.sbt.SbtGit.git
+
+import sbtunidoc.Plugin.ScalaUnidoc
+import sbtunidoc.Plugin.unidocSettings
+import sbtunidoc.Plugin.UnidocKeys._
+
 import scala.util.Properties.envOrNone
 
 object MyBuild extends Build {
@@ -24,6 +33,26 @@ object MyBuild extends Build {
                       .in(file("swagger"))
                       .settings(buildSettings:+ swaggerDeps : _*)
                       .dependsOn(`rho-core` % "compile->compile;test->test")
+
+  lazy val docs = project
+              .in(file("docs"))
+              .settings(buildSettings)
+              .settings(unidocSettings)
+              .settings(ghpages.settings ++ site.settings)
+              .settings(site.includeScaladoc())
+              .settings(Seq(
+                dontPublish,
+                description := "Api Documentation",
+                autoAPIMappings := true,
+                unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
+                  `rho-core`,
+                  `rho-hal`,
+                  `rho-swagger`
+                ),
+                git.remoteRepo := "git@github.com:http4s/rho.git",
+                site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api")
+                ))
+              .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
 
   lazy val `rho-examples` = project
                         .in(file("examples"))
