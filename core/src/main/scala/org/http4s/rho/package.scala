@@ -7,8 +7,6 @@ import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 import scala.language.implicitConversions
 
 import rho.bits.PathAST._
-import rho.bits.HeaderAST._
-import rho.bits.QueryAST._
 
 import shapeless.{HList, HNil, ::}
 import org.http4s.rho.bits._

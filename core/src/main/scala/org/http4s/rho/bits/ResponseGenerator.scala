@@ -13,6 +13,15 @@ import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
 import scalaz.concurrent.Task
 
+/** Helpers to aid in the construction of a response function
+  *
+  * These helpers provide the foundation for the response generation in the rho DSL.
+  * They require the needed codecs and generate a response with the correct meta data.
+  *
+  * {{{
+  *   { req => Ok("foo!") }
+  * }}}
+  */
 sealed trait ResponseGenerator {
   def status: Status
 }
@@ -36,7 +45,7 @@ abstract class EmptyResponseGenerator(val status: Status) extends ResponseGenera
   /** Generate a [[Result]] that carries the type information */
   def apply(): Task[T] = result
 
-  /** Generate wrapper free [[Response]] */
+  /** Generate wrapper free `Response` */
   def pure(): Task[Response] = pureResult
 }
 
@@ -58,11 +67,11 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
     }
   }
 
-  /** Generate wrapper free [[Response]] */
+  /** Generate wrapper free `Response` */
   def pure[A](body: A)(implicit w: EntityEncoder[A]): Task[Response] =
     pure(body, Headers.empty)(w)
 
-  /** Generate wrapper free [[Response]] */
+  /** Generate wrapper free `Response` */
   def pure[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[Response] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {

@@ -18,12 +18,22 @@ import scala.util.control.NonFatal
 import scalaz.concurrent.Task
 
 
-/** Rho specific implementation of the PathTree */
+/** Data structure for route execution
+  *
+  * A [[PathTree]] contains a map of the known route paths. The values of the
+  * tree are [[RhoRoute]]'s that can generate a reply to a `Request`.
+  */
 final class PathTree private(private val paths: PathTree.MatchNode) {
   import PathTree._
 
   override def toString = paths.toString()
 
+  /** Create a new [[PathTree]] with the [[RhoRoute]] appended
+    *
+    * @param route [[RhoRoute]] to append to the new tree.
+    * @tparam T Result type of the [[RhoRoute]].
+    * @return A new [[PathTree]] containing the provided route.
+    */
   def appendRoute[T <: HList](route: RhoRoute[T]): PathTree = {
     val m = route.method
     val newLeaf = makeLeaf(route)
@@ -31,8 +41,10 @@ final class PathTree private(private val paths: PathTree.MatchNode) {
     new PathTree(newNode)
   }
 
+  /** Merge this tree with another [[PathTree]] */
   def merge(other: PathTree): PathTree = new PathTree(paths merge other.paths)
 
+  /** Attempt to generate a `Response` by executing the tree. */
   def getResult(req: Request): RouteResult[Task[Response]] = paths.walkTree(req.method, req)
 }
 
@@ -42,8 +54,6 @@ private[rho] object PathTree {
   type Action = ResultResponse[Task[Response]]
 
   def apply(): PathTree = new PathTree(MatchNode(""))
-
-  object ValidationTools extends ExecutableCompiler
 
   def splitPath(path: String): List[String] = {
     val buff = new ListBuffer[String]
@@ -71,14 +81,14 @@ private[rho] object PathTree {
     route.router match {
       case Router(method, _, rules) =>
         Leaf { (req, pathstack) =>
-          ValidationTools.runRequestRules(req, rules, pathstack).map{ i =>
+          RuleExecutor.runRequestRules(req, rules, pathstack).map{ i =>
             route.action.act(req, i.asInstanceOf[T])
           }
         }
 
       case c @ CodecRouter(_, parser) =>
         Leaf { (req, pathstack) =>
-          ValidationTools.runRequestRules(req, c.router.rules, pathstack).map{ i =>
+          RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map{ i =>
             parser.decode(req, false).run.flatMap(_.fold(e =>
               Response(Status.BadRequest, req.httpVersion).withBody(e.msg),
               { body =>

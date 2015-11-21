@@ -1,15 +1,15 @@
 package org.http4s
 package rho.bits
 
-import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.bits.QueryParser.Params
-
 import scala.language.higherKinds
 
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
-import scalaz.concurrent.Task
 
+/** Extract a value from the `Request` `Query`
+  *
+  * @tparam A Type of value produced by the parser.
+  */
 trait QueryParser[A] {
   import QueryParser.Params
   def collect(name: String, params: Params, default: Option[A]): ResultResponse[A]
@@ -18,6 +18,7 @@ trait QueryParser[A] {
 object QueryParser {
   type Params = Map[String, Seq[String]]
 
+  /** Optionally extract the value from the `Query` */
   implicit def optionParse[A](implicit p: StringParser[A]) = new QueryParser[Option[A]] {
     override def collect(name: String, params: Params, default: Option[Option[A]]): ResultResponse[Option[A]] = {
       val defaultValue = default.getOrElse(None)
@@ -32,6 +33,10 @@ object QueryParser {
     }
   }
 
+  /** Extract multiple elements from the `Query`
+    *
+    * The elements must have the same name and each be a valid representation of the requisite type.
+    */
   implicit def multipleParse[A, B[_]](implicit p: StringParser[A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[B[A]] {
     override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[B[A]] = {
       val b = cbf()
@@ -57,6 +62,7 @@ object QueryParser {
     }
   }
 
+  /** Extract an element from the `Query` using a [[StringParser]] */
   implicit def standardCollector[A](implicit p: StringParser[A]) = new QueryParser[A] {
     override def collect(name: String, params: Params, default: Option[A]): ResultResponse[A] = {
       params.get(name) match {

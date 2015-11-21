@@ -1,5 +1,6 @@
 package com.http4s.rho.hal.plus.swagger
 
+
 import scala.language.implicitConversions
 import scala.util.Failure
 import scala.util.Success
@@ -9,10 +10,10 @@ import org.http4s.Charset
 import org.http4s.headers.`Content-Type`
 import org.http4s.MediaType
 import org.http4s.EntityEncoder
-import org.http4s.rho.bits.QueryAST.TypedQuery
 import org.http4s.rho.hal.LinkObjectSerializer
 import org.http4s.rho.hal.ResourceObject
 import org.http4s.rho.hal.ResourceObjectSerializer
+import org.http4s.rho.bits.TypedQuery
 import org.json4s.DefaultFormats
 import org.json4s.Extraction.decompose
 import org.json4s.Formats

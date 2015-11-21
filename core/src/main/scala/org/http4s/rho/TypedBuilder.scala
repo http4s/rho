@@ -9,7 +9,7 @@ import shapeless.HList
 
 
 /** A typed shell which represents the requirements of the route
- * @tparam T the HList representation of the values to be extracted from the [[Request]]
+ * @tparam T The `HList` representation of the values to be extracted from the `Request`.
  */
 trait TypedBuilder[T <: HList] extends UriConvertible {
   /** Untyped AST representation of the path to operate on */

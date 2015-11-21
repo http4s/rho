@@ -4,8 +4,7 @@ package rho
 import bits.MethodAliases._
 import bits.ResponseGeneratorInstances._
 
-import bits.HeaderAST.TypedHeader
-import bits.{PathTree, SuccessResponse, FailureResponse}
+import org.http4s.rho.bits.{TypedHeader, PathTree, SuccessResponse, FailureResponse}
 import org.http4s.headers.{`Content-Length`, ETag}
 import org.http4s.rho.bits.RequestAST.AndRule
 
@@ -41,7 +40,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request().putHeaders(lenheader)
-      val res = PathTree.ValidationTools.runRequestRules((RequireETag && RequireNonZeroLen).rule,badreq)
+      val res = RuleExecutor.runRequestRules((RequireETag && RequireNonZeroLen).rule,badreq)
 
       res must beAnInstanceOf[FailureResponse]
       res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
@@ -49,7 +48,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request 2" in {
       val req = Request().putHeaders(lenheader)
-      val res = PathTree.ValidationTools.runRequestRules(RequireThrowException.rule, req)
+      val res = RuleExecutor.runRequestRules(RequireThrowException.rule, req)
       res must beAnInstanceOf[FailureResponse]
       res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.InternalServerError
     }
@@ -58,46 +57,46 @@ class ApiTest extends Specification {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request().putHeaders(etag, lenheader)
-      PathTree.ValidationTools.runRequestRules(c.rule, req) should_== SuccessResponse(HNil)
+      RuleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(HNil)
     }
 
     "Capture params" in {
       val req = Request().putHeaders(etag, lenheader)
       Seq({
         val c2 = capture(headers.`Content-Length`) && RequireETag
-        PathTree.ValidationTools.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader::HNil)
+        RuleExecutor.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader::HNil)
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(ETag)
-        PathTree.ValidationTools.runRequestRules(c3.rule, req) should_== SuccessResponse(etag::lenheader::HNil)
+        RuleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(etag::lenheader::HNil)
       }).reduce( _ and _)
     }
 
     "Map header params" in {
       val req = Request().putHeaders(etag, lenheader)
       val c = captureMap(headers.`Content-Length`)(_.length)
-      PathTree.ValidationTools.runRequestRules(c.rule, req) should_== SuccessResponse(4::HNil)
+      RuleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(4::HNil)
     }
 
     "Map header params with exception" in {
       val req = Request().putHeaders(etag, lenheader)
       val c = captureMap(headers.`Content-Length`)(_.length / 0)
-      PathTree.ValidationTools.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse]
+      RuleExecutor.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse]
     }
 
     "Map with possible default" in {
       val req = Request().putHeaders(etag, lenheader)
 
       val c1 = captureMapR(headers.`Content-Length`)(r => \/-(r.length))
-      PathTree.ValidationTools.runRequestRules(c1.rule, req) should_== SuccessResponse(4::HNil)
+      RuleExecutor.runRequestRules(c1.rule, req) should_== SuccessResponse(4::HNil)
 
       val r2 = Gone("Foo")
       val c2 = captureMapR(headers.`Content-Length`)(_ => -\/(r2))
-      val v1 = PathTree.ValidationTools.runRequestRules(c2.rule, req)
+      val v1 = RuleExecutor.runRequestRules(c2.rule, req)
       v1 must beAnInstanceOf[FailureResponse]
       v1.asInstanceOf[FailureResponse].toResponse.run.status must_== r2.run.resp.status
 
       val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
-      val v2 = PathTree.ValidationTools.runRequestRules(c3.rule, req)
+      val v2 = RuleExecutor.runRequestRules(c3.rule, req)
       v2 must beAnInstanceOf[FailureResponse]
       v2.asInstanceOf[FailureResponse].toResponse.run.status must_== r2.run.resp.status
     }
