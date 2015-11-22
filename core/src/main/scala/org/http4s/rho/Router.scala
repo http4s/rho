@@ -2,8 +2,7 @@ package org.http4s
 package rho
 
 import bits.PathAST._
-import bits.HeaderAST._
-import org.http4s.rho.bits.HeaderAppendable
+import org.http4s.rho.bits.{TypedHeader, HeaderAppendable}
 import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
 
 import scala.reflect.runtime.universe.{Type, TypeTag}

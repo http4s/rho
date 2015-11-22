@@ -43,7 +43,7 @@ class CompileServiceSpec extends Specification {
         (GET / "hello" |>> "GetFoo") ::
         (PUT / "hello" |>> "PutFoo") :: Nil
 
-      val srvc = CompileService.makeService(routes)
+      val srvc = CompileService.foldServices(routes)
       "GetFoo" === new RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === new RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }

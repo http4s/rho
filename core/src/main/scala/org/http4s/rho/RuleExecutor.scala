@@ -2,23 +2,20 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits.RequestAST._
+import org.http4s.rho.bits.{ ResultResponse, SuccessResponse }
 
-import org.http4s.rho.bits._
-
-import shapeless.{ HNil, HList, :: }
+import shapeless.{ HNil, HList }
 
 
-trait ExecutableCompiler {
-
-  def parsePath(path: String): List[String] = path.split("/").toList
-
+object RuleExecutor {
   //////////////////////// Stuff for executing the route //////////////////////////////////////
 
-  /** Walks the validation tree */
+  /** Execute the rule tree */
   def runRequestRules(v: RequestRule, req: Request): ResultResponse[HList] =
     runRequestRules(req, v, HNil)
 
 
+  /** Executes the [[RequestRule]] tree pushing the results to `stack` */
   def runRequestRules(req: Request, v: RequestRule, stack: HList): ResultResponse[HList] = v match {
     case AndRule(a, b) => runRequestRules(req, a, stack).flatMap(runRequestRules(req, b, _))
     case OrRule(a, b) => runRequestRules(req, a, stack).orElse(runRequestRules(req, b, stack))

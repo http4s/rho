@@ -10,12 +10,12 @@ import scalaz.concurrent.Task
 /** Object which can be compiled into a complete route
   * The [[RouteExecutable]] is a complete set of HTTP method, path, query, and headers
   * needed for a compiler to generate a complete route description.
-  * @tparam T the HList representation of the types the route expects to extract
-  *           from a [[Request]]
+  * @tparam T The `HList` representation of the types the route expects to extract
+  *           from a `Request`.
   */
 trait RouteExecutable[T <: HList] extends TypedBuilder[T] { exec =>
 
-  /** [[Method]] of the incoming HTTP [[Request]] */
+  /** [[Method]] of the incoming HTTP `Request` */
   def method: Method
 
 //  /** Create a [[RhoRoute]] from this [[RouteExecutable]] with the provided converters */

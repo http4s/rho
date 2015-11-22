@@ -8,6 +8,7 @@ import org.http4s.server.HttpService
 
 import scalaz.concurrent.Task
 
+/** Types that represent the result of executing a step of the route */
 sealed trait RouteResult[+T] {
   final def isSuccess: Boolean = this match {
     case SuccessResponse(_) => true
@@ -26,8 +27,10 @@ sealed trait RouteResult[+T] {
     }
 }
 
+/** Failure to match a route */
 case object NoMatch extends RouteResult[Nothing]
 
+/** Node in the ADT that represents a result, either success or failure */
 sealed trait ResultResponse[+T] extends RouteResult[T] {
   def map[T2](f: T => T2): ResultResponse[T2] = this match {
     case SuccessResponse(v)        => SuccessResponse(f(v))
@@ -45,26 +48,39 @@ sealed trait ResultResponse[+T] extends RouteResult[T] {
   }
 }
 
-case class SuccessResponse[+T](result: T) extends ResultResponse[T]
+/** Successful response */
+final case class SuccessResponse[+T](result: T) extends ResultResponse[T]
 
-case class FailureResponse(reason: FailureReason) extends ResultResponse[Nothing] {
+/** Response that signifies an error
+  *
+  * @param reason The reason for failure which can be turned into a `Task[Response]`.
+  */
+final case class FailureResponse(reason: ResponseReason) extends ResultResponse[Nothing] {
   def toResponse: Task[Response] = reason.toResponse
 }
 
 object FailureResponse {
+
+  /** Construct a `400 BadRequest` FailureResponse
+    *
+    * @param reason Description of the failure
+    */
   def badRequest(reason: String): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
 
-  def error(message: String): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(message)))
+  /** Construct a `500 InternalServerError` FailureResponse
+    *
+    * @param reason Description of the failure
+    */
+  def error(reason: String): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(reason)))
 
+  /** Construct a [[FailureResponse]] using the provided thunk. */
   def pure(response: =>Task[Response]): FailureResponse = FailureResponse(new ResponseReason(response))
 
+  /** Construct a [[FailureResponse]] using the provided thunk. */
   def result(result: =>Task[BaseResult]): FailureResponse = pure(result.map(_.resp))
 
-  trait FailureReason {
-    def toResponse: Task[Response]
-  }
-  
-  class ResponseReason(response: =>Task[Response]) extends FailureReason {
+  /** Concrete representation of the `FailureResponse` */
+  final class ResponseReason(response: =>Task[Response]) {
     def toResponse = response
   }
 }

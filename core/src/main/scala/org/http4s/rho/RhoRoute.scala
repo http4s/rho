@@ -9,14 +9,25 @@ import shapeless.{HNil, HList}
 
 import scalaz.concurrent.Task
 
-/** A shortcut type to bundle everything needed to define a route */
+/** A type to bundle everything needed to define a route */
 final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T])
       extends RoutePrependable[RhoRoute[T]]
 {
 
+  /** Execute the [[RhoRoute]]
+    *
+    * @param req The `Request` to be served.
+    * @param hlist Parameters obtained by executing the rules.
+    * @return A `Response` to the `Request`.
+    */
   def apply(req: Request, hlist: T): Task[Response] = action.act(req, hlist)
 
-  def /:(prefix: TypedPath[HNil]): RhoRoute[T] = {
+  /** Prefix the [[RhoRoute]] with non-capturing path rules
+    *
+    * @param prefix non-capturing prefix to prepend
+    * @return builder with the prefix prepended to the path rules
+    */
+  override def /:(prefix: TypedPath[HNil]): RhoRoute[T] = {
     copy(router = prefix /: router)
   }
 
@@ -32,5 +43,6 @@ final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T
 }
 
 object RhoRoute {
+  /** Existentially typed [[RhoRoute]] useful when the parameters are not needed */
   type Tpe = RhoRoute[_ <: HList]
 }
