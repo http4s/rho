@@ -88,7 +88,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="org.http4s.rho.Action" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="org.http4s.rho.Action" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Action[T&lt;:shapeless.HList]extendsProductwithSerializable"></a>
       <a id="Action[T&lt;:HList]:Action[T]"></a>
       <h4 class="signature">
@@ -104,7 +104,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Encapsulation of metadata and a result generator
+</p><div class="fullcomment"><div class="comment cmt"><p>Encapsulation of metadata and a result generator
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The type of <code>HList</code> required to execute the <a href="Action.html" class="extype" name="org.http4s.rho.Action">Action</a>.</p></dd><dt class="param">resultInfo</dt><dd class="cmt"><p>Information about the status and type the Action will produce.</p></dd><dt class="param">responseEncodings</dt><dd class="cmt"><p>Encodings that the response supports.</p></dd><dt class="param">act</dt><dd class="cmt"><p>Function of <code>Request</code> and the <code>HList</code> to a <code>Task[Response]</code></p></dd></dl></div>
     </li><li name="org.http4s.rho.CodecRouter" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="CodecRouter[T&lt;:shapeless.HList,R]extendsHeaderAppendable[T]withRouteExecutable[shapeless.::[R,T]]withRoutingEntity[shapeless.::[R,T]]withDecodable[T,R]withProductwithSerializable"></a>
       <a id="CodecRouter[T&lt;:HList,R]:CodecRouter[T,R]"></a>
@@ -123,25 +125,25 @@
     </span>
       
     </li><li name="org.http4s.rho.CompileService" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="CompileService[A]extendsAnyRef"></a>
-      <a id="CompileService[A]:CompileService[A]"></a>
+      <a id="CompileService[RouteType]extendsAnyRef"></a>
+      <a id="CompileService[RouteType]:CompileService[RouteType]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="CompileService.html"><span class="name">CompileService</span></a><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <a href="CompileService.html"><span class="name">CompileService</span></a><span class="tparams">[<span name="RouteType">RouteType</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@CompileService[A]extendsAnyRef" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@CompileService[RouteType]extendsAnyRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">This trait serves to transform a <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into an <code>A</code>
+      <p class="shortcomment cmt">This trait serves to transform a <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into an <code>RouteType</code>
 This can be a stateful operation, storing the action for later execution
 or any other type of compilation phase.</p>
-    </li><li name="org.http4s.rho.Decodable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.Decodable" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="Decodable[T&lt;:shapeless.HList,R]extendsAnyRef"></a>
       <a id="Decodable[T&lt;:HList,R]:Decodable[T,R]"></a>
       <h4 class="signature">
@@ -157,26 +159,11 @@ or any other type of compilation phase.</p>
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.ExecutableCompiler" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ExecutableCompilerextendsAnyRef"></a>
-      <a id="ExecutableCompiler:ExecutableCompiler"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="ExecutableCompiler.html"><span class="name">ExecutableCompiler</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@ExecutableCompilerextendsAnyRef" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
+      <p class="shortcomment cmt">Type that can accept a decoder.</p><div class="fullcomment"><div class="comment cmt"><p>Type that can accept a decoder.</p><p>A subtype of <a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a> can accept an <code>EntityDecoder</code> for extracting a message
+from the <code>Request</code> body.
+</p></div></div>
     </li><li name="org.http4s.rho.PathBuilder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="PathBuilder[T&lt;:shapeless.HList]extendsRouteExecutable[T]withDecodable[T,Nothing]withUriConvertiblewithHeaderAppendable[T]withRoutePrependable[org.http4s.rho.PathBuilder[T]]"></a>
+      <a id="PathBuilder[T&lt;:shapeless.HList]extendsRouteExecutable[T]withDecodable[T,Nothing]withHeaderAppendable[T]withRoutePrependable[org.http4s.rho.PathBuilder[T]]withUriConvertible"></a>
       <a id="PathBuilder[T&lt;:HList]:PathBuilder[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -184,15 +171,15 @@ or any other type of compilation phase.</p>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="PathBuilder.html"><span class="name">PathBuilder</span></a><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="result"> extends <a href="RouteExecutable.html" class="extype" name="org.http4s.rho.RouteExecutable">RouteExecutable</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>] with <a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>, <span class="extype" name="scala.Nothing">Nothing</span>] with <a href="UriConvertible.html" class="extype" name="org.http4s.rho.UriConvertible">UriConvertible</a> with <a href="bits/HeaderAppendable.html" class="extype" name="org.http4s.rho.bits.HeaderAppendable">HeaderAppendable</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>] with <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a>[<a href="PathBuilder.html" class="extype" name="org.http4s.rho.PathBuilder">PathBuilder</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>]]</span>
+        <a href="PathBuilder.html"><span class="name">PathBuilder</span></a><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="result"> extends <a href="RouteExecutable.html" class="extype" name="org.http4s.rho.RouteExecutable">RouteExecutable</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>] with <a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>, <span class="extype" name="scala.Nothing">Nothing</span>] with <a href="bits/HeaderAppendable.html" class="extype" name="org.http4s.rho.bits.HeaderAppendable">HeaderAppendable</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>] with <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a>[<a href="PathBuilder.html" class="extype" name="org.http4s.rho.PathBuilder">PathBuilder</a>[<span class="extype" name="org.http4s.rho.PathBuilder.T">T</span>]] with <a href="UriConvertible.html" class="extype" name="org.http4s.rho.UriConvertible">UriConvertible</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@PathBuilder[T&lt;:shapeless.HList]extendsRouteExecutable[T]withDecodable[T,Nothing]withUriConvertiblewithHeaderAppendable[T]withRoutePrependable[org.http4s.rho.PathBuilder[T]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@PathBuilder[T&lt;:shapeless.HList]extendsRouteExecutable[T]withDecodable[T,Nothing]withHeaderAppendable[T]withRoutePrependable[org.http4s.rho.PathBuilder[T]]withUriConvertible" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Fully functional path building</p>
-    </li><li name="org.http4s.rho.QueryBuilder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.QueryBuilder" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="QueryBuilder[T&lt;:shapeless.HList]extendsRouteExecutable[T]withHeaderAppendable[T]withUriConvertiblewithRoutePrependable[org.http4s.rho.QueryBuilder[T]]withProductwithSerializable"></a>
       <a id="QueryBuilder[T&lt;:HList]:QueryBuilder[T]"></a>
       <h4 class="signature">
@@ -208,13 +195,16 @@ or any other type of compilation phase.</p>
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.RequestLineBuilder" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Typed builder of query rules</p><div class="fullcomment"><div class="comment cmt"><p>Typed builder of query rules</p><p>The <a href="QueryBuilder.html" class="extype" name="org.http4s.rho.QueryBuilder">QueryBuilder</a> represents a builder for routes that already have a defined
+method and path. It can accumulate query rules and mount decoders.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The HList representation of the types the route expects to extract
+          from a <code>Request</code>.</p></dd><dt class="param">method</dt><dd class="cmt"><p>Request method to match.</p></dd><dt class="param">path</dt><dd class="cmt"><p>Path rules to execute.</p></dd><dt class="param">rules</dt><dd class="cmt"><p>Accumulated <span class="extype" name="RequestRule">RequestRule</span>'s.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.RequestLineBuilder" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="RequestLineBuilder[T&lt;:shapeless.HList]extendsTypedBuilder[T]withRoutePrependable[org.http4s.rho.RequestLineBuilder[T]]withUriConvertiblewithProductwithSerializable"></a>
       <a id="RequestLineBuilder[T&lt;:HList]:RequestLineBuilder[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
@@ -225,7 +215,8 @@ or any other type of compilation phase.</p>
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">DSL construct for building query rules without a known <code>Method</code></p><div class="fullcomment"><div class="comment cmt"><p>DSL construct for building query rules without a known <code>Method</code></p><p>The <a href="RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> doesn't know about header rules or the method.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The <code>HList</code> representation of the values to be extracted from the <code>Request</code>.</p></dd></dl></div>
     </li><li name="org.http4s.rho.Result" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Result[+CONTINUE,+SWITCHINGPROTOCOLS,+PROCESSING,+OK,+CREATED,+ACCEPTED,+NONAUTHORITATIVEINFORMATION,+NOCONTENT,+RESETCONTENT,+PARTIALCONTENT,+MULTISTATUS,+ALREADYREPORTED,+IMUSED,+MULTIPLECHOICES,+MOVEDPERMANENTLY,+FOUND,+SEEOTHER,+NOTMODIFIED,+USEPROXY,+TEMPORARYREDIRECT,+PERMANENTREDIRECT,+BADREQUEST,+UNAUTHORIZED,+PAYMENTREQUIRED,+FORBIDDEN,+NOTFOUND,+METHODNOTALLOWED,+NOTACCEPTABLE,+PROXYAUTHENTICATIONREQUIRED,+REQUESTTIMEOUT,+CONFLICT,+GONE,+LENGTHREQUIRED,+PRECONDITIONFAILED,+PAYLOADTOOLARGE,+URITOOLONG,+UNSUPPORTEDMEDIATYPE,+RANGENOTSATISFIABLE,+EXPECTATIONFAILED,+UNPROCESSABLEENTITY,+LOCKED,+FAILEDDEPENDENCY,+UPGRADEREQUIRED,+PRECONDITIONREQUIRED,+TOOMANYREQUESTS,+REQUESTHEADERFIELDSTOOLARGE,+INTERNALSERVERERROR,+NOTIMPLEMENTED,+BADGATEWAY,+SERVICEUNAVAILABLE,+GATEWAYTIMEOUT,+HTTPVERSIONNOTSUPPORTED,+VARIANTALSONEGOTIATES,+INSUFFICIENTSTORAGE,+LOOPDETECTED,+NOTEXTENDED,+NETWORKAUTHENTICATIONREQUIRED]extendsProductwithSerializable"></a>
       <a id="Result[+CONTINUE,+SWITCHINGPROTOCOLS,+PROCESSING,+OK,+CREATED,+ACCEPTED,+NONAUTHORITATIVEINFORMATION,+NOCONTENT,+RESETCONTENT,+PARTIALCONTENT,+MULTISTATUS,+ALREADYREPORTED,+IMUSED,+MULTIPLECHOICES,+MOVEDPERMANENTLY,+FOUND,+SEEOTHER,+NOTMODIFIED,+USEPROXY,+TEMPORARYREDIRECT,+PERMANENTREDIRECT,+BADREQUEST,+UNAUTHORIZED,+PAYMENTREQUIRED,+FORBIDDEN,+NOTFOUND,+METHODNOTALLOWED,+NOTACCEPTABLE,+PROXYAUTHENTICATIONREQUIRED,+REQUESTTIMEOUT,+CONFLICT,+GONE,+LENGTHREQUIRED,+PRECONDITIONFAILED,+PAYLOADTOOLARGE,+URITOOLONG,+UNSUPPORTEDMEDIATYPE,+RANGENOTSATISFIABLE,+EXPECTATIONFAILED,+UNPROCESSABLEENTITY,+LOCKED,+FAILEDDEPENDENCY,+UPGRADEREQUIRED,+PRECONDITIONREQUIRED,+TOOMANYREQUESTS,+REQUESTHEADERFIELDSTOOLARGE,+INTERNALSERVERERROR,+NOTIMPLEMENTED,+BADGATEWAY,+SERVICEUNAVAILABLE,+GATEWAYTIMEOUT,+HTTPVERSIONNOTSUPPORTED,+VARIANTALSONEGOTIATES,+INSUFFICIENTSTORAGE,+LOOPDETECTED,+NOTEXTENDED,+NETWORKAUTHENTICATIONREQUIRED]:Result[CONTINUE,SWITCHINGPROTOCOLS,PROCESSING,OK,CREATED,ACCEPTED,NONAUTHORITATIVEINFORMATION,NOCONTENT,RESETCONTENT,PARTIALCONTENT,MULTISTATUS,ALREADYREPORTED,IMUSED,MULTIPLECHOICES,MOVEDPERMANENTLY,FOUND,SEEOTHER,NOTMODIFIED,USEPROXY,TEMPORARYREDIRECT,PERMANENTREDIRECT,BADREQUEST,UNAUTHORIZED,PAYMENTREQUIRED,FORBIDDEN,NOTFOUND,METHODNOTALLOWED,NOTACCEPTABLE,PROXYAUTHENTICATIONREQUIRED,REQUESTTIMEOUT,CONFLICT,GONE,LENGTHREQUIRED,PRECONDITIONFAILED,PAYLOADTOOLARGE,URITOOLONG,UNSUPPORTEDMEDIATYPE,RANGENOTSATISFIABLE,EXPECTATIONFAILED,UNPROCESSABLEENTITY,LOCKED,FAILEDDEPENDENCY,UPGRADEREQUIRED,PRECONDITIONREQUIRED,TOOMANYREQUESTS,REQUESTHEADERFIELDSTOOLARGE,INTERNALSERVERERROR,NOTIMPLEMENTED,BADGATEWAY,SERVICEUNAVAILABLE,GATEWAYTIMEOUT,HTTPVERSIONNOTSUPPORTED,VARIANTALSONEGOTIATES,INSUFFICIENTSTORAGE,LOOPDETECTED,NOTEXTENDED,NETWORKAUTHENTICATIONREQUIRED]"></a>
@@ -242,7 +233,7 @@ or any other type of compilation phase.</p>
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">A helper for capturing the result types and status codes from routes</p>
     </li><li name="org.http4s.rho.ResultSyntaxInstances.ResultSyntax" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ResultSyntax[T&gt;:org.http4s.rho.Result.TopResult&lt;:org.http4s.rho.Result.BaseResult]extendsResponseOps"></a>
       <a id="ResultSyntax[T&lt;:BaseResult&gt;:TopResult]:ResultSyntax[T]"></a>
@@ -310,8 +301,8 @@ or any other type of compilation phase.</p>
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">A shortcut type to bundle everything needed to define a route</p>
-    </li><li name="org.http4s.rho.RhoService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">A type to bundle everything needed to define a route</p>
+    </li><li name="org.http4s.rho.RhoService" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="RhoServiceextendsMethodAliaseswithResponseGeneratorInstanceswithRoutePrependable[org.http4s.rho.RhoService]"></a>
       <a id="RhoService:RhoService"></a>
       <h4 class="signature">
@@ -327,7 +318,13 @@ or any other type of compilation phase.</p>
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Constructor class for defining routes</p><div class="fullcomment"><div class="comment cmt"><p>Constructor class for defining routes</p><p>The <a href="RhoService.html" class="extype" name="org.http4s.rho.RhoService">RhoService</a> provides a convenient way to define routes in a style
+similar to scalatra etc by providing implicit conversions and an implicit
+<a href="CompileService.html" class="extype" name="org.http4s.rho.CompileService">CompileService</a> inside the constructor.</p><pre><span class="kw">val</span> srvc = <span class="kw">new</span> RhoService {
+  POST / <span class="lit">"foo"</span> / pathVar[<span class="std">Int</span>] +? param[<span class="std">String</span>](<span class="lit">"param"</span>) |&gt;&gt; { (p1: <span class="std">Int</span>, param: <span class="std">String</span>) <span class="kw">=&gt;</span>
+    Ok(<span class="lit">"success"</span>)
+  }
+}</pre></div></div>
     </li><li name="org.http4s.rho.RouteExecutable" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="RouteExecutable[T&lt;:shapeless.HList]extendsTypedBuilder[T]"></a>
       <a id="RouteExecutable[T&lt;:HList]:RouteExecutable[T]"></a>
@@ -348,8 +345,8 @@ or any other type of compilation phase.</p>
 The <a href="RouteExecutable.html" class="extype" name="org.http4s.rho.RouteExecutable">RouteExecutable</a> is a complete set of HTTP method, path, query, and headers
 needed for a compiler to generate a complete route description.</p><div class="fullcomment"><div class="comment cmt"><p>Object which can be compiled into a complete route
 The <a href="RouteExecutable.html" class="extype" name="org.http4s.rho.RouteExecutable">RouteExecutable</a> is a complete set of HTTP method, path, query, and headers
-needed for a compiler to generate a complete route description.</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the HList representation of the types the route expects to extract
-          from a <span class="extype" name="Request">Request</span></p></dd></dl></div>
+needed for a compiler to generate a complete route description.</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The <code>HList</code> representation of the types the route expects to extract
+          from a <code>Request</code>.</p></dd></dl></div>
     </li><li name="org.http4s.rho.RoutePrependable" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="RoutePrependable[T&lt;:org.http4s.rho.RoutePrependable[T]]extendsAnyRef"></a>
       <a id="RoutePrependable[T&lt;:RoutePrependable[T]]:RoutePrependable[T]"></a>
@@ -436,7 +433,7 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">A typed shell which represents the requirements of the route</p><div class="fullcomment"><div class="comment cmt"><p>A typed shell which represents the requirements of the route</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the HList representation of the values to be extracted from the <span class="extype" name="Request">Request</span></p></dd></dl></div>
+      <p class="shortcomment cmt">A typed shell which represents the requirements of the route</p><div class="fullcomment"><div class="comment cmt"><p>A typed shell which represents the requirements of the route</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The <code>HList</code> representation of the values to be extracted from the <code>Request</code>.</p></dd></dl></div>
     </li><li name="org.http4s.rho.UriConvertible" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="UriConvertibleextendsAnyRef"></a>
       <a id="UriConvertible:UriConvertible"></a>
@@ -631,6 +628,23 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
       </a>
     </span>
       
+    </li><li name="org.http4s.rho.RuleExecutor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RuleExecutor"></a>
+      <a id="RuleExecutor:RuleExecutor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="RuleExecutor$.html"><span class="name">RuleExecutor</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#org.http4s.rho.package@RuleExecutor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="org.http4s.StatusInstances#StatusOrder" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="StatusOrder:scalaz.Order[org.http4s.Status]"></a>
       <a id="StatusOrder:Order[Status]"></a>
@@ -819,7 +833,7 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>EntityEncoderInstances</dd></dl></div>
     </li><li name="org.http4s.rho#capture" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="capture[H&lt;:org.http4s.HeaderKey.Extractable](key:H):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.::[H#HeaderT,shapeless.HNil]]"></a>
+      <a id="capture[H&lt;:org.http4s.HeaderKey.Extractable](key:H):org.http4s.rho.bits.TypedHeader[shapeless.::[H#HeaderT,shapeless.HNil]]"></a>
       <a id="capture[H&lt;:Extractable](H):TypedHeader[::[rho.capture.H.HeaderT,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -827,16 +841,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">capture</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.capture.H">H</span></span>)</span><span class="result">: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.capture.H.HeaderT</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">capture</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.capture.H">H</span></span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.capture.H.HeaderT</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@capture[H&lt;:org.http4s.HeaderKey.Extractable](key:H):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.::[H#HeaderT,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@capture[H&lt;:org.http4s.HeaderKey.Extractable](key:H):org.http4s.rho.bits.TypedHeader[shapeless.::[H#HeaderT,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">requires the header and will pull this header from the pile and put it into the function args stack</p>
     </li><li name="org.http4s.rho#captureMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="captureMap[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H)(f:H#HeaderT=&gt;R):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
+      <a id="captureMap[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H)(f:H#HeaderT=&gt;R):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
       <a id="captureMap[H&lt;:Extractable,R](H)((rho.captureMap.H.HeaderT)⇒R):TypedHeader[::[R,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -844,16 +858,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">captureMap</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>, <span name="R">R</span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.captureMap.H">H</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.captureMap.H.HeaderT</span>) ⇒ <span class="extype" name="org.http4s.rho.captureMap.R">R</span></span>)</span><span class="result">: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.captureMap.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">captureMap</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>, <span name="R">R</span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.captureMap.H">H</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.captureMap.H.HeaderT</span>) ⇒ <span class="extype" name="org.http4s.rho.captureMap.R">R</span></span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.captureMap.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@captureMap[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H)(f:H#HeaderT=&gt;R):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@captureMap[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H)(f:H#HeaderT=&gt;R):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
     </li><li name="org.http4s.rho#captureMapR" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="captureMapR[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H,default:Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(f:H#HeaderT=&gt;scalaz.\/[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult],R]):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
+      <a id="captureMapR[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H,default:Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(f:H#HeaderT=&gt;scalaz.\/[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult],R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
       <a id="captureMapR[H&lt;:Extractable,R](H,Option[Task[BaseResult]])((rho.captureMapR.H.HeaderT)⇒\/[Task[BaseResult],R]):TypedHeader[::[R,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -861,10 +875,10 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">captureMapR</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>, <span name="R">R</span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.captureMapR.H">H</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]] = <span class="symbol">None</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.captureMapR.H.HeaderT</span>) ⇒ <span class="extype" name="scalaz.\/">\/</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>], <span class="extype" name="org.http4s.rho.captureMapR.R">R</span>]</span>)</span><span class="result">: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.captureMapR.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">captureMapR</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>, <span name="R">R</span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.captureMapR.H">H</span></span>, <span name="default">default: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]] = <span class="symbol">None</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.captureMapR.H.HeaderT</span>) ⇒ <span class="extype" name="scalaz.\/">\/</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>], <span class="extype" name="org.http4s.rho.captureMapR.R">R</span>]</span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.captureMapR.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@captureMapR[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H,default:Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(f:H#HeaderT=&gt;scalaz.\/[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult],R]):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@captureMapR[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H,default:Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(f:H#HeaderT=&gt;scalaz.\/[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult],R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -989,7 +1003,7 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>EntityDecoderInstances</dd></dl></div>
     </li><li name="org.http4s.rho#exists" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="exists(header:org.http4s.HeaderKey.Extractable):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.HNil]"></a>
+      <a id="exists(header:org.http4s.HeaderKey.Extractable):org.http4s.rho.bits.TypedHeader[shapeless.HNil]"></a>
       <a id="exists(Extractable):TypedHeader[HNil]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -997,16 +1011,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">exists</span><span class="params">(<span name="header">header: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>)</span><span class="result">: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.HNil">HNil</span>]</span>
+        <span class="name">exists</span><span class="params">(<span name="header">header: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.HNil">HNil</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@exists(header:org.http4s.HeaderKey.Extractable):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.HNil]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@exists(header:org.http4s.HeaderKey.Extractable):org.http4s.rho.bits.TypedHeader[shapeless.HNil]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
     </li><li name="org.http4s.rho#existsAnd" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="existsAnd[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Boolean):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.HNil]"></a>
+      <a id="existsAnd[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Boolean):org.http4s.rho.bits.TypedHeader[shapeless.HNil]"></a>
       <a id="existsAnd[H&lt;:Extractable](H)((rho.existsAnd.H.HeaderT)⇒Boolean):TypedHeader[HNil]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1014,16 +1028,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">existsAnd</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="header">header: <span class="extype" name="org.http4s.rho.existsAnd.H">H</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.existsAnd.H.HeaderT</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.HNil">HNil</span>]</span>
+        <span class="name">existsAnd</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="header">header: <span class="extype" name="org.http4s.rho.existsAnd.H">H</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.existsAnd.H.HeaderT</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.HNil">HNil</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@existsAnd[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Boolean):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.HNil]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@existsAnd[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Boolean):org.http4s.rho.bits.TypedHeader[shapeless.HNil]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
     </li><li name="org.http4s.rho#existsAndR" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="existsAndR[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]]):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.HNil]"></a>
+      <a id="existsAndR[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]]):org.http4s.rho.bits.TypedHeader[shapeless.HNil]"></a>
       <a id="existsAndR[H&lt;:Extractable](H)((rho.existsAndR.H.HeaderT)⇒Option[Task[BaseResult]]):TypedHeader[HNil]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1031,10 +1045,10 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">existsAndR</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="header">header: <span class="extype" name="org.http4s.rho.existsAndR.H">H</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.existsAndR.H.HeaderT</span>) ⇒ <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]]</span>)</span><span class="result">: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.HNil">HNil</span>]</span>
+        <span class="name">existsAndR</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="header">header: <span class="extype" name="org.http4s.rho.existsAndR.H">H</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.HeaderKey.HeaderT">rho.existsAndR.H.HeaderT</span>) ⇒ <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]]</span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.HNil">HNil</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@existsAndR[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]]):org.http4s.rho.bits.HeaderAST.TypedHeader[shapeless.HNil]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@existsAndR[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]]):org.http4s.rho.bits.TypedHeader[shapeless.HNil]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -1159,7 +1173,7 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>EntityEncoderInstances0</dd></dl></div>
     </li><li name="org.http4s.rho#param" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="param[T](name:String,default:T,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
+      <a id="param[T](name:String,default:T,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
       <a id="param[T](String,T,(T)⇒Boolean)(QueryParser[T],scala.reflect.api.JavaUniverse.TypeTag[T]):TypedQuery[::[T,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1167,16 +1181,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="default">default: <span class="extype" name="org.http4s.rho.param.T">T</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.param.T">T</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="default">default: <span class="extype" name="org.http4s.rho.param.T">T</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.param.T">T</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String,default:T,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String,default:T,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Define a query parameter that will be validated with the predicate</p><div class="fullcomment"><div class="comment cmt"><p>Define a query parameter that will be validated with the predicate</p><p>Failure of the predicate results in a '403: BadRequest' response.</p></div></div>
     </li><li name="org.http4s.rho#param" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="param[T](name:String,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
+      <a id="param[T](name:String,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
       <a id="param[T](String,(T)⇒Boolean)(QueryParser[T],scala.reflect.api.JavaUniverse.TypeTag[T]):TypedQuery[::[T,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1184,16 +1198,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.param.T">T</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.param.T">T</span>) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String,validate:T=&gt;Boolean)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Define a query parameter that will be validated with the predicate</p><div class="fullcomment"><div class="comment cmt"><p>Define a query parameter that will be validated with the predicate</p><p>Failure of the predicate results in a '403: BadRequest' response.</p></div></div>
     </li><li name="org.http4s.rho#param" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="param[T](name:String,default:T)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
+      <a id="param[T](name:String,default:T)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
       <a id="param[T](String,T)(QueryParser[T],scala.reflect.api.JavaUniverse.TypeTag[T]):TypedQuery[::[T,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1201,16 +1215,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="default">default: <span class="extype" name="org.http4s.rho.param.T">T</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="default">default: <span class="extype" name="org.http4s.rho.param.T">T</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String,default:T)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String,default:T)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Define a query parameter with a default value</p>
     </li><li name="org.http4s.rho#param" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="param[T](name:String)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
+      <a id="param[T](name:String)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
       <a id="param[T](String)(QueryParser[T],scala.reflect.api.JavaUniverse.TypeTag[T]):TypedQuery[::[T,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1218,16 +1232,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">param</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.param.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@param[T](name:String)(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Defines a parameter in query string that should be bound to a route definition.</p><div class="fullcomment"><div class="comment cmt"><p>Defines a parameter in query string that should be bound to a route definition.</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>name of the parameter in query</p></dd></dl></div>
     </li><li name="org.http4s.rho#paramR" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="paramR[T](name:String,default:T,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
+      <a id="paramR[T](name:String,default:T,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
       <a id="paramR[T](String,T,(T)⇒Option[Task[BaseResult]])(QueryParser[T],scala.reflect.api.JavaUniverse.TypeTag[T]):TypedQuery[::[T,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1235,16 +1249,16 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">paramR</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="default">default: <span class="extype" name="org.http4s.rho.paramR.T">T</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.paramR.T">T</span>) ⇒ <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>)</span><span class="result">: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">paramR</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="default">default: <span class="extype" name="org.http4s.rho.paramR.T">T</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.paramR.T">T</span>) ⇒ <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@paramR[T](name:String,default:T,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@paramR[T](name:String,default:T,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Defines a parameter in query string that should be bound to a route definition.</p>
     </li><li name="org.http4s.rho#paramR" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="paramR[T](name:String,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
+      <a id="paramR[T](name:String,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]"></a>
       <a id="paramR[T](String,(T)⇒Option[Task[BaseResult]])(QueryParser[T],scala.reflect.api.JavaUniverse.TypeTag[T]):TypedQuery[::[T,HNil]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -1252,10 +1266,10 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">paramR</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.paramR.T">T</span>) ⇒ <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>)</span><span class="result">: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+        <span class="name">paramR</span><span class="tparams">[<span name="T">T</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="validate">validate: (<span class="extype" name="org.http4s.rho.paramR.T">T</span>) ⇒ <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scalaz.concurrent.Task">Task</span>[<a href="Result$.html#BaseResult=org.http4s.rho.Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>]]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="parser">parser: <a href="bits/QueryParser.html" class="extype" name="org.http4s.rho.bits.QueryParser">QueryParser</a>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>, <span name="m">m: <span class="extype" name="scala.reflect.api.TypeTags.TypeTag">scala.reflect.api.JavaUniverse.TypeTag</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.paramR.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.package@paramR[T](name:String,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.QueryAST.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.package@paramR[T](name:String,validate:T=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(implicitparser:org.http4s.rho.bits.QueryParser[T],implicitm:reflect.runtime.universe.TypeTag[T]):org.http4s.rho.bits.TypedQuery[shapeless.::[T,shapeless.HNil]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>

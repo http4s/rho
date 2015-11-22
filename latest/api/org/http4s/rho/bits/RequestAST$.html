@@ -49,7 +49,8 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Rules for extracting non-path related data from the <code>Request</code><code></code></p><p>This AST is subject to change.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -99,14 +100,14 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="RequestAST$$AndRule.html"><span class="name">AndRule</span></a><span class="params">(<span name="a">a: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="b">b: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a href="RequestAST$$AndRule.html"><span class="name">AndRule</span></a><span class="params">(<span name="fst">fst: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="snd">snd: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$@AndRuleextendsRequestAST.RequestRulewithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Append the result as <code>b:::a:::HNil</code></p>
     </li><li name="org.http4s.rho.bits.RequestAST.CaptureRule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="CaptureRule[T]extendsRequestAST.RequestRulewithProductwithSerializable"></a>
       <a id="CaptureRule[T]:CaptureRule[T]"></a>
@@ -123,7 +124,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Captures data from the <code>Request</code></p>
     </li><li name="org.http4s.rho.bits.RequestAST.IgnoreRule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="IgnoreRuleextendsRequestAST.RequestRulewithProductwithSerializable"></a>
       <a id="IgnoreRule:IgnoreRule"></a>
@@ -140,7 +141,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Ignore any results obtained form the enclosed rules</p>
     </li><li name="org.http4s.rho.bits.RequestAST.MetaRule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="MetaRuleextendsRequestAST.RequestRulewithProductwithSerializable"></a>
       <a id="MetaRule:MetaRule"></a>
@@ -150,14 +151,14 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="RequestAST$$MetaRule.html"><span class="name">MetaRule</span></a><span class="params">(<span name="query">query: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="meta">meta: <a href="Metadata.html" class="extype" name="org.http4s.rho.bits.Metadata">Metadata</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a href="RequestAST$$MetaRule.html"><span class="name">MetaRule</span></a><span class="params">(<span name="rule">rule: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="meta">meta: <a href="Metadata.html" class="extype" name="org.http4s.rho.bits.Metadata">Metadata</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$@MetaRuleextendsRequestAST.RequestRulewithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Append meta data to the tree</p>
     </li><li name="org.http4s.rho.bits.RequestAST.OrRule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="OrRuleextendsRequestAST.RequestRulewithProductwithSerializable"></a>
       <a id="OrRule:OrRule"></a>
@@ -167,14 +168,14 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="RequestAST$$OrRule.html"><span class="name">OrRule</span></a><span class="params">(<span name="a">a: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="b">b: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a href="RequestAST$$OrRule.html"><span class="name">OrRule</span></a><span class="params">(<span name="fst">fst: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="alt">alt: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$@OrRuleextendsRequestAST.RequestRulewithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Attempt rule <code>fst</code> and attempt rule <code>alt</code> if <code>fst</code> fails</p>
     </li><li name="org.http4s.rho.bits.RequestAST.RequestRule" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="RequestRuleextendsAnyRef"></a>
       <a id="RequestRule:RequestRule"></a>
@@ -266,7 +267,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Empty rule</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>

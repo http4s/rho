@@ -49,7 +49,9 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Type that can accept a decoder.</p><p>A subtype of <a href="" class="extype" name="org.http4s.rho.Decodable">Decodable</a> can accept an <code>EntityDecoder</code> for extracting a message
+from the <code>Request</code> body.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div><div class="toggleContainer block">
@@ -95,7 +97,7 @@
 
         <div id="values" class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="org.http4s.rho.Decodable#decoding" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="org.http4s.rho.Decodable#decoding" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="decoding[R2&gt;:R](decoder:org.http4s.EntityDecoder[R2])(implicitt:reflect.runtime.universe.TypeTag[R2]):org.http4s.rho.CodecRouter[T,R2]"></a>
       <a id="decoding[R2&gt;:R](EntityDecoder[R2])(scala.reflect.api.JavaUniverse.TypeTag[R2]):CodecRouter[T,R2]"></a>
       <h4 class="signature">
@@ -111,7 +113,8 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Decode the body using the <code>EntityDecoder</code></p>
+      <p class="shortcomment cmt">Decode the body using the <code>EntityDecoder</code></p><div class="fullcomment"><div class="comment cmt"><p>Decode the body using the <code>EntityDecoder</code></p><p>Alias for the <code>^<code> operator.
+</code></code></p></div><dl class="paramcmts block"><dt class="tparam">R2</dt><dd class="cmt"><p>type of the result.</p></dd><dt class="param">decoder</dt><dd class="cmt"><p><code>EntityDecoder</code> to utilize for decoding the body.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -168,7 +171,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.Decodable#^" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.Decodable#^" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="^[R2&gt;:R](decoder:org.http4s.EntityDecoder[R2])(implicitt:reflect.runtime.universe.TypeTag[R2]):org.http4s.rho.CodecRouter[T,R2]"></a>
       <a id="^[R2&gt;:R](EntityDecoder[R2])(scala.reflect.api.JavaUniverse.TypeTag[R2]):CodecRouter[T,R2]"></a>
       <h4 class="signature">
@@ -184,7 +187,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Alias for decoding</p>
+      <p class="shortcomment cmt">Decode the body using the <code>EntityDecoder</code></p><div class="fullcomment"><div class="comment cmt"><p>Decode the body using the <code>EntityDecoder</code></p><p>Alias for decoding</p></div><dl class="paramcmts block"><dt class="tparam">R2</dt><dd class="cmt"><p>type of the result.</p></dd><dt class="param">decoder</dt><dd class="cmt"><p><code>EntityDecoder</code> to utilize for decoding the body.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>

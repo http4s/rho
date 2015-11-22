@@ -49,7 +49,9 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Rho specific implementation of the PathTree</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Data structure for route execution</p><p>A <a href="" class="extype" name="org.http4s.rho.bits.PathTree">PathTree</a> contains a map of the known route paths. The values of the
+tree are <a href="../RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s that can generate a reply to a <code>Request</code>.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -145,7 +147,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.PathTree#appendRoute" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.PathTree#appendRoute" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="appendRoute[T&lt;:shapeless.HList](route:org.http4s.rho.RhoRoute[T]):org.http4s.rho.bits.PathTree"></a>
       <a id="appendRoute[T&lt;:HList](RhoRoute[T]):PathTree"></a>
       <h4 class="signature">
@@ -161,7 +163,9 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Create a new <a href="" class="extype" name="org.http4s.rho.bits.PathTree">PathTree</a> with the <a href="../RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> appended
+</p><div class="fullcomment"><div class="comment cmt"><p>Create a new <a href="" class="extype" name="org.http4s.rho.bits.PathTree">PathTree</a> with the <a href="../RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> appended
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>Result type of the <a href="../RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>.</p></dd><dt class="param">route</dt><dd class="cmt"><p><a href="../RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> to append to the new tree.</p></dd><dt>returns</dt><dd class="cmt"><p>A new <a href="" class="extype" name="org.http4s.rho.bits.PathTree">PathTree</a> containing the provided route.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -292,7 +296,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Attempt to generate a <code>Response</code> by executing the tree.</p>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -343,7 +347,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Merge this tree with another <a href="" class="extype" name="org.http4s.rho.bits.PathTree">PathTree</a></p>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>

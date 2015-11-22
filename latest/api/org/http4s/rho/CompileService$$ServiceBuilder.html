@@ -49,7 +49,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Tool for accumulating compiled routes</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="CompileService.html" class="extype" name="org.http4s.rho.CompileService">CompileService</a>[<a href="RhoRoute$.html#Tpe=org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]" class="extmbr" name="org.http4s.rho.RhoRoute.Tpe">Tpe</a>], <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -165,7 +165,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.CompileService.ServiceBuilder#append" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.CompileService.ServiceBuilder#append" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="append(routes:TraversableOnce[org.http4s.rho.RhoRoute.Tpe]):ServiceBuilder.this.type"></a>
       <a id="append(TraversableOnce[Tpe]):ServiceBuilder.this.type"></a>
       <h4 class="signature">
@@ -181,7 +181,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Accumulate the routes into this <a href="" class="extype" name="org.http4s.rho.CompileService.ServiceBuilder">ServiceBuilder</a>
+</p><div class="fullcomment"><div class="comment cmt"><p>Accumulate the routes into this <a href="" class="extype" name="org.http4s.rho.CompileService.ServiceBuilder">ServiceBuilder</a>
+</p></div><dl class="paramcmts block"><dt class="param">routes</dt><dd class="cmt"><p>Routes to accumulate.</p></dd><dt>returns</dt><dd class="cmt"><p><code>this</code> instance with its internal state mutated.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -238,7 +240,8 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.CompileService.ServiceBuilder">ServiceBuilder</a> → <a href="CompileService.html" class="extype" name="org.http4s.rho.CompileService">CompileService</a></dd></dl></div>
+      <p class="shortcomment cmt">Accumulate the <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into this <a href="" class="extype" name="org.http4s.rho.CompileService.ServiceBuilder">ServiceBuilder</a></p><div class="fullcomment"><div class="comment cmt"><p>Accumulate the <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into this <a href="" class="extype" name="org.http4s.rho.CompileService.ServiceBuilder">ServiceBuilder</a></p><p>This is the same as appending a the single route and returning the same route.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p><code>HList</code> representation of the result of the route</p></dd><dt class="param">route</dt><dd class="cmt"><p><a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> to compile.</p></dd><dt>returns</dt><dd class="cmt"><p>The <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> passed to the method.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.CompileService.ServiceBuilder">ServiceBuilder</a> → <a href="CompileService.html" class="extype" name="org.http4s.rho.CompileService">CompileService</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -380,7 +383,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Get the currently acquired routes</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -398,7 +401,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="org.http4s.rho.CompileService.ServiceBuilder#toService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.CompileService.ServiceBuilder#toService" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toService(filter:org.http4s.rho.RhoMiddleware):org.http4s.server.HttpService"></a>
       <a id="toService(RhoMiddleware):HttpService"></a>
       <h4 class="signature">
@@ -414,7 +417,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Turn the accumulated routes into an <code>HttpService</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Turn the accumulated routes into an <code>HttpService</code>
+</p></div><dl class="paramcmts block"><dt class="param">filter</dt><dd class="cmt"><p><a href="package.html#RhoMiddleware=Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]=&gt;Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]" class="extmbr" name="org.http4s.rho.RhoMiddleware">RhoMiddleware</a> to apply to the collection of routes.</p></dd><dt>returns</dt><dd class="cmt"><p>An <code>HttpService</code> which can be mounted by http4s servers.</p></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>

@@ -49,7 +49,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Typed shell for the Path operations of the DSL</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="../UriConvertible.html" class="extype" name="org.http4s.rho.UriConvertible">UriConvertible</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -148,7 +148,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#&amp;&amp;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#&amp;&amp;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="&amp;&amp;[T2&lt;:shapeless.HList](p2:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]"></a>
       <a id="&amp;&amp;[T2&lt;:HList](TypedPath[T2])(Prepend[T2,T]):TypedPath[Out]"></a>
       <h4 class="signature">
@@ -164,9 +164,10 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#+?" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="+?[T1&lt;:shapeless.HList](q:org.http4s.rho.bits.QueryAST.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]"></a>
+      <p class="shortcomment cmt">Match this rule and then <code>next</code> rule</p><div class="fullcomment"><div class="comment cmt"><p>Match this rule and then <code>next</code> rule</p><p>Alias of <code>and</code>
+</p></div></div>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#+?" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+?[T1&lt;:shapeless.HList](query:org.http4s.rho.bits.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]"></a>
       <a id="+?[T1&lt;:HList](TypedQuery[T1])(Prepend[T1,T]):RequestLineBuilder[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -174,16 +175,18 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $plus$qmark" class="name">+?</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="q">q: <a href="QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.+?.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.+?.T1">T1</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span title="gt4s: $plus$qmark" class="name">+?</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="query">query: <a href="TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.+?.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.+?.T1">T1</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@+?[T1&lt;:shapeless.HList](q:org.http4s.rho.bits.QueryAST.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@+?[T1&lt;:shapeless.HList](query:org.http4s.rho.bits.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="/[T2&lt;:shapeless.HList](t:org.http4s.rho.RequestLineBuilder[T2])(implicitprep:shapeless.ops.hlist.Prepend[T,T2]):org.http4s.rho.RequestLineBuilder[prep.Out]"></a>
+      <p class="shortcomment cmt">Capture a query rule
+</p><div class="fullcomment"><div class="comment cmt"><p>Capture a query rule
+</p></div><dl class="paramcmts block"><dt class="tparam">T1</dt><dd class="cmt"><p>The types of elements captured by query.</p></dd><dt class="param">query</dt><dd class="cmt"><p>Query capture rule</p></dd><dt>returns</dt><dd class="cmt"><p>A <a href="../QueryBuilder.html" class="extype" name="org.http4s.rho.QueryBuilder">QueryBuilder</a> with which to continue building the route.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="/[T2&lt;:shapeless.HList](builder:org.http4s.rho.RequestLineBuilder[T2])(implicitprep:shapeless.ops.hlist.Prepend[T,T2]):org.http4s.rho.RequestLineBuilder[prep.Out]"></a>
       <a id="/[T2&lt;:HList](RequestLineBuilder[T2])(Prepend[T,T2]):RequestLineBuilder[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -191,16 +194,18 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $div" class="name">/</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="t">t: <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>]</span>)</span><span class="result">: <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span title="gt4s: $div" class="name">/</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="builder">builder: <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>]</span>)</span><span class="result">: <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/[T2&lt;:shapeless.HList](t:org.http4s.rho.RequestLineBuilder[T2])(implicitprep:shapeless.ops.hlist.Prepend[T,T2]):org.http4s.rho.RequestLineBuilder[prep.Out]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/[T2&lt;:shapeless.HList](builder:org.http4s.rho.RequestLineBuilder[T2])(implicitprep:shapeless.ops.hlist.Prepend[T,T2]):org.http4s.rho.RequestLineBuilder[prep.Out]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="/[T2&lt;:shapeless.HList](t:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]"></a>
+      <p class="shortcomment cmt">Prepend this path rule to the <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>
+</p><div class="fullcomment"><div class="comment cmt"><p>Prepend this path rule to the <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>
+</p></div><dl class="paramcmts block"><dt class="param">builder</dt><dd class="cmt"><p><a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> rules to append to the path capture rules.</p></dd><dt>returns</dt><dd class="cmt"><p>a new <a href="../RequestLineBuilder.html" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> with this rule prepended.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="/[T2&lt;:shapeless.HList](rules:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]"></a>
       <a id="/[T2&lt;:HList](TypedPath[T2])(Prepend[T2,T]):TypedPath[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -208,16 +213,18 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $div" class="name">/</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="t">t: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span title="gt4s: $div" class="name">/</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="rules">rules: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath./.T2">T2</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/[T2&lt;:shapeless.HList](t:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/[T2&lt;:shapeless.HList](rules:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="/(s:Symbol):org.http4s.rho.bits.PathAST.TypedPath[shapeless.::[String,T]]"></a>
+      <p class="shortcomment cmt">Append the path rules to the <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>
+</p><div class="fullcomment"><div class="comment cmt"><p>Append the path rules to the <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>
+</p></div><dl class="paramcmts block"><dt class="param">rules</dt><dd class="cmt"><p><a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a> rules to append to the path capture rules.</p></dd><dt>returns</dt><dd class="cmt"><p>a new <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a> that will execute the appended rules.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="/(symbol:Symbol):org.http4s.rho.bits.PathAST.TypedPath[shapeless.::[String,T]]"></a>
       <a id="/(Symbol):TypedPath[::[String,T]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -225,16 +232,18 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $div" class="name">/</span><span class="params">(<span name="s">s: <span class="extype" name="scala.Symbol">Symbol</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]]</span>
+        <span title="gt4s: $div" class="name">/</span><span class="params">(<span name="symbol">symbol: <span class="extype" name="scala.Symbol">Symbol</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/(s:Symbol):org.http4s.rho.bits.PathAST.TypedPath[shapeless.::[String,T]]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/(symbol:Symbol):org.http4s.rho.bits.PathAST.TypedPath[shapeless.::[String,T]]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="/(s:String):org.http4s.rho.bits.PathAST.TypedPath[T]"></a>
+      <p class="shortcomment cmt">Capture a <code>String</code> from the path
+</p><div class="fullcomment"><div class="comment cmt"><p>Capture a <code>String</code> from the path
+</p></div><dl class="paramcmts block"><dt class="param">symbol</dt><dd class="cmt"><p><code>Symbol</code> representing the name of the segment to capture.</p></dd><dt>returns</dt><dd class="cmt"><p>a new <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a> that will capture a uri segment.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#/" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="/(segment:String):org.http4s.rho.bits.PathAST.TypedPath[T]"></a>
       <a id="/(String):TypedPath[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -242,14 +251,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $div" class="name">/</span><span class="params">(<span name="s">s: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>
+        <span title="gt4s: $div" class="name">/</span><span class="params">(<span name="segment">segment: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/(s:String):org.http4s.rho.bits.PathAST.TypedPath[T]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@/(segment:String):org.http4s.rho.bits.PathAST.TypedPath[T]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Match against a <code>String</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Match against a <code>String</code>
+</p></div><dl class="paramcmts block"><dt class="param">segment</dt><dd class="cmt"><p><code>String</code> to match against.</p></dd><dt>returns</dt><dd class="cmt"><p>a new <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a> that will match against the provided <code>String</code>.</p></dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
@@ -267,8 +278,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#and" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="and[T2&lt;:shapeless.HList](p2:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]"></a>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#and" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="and[T2&lt;:shapeless.HList](next:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]"></a>
       <a id="and[T2&lt;:HList](TypedPath[T2])(Prepend[T2,T]):TypedPath[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -276,14 +287,15 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">and</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="p2">p2: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.and.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.and.T2">T2</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span class="name">and</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="next">next: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.and.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.and.T2">T2</span>, <span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@and[T2&lt;:shapeless.HList](p2:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@and[T2&lt;:shapeless.HList](next:org.http4s.rho.bits.PathAST.TypedPath[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T]):org.http4s.rho.bits.PathAST.TypedPath[prep.Out]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">These methods differ in their return type</p>
+      <p class="shortcomment cmt">Match this rule and then <code>next</code> rule</p><div class="fullcomment"><div class="comment cmt"><p>Match this rule and then <code>next</code> rule</p><p>Alias of <code>&amp;&amp;</code>
+</p></div></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -488,8 +500,8 @@ multiple paths only one way will be resolved as instance of <code>UriTemplate</c
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#or" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="or(p2:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]"></a>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#or" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="or(alt:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]"></a>
       <a id="or(TypedPath[T]):TypedPath[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -497,14 +509,15 @@ multiple paths only one way will be resolved as instance of <code>UriTemplate</c
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">or</span><span class="params">(<span name="p2">p2: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>
+        <span class="name">or</span><span class="params">(<span name="alt">alt: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@or(p2:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@or(alt:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Match this rule or <code>alt</code> rule if this rule fails</p><div class="fullcomment"><div class="comment cmt"><p>Match this rule or <code>alt</code> rule if this rule fails</p><p>Alias of <code>||</code>
+</p></div></div>
     </li><li name="org.http4s.rho.bits.PathAST.TypedPath#rule" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="rule:org.http4s.rho.bits.PathAST.PathRule"></a>
       <a id="rule:PathRule"></a>
@@ -608,8 +621,8 @@ multiple paths only one way will be resolved as instance of <code>UriTemplate</c
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#||" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="||(p2:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]"></a>
+    </li><li name="org.http4s.rho.bits.PathAST.TypedPath#||" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="||(alt:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]"></a>
       <a id="||(TypedPath[T]):TypedPath[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -617,14 +630,15 @@ multiple paths only one way will be resolved as instance of <code>UriTemplate</c
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bar$bar" class="name">||</span><span class="params">(<span name="p2">p2: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>
+        <span title="gt4s: $bar$bar" class="name">||</span><span class="params">(<span name="alt">alt: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.PathAST.TypedPath">TypedPath</a>[<span class="extype" name="org.http4s.rho.bits.PathAST.TypedPath.T">T</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@||(p2:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.PathAST$$TypedPath@||(alt:org.http4s.rho.bits.PathAST.TypedPath[T]):org.http4s.rho.bits.PathAST.TypedPath[T]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Match this rule or <code>alt</code> rule if this rule fails</p><div class="fullcomment"><div class="comment cmt"><p>Match this rule or <code>alt</code> rule if this rule fails</p><p>Alias of <code>or</code>
+</p></div></div>
     </li></ol>
             </div>
 

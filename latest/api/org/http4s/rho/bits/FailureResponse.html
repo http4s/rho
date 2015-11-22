@@ -43,15 +43,16 @@
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">FailureResponse</span><span class="params">(<span name="reason">reason: <a href="FailureResponse$$FailureReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.FailureReason">FailureReason</a></span>)</span><span class="result"> extends <a href="ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="scala.Nothing">Nothing</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">FailureResponse</span><span class="params">(<span name="reason">reason: <a href="FailureResponse$$ResponseReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.ResponseReason">ResponseReason</a></span>)</span><span class="result"> extends <a href="ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="scala.Nothing">Nothing</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Response that signifies an error
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>The reason for failure which can be turned into a <code>Task[Response]</code>.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="scala.Nothing">Nothing</span>], <a href="RouteResult.html" class="extype" name="org.http4s.rho.bits.RouteResult">RouteResult</a>[<span class="extype" name="scala.Nothing">Nothing</span>], <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -90,8 +91,8 @@
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="org.http4s.rho.bits.FailureResponse#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(reason:org.http4s.rho.bits.FailureResponse.FailureReason):org.http4s.rho.bits.FailureResponse"></a>
+              <ol><li name="org.http4s.rho.bits.FailureResponse#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(reason:org.http4s.rho.bits.FailureResponse.ResponseReason):org.http4s.rho.bits.FailureResponse"></a>
       <a id="&lt;init&gt;:FailureResponse"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -99,14 +100,14 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">FailureResponse</span><span class="params">(<span name="reason">reason: <a href="FailureResponse$$FailureReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.FailureReason">FailureReason</a></span>)</span>
+        <span class="name">FailureResponse</span><span class="params">(<span name="reason">reason: <a href="FailureResponse$$ResponseReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.ResponseReason">ResponseReason</a></span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse@&lt;init&gt;(reason:org.http4s.rho.bits.FailureResponse.FailureReason):org.http4s.rho.bits.FailureResponse" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse@&lt;init&gt;(reason:org.http4s.rho.bits.FailureResponse.ResponseReason):org.http4s.rho.bits.FailureResponse" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>The reason for failure which can be turned into a <code>Task[Response]</code>.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -418,22 +419,22 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a></dd></dl></div>
     </li><li name="org.http4s.rho.bits.FailureResponse#reason" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="reason:org.http4s.rho.bits.FailureResponse.FailureReason"></a>
-      <a id="reason:FailureReason"></a>
+      <a id="reason:org.http4s.rho.bits.FailureResponse.ResponseReason"></a>
+      <a id="reason:ResponseReason"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">reason</span><span class="result">: <a href="FailureResponse$$FailureReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.FailureReason">FailureReason</a></span>
+        <span class="name">reason</span><span class="result">: <a href="FailureResponse$$ResponseReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.ResponseReason">ResponseReason</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse@reason:org.http4s.rho.bits.FailureResponse.FailureReason" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse@reason:org.http4s.rho.bits.FailureResponse.ResponseReason" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">The reason for failure which can be turned into a <code>Task[Response]</code>.</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>

@@ -108,7 +108,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Tool for accumulating compiled routes</p>
     </li></ol>
             </div>
 
@@ -183,7 +183,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Importable implicit identity compiler</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -281,6 +281,25 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="org.http4s.rho.CompileService#foldServices" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="foldServices(routes:Seq[org.http4s.rho.RhoRoute.Tpe],filter:org.http4s.rho.RhoMiddleware):org.http4s.server.HttpService"></a>
+      <a id="foldServices(Seq[Tpe],RhoMiddleware):HttpService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">foldServices</span><span class="params">(<span name="routes">routes: <span class="extype" name="scala.Seq">Seq</span>[<a href="RhoRoute$.html#Tpe=org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]" class="extmbr" name="org.http4s.rho.RhoRoute.Tpe">Tpe</a>]</span>, <span name="filter">filter: <a href="package.html#RhoMiddleware=Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]=&gt;Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]" class="extmbr" name="org.http4s.rho.RhoMiddleware">RhoMiddleware</a> = <span class="symbol">identity</span></span>)</span><span class="result">: <span class="extype" name="org.http4s.server.HttpService">HttpService</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#org.http4s.rho.CompileService$@foldServices(routes:Seq[org.http4s.rho.RhoRoute.Tpe],filter:org.http4s.rho.RhoMiddleware):org.http4s.server.HttpService" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Convert the <code>Seq</code> of <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s into a <code>HttpService</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Convert the <code>Seq</code> of <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s into a <code>HttpService</code>
+</p></div><dl class="paramcmts block"><dt class="param">routes</dt><dd class="cmt"><p><code>Seq</code> of routes to bundle into a service.</p></dd><dt class="param">filter</dt><dd class="cmt"><p><a href="package.html#RhoMiddleware=Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]=&gt;Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]" class="extmbr" name="org.http4s.rho.RhoMiddleware">RhoMiddleware</a> to apply to the routes.</p></dd><dt>returns</dt><dd class="cmt"><p>An <code>HttpService</code></p></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -331,7 +350,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt"><a href="CompileService.html" class="extype" name="org.http4s.rho.CompileService">CompileService</a> that simply returns its argument</p>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -349,23 +368,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="org.http4s.rho.CompileService#makeService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="makeService(routes:Seq[org.http4s.rho.RhoRoute.Tpe],filter:org.http4s.rho.RhoMiddleware):org.http4s.server.HttpService"></a>
-      <a id="makeService(Seq[Tpe],RhoMiddleware):HttpService"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">makeService</span><span class="params">(<span name="routes">routes: <span class="extype" name="scala.Seq">Seq</span>[<a href="RhoRoute$.html#Tpe=org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]" class="extmbr" name="org.http4s.rho.RhoRoute.Tpe">Tpe</a>]</span>, <span name="filter">filter: <a href="package.html#RhoMiddleware=Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]=&gt;Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]" class="extmbr" name="org.http4s.rho.RhoMiddleware">RhoMiddleware</a> = <span class="symbol">identity</span></span>)</span><span class="result">: <span class="extype" name="org.http4s.server.HttpService">HttpService</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.CompileService$@makeService(routes:Seq[org.http4s.rho.RhoRoute.Tpe],filter:org.http4s.rho.RhoMiddleware):org.http4s.server.HttpService" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>

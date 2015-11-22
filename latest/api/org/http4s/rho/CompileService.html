@@ -47,11 +47,11 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">CompileService</span><span class="tparams">[<span name="A">A</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">CompileService</span><span class="tparams">[<span name="RouteType">RouteType</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This trait serves to transform a <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into an <code>A</code>
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This trait serves to transform a <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into an <code>RouteType</code>
 This can be a stateful operation, storing the action for later execution
 or any other type of compilation phase.
 </p></div><div class="toggleContainer block">
@@ -100,23 +100,24 @@ or any other type of compilation phase.
 
         <div id="values" class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="org.http4s.rho.CompileService#compile" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="compile[T&lt;:shapeless.HList](route:org.http4s.rho.RhoRoute[T]):A"></a>
-      <a id="compile[T&lt;:HList](RhoRoute[T]):A"></a>
+              <ol><li name="org.http4s.rho.CompileService#compile" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="compile[T&lt;:shapeless.HList](route:org.http4s.rho.RhoRoute[T]):RouteType"></a>
+      <a id="compile[T&lt;:HList](RhoRoute[T]):RouteType"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">compile</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="route">route: <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>[<span class="extype" name="org.http4s.rho.CompileService.compile.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.http4s.rho.CompileService.A">A</span></span>
+        <span class="name">compile</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="route">route: <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>[<span class="extype" name="org.http4s.rho.CompileService.compile.T">T</span>]</span>)</span><span class="result">: <span class="extype" name="org.http4s.rho.CompileService.RouteType">RouteType</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.CompileService@compile[T&lt;:shapeless.HList](route:org.http4s.rho.RhoRoute[T]):A" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.CompileService@compile[T&lt;:shapeless.HList](route:org.http4s.rho.RhoRoute[T]):RouteType" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Transform the <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into a <code>RouteType</code> possibly mutating this compilers state.</p><div class="fullcomment"><div class="comment cmt"><p>Transform the <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> into a <code>RouteType</code> possibly mutating this compilers state.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p><code>HList</code> representation of the result of the route</p></dd><dt class="param">route</dt><dd class="cmt"><p><a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> to compile.</p></dd><dt>returns</dt><dd class="cmt"><p>The result of the compilation process.</p></dd></dl></div>
     </li></ol>
             </div>
 

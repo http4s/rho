@@ -92,40 +92,23 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="org.http4s.rho.bits.FailureResponse.FailureReason" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="FailureReasonextendsAnyRef"></a>
-      <a id="FailureReason:FailureReason"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="FailureResponse$$FailureReason.html"><span class="name">FailureReason</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse$@FailureReasonextendsAnyRef" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="org.http4s.rho.bits.FailureResponse.ResponseReason" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ResponseReasonextendsFailureResponse.FailureReason"></a>
+              <ol><li name="org.http4s.rho.bits.FailureResponse.ResponseReason" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ResponseReasonextendsAnyRef"></a>
       <a id="ResponseReason:ResponseReason"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="FailureResponse$$ResponseReason.html"><span class="name">ResponseReason</span></a><span class="result"> extends <a href="FailureResponse$$FailureReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.FailureReason">FailureReason</a></span>
+        <a href="FailureResponse$$ResponseReason.html"><span class="name">ResponseReason</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse$@ResponseReasonextendsFailureResponse.FailureReason" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse$@ResponseReasonextendsAnyRef" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Concrete representation of the <code>FailureResponse</code></p>
     </li></ol>
             </div>
 
@@ -201,7 +184,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.FailureResponse#badRequest" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.FailureResponse#badRequest" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="badRequest(reason:String):org.http4s.rho.bits.FailureResponse"></a>
       <a id="badRequest(String):FailureResponse"></a>
       <h4 class="signature">
@@ -217,7 +200,9 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Construct a <code>400 BadRequest</code> FailureResponse
+</p><div class="fullcomment"><div class="comment cmt"><p>Construct a <code>400 BadRequest</code> FailureResponse
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>Description of the failure</p></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -275,8 +260,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.FailureResponse#error" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="error(message:String):org.http4s.rho.bits.FailureResponse"></a>
+    </li><li name="org.http4s.rho.bits.FailureResponse#error" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="error(reason:String):org.http4s.rho.bits.FailureResponse"></a>
       <a id="error(String):FailureResponse"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -284,14 +269,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">error</span><span class="params">(<span name="message">message: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="FailureResponse.html" class="extype" name="org.http4s.rho.bits.FailureResponse">FailureResponse</a></span>
+        <span class="name">error</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="FailureResponse.html" class="extype" name="org.http4s.rho.bits.FailureResponse">FailureResponse</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse$@error(message:String):org.http4s.rho.bits.FailureResponse" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.FailureResponse$@error(reason:String):org.http4s.rho.bits.FailureResponse" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Construct a <code>500 InternalServerError</code> FailureResponse
+</p><div class="fullcomment"><div class="comment cmt"><p>Construct a <code>500 InternalServerError</code> FailureResponse
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>Description of the failure</p></dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -433,7 +420,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Construct a <a href="FailureResponse.html" class="extype" name="org.http4s.rho.bits.FailureResponse">FailureResponse</a> using the provided thunk.</p>
     </li><li name="org.http4s.rho.bits.FailureResponse#result" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="result(result:=&gt;scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]):org.http4s.rho.bits.FailureResponse"></a>
       <a id="result(⇒Task[BaseResult]):FailureResponse"></a>
@@ -450,7 +437,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Construct a <a href="FailureResponse.html" class="extype" name="org.http4s.rho.bits.FailureResponse">FailureResponse</a> using the provided thunk.</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>

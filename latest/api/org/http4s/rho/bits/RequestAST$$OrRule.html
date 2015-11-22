@@ -45,11 +45,11 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">OrRule</span><span class="params">(<span name="a">a: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="b">b: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">OrRule</span><span class="params">(<span name="fst">fst: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="alt">alt: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Attempt rule <code>fst</code> and attempt rule <code>alt</code> if <code>fst</code> fails</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -89,7 +89,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="org.http4s.rho.bits.RequestAST.OrRule#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(a:org.http4s.rho.bits.RequestAST.RequestRule,b:org.http4s.rho.bits.RequestAST.RequestRule):org.http4s.rho.bits.RequestAST.OrRule"></a>
+      <a id="&lt;init&gt;(fst:org.http4s.rho.bits.RequestAST.RequestRule,alt:org.http4s.rho.bits.RequestAST.RequestRule):org.http4s.rho.bits.RequestAST.OrRule"></a>
       <a id="&lt;init&gt;:OrRule"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -97,10 +97,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">OrRule</span><span class="params">(<span name="a">a: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="b">b: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span>
+        <span class="name">OrRule</span><span class="params">(<span name="fst">fst: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>, <span name="alt">alt: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$$OrRule@&lt;init&gt;(a:org.http4s.rho.bits.RequestAST.RequestRule,b:org.http4s.rho.bits.RequestAST.RequestRule):org.http4s.rho.bits.RequestAST.OrRule" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$$OrRule@&lt;init&gt;(fst:org.http4s.rho.bits.RequestAST.RequestRule,alt:org.http4s.rho.bits.RequestAST.RequestRule):org.http4s.rho.bits.RequestAST.OrRule" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -165,19 +165,19 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.RequestAST.OrRule#a" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="a:org.http4s.rho.bits.RequestAST.RequestRule"></a>
-      <a id="a:RequestRule"></a>
+    </li><li name="org.http4s.rho.bits.RequestAST.OrRule#alt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="alt:org.http4s.rho.bits.RequestAST.RequestRule"></a>
+      <a id="alt:RequestRule"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">a</span><span class="result">: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>
+        <span class="name">alt</span><span class="result">: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$$OrRule@a:org.http4s.rho.bits.RequestAST.RequestRule" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$$OrRule@alt:org.http4s.rho.bits.RequestAST.RequestRule" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -199,23 +199,6 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="org.http4s.rho.bits.RequestAST.OrRule#b" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="b:org.http4s.rho.bits.RequestAST.RequestRule"></a>
-      <a id="b:RequestRule"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">b</span><span class="result">: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$$OrRule@b:org.http4s.rho.bits.RequestAST.RequestRule" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -279,6 +262,23 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="org.http4s.rho.bits.RequestAST.OrRule#fst" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="fst:org.http4s.rho.bits.RequestAST.RequestRule"></a>
+      <a id="fst:RequestRule"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">fst</span><span class="result">: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#org.http4s.rho.bits.RequestAST$$OrRule@fst:org.http4s.rho.bits.RequestAST.RequestRule" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>

@@ -51,7 +51,7 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A shortcut type to bundle everything needed to define a route</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A type to bundle everything needed to define a route</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a>[<a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>[<span class="extype" name="org.http4s.rho.RhoRoute.T">T</span>]], <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -166,7 +166,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a></dd></dl></div>
+      <p class="shortcomment cmt">Prefix the <a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> with non-capturing path rules
+</p><div class="fullcomment"><div class="comment cmt"><p>Prefix the <a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> with non-capturing path rules
+</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>non-capturing prefix to prepend</p></dd><dt>returns</dt><dd class="cmt"><p>builder with the prefix prepended to the path rules</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a></dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
@@ -201,7 +203,7 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.RhoRoute#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.RhoRoute#apply" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="apply(req:org.http4s.Request,hlist:T):scalaz.concurrent.Task[org.http4s.Response]"></a>
       <a id="apply(Request,T):Task[Response]"></a>
       <h4 class="signature">
@@ -217,7 +219,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Execute the <a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>
+</p><div class="fullcomment"><div class="comment cmt"><p>Execute the <a href="" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>
+</p></div><dl class="paramcmts block"><dt class="param">req</dt><dd class="cmt"><p>The <code>Request</code> to be served.</p></dd><dt class="param">hlist</dt><dd class="cmt"><p>Parameters obtained by executing the rules.</p></dd><dt>returns</dt><dd class="cmt"><p>A <code>Response</code> to the <code>Request</code>.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>

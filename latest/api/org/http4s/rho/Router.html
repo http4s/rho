@@ -185,7 +185,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.Router">Router</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a> → <a href="RoutingEntity.html" class="extype" name="org.http4s.rho.RoutingEntity">RoutingEntity</a></dd></dl></div>
+      <p class="shortcomment cmt">Prepend the prefix to the path rules
+</p><div class="fullcomment"><div class="comment cmt"><p>Prepend the prefix to the path rules
+</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>non-capturing prefix to prepend</p></dd><dt>returns</dt><dd class="cmt"><p>builder with the prefix prepended to the path rules</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.Router">Router</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a> → <a href="RoutingEntity.html" class="extype" name="org.http4s.rho.RoutingEntity">RoutingEntity</a></dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
@@ -204,7 +206,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="org.http4s.rho.Router#&gt;&gt;&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&gt;&gt;&gt;[T1&lt;:shapeless.HList](v:org.http4s.rho.bits.HeaderAST.TypedHeader[T1])(implicitprep1:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.Router[prep1.Out]"></a>
+      <a id="&gt;&gt;&gt;[T1&lt;:shapeless.HList](v:org.http4s.rho.bits.TypedHeader[T1])(implicitprep1:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.Router[prep1.Out]"></a>
       <a id="&gt;&gt;&gt;[T1&lt;:HList](TypedHeader[T1])(Prepend[T1,T]):Router[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -212,10 +214,10 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $greater$greater$greater" class="name">&gt;&gt;&gt;</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="v">v: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="org.http4s.rho.Router.&gt;&gt;&gt;.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep1">prep1: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.Router.&gt;&gt;&gt;.T1">T1</span>, <span class="extype" name="org.http4s.rho.Router.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.Router">Router</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span title="gt4s: $greater$greater$greater" class="name">&gt;&gt;&gt;</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="v">v: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="org.http4s.rho.Router.&gt;&gt;&gt;.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep1">prep1: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.Router.&gt;&gt;&gt;.T1">T1</span>, <span class="extype" name="org.http4s.rho.Router.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.Router">Router</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.Router@&gt;&gt;&gt;[T1&lt;:shapeless.HList](v:org.http4s.rho.bits.HeaderAST.TypedHeader[T1])(implicitprep1:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.Router[prep1.Out]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.Router@&gt;&gt;&gt;[T1&lt;:shapeless.HList](v:org.http4s.rho.bits.TypedHeader[T1])(implicitprep1:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.Router[prep1.Out]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -236,7 +238,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Alias for decoding</p><div class="fullcomment"><div class="comment cmt"><p>Alias for decoding</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a></dd></dl></div>
+      <p class="shortcomment cmt">Decode the body using the <code>EntityDecoder</code></p><div class="fullcomment"><div class="comment cmt"><p>Decode the body using the <code>EntityDecoder</code></p><p>Alias for decoding</p></div><dl class="paramcmts block"><dt class="tparam">R2</dt><dd class="cmt"><p>type of the result.</p></dd><dt class="param">decoder</dt><dd class="cmt"><p><code>EntityDecoder</code> to utilize for decoding the body.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -332,7 +334,8 @@ multiple paths only one way will be resolved as instance of <code>UriTemplate</c
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Decode the body using the <code>EntityDecoder</code></p><div class="fullcomment"><div class="comment cmt"><p>Decode the body using the <code>EntityDecoder</code></p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.Router">Router</a> → <a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a></dd></dl></div>
+      <p class="shortcomment cmt">Decode the body using the <code>EntityDecoder</code></p><div class="fullcomment"><div class="comment cmt"><p>Decode the body using the <code>EntityDecoder</code></p><p>Alias for the <code>^<code> operator.
+</code></code></p></div><dl class="paramcmts block"><dt class="param">decoder</dt><dd class="cmt"><p><code>EntityDecoder</code> to utilize for decoding the body.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.Router">Router</a> → <a href="Decodable.html" class="extype" name="org.http4s.rho.Decodable">Decodable</a></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -561,22 +564,22 @@ multiple paths only one way will be resolved as instance of <code>UriTemplate</c
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="org.http4s.rho.bits.HeaderAppendable#validate" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="validate[T2&lt;:shapeless.HList](header:org.http4s.rho.bits.HeaderAST.TypedHeader[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T1]):HeaderAppendable.this.HeaderAppendResult[prep.Out]"></a>
-      <a id="validate[T2&lt;:HList](TypedHeader[T2])(Prepend[T2,T]):HeaderAppendResult[Out]"></a>
+      <a id="validate[T1&lt;:shapeless.HList](header:org.http4s.rho.bits.TypedHeader[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):HeaderAppendable.this.HeaderAppendResult[prep.Out]"></a>
+      <a id="validate[T1&lt;:HList](TypedHeader[T1])(Prepend[T1,T]):HeaderAppendResult[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">validate</span><span class="tparams">[<span name="T2">T2 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="header">header: <a href="bits/HeaderAST$$TypedHeader.html" class="extype" name="org.http4s.rho.bits.HeaderAST.TypedHeader">TypedHeader</a>[<span class="extype" name="org.http4s.rho.bits.HeaderAppendable.validate.T2">T2</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.HeaderAppendable.validate.T2">T2</span>, <span class="extype" name="org.http4s.rho.Router.T">T</span>]</span>)</span><span class="result">: <a href="#HeaderAppendResult[T&lt;:shapeless.HList]=org.http4s.rho.Router[T]" class="extmbr" name="org.http4s.rho.Router.HeaderAppendResult">HeaderAppendResult</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span class="name">validate</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="header">header: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="org.http4s.rho.bits.HeaderAppendable.validate.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.bits.HeaderAppendable.validate.T1">T1</span>, <span class="extype" name="org.http4s.rho.Router.T">T</span>]</span>)</span><span class="result">: <a href="#HeaderAppendResult[T&lt;:shapeless.HList]=org.http4s.rho.Router[T]" class="extmbr" name="org.http4s.rho.Router.HeaderAppendResult">HeaderAppendResult</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.Router@validate[T2&lt;:shapeless.HList](header:org.http4s.rho.bits.HeaderAST.TypedHeader[T2])(implicitprep:shapeless.ops.hlist.Prepend[T2,T1]):HeaderAppendable.this.HeaderAppendResult[prep.Out]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.Router@validate[T1&lt;:shapeless.HList](header:org.http4s.rho.bits.TypedHeader[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):HeaderAppendable.this.HeaderAppendResult[prep.Out]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="bits/HeaderAppendable.html" class="extype" name="org.http4s.rho.bits.HeaderAppendable">HeaderAppendable</a></dd></dl></div>
+      <p class="shortcomment cmt">Append the header to the builder, generating a new typed representation of the route</p><div class="fullcomment"><div class="comment cmt"><p>Append the header to the builder, generating a new typed representation of the route</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="bits/HeaderAppendable.html" class="extype" name="org.http4s.rho.bits.HeaderAppendable">HeaderAppendable</a></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>

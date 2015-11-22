@@ -134,23 +134,25 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.bits.FailureResponse" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.FailureResponse" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="FailureResponseextendsResultResponse[Nothing]withProductwithSerializable"></a>
       <a id="FailureResponse:FailureResponse"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="FailureResponse.html"><span class="name">FailureResponse</span></a><span class="params">(<span name="reason">reason: <a href="FailureResponse$$FailureReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.FailureReason">FailureReason</a></span>)</span><span class="result"> extends <a href="ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="scala.Nothing">Nothing</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a href="FailureResponse.html"><span class="name">FailureResponse</span></a><span class="params">(<span name="reason">reason: <a href="FailureResponse$$ResponseReason.html" class="extype" name="org.http4s.rho.bits.FailureResponse.ResponseReason">ResponseReason</a></span>)</span><span class="result"> extends <a href="ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="scala.Nothing">Nothing</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#org.http4s.rho.bits.package@FailureResponseextendsResultResponse[Nothing]withProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Response that signifies an error
+</p><div class="fullcomment"><div class="comment cmt"><p>Response that signifies an error
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>The reason for failure which can be turned into a <code>Task[Response]</code>.</p></dd></dl></div>
     </li><li name="org.http4s.rho.bits.FloatParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="FloatParserextendsStringParser[Float]"></a>
       <a id="FloatParser:FloatParser"></a>
@@ -184,24 +186,26 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Maps an F to the HList T</p><div class="fullcomment"><div class="comment cmt"><p>Maps an F to the HList T</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>HList type of the incoming values</p></dd><dt class="tparam">F</dt><dd class="cmt"><p>type of element onto which T will be mapped</p></dd></dl></div>
+      <p class="shortcomment cmt">Converter of an value of type F to the HList of type T
+</p><div class="fullcomment"><div class="comment cmt"><p>Converter of an value of type F to the HList of type T
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>HList type of the incoming values</p></dd><dt class="tparam">F</dt><dd class="cmt"><p>type of element onto which T will be mapped</p></dd></dl></div>
     </li><li name="org.http4s.rho.bits.HeaderAppendable" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="HeaderAppendable[T1&lt;:shapeless.HList]extendsAnyRef"></a>
-      <a id="HeaderAppendable[T1&lt;:HList]:HeaderAppendable[T1]"></a>
+      <a id="HeaderAppendable[T&lt;:shapeless.HList]extendsAnyRef"></a>
+      <a id="HeaderAppendable[T&lt;:HList]:HeaderAppendable[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="HeaderAppendable.html"><span class="name">HeaderAppendable</span></a><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <a href="HeaderAppendable.html"><span class="name">HeaderAppendable</span></a><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.package@HeaderAppendable[T1&lt;:shapeless.HList]extendsAnyRef" title="Permalink" target="_top">
+      <a href="../../../../index.html#org.http4s.rho.bits.package@HeaderAppendable[T&lt;:shapeless.HList]extendsAnyRef" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Base trait which is capable of appending header rules</p><div class="fullcomment"><div class="comment cmt"><p>Base trait which is capable of appending header rules</p></div><dl class="paramcmts block"><dt class="tparam">T1</dt><dd class="cmt"><p>HList representation of the values to be extracted from the <span class="extype" name="Request">Request</span></p></dd></dl></div>
+      <p class="shortcomment cmt">Base trait which is capable of appending header rules</p><div class="fullcomment"><div class="comment cmt"><p>Base trait which is capable of appending header rules</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The <code>HList</code> representation of the values to be extracted from the <code>Request</code>.</p></dd></dl></div>
     </li><li name="org.http4s.rho.bits.HeaderMetaData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="HeaderMetaData[T&lt;:org.http4s.HeaderKey.Extractable]extendsMetadatawithProductwithSerializable"></a>
       <a id="HeaderMetaData[T&lt;:Extractable]:HeaderMetaData[T]"></a>
@@ -218,7 +222,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Metadata about a header rule</p>
     </li><li name="org.http4s.rho.bits.IntParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="IntParserextendsStringParser[Int]"></a>
       <a id="IntParser:IntParser"></a>
@@ -270,7 +274,7 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.bits.Metadata" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.Metadata" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="MetadataextendsAnyRef"></a>
       <a id="Metadata:Metadata"></a>
       <h4 class="signature">
@@ -286,7 +290,10 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Base type for data that can be used to decorate the rules trees</p><div class="fullcomment"><div class="comment cmt"><p>Base type for data that can be used to decorate the rules trees</p><p>Metadata is not directly useful for evaluating a request or for generating
+HTTP responses; it is primarily used for storing data to auto generate information
+about a route or service.
+</p></div></div>
     </li><li name="org.http4s.rho.bits.MethodAliases" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="MethodAliasesextendsAnyRef"></a>
       <a id="MethodAliases:MethodAliases"></a>
@@ -304,7 +311,7 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.bits.PathTree" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.PathTree" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="PathTreeextendsAnyRef"></a>
       <a id="PathTree:PathTree"></a>
       <h4 class="signature">
@@ -320,7 +327,9 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Rho specific implementation of the PathTree</p>
+      <p class="shortcomment cmt">Data structure for route execution</p><div class="fullcomment"><div class="comment cmt"><p>Data structure for route execution</p><p>A <a href="PathTree.html" class="extype" name="org.http4s.rho.bits.PathTree">PathTree</a> contains a map of the known route paths. The values of the
+tree are <a href="../RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s that can generate a reply to a <code>Request</code>.
+</p></div></div>
     </li><li name="org.http4s.rho.bits.QueryMetaData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="QueryMetaData[T]extendsMetadatawithProductwithSerializable"></a>
       <a id="QueryMetaData[T]:QueryMetaData[T]"></a>
@@ -337,8 +346,8 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.QueryParser" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Metadata about a query rule</p>
+    </li><li name="org.http4s.rho.bits.QueryParser" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="QueryParser[A]extendsAnyRef"></a>
       <a id="QueryParser[A]:QueryParser[A]"></a>
       <h4 class="signature">
@@ -354,8 +363,10 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.bits.ResponseGenerator" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Extract a value from the <code>Request</code> <code>Query</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Extract a value from the <code>Request</code> <code>Query</code>
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>Type of value produced by the parser.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.bits.ResponseGenerator" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="ResponseGeneratorextendsAnyRef"></a>
       <a id="ResponseGenerator:ResponseGenerator"></a>
       <h4 class="signature">
@@ -371,7 +382,8 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Helpers to aid in the construction of a response function</p><div class="fullcomment"><div class="comment cmt"><p>Helpers to aid in the construction of a response function</p><p>These helpers provide the foundation for the response generation in the rho DSL.
+They require the needed codecs and generate a response with the correct meta data.</p><pre>{ req <span class="kw">=&gt;</span> Ok(<span class="lit">"foo!"</span>) }</pre></div></div>
     </li><li name="org.http4s.rho.bits.ResponseGeneratorInstances" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="ResponseGeneratorInstancesextendsAnyRef"></a>
       <a id="ResponseGeneratorInstances:ResponseGeneratorInstances"></a>
@@ -405,7 +417,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Information about the response type</p>
     </li><li name="org.http4s.rho.bits.ResultMatcher" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="ResultMatcher[-R]extendsAnyRef"></a>
       <a id="ResultMatcher[-R]:ResultMatcher[R]"></a>
@@ -439,7 +451,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Node in the ADT that represents a result, either success or failure</p>
     </li><li name="org.http4s.rho.bits.RouteResult" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="RouteResult[+T]extendsAnyRef"></a>
       <a id="RouteResult[+T]:RouteResult[T]"></a>
@@ -456,7 +468,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Types that represent the result of executing a step of the route</p>
     </li><li name="org.http4s.rho.bits.ShortParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ShortParserextendsStringParser[Short]"></a>
       <a id="ShortParser:ShortParser"></a>
@@ -508,7 +520,7 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.bits.StringParser" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.StringParser" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="StringParser[T]extendsAnyRef"></a>
       <a id="StringParser[T]:StringParser[T]"></a>
       <h4 class="signature">
@@ -524,13 +536,15 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Parse values from a <code>String</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Parse values from a <code>String</code>
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The result type generated by the parser.</p></dd></dl></div>
     </li><li name="org.http4s.rho.bits.SuccessResponse" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="SuccessResponse[+T]extendsResultResponse[T]withProductwithSerializable"></a>
       <a id="SuccessResponse[+T]:SuccessResponse[T]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
@@ -541,7 +555,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Successful response</p>
     </li><li name="org.http4s.rho.bits.TextMetaData" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="TextMetaDataextendsMetadata"></a>
       <a id="TextMetaData:TextMetaData"></a>
@@ -558,7 +572,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Textual meta data</p>
     </li><li name="org.http4s.rho.bits.TypeOnly" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="TypeOnlyextendsResultInfowithProductwithSerializable"></a>
       <a id="TypeOnly:TypeOnly"></a>
@@ -576,6 +590,40 @@
       </a>
     </span>
       
+    </li><li name="org.http4s.rho.bits.TypedHeader" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TypedHeader[T&lt;:shapeless.HList]extendsProductwithSerializable"></a>
+      <a id="TypedHeader[T&lt;:HList]:TypedHeader[T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="TypedHeader.html"><span class="name">TypedHeader</span></a><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="rule">rule: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#org.http4s.rho.bits.package@TypedHeader[T&lt;:shapeless.HList]extendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Typed shell for the Header operations of the DSL</p>
+    </li><li name="org.http4s.rho.bits.TypedQuery" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TypedQuery[T&lt;:shapeless.HList]extendsUriConvertiblewithProductwithSerializable"></a>
+      <a id="TypedQuery[T&lt;:HList]:TypedQuery[T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="TypedQuery.html"><span class="name">TypedQuery</span></a><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="rule">rule: <a href="RequestAST$$RequestRule.html" class="extype" name="org.http4s.rho.bits.RequestAST.RequestRule">RequestRule</a></span>)</span><span class="result"> extends <a href="../UriConvertible.html" class="extype" name="org.http4s.rho.UriConvertible">UriConvertible</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#org.http4s.rho.bits.package@TypedQuery[T&lt;:shapeless.HList]extendsUriConvertiblewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Typed shell for the Query operations of the DSL</p>
     </li></ol>
             </div>
 
@@ -617,23 +665,6 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.bits.HeaderAST" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="HeaderAST"></a>
-      <a id="HeaderAST:HeaderAST"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="HeaderAST$.html"><span class="name">HeaderAST</span></a>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.package@HeaderAST" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">AST representing the Header operations of the DSL</p>
     </li><li name="org.http4s.rho.bits.MethodAliases" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="MethodAliases"></a>
       <a id="MethodAliases:MethodAliases"></a>
@@ -667,7 +698,7 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Failure to match a route</p>
     </li><li name="org.http4s.rho.bits.PathAST" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="PathAST"></a>
       <a id="PathAST:PathAST"></a>
@@ -685,23 +716,6 @@
       </a>
     </span>
       <p class="shortcomment cmt">Actual elements which build up the AST</p>
-    </li><li name="org.http4s.rho.bits.QueryAST" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="QueryAST"></a>
-      <a id="QueryAST:QueryAST"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="QueryAST$.html"><span class="name">QueryAST</span></a>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#org.http4s.rho.bits.package@QueryAST" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
     </li><li name="org.http4s.rho.bits.QueryParser" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="QueryParser"></a>
       <a id="QueryParser:QueryParser"></a>
@@ -719,7 +733,7 @@
       </a>
     </span>
       
-    </li><li name="org.http4s.rho.bits.RequestAST" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.bits.RequestAST" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="RequestAST"></a>
       <a id="RequestAST:RequestAST"></a>
       <h4 class="signature">
@@ -735,7 +749,8 @@
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Rules for extracting non-path related data from the <code>Request</code><code></code></p><div class="fullcomment"><div class="comment cmt"><p>Rules for extracting non-path related data from the <code>Request</code><code></code></p><p>This AST is subject to change.
+</p></div></div>
     </li><li name="org.http4s.rho.bits.ResponseGenerator" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ResponseGenerator"></a>
       <a id="ResponseGenerator:ResponseGenerator"></a>
@@ -800,6 +815,23 @@
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#org.http4s.rho.bits.package@StringParser" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="org.http4s.rho.bits.TypedQuery" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TypedQuery"></a>
+      <a id="TypedQuery:TypedQuery"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TypedQuery$.html"><span class="name">TypedQuery</span></a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#org.http4s.rho.bits.package@TypedQuery" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>

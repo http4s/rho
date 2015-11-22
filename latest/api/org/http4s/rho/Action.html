@@ -49,7 +49,8 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Encapsulation of metadata and a result generator
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The type of <code>HList</code> required to execute the <a href="" class="extype" name="org.http4s.rho.Action">Action</a>.</p></dd><dt class="param">resultInfo</dt><dd class="cmt"><p>Information about the status and type the Action will produce.</p></dd><dt class="param">responseEncodings</dt><dd class="cmt"><p>Encodings that the response supports.</p></dd><dt class="param">act</dt><dd class="cmt"><p>Function of <code>Request</code> and the <code>HList</code> to a <code>Task[Response]</code></p></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -88,7 +89,7 @@
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="org.http4s.rho.Action#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="org.http4s.rho.Action#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="&lt;init&gt;(resultInfo:Set[org.http4s.rho.bits.ResultInfo],responseEncodings:Set[org.http4s.MediaType],act:(org.http4s.Request,T)=&gt;scalaz.concurrent.Task[org.http4s.Response]):org.http4s.rho.Action[T]"></a>
       <a id="&lt;init&gt;:Action[T]"></a>
       <h4 class="signature">
@@ -104,7 +105,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">resultInfo</dt><dd class="cmt"><p>Information about the status and type the Action will produce.</p></dd><dt class="param">responseEncodings</dt><dd class="cmt"><p>Encodings that the response supports.</p></dd><dt class="param">act</dt><dd class="cmt"><p>Function of <code>Request</code> and the <code>HList</code> to a <code>Task[Response]</code></p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -181,7 +182,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Function of <code>Request</code> and the <code>HList</code> to a <code>Task[Response]</code></p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -363,7 +364,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Encodings that the response supports.</p>
     </li><li name="org.http4s.rho.Action#resultInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="resultInfo:Set[org.http4s.rho.bits.ResultInfo]"></a>
       <a id="resultInfo:Set[ResultInfo]"></a>
@@ -380,7 +381,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Information about the status and type the Action will produce.</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>

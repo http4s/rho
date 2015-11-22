@@ -41,7 +41,7 @@
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
@@ -49,7 +49,8 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>DSL construct for building query rules without a known <code>Method</code></p><p>The <a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> doesn't know about header rules or the method.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The <code>HList</code> representation of the values to be extracted from the <code>Request</code>.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <span class="extype" name="scala.Product">Product</span>, <span class="extype" name="scala.Equals">Equals</span>, <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a>[<a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="org.http4s.rho.RequestLineBuilder.T">T</span>]], <a href="TypedBuilder.html" class="extype" name="org.http4s.rho.TypedBuilder">TypedBuilder</a>[<span class="extype" name="org.http4s.rho.RequestLineBuilder.T">T</span>], <a href="UriConvertible.html" class="extype" name="org.http4s.rho.UriConvertible">UriConvertible</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -104,7 +105,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt"></p>
     </li></ol>
             </div>
 
@@ -148,8 +149,8 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="org.http4s.rho.RequestLineBuilder#&amp;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&amp;[T1&lt;:shapeless.HList](q:org.http4s.rho.bits.QueryAST.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]"></a>
+    </li><li name="org.http4s.rho.RequestLineBuilder#&amp;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&amp;[T1&lt;:shapeless.HList](query:org.http4s.rho.bits.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]"></a>
       <a id="&amp;[T1&lt;:HList](TypedQuery[T1])(Prepend[T1,T]):RequestLineBuilder[Out]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -157,14 +158,16 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $amp" class="name">&amp;</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="q">q: <a href="bits/QueryAST$$TypedQuery.html" class="extype" name="org.http4s.rho.bits.QueryAST.TypedQuery">TypedQuery</a>[<span class="extype" name="org.http4s.rho.RequestLineBuilder.&amp;.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.RequestLineBuilder.&amp;.T1">T1</span>, <span class="extype" name="org.http4s.rho.RequestLineBuilder.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
+        <span title="gt4s: $amp" class="name">&amp;</span><span class="tparams">[<span name="T1">T1 &lt;: <span class="extype" name="shapeless.HList">HList</span></span>]</span><span class="params">(<span name="query">query: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="org.http4s.rho.RequestLineBuilder.&amp;.T1">T1</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="prep">prep: <span class="extype" name="shapeless.ops.hlist.Prepend">Prepend</span>[<span class="extype" name="org.http4s.rho.RequestLineBuilder.&amp;.T1">T1</span>, <span class="extype" name="org.http4s.rho.RequestLineBuilder.T">T</span>]</span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a>[<span class="extype" name="shapeless.ops.hlist.Prepend.Out">Out</span>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#org.http4s.rho.RequestLineBuilder@&amp;[T1&lt;:shapeless.HList](q:org.http4s.rho.bits.QueryAST.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]" title="Permalink" target="_top">
+      <a href="../../../index.html#org.http4s.rho.RequestLineBuilder@&amp;[T1&lt;:shapeless.HList](query:org.http4s.rho.bits.TypedQuery[T1])(implicitprep:shapeless.ops.hlist.Prepend[T1,T]):org.http4s.rho.RequestLineBuilder[prep.Out]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Capture a query rule
+</p><div class="fullcomment"><div class="comment cmt"><p>Capture a query rule
+</p></div><dl class="paramcmts block"><dt class="tparam">T1</dt><dd class="cmt"><p>The types of elements captured by query.</p></dd><dt class="param">query</dt><dd class="cmt"><p>Query capture rule.</p></dd><dt>returns</dt><dd class="cmt"><p>A <a href="QueryBuilder.html" class="extype" name="org.http4s.rho.QueryBuilder">QueryBuilder</a> with which to continue building the route.</p></dd></dl></div>
     </li><li name="org.http4s.rho.RequestLineBuilder#/:" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="/:(prefix:org.http4s.rho.bits.PathAST.TypedPath[shapeless.HNil]):org.http4s.rho.RequestLineBuilder[T]"></a>
       <a id="/:(TypedPath[HNil]):RequestLineBuilder[T]"></a>
@@ -181,7 +184,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a></dd></dl></div>
+      <p class="shortcomment cmt">Prepend the prefix to the path rules
+</p><div class="fullcomment"><div class="comment cmt"><p>Prepend the prefix to the path rules
+</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>The non-capturing prefix to prepend.</p></dd><dt>returns</dt><dd class="cmt"><p>A <a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> with the prefix prepended to the path rules.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.RequestLineBuilder">RequestLineBuilder</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a></dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>

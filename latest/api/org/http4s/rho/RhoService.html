@@ -49,7 +49,13 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Constructor class for defining routes</p><p>The <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> provides a convenient way to define routes in a style
+similar to scalatra etc by providing implicit conversions and an implicit
+<a href="CompileService.html" class="extype" name="org.http4s.rho.CompileService">CompileService</a> inside the constructor.</p><pre><span class="kw">val</span> srvc = <span class="kw">new</span> RhoService {
+  POST / <span class="lit">"foo"</span> / pathVar[<span class="std">Int</span>] +? param[<span class="std">String</span>](<span class="lit">"param"</span>) |&gt;&gt; { (p1: <span class="std">Int</span>, param: <span class="std">String</span>) <span class="kw">=&gt;</span>
+    Ok(<span class="lit">"success"</span>)
+  }
+}</pre></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a>[<a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a>], <a href="bits/ResponseGeneratorInstances.html" class="extype" name="org.http4s.rho.bits.ResponseGeneratorInstances">ResponseGeneratorInstances</a>, <a href="bits/MethodAliases.html" class="extype" name="org.http4s.rho.bits.MethodAliases">MethodAliases</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
@@ -88,7 +94,7 @@
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="org.http4s.rho.RhoService#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="org.http4s.rho.RhoService#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="&lt;init&gt;(routes:Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]):org.http4s.rho.RhoService"></a>
       <a id="&lt;init&gt;:RhoService"></a>
       <h4 class="signature">
@@ -104,7 +110,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">routes</dt><dd class="cmt"><p>Routes to prepend before elements in the constructor.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -1136,7 +1142,9 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a></dd></dl></div>
+      <p class="shortcomment cmt">Prepend the prefix to the path rules
+</p><div class="fullcomment"><div class="comment cmt"><p>Prepend the prefix to the path rules
+</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>non-capturing prefix to prepend</p></dd><dt>returns</dt><dd class="cmt"><p>builder with the prefix prepended to the path rules</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> → <a href="RoutePrependable.html" class="extype" name="org.http4s.rho.RoutePrependable">RoutePrependable</a></dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
@@ -2276,7 +2284,7 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="bits/ResponseGeneratorInstances.html" class="extype" name="org.http4s.rho.bits.ResponseGeneratorInstances">ResponseGeneratorInstances</a></dd></dl></div>
-    </li><li name="org.http4s.rho.RhoService#and" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho.RhoService#and" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="and(routes:Seq[org.http4s.rho.RhoRoute[_&lt;:shapeless.HList]]):org.http4s.rho.RhoService"></a>
       <a id="and(Seq[RhoRoute[_&lt;:HList]]):RhoService"></a>
       <h4 class="signature">
@@ -2292,8 +2300,11 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho.RhoService#and" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Create a new <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> by append the routes of the passed <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a>
+</p><div class="fullcomment"><div class="comment cmt"><p>Create a new <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> by append the routes of the passed <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a>
+</p></div><dl class="paramcmts block"><dt class="param">routes</dt><dd class="cmt"><p><code>Seq</code> of <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s to be appended.</p></dd><dt>returns</dt><dd class="cmt"><p>A new <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> that contains the provided routes appended
+        the the routes contained in this service.</p></dd></dl></div>
+    </li><li name="org.http4s.rho.RhoService#and" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="and(other:org.http4s.rho.RhoService):org.http4s.rho.RhoService"></a>
       <a id="and(RhoService):RhoService"></a>
       <h4 class="signature">
@@ -2309,7 +2320,10 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Create a new <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> by appending the routes of the passed <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a>
+</p><div class="fullcomment"><div class="comment cmt"><p>Create a new <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> by appending the routes of the passed <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a>
+</p></div><dl class="paramcmts block"><dt class="param">other</dt><dd class="cmt"><p><a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> whos routes are to be appended.</p></dd><dt>returns</dt><dd class="cmt"><p>A new <a href="" class="extype" name="org.http4s.rho.RhoService">RhoService</a> that contains the routes of the other service appended
+        the the routes contained in this service.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -2457,7 +2471,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Get the collection of <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s accumulated so far</p>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -2593,7 +2607,7 @@
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Convert the <a href="RhoRoute.html" class="extype" name="org.http4s.rho.RhoRoute">RhoRoute</a>'s accumulated into a <code>HttpService</code></p>
     </li><li name="org.http4s.rho.RhoService#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <a id="toString():String"></a>
