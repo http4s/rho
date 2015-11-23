@@ -16,6 +16,7 @@ The primary goal of ρ is to provide an easy to use AST with which to build HTTP
 
 ### Get ρ
 Rho artifacts are available at Maven Central and snapshots are available from the Sonatype repositories
+
 Read the [Rho Scaladocs](http://rho.http4s.org)
 
 ```scala
