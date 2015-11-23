@@ -56,7 +56,6 @@ object RhoBuild extends Build {
                   `rho-swagger`
                 ),
                 git.remoteRepo := "git@github.com:http4s/rho.git",
-                site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api"),
                 GhPagesKeys.cleanSite <<= VersionedGhPages.cleanSite0,
                 GhPagesKeys.synchLocal <<= VersionedGhPages.synchLocal0,
                 siteMappings <++= (mappings in (ScalaUnidoc, packageDoc), apiVersion) map {

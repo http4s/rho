@@ -33,6 +33,32 @@ object VersionedGhPages {
       // Now copy files.
       IO.copy(betterMappings)
       if(noJekyll) IO.touch(repo / ".nojekyll")
+
+      IO.write(repo / "src/site/index.html", indexTemplate(v._1, v._2))
+
       repo
 	}
+
+  def indexTemplate(major: Int, minor: Int) = s"""
+      |<!DOCTYPE html>
+      |<html lang="en">
+      |  <head>
+      |    <meta charset="UTF-8">
+      |    <title>Project Documentation</title>
+      |    <script language="JavaScript">
+      |    <!--
+      |    function doRedirect() {
+      |     // redirect to the latest docs
+      |      window.location.replace("api/$major.$minor");
+      |    }
+      |
+      |    doRedirect();
+      |    //-->
+      |    </script>
+      |  </head>
+      |  <body>
+      |    <a href="api/$major.$minor">Go to the project documentation</a>
+      |  </body>
+      |</html>
+    """.stripMargin
 }
