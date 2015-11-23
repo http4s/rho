@@ -13,7 +13,7 @@ object VersionedGhPages {
 	def cleanSiteForRealz(dir: File, git: GitRunner, s: TaskStreams, apiVersion: (Int, Int)): Unit ={
 		val toClean = IO.listFiles(dir).collect {
 			case f if f.getName == "api" => new java.io.File(f, s"${apiVersion._1}.${apiVersion._2}")
-			case f if f.getName != ".git" => f
+			case f if f.getName != ".git" && f.getName != "CNAME" => f
 		}.map(_.getAbsolutePath).toList
 		if (!toClean.isEmpty)
 			git(("rm" :: "-r" :: "-f" :: "--ignore-unmatch" :: toClean) :_*)(dir, s.log)
@@ -34,7 +34,7 @@ object VersionedGhPages {
       IO.copy(betterMappings)
       if(noJekyll) IO.touch(repo / ".nojekyll")
 
-      IO.write(repo / "src/site/index.html", indexTemplate(v._1, v._2))
+      IO.write(repo / "index.html", indexTemplate(v._1, v._2))
 
       repo
 	}
