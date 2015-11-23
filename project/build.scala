@@ -19,9 +19,12 @@ import scala.util.Properties.envOrNone
 object RhoBuild extends Build {
   import Dependencies._
 
-  val apiVersion = TaskKey[(Int, Int)]("api-version", "Defines the API compatibility version for the project.")
-
   val homepageUrl= "https://github.com/http4s/rho"
+
+  val rhoVersion = "0.8.0-SNAPSHOT"
+
+  val apiVersion: (Int, Int) = extractApiVersion(rhoVersion)
+
 
   lazy val rho = project
                   .in(file("."))
@@ -52,7 +55,7 @@ object RhoBuild extends Build {
                 dontPublish,
                 description := "Api Documentation",
                 autoAPIMappings := true,
-                scalacOptions in Compile <++= (apiVersion, baseDirectory in ThisBuild).map(scaladocOptions),
+                scalacOptions in Compile <++= (baseDirectory in ThisBuild).map(scaladocOptions),
                 unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
                   `rho-core`,
                   `rho-hal`,
@@ -61,8 +64,9 @@ object RhoBuild extends Build {
                 git.remoteRepo := "git@github.com:http4s/rho.git",
                 GhPagesKeys.cleanSite <<= VersionedGhPages.cleanSite0,
                 GhPagesKeys.synchLocal <<= VersionedGhPages.synchLocal0,
-                siteMappings <++= (mappings in (ScalaUnidoc, packageDoc), apiVersion) map {
-                  case (m, (major, minor)) => for ((f, d) <- m) yield (f, s"api/$major.$minor/$d")
+                siteMappings <++= (mappings in (ScalaUnidoc, packageDoc)) map { m =>
+                    val (major,minor) = apiVersion
+                    for ((f, d) <- m) yield (f, s"api/$major.$minor/$d")
                 }
                 ))
               .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
@@ -80,9 +84,7 @@ object RhoBuild extends Build {
 
   lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
 
-  lazy val rhoVersion = "0.8.0-SNAPSHOT"
-
-  /* Don't publish setting */
+    /* Don't publish setting */
   val dontPublish = packagedArtifacts := Map.empty
 
   lazy val license = licenses in ThisBuild := Seq(
@@ -102,8 +104,6 @@ object RhoBuild extends Build {
         homepage in ThisBuild := Some(url(homepageUrl)),
         description := "A self documenting DSL build upon the http4s framework",
         license,
-
-        apiVersion in ThisBuild <<= version.map(extractApiVersion),
 
         libraryDependencies ++= Seq(
           http4sServer     % "provided",
@@ -149,9 +149,14 @@ object RhoBuild extends Build {
     }
   }
 
-  def scaladocOptions(apiVersion: (Int, Int), base: File): List[String] = {
-    val (major,minor) = apiVersion
-    val sourceLoc = s"$homepageUrl/tree/v$major.$minor.0€{FILE_PATH}.scala"
+  def scaladocOptions(base: File): List[String] = {
+    val sourceLoc = 
+      if (rhoVersion.endsWith("SNAPSHOT")) {
+        s"$homepageUrl/tree/master€{FILE_PATH}.scala"
+      } else {
+        val (major,minor) = apiVersion
+        s"$homepageUrl/tree/v$major.$minor.0€{FILE_PATH}.scala"
+      }
 
     val opts = List("-implicits", 
                     "-doc-source-url", sourceLoc,
