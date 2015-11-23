@@ -21,6 +21,8 @@ object RhoBuild extends Build {
 
   val apiVersion = TaskKey[(Int, Int)]("api-version", "Defines the API compatibility version for the project.")
 
+  val homepageUrl= "https://github.com/http4s/rho"
+
   lazy val rho = project
                   .in(file("."))
                   .settings(buildSettings: _*)
@@ -50,6 +52,7 @@ object RhoBuild extends Build {
                 dontPublish,
                 description := "Api Documentation",
                 autoAPIMappings := true,
+                scalacOptions in Compile <++= (apiVersion, baseDirectory in ThisBuild).map(scaladocOptions),
                 unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
                   `rho-core`,
                   `rho-hal`,
@@ -96,7 +99,7 @@ object RhoBuild extends Build {
 
         organization in ThisBuild := "org.http4s",
         version := rhoVersion,
-        homepage in ThisBuild := Some(url("https://github.com/http4s/rho")),
+        homepage in ThisBuild := Some(url(homepageUrl)),
         description := "A self documenting DSL build upon the http4s framework",
         license,
 
@@ -144,6 +147,17 @@ object RhoBuild extends Build {
     version match {
       case VersionExtractor(major, minor) => (major.toInt, minor.toInt)
     }
+  }
+
+  def scaladocOptions(apiVersion: (Int, Int), base: File): List[String] = {
+    val (major,minor) = apiVersion
+    val sourceLoc = s"$homepageUrl/tree/v$major.$minor.0€{FILE_PATH}.scala"
+
+    val opts = List("-implicits", 
+                    "-doc-source-url", sourceLoc,
+                    "-sourcepath", base.getAbsolutePath
+                    )
+    opts
   }
 
   def isSnapshot(version: String): Boolean = version.endsWith("-SNAPSHOT")

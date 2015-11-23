@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.RequestAST._
+import org.http4s.rho.bits.RequestAST, RequestAST._
 import org.http4s.rho.bits.{ ResultResponse, SuccessResponse }
 
 import shapeless.{ HNil, HList }

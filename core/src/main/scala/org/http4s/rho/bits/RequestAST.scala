@@ -7,6 +7,7 @@ package rho.bits
   */
 object RequestAST {
 
+  /** Base trait of the AST */
   sealed trait RequestRule
 
   /** Captures data from the `Request` */

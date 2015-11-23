@@ -15,7 +15,7 @@ import scalaz.concurrent.Task
   */
 trait RouteExecutable[T <: HList] extends TypedBuilder[T] { exec =>
 
-  /** [[Method]] of the incoming HTTP `Request` */
+  /** `Method` of the incoming HTTP `Request` */
   def method: Method
 
 //  /** Create a [[RhoRoute]] from this [[RouteExecutable]] with the provided converters */

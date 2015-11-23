@@ -31,7 +31,7 @@ class ResourceObjectBuilder[T, E] {
     link(name, LinkObject(href, title = Some(title)))
 
   /**
-   * Creates a single link object with a given [[Uri]] as `href` and the
+   * Creates a single link object with a given `Uri` as `href` and the
    * specified `name` to this document builder. In case the same `name` already
    * exists the link object will be overwritten.
    */
@@ -39,7 +39,7 @@ class ResourceObjectBuilder[T, E] {
     link(name, LinkObject(href.toString))
 
   /**
-   * Creates a single link object with a given [[UriTemplate]] as `href` and
+   * Creates a single link object with a given `UriTemplate` as `href` and
    * the specified `name` to this document builder. In case the same `name`
    * already exists the link object will be overwritten.
    */

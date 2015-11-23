@@ -15,7 +15,7 @@ trait TypedBuilder[T <: HList] extends UriConvertible {
   /** Untyped AST representation of the path to operate on */
   val path: PathRule
 
-  /** Untyped AST describing the extraction of headers and the query from the [[Request]] */
+  /** Untyped AST describing the extraction of headers and the query from the `Request` */
   val rules: RequestRule
 
   private def uriTemplate =
