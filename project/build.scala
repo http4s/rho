@@ -3,7 +3,11 @@ import Keys._
 import spray.revolver.RevolverPlugin._
 
 import com.typesafe.sbt.SbtGhPages.ghpages
+import com.typesafe.sbt.SbtGhPages.GhPagesKeys
+
+import com.typesafe.sbt.SbtSite.SiteKeys.siteMappings
 import com.typesafe.sbt.SbtSite.site
+
 import com.typesafe.sbt.SbtGit.git
 
 import sbtunidoc.Plugin.ScalaUnidoc
@@ -12,8 +16,10 @@ import sbtunidoc.Plugin.UnidocKeys._
 
 import scala.util.Properties.envOrNone
 
-object MyBuild extends Build {
+object RhoBuild extends Build {
   import Dependencies._
+
+  val apiVersion = TaskKey[(Int, Int)]("api-version", "Defines the API compatibility version for the project.")
 
   lazy val rho = project
                   .in(file("."))
@@ -50,7 +56,12 @@ object MyBuild extends Build {
                   `rho-swagger`
                 ),
                 git.remoteRepo := "git@github.com:http4s/rho.git",
-                site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api")
+                site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api"),
+                GhPagesKeys.cleanSite <<= VersionedGhPages.cleanSite0,
+                GhPagesKeys.synchLocal <<= VersionedGhPages.synchLocal0,
+                siteMappings <++= (mappings in (ScalaUnidoc, packageDoc), apiVersion) map {
+                  case (m, (major, minor)) => for ((f, d) <- m) yield (f, s"api/$major.$minor/$d")
+                }
                 ))
               .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
 
@@ -90,6 +101,8 @@ object MyBuild extends Build {
         description := "A self documenting DSL build upon the http4s framework",
         license,
 
+        apiVersion in ThisBuild <<= version.map(extractApiVersion),
+
         libraryDependencies ++= Seq(
           http4sServer     % "provided",
           logbackClassic   % "test",
@@ -125,6 +138,13 @@ object MyBuild extends Build {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot(version)) "snapshots" at nexus + "content/repositories/snapshots"
     else "releases" at nexus + "service/local/staging/deploy/maven2"
+  }
+
+  def extractApiVersion(version: String) = {
+    val VersionExtractor = """(\d+)\.(\d+)\..*""".r
+    version match {
+      case VersionExtractor(major, minor) => (major.toInt, minor.toInt)
+    }
   }
 
   def isSnapshot(version: String): Boolean = version.endsWith("-SNAPSHOT")
