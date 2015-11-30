@@ -76,6 +76,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def paramR[T](name: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, Some(default), validate)
 
+  /////////////////////////////// Path helpers //////////////////////////////////////
   /**
    * Defines a path variable of a URI that should be bound to a route definition
    */
