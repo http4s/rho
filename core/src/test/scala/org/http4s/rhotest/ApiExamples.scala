@@ -19,29 +19,26 @@ class ApiExamples extends Specification {
 
       /// src_inlined SimplePath
       new RhoService {
-        // A Path can be made all at once
-        POST / "hello" / pathVar[Int] +? param[Int]("fav") |>> { (i1: Int, i2: Int) =>
-          Ok(s"Sum of the number is ${i1 + i2}")
-        }
+        GET / "hello" |>> { () => Ok("Hello, world!") }
       }
       /// end_src_inlined
 
       /// src_inlined ReusePath
       new RhoService {
         // A path can be built up in multiple steps and the parts reused
-        val pathPart1 = POST / "hello"
-        val pathPart2 = pathPart1 / 'world +? param[Int]("fav") // the symbol 'world just says 'capture a String'
-        pathPart1 |>> { () => Ok("Empty") } // use the |>> operator to turn a Router into an Action
-        pathPart2 |>> { (world: String, fav: Int) => Ok(s"Received $fav, $world") }
+        val pathPart1 = GET / "hello"
+
+        pathPart1 / "world" |>> { () => Ok("Hello, world!") }
+        pathPart1 / "you"   |>> { () => Ok("Hello, you!") }
       }
       /// end_src_inlined
 
       /// src_inlined PathCapture
       new RhoService {
         // Use combinators to parse and capture path parameters
-        GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
-          Ok("Received $i")
-        }
+        GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int => Ok("Received $i") }
+        // the symbol 'world just says 'capture a String' with variable name "world"
+        GET / "helloworldstring" / 'world / "foo" |>> { i: String => Ok("Received $i") }
       }
       /// end_src_inlined
 
@@ -49,6 +46,22 @@ class ApiExamples extends Specification {
       new RhoService {
         // You can capture the entire rest of the tail using *
         GET / "hello" / * |>> { r: List[String] => Ok(s"Got the rest: ${r.mkString}") }
+      }
+      /// end_src_inlined
+
+      /// src_inlined QueryCapture
+      new RhoService {
+        // Query parameters can be captured in a similar manner as path fragments
+        GET / "hello" +? param[Int]("fav") |>> { i: Int => Ok(s"Query 'fav' had Int value $i") } 
+      }
+      /// end_src_inlined
+
+      /// src_inlined MultiCapture
+      new RhoService {
+        // A Path can be made all at once
+        POST / "hello" / pathVar[Int] +? param[Int]("fav") |>> { (i1: Int, i2: Int) =>
+          Ok(s"Sum of the number is ${i1 + i2}")
+        }
       }
       /// end_src_inlined
 
