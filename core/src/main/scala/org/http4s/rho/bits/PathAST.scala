@@ -95,7 +95,9 @@ object PathAST {
 
   /** The root type of the parser AST */
   sealed trait PathRule
+
   sealed trait PathRoute extends PathRule
+
   sealed trait PathOperation extends PathRule
 
   case class PathAnd(p1: PathRule, p2: PathRule) extends PathRoute

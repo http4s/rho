@@ -1,7 +1,7 @@
 package org.http4s
 
 import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.bits.RequestAST.{CaptureRule, MetaRule, IgnoreRule}
+import org.http4s.rho.bits.RequestAST.CaptureRule
 import org.http4s.rho.bits.ResponseGeneratorInstances.BadRequest
 
 import scala.language.implicitConversions
@@ -76,6 +76,23 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def paramR[T](name: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, Some(default), validate)
 
+  /** Create a query capture rule using the `Request`'s `Uri`
+    *
+    * @param f function generating the result or failure
+    */
+  def genericQueryCapture[R](f: Query => ResultResponse[R]): TypedQuery[R :: HNil] =
+    genericRequestQueryCapture(req => f(req.uri.query))
+
+  /** Create a query capture rule using the `Request`
+    *
+    * In general, this function should be avoided for most cases because it has access to the entire `Request`
+    * which allows it to modify the `Request` body which should be avoided.
+    *
+    * @param f function generating the result or failure
+    */
+  def genericRequestQueryCapture[R](f: Request => ResultResponse[R]): TypedQuery[R :: HNil] =
+    TypedQuery(CaptureRule(f))
+
   /////////////////////////////// Path helpers //////////////////////////////////////
   /**
    * Defines a path variable of a URI that should be bound to a route definition
@@ -101,50 +118,90 @@ package object rho extends Http4s with ResultSyntaxInstances {
 
   /////////////////////////////// Header helpers //////////////////////////////////////
 
-  /* Checks that the header exists */
+  /** Requires that the header exists
+    *
+    * @param header `HeaderKey` that identifies the header which is required
+    */
   def exists(header: HeaderKey.Extractable): TypedHeader[HNil] = existsAndR(header)(_ => None)
 
-  /* Check that the header exists and satisfies the condition */
+  /** Requires that the header exists and satisfies the condition
+    *
+    * @param header  `HeaderKey` that identifies the header to capture and parse
+    * @param f predicate function where a return value of `false` signals an invalid
+    *          header and aborts evaluation with a _BadRequest_ response.
+    */
   def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
     existsAndR(header){ h =>
       if (f(h)) None
       else Some(BadRequest("Invalid header: " + h.value))
     }
 
-  /* Check that the header exists and satisfies the condition */
+  /** Check that the header exists and satisfies the condition
+    *
+    * @param header `HeaderKey` that identifies the header to capture and parse
+    * @param f function that evaluates the header and returns a Some(Response) to
+    *          immediately send back to the user or None to continue evaluation.
+    */
   def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
-    TypedHeader(IgnoreRule(
-      captureMapR(header, None){ h => f(h) match {
+    captureMapR(header, None){ h => f(h) match {
         case Some(r) => -\/(r)
         case None    => \/-(())
       }
-    }.rule))
+    }.ignore
 
 
   /** requires the header and will pull this header from the pile and put it into the function args stack */
   def capture[H <: HeaderKey.Extractable](key: H): TypedHeader[H#HeaderT :: HNil] =
     captureMap(key)(identity)
 
+  /** Capture a specific header and map its value
+    *
+    * @param key `HeaderKey` used to identify the header to capture
+    * @param f mapping function
+    */
   def captureMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
     captureMapR(key, None)(f andThen (\/-(_)))
 
+  /** Capture a specific header and map its value with an optional default
+    *
+    * @param key `HeaderKey` used to identify the header to capture
+    * @param default optional default for the case of a missing header
+    * @param f mapping function
+    */
   def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]] = None)(f: H#HeaderT => Task[BaseResult]\/R): TypedHeader[R :: HNil] =
     _captureMapR(key, default)(f)
 
+  /** Create a header capture rule using the `Request`'s `Headers`
+    *
+    * @param f function generating the result or failure
+    */
+  def genericHeaderCapture[R](f: Headers => ResultResponse[R]): TypedHeader[R :: HNil] =
+    genericRequestHeaderCapture(req => f(req.headers))
+
+  /** Create a header capture rule using the `Request`
+    *
+    * In general, this function should be avoided for most cases because it has access to the entire `Request`
+    * which allows it to modify the `Request` body which should be avoided.
+    *
+    * @param f function generating the result or failure
+    */
+  def genericRequestHeaderCapture[R](f: Request => ResultResponse[R]): TypedHeader[R :: HNil] =
+    TypedHeader(CaptureRule(f))
+
   /** Defines a parameter in query string that should be bound to a route definition. */
   private def _paramR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    TypedQuery(MetaRule(CaptureRule { req =>
+    genericRequestQueryCapture { req =>
         val result = parser.collect(name, req.uri.multiParams, default)
         result.flatMap { r => validate(r) match {
           case None       => result
           case Some(resp) => FailureResponse.pure(resp.map(_.resp))
         }
       }
-    }, QueryMetaData(name, parser, default = default, m)))
+    }.withMetadata(QueryMetaData(name, parser, default = default, m))
 
   private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]])(f: H#HeaderT => Task[BaseResult]\/R): TypedHeader[R :: HNil] =
-    TypedHeader(MetaRule(CaptureRule{ req =>
-      req.headers.get(key) match {
+    genericHeaderCapture { headers =>
+      headers.get(key) match {
         case Some(h) =>
           try f(h) match {
             case \/-(r) => SuccessResponse(r)
@@ -160,7 +217,5 @@ package object rho extends Http4s with ResultSyntaxInstances {
           case None    => FailureResponse.badRequest(s"Missing header: ${key.name}")
         }
       }
-    },
-    HeaderMetaData(key, default.isDefined)))
-
+    }.withMetadata(HeaderMetaData(key, default.isDefined))
 }
