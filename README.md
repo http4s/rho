@@ -14,7 +14,7 @@ val httpService = new RhoService {
 }
 ```
 
-See the [tests](https://github.com/http4s/rho/blob/master/core/src/test/scala/org/http4s/rhotest/ApiExamples.scala) for more examples.
+See the [wiki](https://github.com/http4s/rho/wiki) and the [tests](https://github.com/http4s/rho/blob/master/core/src/test/scala/org/http4s/rhotest/ApiExamples.scala) for more examples.
 
 ### Get more from your route definitions
 The primary goal of ρ is to provide an easy to use AST with which to build HTTP services which can be inspected to extract a variety of information including:
@@ -43,8 +43,9 @@ and have deprecation period.
 Contributing
 ------------
 Contributions of all kinds are welcome! Documentation contributions are especially useful 
-for others who are also just learning to use ρ. Pull requests are greatly appreciated from 
-their original authors, licensed to the http4s project under the project's 
+for others who are also just learning to use ρ. The wiki and the tests are the primary
+source of documentation. Pull requests are greatly appreciated from their original authors,
+licensed to the http4s project under the project's
 [open source license](https://github.com/http4s/rho/blob/master/LICENSE).
 
 License
