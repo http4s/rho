@@ -849,7 +849,7 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
       </a>
     </span>
       <p class="shortcomment cmt">requires the header and will pull this header from the pile and put it into the function args stack</p>
-    </li><li name="org.http4s.rho#captureMap" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho#captureMap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="captureMap[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H)(f:H#HeaderT=&gt;R):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
       <a id="captureMap[H&lt;:Extractable,R](H)((rho.captureMap.H.HeaderT)⇒R):TypedHeader[::[R,HNil]]"></a>
       <h4 class="signature">
@@ -865,8 +865,10 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho#captureMapR" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Capture a specific header and map its value
+</p><div class="fullcomment"><div class="comment cmt"><p>Capture a specific header and map its value
+</p></div><dl class="paramcmts block"><dt class="param">key</dt><dd class="cmt"><p><code>HeaderKey</code> used to identify the header to capture</p></dd><dt class="param">f</dt><dd class="cmt"><p>mapping function</p></dd></dl></div>
+    </li><li name="org.http4s.rho#captureMapR" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="captureMapR[H&lt;:org.http4s.HeaderKey.Extractable,R](key:H,default:Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]])(f:H#HeaderT=&gt;scalaz.\/[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult],R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
       <a id="captureMapR[H&lt;:Extractable,R](H,Option[Task[BaseResult]])((rho.captureMapR.H.HeaderT)⇒\/[Task[BaseResult],R]):TypedHeader[::[R,HNil]]"></a>
       <h4 class="signature">
@@ -882,7 +884,9 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Capture a specific header and map its value with an optional default
+</p><div class="fullcomment"><div class="comment cmt"><p>Capture a specific header and map its value with an optional default
+</p></div><dl class="paramcmts block"><dt class="param">key</dt><dd class="cmt"><p><code>HeaderKey</code> used to identify the header to capture</p></dd><dt class="param">default</dt><dd class="cmt"><p>optional default for the case of a missing header</p></dd><dt class="param">f</dt><dd class="cmt"><p>mapping function</p></dd></dl></div>
     </li><li name="org.http4s.EntityEncoderInstances#charArrayEncoder" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="charArrayEncoder(implicitcharset:org.http4s.Charset):org.http4s.EntityEncoder[Array[Char]]"></a>
       <a id="charArrayEncoder(Charset):EntityEncoder[Array[Char]]"></a>
@@ -1002,7 +1006,7 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>EntityDecoderInstances</dd></dl></div>
-    </li><li name="org.http4s.rho#exists" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="org.http4s.rho#exists" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="exists(header:org.http4s.HeaderKey.Extractable):org.http4s.rho.bits.TypedHeader[shapeless.HNil]"></a>
       <a id="exists(Extractable):TypedHeader[HNil]"></a>
       <h4 class="signature">
@@ -1018,8 +1022,10 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho#existsAnd" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Requires that the header exists
+</p><div class="fullcomment"><div class="comment cmt"><p>Requires that the header exists
+</p></div><dl class="paramcmts block"><dt class="param">header</dt><dd class="cmt"><p><code>HeaderKey</code> that identifies the header which is required</p></dd></dl></div>
+    </li><li name="org.http4s.rho#existsAnd" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="existsAnd[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Boolean):org.http4s.rho.bits.TypedHeader[shapeless.HNil]"></a>
       <a id="existsAnd[H&lt;:Extractable](H)((rho.existsAnd.H.HeaderT)⇒Boolean):TypedHeader[HNil]"></a>
       <h4 class="signature">
@@ -1035,8 +1041,11 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="org.http4s.rho#existsAndR" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">Requires that the header exists and satisfies the condition
+</p><div class="fullcomment"><div class="comment cmt"><p>Requires that the header exists and satisfies the condition
+</p></div><dl class="paramcmts block"><dt class="param">header</dt><dd class="cmt"><p><code>HeaderKey</code> that identifies the header to capture and parse</p></dd><dt class="param">f</dt><dd class="cmt"><p>predicate function where a return value of <code>false</code> signals an invalid
+         header and aborts evaluation with a _BadRequest_ response.</p></dd></dl></div>
+    </li><li name="org.http4s.rho#existsAndR" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="existsAndR[H&lt;:org.http4s.HeaderKey.Extractable](header:H)(f:H#HeaderT=&gt;Option[scalaz.concurrent.Task[org.http4s.rho.Result.BaseResult]]):org.http4s.rho.bits.TypedHeader[shapeless.HNil]"></a>
       <a id="existsAndR[H&lt;:Extractable](H)((rho.existsAndR.H.HeaderT)⇒Option[Task[BaseResult]]):TypedHeader[HNil]"></a>
       <h4 class="signature">
@@ -1052,7 +1061,10 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Check that the header exists and satisfies the condition
+</p><div class="fullcomment"><div class="comment cmt"><p>Check that the header exists and satisfies the condition
+</p></div><dl class="paramcmts block"><dt class="param">header</dt><dd class="cmt"><p><code>HeaderKey</code> that identifies the header to capture and parse</p></dd><dt class="param">f</dt><dd class="cmt"><p>function that evaluates the header and returns a Some(Response) to
+         immediately send back to the user or None to continue evaluation.</p></dd></dl></div>
     </li><li name="org.http4s.EntityEncoderInstances#fileEncoder" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="fileEncoder:org.http4s.EntityEncoder[java.io.File]"></a>
       <a id="fileEncoder:EntityEncoder[File]"></a>
@@ -1104,6 +1116,82 @@ needed for a compiler to generate a complete route description.</p></div><dl cla
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>EntityEncoderInstances0</dd></dl></div>
+    </li><li name="org.http4s.rho#genericHeaderCapture" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="genericHeaderCapture[R](f:org.http4s.Headers=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
+      <a id="genericHeaderCapture[R]((Headers)⇒ResultResponse[R]):TypedHeader[::[R,HNil]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">genericHeaderCapture</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.Headers">Headers</span>) ⇒ <a href="bits/ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="org.http4s.rho.genericHeaderCapture.R">R</span>]</span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.genericHeaderCapture.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#org.http4s.rho.package@genericHeaderCapture[R](f:org.http4s.Headers=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create a header capture rule using the <code>Request</code>'s <code>Headers</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Create a header capture rule using the <code>Request</code>'s <code>Headers</code>
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>function generating the result or failure</p></dd></dl></div>
+    </li><li name="org.http4s.rho#genericQueryCapture" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="genericQueryCapture[R](f:org.http4s.Query=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedQuery[shapeless.::[R,shapeless.HNil]]"></a>
+      <a id="genericQueryCapture[R]((Query)⇒ResultResponse[R]):TypedQuery[::[R,HNil]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">genericQueryCapture</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.Query">Query</span>) ⇒ <a href="bits/ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="org.http4s.rho.genericQueryCapture.R">R</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.genericQueryCapture.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#org.http4s.rho.package@genericQueryCapture[R](f:org.http4s.Query=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedQuery[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create a query capture rule using the <code>Request</code>'s <code>Uri</code>
+</p><div class="fullcomment"><div class="comment cmt"><p>Create a query capture rule using the <code>Request</code>'s <code>Uri</code>
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>function generating the result or failure</p></dd></dl></div>
+    </li><li name="org.http4s.rho#genericRequestHeaderCapture" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="genericRequestHeaderCapture[R](f:org.http4s.Request=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]"></a>
+      <a id="genericRequestHeaderCapture[R]((Request)⇒ResultResponse[R]):TypedHeader[::[R,HNil]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">genericRequestHeaderCapture</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.Request">Request</span>) ⇒ <a href="bits/ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="org.http4s.rho.genericRequestHeaderCapture.R">R</span>]</span>)</span><span class="result">: <a href="bits/TypedHeader.html" class="extype" name="org.http4s.rho.bits.TypedHeader">TypedHeader</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.genericRequestHeaderCapture.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#org.http4s.rho.package@genericRequestHeaderCapture[R](f:org.http4s.Request=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedHeader[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create a header capture rule using the <code>Request</code></p><div class="fullcomment"><div class="comment cmt"><p>Create a header capture rule using the <code>Request</code></p><p>In general, this function should be avoided for most cases because it has access to the entire <code>Request</code>
+which allows it to modify the <code>Request</code> body which should be avoided.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>function generating the result or failure</p></dd></dl></div>
+    </li><li name="org.http4s.rho#genericRequestQueryCapture" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="genericRequestQueryCapture[R](f:org.http4s.Request=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedQuery[shapeless.::[R,shapeless.HNil]]"></a>
+      <a id="genericRequestQueryCapture[R]((Request)⇒ResultResponse[R]):TypedQuery[::[R,HNil]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">genericRequestQueryCapture</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="org.http4s.Request">Request</span>) ⇒ <a href="bits/ResultResponse.html" class="extype" name="org.http4s.rho.bits.ResultResponse">ResultResponse</a>[<span class="extype" name="org.http4s.rho.genericRequestQueryCapture.R">R</span>]</span>)</span><span class="result">: <a href="bits/TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.genericRequestQueryCapture.R">R</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#org.http4s.rho.package@genericRequestQueryCapture[R](f:org.http4s.Request=&gt;org.http4s.rho.bits.ResultResponse[R]):org.http4s.rho.bits.TypedQuery[shapeless.::[R,shapeless.HNil]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Create a query capture rule using the <code>Request</code></p><div class="fullcomment"><div class="comment cmt"><p>Create a query capture rule using the <code>Request</code></p><p>In general, this function should be avoided for most cases because it has access to the entire <code>Request</code>
+which allows it to modify the <code>Request</code> body which should be avoided.
+</p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>function generating the result or failure</p></dd></dl></div>
     </li><li name="org.http4s.rho.hal" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="hal"></a>
       <a id="hal:hal"></a>
