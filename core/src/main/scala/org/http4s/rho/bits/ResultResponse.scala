@@ -4,7 +4,7 @@ import org.http4s.rho.bits.FailureResponse._
 import org.http4s.rho.bits.ResponseGeneratorInstances.{InternalServerError, BadRequest}
 import org.http4s.Response
 import org.http4s.rho.Result.BaseResult
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 
 import scalaz.concurrent.Task
 

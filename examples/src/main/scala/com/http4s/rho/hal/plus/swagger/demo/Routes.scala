@@ -1,7 +1,7 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import org.http4s.rho.swagger.SwaggerSupport
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 
 class Routes(businessLayer: BusinessLayer) {
 

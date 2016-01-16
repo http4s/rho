@@ -1,8 +1,8 @@
 package org.http4s.rho.swagger
 
 import java.util.Date
+import java.time.Instant
 
-import org.http4s.DateTime
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
 import org.log4s.getLogger
@@ -230,7 +230,7 @@ object TypeBuilder {
       DecimalTypes.exists(t =:= _)
 
     private[this] val DateTimeTypes =
-      Set[Type](typeOf[Date], typeOf[DateTime])
+      Set[Type](typeOf[Date], typeOf[Instant])
 
     private[this] def isDateTime(t: Type): Boolean =
       DateTimeTypes.exists(t <:< _)
