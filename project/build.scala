@@ -21,7 +21,7 @@ object RhoBuild extends Build {
 
   val homepageUrl= "https://github.com/http4s/rho"
 
-  val rhoVersion = "0.9.0"
+  val rhoVersion = "0.10.0-SNAPSHOT"
 
   val apiVersion: (Int, Int) = extractApiVersion(rhoVersion)
 
