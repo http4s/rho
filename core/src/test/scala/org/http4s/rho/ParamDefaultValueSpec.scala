@@ -1,7 +1,7 @@
 package org.http4s
 package rho
 
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 

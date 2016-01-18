@@ -1,7 +1,7 @@
 package com.http4s.rho.swagger.demo
 
 import org.http4s.rho.swagger.SwaggerSupport
-import org.http4s.server.Service
+import org.http4s.Service
 import org.http4s.server.blaze.BlazeBuilder
 
 object Main extends App {

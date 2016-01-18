@@ -1,6 +1,6 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import org.http4s.server.Service
+import org.http4s.Service
 import org.http4s.server.blaze.BlazeBuilder
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
 

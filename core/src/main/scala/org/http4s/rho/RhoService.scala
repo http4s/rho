@@ -3,7 +3,7 @@ package rho
 
 import org.http4s.rho.CompileService.ServiceBuilder
 import org.http4s.rho.bits.PathAST.TypedPath
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 
 import org.log4s.getLogger
 import shapeless.{HNil, HList}

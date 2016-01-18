@@ -1,6 +1,8 @@
 package org.http4s.rho
 
-import org.http4s.{AttributeKey, DateTime}
+import java.time.Instant
+
+import org.http4s.AttributeKey
 import org.http4s.headers._
 import org.specs2.mutable.Specification
 
@@ -10,18 +12,19 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
 
   "ResultSyntax" should {
     "Add headers" in {
+      val date = Date(Instant.ofEpochMilli(0))
       val resp = Ok("Foo")
-                  .putHeaders(Date(DateTime.UnixEpoch))
+                  .putHeaders(date)
                   .run
                   .resp
 
-      resp.headers.get(Date) must_== Some(Date(DateTime.UnixEpoch))
+      resp.headers.get(Date) must_== Some(date)
 
       val respNow = Ok("Foo").run
-        .putHeaders(Date(DateTime.UnixEpoch))
+        .putHeaders(date)
         .resp
 
-      respNow.headers.get(Date) must_== Some(Date(DateTime.UnixEpoch))
+      respNow.headers.get(Date) must_== Some(date)
     }
 
     "Add atributes" in {

@@ -4,7 +4,7 @@ package rho
 import org.log4s.getLogger
 
 import org.http4s.rho.bits.PathTree
-import org.http4s.server.{Service, HttpService}
+import org.http4s.{Service, HttpService}
 import shapeless.HList
 
 /** This trait serves to transform a [[RhoRoute]] into an `RouteType`

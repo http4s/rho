@@ -4,7 +4,7 @@ package bits
 
 import java.nio.charset.StandardCharsets
 
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 import org.specs2.mutable.Specification
 
 import org.http4s.server.middleware.URITranslation

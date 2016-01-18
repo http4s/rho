@@ -2,7 +2,7 @@ package org.http4s
 package rho
 
 import bits.HListToFunc
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 import shapeless.HList
 
 import scalaz.concurrent.Task

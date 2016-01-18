@@ -1,7 +1,7 @@
 package org.http4s.rho
 
 import org.http4s._
-import org.http4s.server.HttpService
+import org.http4s.HttpService
 import scodec.bits.ByteVector
 
 /** Helper for collecting a the body from a `RhoService` */
