@@ -90,7 +90,7 @@ private[rho] object PathTree {
         Leaf { (req, pathstack) =>
           RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map{ i =>
             parser.decode(req, false).run.flatMap(_.fold(e =>
-              Response(Status.BadRequest, req.httpVersion).withBody(e.msg),
+              e.toHttpResponse(req.httpVersion),
               { body =>
                 // `asInstanceOf` to turn the untyped HList to type T
                 route.action.act(req, (body :: i).asInstanceOf[T])

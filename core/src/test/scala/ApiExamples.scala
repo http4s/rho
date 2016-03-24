@@ -106,12 +106,12 @@ class ApiExamples extends Specification {
         val path2 = "two" / pathVar[Int]
 
         val getLength = captureMap(`Content-Length`)(_.length)
-        val getTag = captureMap(ETag)(_ => -1)
+        val getTag = captureMap(ETag)(_ => -1l)
 
         GET / (path1 || path2) +?
             param[String]("foo") >>>
             (getLength || getTag) |>> {
-          (i: Int, foo: String, v: Int) =>
+          (i: Int, foo: String, v: Long) =>
             Ok(s"Received $i, $foo, $v")
         }
       }
