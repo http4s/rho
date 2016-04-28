@@ -40,5 +40,11 @@ class SwaggerSupportSpec extends Specification {
 
       Set(a, b, c) should_== Set("/swagger.json", "/foo/hello", "/foo/hello/{string}")
     }
+
+    "Provide a method to build the Swagger model for a list of routes" in {
+      val swaggerSpec = SwaggerSupport.createSwagger(apiPath = "/api")(baseService.getRoutes)
+
+      swaggerSpec.paths must haveSize(2)
+    }
   }
 }
