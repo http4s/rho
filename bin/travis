@@ -5,7 +5,9 @@ set -e
 SBT_COMMAND=";test"
 
 if [[ $TRAVIS_BRANCH = "master" || $TRAVIS_BRANCH = "release-"* ]] && [[ $TRAVIS_PULL_REQUEST = "false" ]]; then
-  
+
+  openssl aes-256-cbc -K $encrypted_e1dc8b0b9e65_key -iv $encrypted_e1dc8b0b9e65_iv -in bin/deployprep.enc -out bin/deployprep -d
+ 
   # execute deployment
   bash bin/deployprep
 
