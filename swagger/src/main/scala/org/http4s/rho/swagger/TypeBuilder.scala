@@ -208,6 +208,8 @@ object TypeBuilder {
       } else if (t.isProcess) {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs(1)))
         else GenArray()
+      } else if (klass <:< typeOf[AnyVal]) {
+        fromType(t.members.filter(_.isConstructor).flatMap(_.asMethod.paramLists.flatten).head.typeSignature)
       } else {
         val stt = if (t.isOption) t.typeArgs.head else t
         ComplexDataType(stt.simpleName, qualifiedName = Option(stt.fullName))

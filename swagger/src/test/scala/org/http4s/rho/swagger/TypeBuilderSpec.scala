@@ -3,14 +3,14 @@ package org.http4s.rho.swagger
 import java.sql.Timestamp
 import java.util.Date
 
+import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 
 import scalaz.concurrent.Task
 import scalaz.stream.Process
-
-import scala.reflect.runtime.universe.{ TypeTag, typeTag, typeOf }
-
-import scalaz._, Scalaz._
+import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
+import scalaz._
+import Scalaz._
 
 package object model {
   case class Foo(a: Int, b: String)
@@ -218,5 +218,23 @@ class TypeBuilderSpec extends Specification {
     "Get the type for a container" in {
       DataType(typeTag[Seq[Int]]).name must_== "List"
     }
+
+    "Get the DataType of the underlying type for an AnyVal" in {
+      val datatypes = List[(TypeTag[_], TypeTag[_])](
+        (typeTag[StringAnyVal], typeTag[String]), (typeTag[IntAnyVal], typeTag[Int]),
+        (typeTag[DoubleAnyVal], typeTag[Double]), (typeTag[EntityAnyVal], typeTag[Entity])
+      )
+
+      Result.foreach(datatypes) { case (anyValType, underlyingType) =>
+        DataType(anyValType) === DataType(underlyingType)
+      }
+    }
   }
 }
+
+case class StringAnyVal(value: String) extends AnyVal
+case class IntAnyVal(value: Int) extends AnyVal
+case class DoubleAnyVal(value: Double) extends AnyVal
+case class EntityAnyVal(value: Entity) extends AnyVal
+
+case class Entity(name: String)
