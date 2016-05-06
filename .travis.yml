@@ -1,6 +1,9 @@
 language: scala
 scala:
 - 2.11.7
+matrix:
+- SCALAZ_VERSION=7.1.7
+- SCALAZ_VERSION=7.2.2
 jdk: oraclejdk8
 sudo: false
 cache:
