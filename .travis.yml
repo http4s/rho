@@ -1,9 +1,6 @@
 language: scala
 scala:
 - 2.11.7
-matrix:
-- SCALAZ_VERSION=7.1.7
-- SCALAZ_VERSION=7.2.2
 jdk: oraclejdk8
 sudo: false
 cache:
@@ -12,6 +9,8 @@ cache:
 env:
   global:
   - secure: n0shGVhtGvg4jA9gQ5Dds7mbczjRjvbjon5RBk0+aXA9EPTGApvk4/zo/LFiCOxfBYPDfe+7EcljgiBFBw9DhggrTtlEKYEAJjqc81B0nZih5H7C9veQcsUWJ6WFEH4HPRSH4kk1PGwmjoDWsk1l6T3jnOblbjcV68pQqA02VBY=
-
+  matrix:
+  - SCALAZ_VERSION=7.1.7
+  - SCALAZ_VERSION=7.2.2
 script: bash bin/travis
 
