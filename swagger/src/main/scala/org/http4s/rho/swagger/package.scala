@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.util.Date
 import org.http4s.Method
 import org.http4s.rho.bits.{TextMetaData, PathAST}
+import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 import shapeless.HNil
 
 import scala.reflect.runtime.universe._
@@ -37,7 +38,7 @@ package object swagger {
     }
 
     private[swagger] val excludes = {
-      Set[Type](typeOf[scala.xml.Elem])
+      Set[Type](typeOf[scala.xml.Elem], typeOf[EmptyRe])
     }
 
     def isPrimitive(t: Type, extra: Set[Type] = Set.empty) = (primitives ++ extra).exists(t =:= _)

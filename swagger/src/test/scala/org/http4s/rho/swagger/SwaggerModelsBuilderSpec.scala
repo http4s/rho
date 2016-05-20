@@ -294,6 +294,13 @@ class SwaggerModelsBuilderSpec extends Specification {
 
   "SwaggerModelsBuilder.collectResponses" should {
 
+    "collect an empty response" in {
+      val ra = GET / "test" |>> { () => NoContent() }
+
+      sb.collectResponses(ra) must havePair(
+        "204" -> Response(description = "No Content", schema = None))
+    }
+
     "collect response of primitive types" in {
       val ra = GET / "test" |>> { () => Ok("") }
 
