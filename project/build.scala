@@ -204,7 +204,7 @@ object Dependencies {
       case Seq(7, 2, _*) => "3.7.2"
     }
   def http4sVersion(scalazVersion: String) =
-    s"0.13.0${scalazCrossBuildSuffix(scalazVersion)}"
+    s"0.14.1${scalazCrossBuildSuffix(scalazVersion)}"
 
   def http4sServer(zv: String) = "org.http4s"                 %% "http4s-server"         % http4sVersion(zv)
   def http4sDSL(zv: String)    = "org.http4s"                 %% "http4s-dsl"            % http4sVersion(zv)
