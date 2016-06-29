@@ -145,6 +145,14 @@ class SwaggerModelsBuilderSpec extends Specification {
         HeaderParameter(`type` = "string", name = "Content-Length".some, description = orStr("Content-MD5"), required = true),
         HeaderParameter(`type` = "string", name = "Content-MD5".some,    description = orStr("Content-Length"), required = true))
     }
+
+    "set required = false if there is a default value for the header" in {
+      val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(\/-(_)) |>> { (_: `Content-Length`) => "" }
+
+      sb.collectHeaderParams(ra) must_==
+        List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
+    }
+
   }
 
   "SwaggerModelsBuilder.mkOperation" should {
