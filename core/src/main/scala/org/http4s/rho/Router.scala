@@ -11,11 +11,14 @@ import shapeless.{HNil, ::, HList}
 import shapeless.ops.hlist.Prepend
 
 sealed trait RoutingEntity[T <: HList] {
+  type Self <: RoutingEntity[T]
+
   def method: Method
   def path: PathRule
   def rules: RequestRule
 
-  def /:(path: TypedPath[HNil]): RoutingEntity[T]
+  def /:(path: TypedPath[HNil]): Self
+  def withMethod(method: Method): Self
 }
 
 /** Provides the operations for generating a router
@@ -28,15 +31,17 @@ sealed trait RoutingEntity[T <: HList] {
 case class Router[T <: HList](method: Method,
                               path: PathRule,
                               rules: RequestRule)
-                       extends RouteExecutable[T]
-                          with HeaderAppendable[T]
-                          with RoutingEntity[T]
-                          with Decodable[T, Nothing]
-                          with RoutePrependable[Router[T]]
+  extends RouteExecutable[T]
+    with HeaderAppendable[T]
+    with RoutingEntity[T]
+    with Decodable[T, Nothing]
+    with RoutePrependable[Router[T]]
 {
+  type Self = Router[T]
+
   override type HeaderAppendResult[T <: HList] = Router[T]
 
-  override def /:(prefix: TypedPath[HNil]): Router[T] = {
+  override def /:(prefix: TypedPath[HNil]): Self = {
     copy(path = PathAnd(prefix.rule, path))
   }
 
@@ -47,24 +52,29 @@ case class Router[T <: HList](method: Method,
 
   override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
     CodecRouter(this, decoder)
+
+  def withMethod(other: Method): Self =
+    copy(method = other)
 }
 
 case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])(implicit t: TypeTag[R])
-           extends HeaderAppendable[T]
-           with RouteExecutable[R::T]
-           with RoutingEntity[R::T]
-           with Decodable[T, R]
+  extends HeaderAppendable[T]
+    with RouteExecutable[R::T]
+    with RoutingEntity[R::T]
+    with Decodable[T, R]
 {
+  type Self = CodecRouter[T, R]
+
   override type HeaderAppendResult[T <: HList] = CodecRouter[T, R]
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): CodecRouter[prep1.Out,R] =
     CodecRouter(router >>> v, decoder)
 
-  override def /:(prefix: TypedPath[HNil]): CodecRouter[T, R] =
+  override def /:(prefix: TypedPath[HNil]): Self =
     copy(router = prefix /: router)
 
   /** Append the header to the builder, generating a new typed representation of the route */
-//  override def >>>[T2 <: HList](header: TypedHeader[T2])(implicit prep: Prepend[T2, T]): CodecRouter[prep.Out, R] = ???
+  //  override def >>>[T2 <: HList](header: TypedHeader[T2])(implicit prep: Prepend[T2, T]): CodecRouter[prep.Out, R] = ???
 
   override def makeRoute(action: Action[R::T]): RhoRoute[R::T] = RhoRoute(this, action)
 
@@ -78,5 +88,8 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
     CodecRouter(router, decoder orElse decoder2)
 
   def entityType: Type = t.tpe
+
+  def withMethod(other: Method): Self =
+    copy(router = router.withMethod(other))
 }
 
