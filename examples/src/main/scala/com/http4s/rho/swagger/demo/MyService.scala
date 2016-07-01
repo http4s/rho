@@ -6,6 +6,8 @@ import java.time.Instant
 import org.http4s.Uri
 import org.http4s.rho.RhoService
 import org.http4s.rho.swagger.SwaggerSupport
+import org.http4s.rho.bits.EntityParser
+import org.http4s.rho.bits.EntityParser.defaults._
 
 import JsonEncoder.AutoSerializable
 import scalaz.Scalaz._
@@ -85,7 +87,7 @@ object MyService extends RhoService {
     }
 
   "This route allows your to post stuff" **
-    POST / "post" ^ EntityDecoder.text |>> { body: String =>
+    POST / "post" ^ EntityParser[String] |>> { body: String =>
       "You posted: " + body
     }
 

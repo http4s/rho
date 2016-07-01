@@ -85,8 +85,8 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   override def >>>[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
     Router(method, path, h2.rule)
 
-  override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
-    CodecRouter(>>>(TypedHeader[HNil](EmptyRule)), decoder)
+  override def decoding[R](parser: EntityParser[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
+    CodecRouter(>>>(TypedHeader[HNil](EmptyRule)), parser)
 
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, EmptyRule), action)
 }

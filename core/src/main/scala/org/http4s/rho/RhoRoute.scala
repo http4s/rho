@@ -37,7 +37,7 @@ final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T
   def responseEncodings: Set[MediaType] = action.responseEncodings
   def resultInfo: Set[ResultInfo] = action.resultInfo
   def validMedia: Set[MediaRange] = router match {
-    case r: CodecRouter[_,_] => r.decoder.consumes
+    case r: CodecRouter[_,_] => r.parser.consumes
     case _ => Set.empty
   }
 }
