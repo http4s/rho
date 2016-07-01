@@ -114,9 +114,8 @@ object RhoBuild extends Build {
 
         libraryDependencies <++= scalazVersion { sz => Seq(
           http4sServer(sz) % "provided",
-          logbackClassic   % "test",
-          specs2(sz)       % "test"
-        )},
+          logbackClassic   % "test"
+        ) ++ specs2(sz) },
         libraryDependencies += `scala-reflect` % scalaVersion.value
     )
 
@@ -217,8 +216,10 @@ object Dependencies {
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.5.8"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.3"
-  def specs2(zv: String)       = "org.specs2"                 %% "specs2-core"           % specs2Version(zv)
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.09"
+
+  def specs2(zv: String)       = Seq("org.specs2"              %% "specs2-core"          ,
+                                     "org.specs2"              %% "specs2-scalacheck"    ).map(_ % specs2Version(zv) % "test")
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 

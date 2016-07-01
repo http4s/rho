@@ -187,6 +187,15 @@ object models {
     , vendorExtensions : Map[String, Any]  = Map.empty
     ) {
 
+    def operations: Seq[Operation] =
+      get.toList ++
+      put.toList ++
+      post.toList ++
+      delete.toList ++
+      patch.toList ++
+      options.toList ++
+      head.toList
+
     def toJModel: jm.Path = {
       val p = new jm.Path
       p.setGet(fromOption(get.map(_.toJModel)))
@@ -747,6 +756,6 @@ object models {
       if (xs.isEmpty) null else xs
 
     def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
-      if (m.isEmpty) Map.empty[A,B] else m
+      if (m.isEmpty) null else m
   }
 }
