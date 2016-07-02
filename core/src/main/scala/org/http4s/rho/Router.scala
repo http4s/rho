@@ -9,6 +9,7 @@ import scala.reflect.runtime.universe.{Type, TypeTag}
 
 import shapeless.{HNil, ::, HList}
 import shapeless.ops.hlist.Prepend
+import scalaz.concurrent.Task
 
 sealed trait RoutingEntity[T <: HList] {
   def method: Method
@@ -46,10 +47,10 @@ case class Router[T <: HList](method: Method,
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(this, action)
 
   override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
-    CodecRouter(this, decoder)
+    CodecRouter(this, decoder, PartialFunction.empty) 
 }
 
-case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])(implicit t: TypeTag[R])
+case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R], errHandler: PartialFunction[DecodeFailure, Task[Response]])(implicit t: TypeTag[R])
            extends HeaderAppendable[T]
            with RouteExecutable[R::T]
            with RoutingEntity[R::T]
@@ -58,7 +59,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
   override type HeaderAppendResult[T <: HList] = CodecRouter[T, R]
 
   override def >>>[T1 <: HList](v: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): CodecRouter[prep1.Out,R] =
-    CodecRouter(router >>> v, decoder)
+    CodecRouter(router >>> v, decoder, errHandler)
 
   override def /:(prefix: TypedPath[HNil]): CodecRouter[T, R] =
     copy(router = prefix /: router)
@@ -74,8 +75,10 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override val rules: RequestRule = router.rules
 
+  def handleError(otherErrHandler: PartialFunction[DecodeFailure, Task[Response]]): CodecRouter[T, R] = this.copy(errHandler = otherErrHandler)
+
   override def decoding[R2 >: R](decoder2: EntityDecoder[R2])(implicit t: TypeTag[R2]): CodecRouter[T, R2] =
-    CodecRouter(router, decoder orElse decoder2)
+    CodecRouter(router, decoder orElse decoder2, errHandler)
 
   def entityType: Type = t.tpe
 }

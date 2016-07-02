@@ -86,11 +86,11 @@ private[rho] object PathTree {
           }
         }
 
-      case c @ CodecRouter(_, parser) =>
+      case c @ CodecRouter(_, parser, errorHandler) =>
         Leaf { (req, pathstack) =>
           RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map{ i =>
-            parser.decode(req, false).run.flatMap(_.fold(e =>
-              e.toHttpResponse(req.httpVersion),
+            parser.decode(req, false).run.flatMap(_.fold(
+              errorHandler orElse { case e: DecodeFailure => e.toHttpResponse(req.httpVersion)},
               { body =>
                 // `asInstanceOf` to turn the untyped HList to type T
                 route.action.act(req, (body :: i).asInstanceOf[T])
