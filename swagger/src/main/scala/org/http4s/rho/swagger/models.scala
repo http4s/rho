@@ -122,16 +122,19 @@ object models {
   }
 
   case class ApiKeyAuthDefinition
-    (
-      name : String
+  (
+    name : String
     , in   : In
-    ) extends SecuritySchemeDefinition {
+    , description: Option[String] = None
+  ) extends SecuritySchemeDefinition {
 
     override val `type` = "apiKey"
 
     def toJModel: jm.auth.ApiKeyAuthDefinition = {
       val akad  = new jm.auth.ApiKeyAuthDefinition
-      akad.name(name).in(in.toJModel)
+      val definition = akad.name(name).in(in.toJModel)
+      description.foreach(definition.setDescription)
+      definition
     }
   }
 
