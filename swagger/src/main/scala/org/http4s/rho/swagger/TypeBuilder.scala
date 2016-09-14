@@ -157,7 +157,6 @@ object TypeBuilder {
     val Boolean = DataType("boolean")
     val Date = DataType("string", Some("date"))
     val DateTime = DataType("string", Some("date-time"))
-    val File = DataType("file")
 
     object GenList {
       def apply(): DataType = ContainerDataType("List")
@@ -197,7 +196,6 @@ object TypeBuilder {
       else if (isDecimal(klass)) this.Double
       else if (isDateTime(klass)) this.DateTime
       else if (isBool(klass)) this.Boolean
-      else if (klass <:< typeOf[SwaggerFileResponse]) this.File
       else if (klass <:< typeOf[scala.collection.Set[_]] || klass <:< typeOf[java.util.Set[_]]) {
         if (t.typeArgs.nonEmpty) GenSet(fromType(t.typeArgs.head))
         else GenSet()

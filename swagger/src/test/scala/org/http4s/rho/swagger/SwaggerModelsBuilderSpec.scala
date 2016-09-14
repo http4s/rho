@@ -17,6 +17,7 @@ import scalaz._, Scalaz._
 import scalaz.stream._
 import scalaz.concurrent.Task
 
+
 object SwaggerModelsBuilderSpec {
   
   case class Foo(a: String, b: Int)
@@ -317,7 +318,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response with file type" in {
-      val ra = GET / "test" |>> { () => Ok(CsvFile()) }
+      val ra = GET / "test" |>> { () => Ok(SwaggerFileResponse(CsvFile())) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "file").some))
@@ -442,7 +443,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   implicit def listEntityEncoder[A]: EntityEncoder[List[A]] =
     EntityEncoder.simple[List[A]]()(_ => ByteVector.view("A".getBytes))
 
-  case class CsvFile() extends SwaggerFileResponse
+  case class CsvFile()
 
   object CsvFile {
     implicit def EntityEncoderCsvFile: EntityEncoder[CsvFile] =

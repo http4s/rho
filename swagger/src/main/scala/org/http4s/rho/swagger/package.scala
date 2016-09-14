@@ -34,7 +34,7 @@ package object swagger {
         typeOf[java.lang.Double], typeOf[java.lang.Float], typeOf[BigDecimal],
         typeOf[java.lang.Byte], typeOf[java.lang.Boolean], typeOf[Number],
         typeOf[java.lang.Short], typeOf[Date], typeOf[Timestamp], typeOf[scala.Symbol],
-        typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger], typeOf[SwaggerFileResponse])
+        typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger])
     }
 
     private[swagger] val excludes = {
@@ -87,7 +87,7 @@ package object swagger {
       t <:< typeOf[Option[_]]
 
     def isPrimitive: Boolean =
-      Reflector.primitives.find(t <:< _).isDefined ||
+      Reflector.primitives.find(_ =:= t).isDefined ||
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isProcess: Boolean =
@@ -95,8 +95,8 @@ package object swagger {
 
     def isTask: Boolean =
       t <:< typeOf[Task[_]]
-  }
 
-  /** marker trait for responses returning files */
-  trait SwaggerFileResponse
+    def isSwaggerFile: Boolean =
+      t <:< typeOf[SwaggerFileResponse[_]]
+  }
 }
