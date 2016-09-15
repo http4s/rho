@@ -257,6 +257,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         typeToProp(tpe.dealias.typeArgs(1))
       else if (tpe.isTask)
         typeToProp(tpe.dealias.typeArgs(0))
+      else if (tpe.isSwaggerFile)
+        AbstractProperty(`type` = "file").some
       else
         RefProperty(ref = tpe.simpleName).some      
 

@@ -95,6 +95,8 @@ package object swagger {
 
     def isTask: Boolean =
       t <:< typeOf[Task[_]]
-  }
 
+    def isSwaggerFile: Boolean =
+      t <:< typeOf[SwaggerFileResponse[_]]
+  }
 }
