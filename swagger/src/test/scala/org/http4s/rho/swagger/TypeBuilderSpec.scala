@@ -20,13 +20,14 @@ package object model {
   type Foos = Seq[Foo]
   case class FooComposite(single: Foo, many: Seq[Foo])
   case class FooCompositeWithAlias(single: Bar, many: Seq[Bar], manyAlias: Foos)
+  case class FooWithListOfLists(values: Seq[Seq[Int]])
   case class FooWithList(l: List[Int])
   case class FooWithMap(l: Map[String, Int])
 }
 
 class TypeBuilderSpec extends Specification {
   import model._
-  import models.Model
+  import models.{ArrayProperty, Model, RefProperty}
 
   def modelOf[T](implicit t: TypeTag[T]): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, DefaultSwaggerFormats)
@@ -151,10 +152,18 @@ class TypeBuilderSpec extends Specification {
       m1.description must_== "FooComposite".some
       m1.properties.size must_== 2
       m1.properties.get("single").get.`type` must_== "ref"
-      m1.properties.get("many").get.`type` must_== "array"
+
+      m1.properties.get("many") must beLike {
+        case Some(array: ArrayProperty) =>
+
+          array.items must beLike {
+            case ref: RefProperty =>
+              ref.ref must_== "Foo"
+          }
+      }
 
       val m2 = ms.tail.head
-      m2.description must_== "Foo".some      
+      m2.description must_== "Foo".some
     }
 
     "Build a composite model with alias" in {
@@ -199,11 +208,37 @@ class TypeBuilderSpec extends Specification {
       val m = ms.head
       m.description must_== "FooWithList".some
 
-      //val p = m.properties.head._2
-      // p.`type` must_== "List"
-      // p.items.isDefined must_== true
+      m.properties.head._2 must beLike {
+        case items: ArrayProperty =>
+          items.`type` must_== "array"
+          items.required must_== true
 
-      // p.items.get.`type` must_== "integer"
+          items.items.required must_== false
+          items.items.`type` must_== "integer"
+          items.items.format must_== Some("int32")
+      }
+    }
+
+    "Build model that contains a List of Lists" in {
+      val ms = modelOf[FooWithListOfLists]
+      ms.size must_== 1
+      val m = ms.head
+      m.description must_== "FooWithListOfLists".some
+
+      m.properties.head._2 must beLike {
+        case items: ArrayProperty =>
+          items.`type` must_== "array"
+          items.required must_== true
+
+          items.items must beLike {
+            case items: ArrayProperty =>
+              items.`type` must_== "array"
+
+              items.items.required must_== false
+              items.items.`type` must_== "integer"
+              items.items.format must_== Some("int32")
+          }
+      }
     }
   }
 

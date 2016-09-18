@@ -109,23 +109,34 @@ object TypeBuilder {
         description = tpe.simpleName.some,
         properties  = props).some
     } catch {
-      case NonFatal(t) => None
+      case NonFatal(t) =>
+        logger.info(t)(s"Failed to build model for type $tpe")
+        None
     }
 
   private def paramSymToProp
     (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol): (String, Property) = {
     val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
-    val prop = sfs.customFieldSerializers.applyOrElse(pType, { _: Type =>
+    val prop = typeToProperty(pType, sfs)
+    (pSym.name.decodedName.toString, prop.withRequired(required))
+  }
 
-      val TypeRef(_, ptSym: Symbol, ptTpeArgs: List[Type]) = pType
+  // Turn a `Type` into the appropriate `Property` representation
+  private def typeToProperty(tpe: Type, sfs: SwaggerFormats): Property = {
+    sfs.customFieldSerializers.applyOrElse(tpe, { _: Type =>
 
-      if (pType.isCollection && !pType.isNothingOrNull)
-        ArrayProperty(items = RefProperty(pType.dealias.typeArgs.head.simpleName))
+      val TypeRef(_, ptSym: Symbol, _) = tpe
+
+      if (tpe.isCollection && !tpe.isNothingOrNull) {
+        val pType = tpe.dealias.typeArgs.head
+        val itemProperty = typeToProperty(pType, sfs).withRequired(false)
+        ArrayProperty(items = itemProperty)
+      }
       else if (isCaseClass(ptSym))
-        RefProperty(pType.simpleName)
+        RefProperty(tpe.simpleName)
       else
-        DataType.fromType(pType) match {
+        DataType.fromType(tpe) match {
           case DataType.ValueDataType(name, format, qName) =>
             AbstractProperty(`type` = name, description = qName, format = format)
           case DataType.ComplexDataType(name, qName) =>
@@ -134,7 +145,6 @@ object TypeBuilder {
             AbstractProperty(`type` = name)
         }
     })
-    (pSym.name.decodedName.toString, prop.withRequired(required))
   }
 
   sealed trait DataType {
