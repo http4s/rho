@@ -1,6 +1,5 @@
 package org.http4s.rho.swagger
 
-import scala.collection.mutable.LinkedHashMap
 import scala.reflect.runtime.universe._
 
 import org.specs2.mutable.Specification
@@ -40,7 +39,7 @@ class SwaggerFormatsSpec extends Specification {
       val sfs = DefaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], arrProp)
 
       def modelOf[T](t: TypeTag[T]): Set[Model] =
-        TypeBuilder.collectModels(t.tpe, Set.empty, DefaultSwaggerFormats)
+        TypeBuilder.collectModels(t.tpe, Set.empty, sfs)
 
       modelOf(typeTag[FruitBox]).nonEmpty must_== true
       modelOf(typeTag[FruitBox]).head.properties.head._1 must_== "fruits"
