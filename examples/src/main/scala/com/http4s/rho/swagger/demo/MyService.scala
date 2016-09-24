@@ -5,7 +5,6 @@ import java.time.Instant
 
 import org.http4s.Uri
 import org.http4s.rho.RhoService
-import org.http4s.rho.swagger.SwaggerSupport
 
 import JsonEncoder.AutoSerializable
 import scalaz.Scalaz._
