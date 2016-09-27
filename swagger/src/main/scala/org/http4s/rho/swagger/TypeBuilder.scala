@@ -125,7 +125,6 @@ object TypeBuilder {
   // Turn a `Type` into the appropriate `Property` representation
   private def typeToProperty(tpe: Type, sfs: SwaggerFormats): Property = {
     sfs.customFieldSerializers.applyOrElse(tpe, { _: Type =>
-
       val TypeRef(_, ptSym: Symbol, _) = tpe
 
       if (tpe.isCollection && !tpe.isNothingOrNull) {
@@ -133,6 +132,8 @@ object TypeBuilder {
         val itemProperty = typeToProperty(pType, sfs).withRequired(false)
         ArrayProperty(items = itemProperty)
       }
+      else if (tpe.isOption && !tpe.isNothingOrNull)
+        typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
       else if (isCaseClass(ptSym))
         RefProperty(tpe.simpleName)
       else

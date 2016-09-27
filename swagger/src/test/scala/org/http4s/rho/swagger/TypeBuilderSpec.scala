@@ -3,6 +3,7 @@ package org.http4s.rho.swagger
 import java.sql.Timestamp
 import java.util.Date
 
+import org.http4s.rho.swagger.models.AbstractProperty
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 
@@ -14,6 +15,7 @@ import Scalaz._
 
 package object model {
   case class Foo(a: Int, b: String)
+  case class FooWithOption(a: Int, b: Option[String])
   type Bar = Foo
   case class FooDefault(a: Int = 0)
   case class FooGeneric[+A](a: A)
@@ -30,7 +32,10 @@ class TypeBuilderSpec extends Specification {
   import models.{ArrayProperty, Model, RefProperty}
 
   def modelOf[T](implicit t: TypeTag[T]): Set[Model] =
-    TypeBuilder.collectModels(t.tpe, Set.empty, DefaultSwaggerFormats)
+    modelOfWithFormats(DefaultSwaggerFormats)
+
+  def modelOfWithFormats[T](formats: SwaggerFormats)(implicit t: TypeTag[T]): Set[Model] =
+    TypeBuilder.collectModels(t.tpe, Set.empty, formats)
 
   "TypeBuilder" should {
 
@@ -184,6 +189,27 @@ class TypeBuilderSpec extends Specification {
       val ms = modelOf[FooGeneric[Foo]]
       ms.size must_== 2
       ms ++ modelOf[Foo] must_== ms
+    }
+
+    "Build a model from an Option" in {
+      val ms = modelOf[FooWithOption]
+      ms.size must_== 1
+      val omodel = ms.head
+      val optProp = omodel.properties("b")
+      optProp.required must_== false
+    }
+
+    "Build a model from an Option with overridden formats" in {
+      val formats = DefaultSwaggerFormats.withFieldSerializers({
+        case x if x =:= typeOf[String] => AbstractProperty(`type`="a_string")
+      })
+
+      val ms = modelOfWithFormats[FooWithOption](formats)
+      ms.size must_== 1
+      val omodel = ms.head
+      val optProp = omodel.properties("b")
+      optProp.required must_== false
+      optProp.`type` must_== "a_string"
     }
 
     "Get types from a collection" in {
