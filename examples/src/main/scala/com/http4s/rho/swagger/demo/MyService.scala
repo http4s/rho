@@ -94,7 +94,10 @@ object MyService extends RhoService {
       val p: Process[Task, String] = Process.emitAll(s)
       Ok(p)
     }
-    
+
+  "Get a file" **
+    GET / "file" |>> Ok(SwaggerFileResponse("HELLO"))
+
   import scala.reflect._
   import scala.reflect.runtime.universe._
     
