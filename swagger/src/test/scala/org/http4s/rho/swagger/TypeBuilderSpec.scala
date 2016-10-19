@@ -228,6 +228,10 @@ class TypeBuilderSpec extends Specification {
       modelOf[Task[Foo]] must_== modelOf[Foo]
     }
 
+    "Get types from a SwaggerFileResponse" in {
+      modelOf[SwaggerFileResponse[Foo]] must_== Set.empty
+    }
+
     "Build model that contains a List" in {
       val ms = modelOf[FooWithList]
       ms.size must_== 1
