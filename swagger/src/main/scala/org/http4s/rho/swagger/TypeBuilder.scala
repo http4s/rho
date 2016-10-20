@@ -52,6 +52,9 @@ object TypeBuilder {
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
 
+        case tpe if tpe.isSwaggerFile =>
+          Set.empty
+
         case tpe if (alreadyKnown.map(_.id).contains(tpe.fullName) || (tpe.isPrimitive)) =>
           Set.empty
 
