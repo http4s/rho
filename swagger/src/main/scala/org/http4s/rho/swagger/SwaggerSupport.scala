@@ -25,7 +25,7 @@ object SwaggerSupport {
       createSwagger(swaggerFormats, apiPath, apiInfo)(routes ++ swaggerRoutes)
 
     lazy val swaggerRoutes: Seq[RhoRoute[_ <: HList]] = new RhoService {
-      lazy val response = Ok(Json.mapper().
+      lazy val response = Ok(Json.mapper().writerWithDefaultPrettyPrinter().
         writeValueAsString(swaggerSpec.toJModel)).
         putHeaders(`Content-Type`(MediaType.`application/json`))
 
