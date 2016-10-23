@@ -298,12 +298,14 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   }
 
   def mkQueryParam(rule: QueryMetaData[_]): Parameter = {
+    val required = !(rule.m.tpe.isOption || rule.default.isDefined)
+
     TypeBuilder.DataType(rule.m.tpe) match {
       case TypeBuilder.DataType.ComplexDataType(nm, _) =>
         QueryParameter(
-          $ref          = nm.some,
+          $ref         = nm.some,
           name         = rule.name.some,
-          required     = rule.default.isEmpty,
+          required     = required,
           defaultValue = rule.default.map(_ => "") // TODO ideally need to use the parser to serialize it into string
         )
       // XXX uniqueItems is indeed part of `parameter` api, 
@@ -322,15 +324,16 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         QueryParameter(
           name         = rule.name.some,
           items        = itemTpe,
-          required     = rule.default.isEmpty,
+          required     = required,
           defaultValue = rule.default.map(_ => ""), // TODO ideally need to put something like [...] here
           isArray      = true
         )
+
       case TypeBuilder.DataType.ValueDataType(nm, _, _) => 
         QueryParameter(
           `type`       = nm.some,
           name         = rule.name.some,
-          required     = rule.default.isEmpty,
+          required     = required,
           defaultValue = rule.default.map(_.toString)              
         )
     }

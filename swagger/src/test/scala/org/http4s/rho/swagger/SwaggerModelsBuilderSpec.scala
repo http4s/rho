@@ -17,21 +17,19 @@ import scalaz._, Scalaz._
 import scalaz.stream._
 import scalaz.concurrent.Task
 
-
 object SwaggerModelsBuilderSpec {
-  
   case class Foo(a: String, b: Int)
   case class Bar(c: Long, d: List[Foo])
-  
+
   import org.json4s._
   import org.json4s.jackson.JsonMethods
-  
+
   private implicit val format = DefaultFormats
-  
+
   implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[A] = new StringParser[A] {
     override val typeTag = implicitly[TypeTag[A]].some
     override def parse(s: String): ResultResponse[A] = {
-      
+
       \/.fromTryCatchNonFatal(JsonMethods.parse(s).extract[A]) match {
         case -\/(t) => FailureResponse.badRequest(t.getMessage())
         case \/-(t) => SuccessResponse(t)
@@ -71,6 +69,13 @@ class SwaggerModelsBuilderSpec extends Specification {
       List(QueryParameter(`type` = "integer".some, name = "id".some, required = true))
     }
 
+    "handle an action with one optional query parameter" in {
+      val ra = fooPath +? param[Option[String]]("name") |>> { (s: Option[String]) => "" }
+
+      sb.collectQueryParams(ra) must_==
+      List(QueryParameter(`type` = "string".some, name = "name".some, required = false))
+    }
+
     "handle an action with one query parameter with default value" in {
       val ra = fooPath +? param[Int]("id", 6) |>> { (i: Int) => "" }
 
@@ -88,7 +93,6 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "handle an action with query or-structure" in {
-
       def orStr(str: String) = s"Optional if the following params are satisfied: [$str]".some
 
       val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> { (i: Int) => "" }
@@ -106,7 +110,14 @@ class SwaggerModelsBuilderSpec extends Specification {
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
     }
     
-    "handle and action with two query paramters of complex data type" in {
+    "handle an action with one optional query parameter of complex data type" in {
+       val ra = fooPath +? param[Option[Foo]]("foo") |>> { (_: Option[Foo]) => "" }
+
+       sb.collectQueryParams(ra) must_==
+       List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = false))
+    }
+
+    "handle and action with two query parameters of complex data type" in {
       val ra = fooPath +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (_: Foo, _: Seq[Bar]) => "" }
       
       sb.collectQueryParams(ra) must_==
@@ -136,7 +147,6 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "handle an action with or-structure header rules" in {
-
       def orStr(str: String) = s"Optional if the following headers are satisfied: [$str]".some
 
       val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> { () => "" }
