@@ -20,6 +20,7 @@ import scalaz.concurrent.Task
 object SwaggerModelsBuilderSpec {
   case class Foo(a: String, b: Int)
   case class Bar(c: Long, d: List[Foo])
+  case class FooVal(str: String) extends AnyVal
 
   import org.json4s._
   import org.json4s.jackson.JsonMethods
@@ -109,12 +110,19 @@ class SwaggerModelsBuilderSpec extends Specification {
        sb.collectQueryParams(ra) must_==
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
     }
-    
+
     "handle an action with one optional query parameter of complex data type" in {
        val ra = fooPath +? param[Option[Foo]]("foo") |>> { (_: Option[Foo]) => "" }
 
        sb.collectQueryParams(ra) must_==
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = false))
+    }
+
+    "handle an action with one optional query parameter of complex (but AnyVal) data type" in {
+       val ra = fooPath +? param[Option[FooVal]]("foo") |>> { (_: Option[FooVal]) => "" }
+
+       sb.collectQueryParams(ra) must_==
+       List(QueryParameter(`type` = "string".some, name = "foo".some, required = false))
     }
 
     "handle and action with two query parameters of complex data type" in {

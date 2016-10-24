@@ -87,7 +87,7 @@ package object swagger {
       t <:< typeOf[Option[_]]
 
     def isPrimitive: Boolean =
-      Reflector.primitives.find(_ =:= t).isDefined ||
+      Reflector.primitives.exists(_ =:= t) ||
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isProcess: Boolean =
