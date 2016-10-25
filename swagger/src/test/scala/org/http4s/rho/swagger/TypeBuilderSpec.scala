@@ -25,6 +25,8 @@ package object model {
   case class FooWithListOfLists(values: Seq[Seq[Int]])
   case class FooWithList(l: List[Int])
   case class FooWithMap(l: Map[String, Int])
+  case class FooVal(str: String) extends AnyVal
+  case class BarWithFooVal(fooVal: FooVal)
 }
 
 class TypeBuilderSpec extends Specification {
@@ -268,6 +270,25 @@ class TypeBuilderSpec extends Specification {
               items.items.`type` must_== "integer"
               items.items.format must_== Some("int32")
           }
+      }
+    }
+
+    "Build an empty model for an AnyVal" in {
+      val ms = modelOf[FooVal]
+      ms must be empty
+    }
+
+    "Build a model with the underlying type for AnyVals" in {
+      val ms = modelOf[BarWithFooVal]
+
+      ms.size must_== 1
+      val m = ms.head
+
+      m.properties.size must_== 1
+      m.properties.head must beLike {
+        case (name, prop) =>
+          name must_== "fooVal"
+          prop.`type` must_== "string"
       }
     }
   }
