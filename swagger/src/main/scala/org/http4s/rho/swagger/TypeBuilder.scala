@@ -199,7 +199,8 @@ object TypeBuilder {
     private[this] def isBool(t: Type) = BoolTypes.exists(t =:= _)
 
     private[swagger] def fromType(t: Type): DataType = {
-      val klass = if (t.isOption && t.typeArgs.size > 0) t.typeArgs.head else t
+      val klass = if (t.isOption && t.typeArgs.nonEmpty) t.typeArgs.head else t
+
       if (klass <:< typeOf[Unit] || klass <:< typeOf[Void]) this.Void
       else if (t =:= weakTypeOf[EmptyRe]) this.Void
       else if (isString(klass)) this.String
@@ -223,7 +224,7 @@ object TypeBuilder {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs(1)))
         else GenArray()
       } else if (klass <:< typeOf[AnyVal]) {
-        fromType(t.members.filter(_.isConstructor).flatMap(_.asMethod.paramLists.flatten).head.typeSignature)
+        fromType(klass.members.filter(_.isConstructor).flatMap(_.asMethod.paramLists.flatten).head.typeSignature)
       } else {
         val stt = if (t.isOption) t.typeArgs.head else t
         ComplexDataType(stt.simpleName, qualifiedName = Option(stt.fullName))
