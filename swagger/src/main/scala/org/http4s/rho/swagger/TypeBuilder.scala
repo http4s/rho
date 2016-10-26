@@ -7,7 +7,6 @@ import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
 import org.log4s.getLogger
 
-import scala.collection.mutable.LinkedHashMap
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
@@ -48,14 +47,17 @@ object TypeBuilder {
           else Set.empty
 
         case tpe if tpe.isTask =>
-          val ntpe = tpe.typeArgs.apply(0)
+          val ntpe = tpe.typeArgs.head
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
 
         case tpe if tpe.isSwaggerFile =>
           Set.empty
 
-        case tpe if (alreadyKnown.map(_.id).contains(tpe.fullName) || (tpe.isPrimitive)) =>
+        case tpe if alreadyKnown.map(_.id).contains(tpe.fullName) || tpe.isPrimitive =>
+          Set.empty
+
+        case tpe if tpe <:< typeOf[AnyVal] =>
           Set.empty
 
         case ExistentialType(_, _) =>
@@ -118,7 +120,7 @@ object TypeBuilder {
     }
 
   private def paramSymToProp
-    (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol): (String, Property) = {
+  (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol): (String, Property) = {
     val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
     val prop = typeToProperty(pType, sfs)
@@ -137,7 +139,7 @@ object TypeBuilder {
       }
       else if (tpe.isOption && !tpe.isNothingOrNull)
         typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-      else if (isCaseClass(ptSym))
+      else if (isCaseClass(ptSym) && !(tpe <:< typeOf[AnyVal]))
         RefProperty(tpe.simpleName)
       else
         DataType.fromType(tpe) match {
