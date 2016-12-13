@@ -101,7 +101,8 @@ object RhoBuild extends Build {
 
   lazy val buildSettings = publishing ++
      Seq(
-        scalaVersion := "2.11.7",
+        scalaVersion := "2.11.8",
+        crossScalaVersions := Seq("2.11.8", "2.12.1"),
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
@@ -199,11 +200,11 @@ object Dependencies {
 
   def specs2Version(scalazVersion: String) =
     VersionNumber(scalazVersion).numbers match {
-      case Seq(7, 1, _*) => "3.7.2-scalaz-7.1.7"
-      case Seq(7, 2, _*) => "3.7.2"
+      case Seq(7, 1, _*) => "3.8.6-scalaz-7.1"
+      case Seq(7, 2, _*) => "3.8.6"
     }
   def http4sVersion(scalazVersion: String) =
-    s"0.14.1${scalazCrossBuildSuffix(scalazVersion)}"
+    s"0.15.0${scalazCrossBuildSuffix(scalazVersion)}"
 
   def http4sServer(zv: String) = "org.http4s"                 %% "http4s-server"         % http4sVersion(zv)
   def http4sDSL(zv: String)    = "org.http4s"                 %% "http4s-dsl"            % http4sVersion(zv)
@@ -211,7 +212,7 @@ object Dependencies {
   def http4sJetty(zv: String)  = "org.http4s"                 %% "http4s-servlet"        % http4sVersion(zv)
   def http4sJson4sJackson(zv: String) = "org.http4s"          %% "http4s-json4s-jackson" % http4sVersion(zv)
   def http4sXmlInstances(zv: String) = "org.http4s"           %% "http4s-scala-xml"      % http4sVersion(zv)
-  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.3.0"
+  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.5.0"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.5.8"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision

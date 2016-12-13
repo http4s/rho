@@ -29,6 +29,7 @@ class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances
     with RoutePrependable[RhoService]
+    with EntityEncoderInstances
 {
   final protected val logger = getLogger
 
