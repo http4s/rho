@@ -25,10 +25,6 @@ Get ρ
 -----
 Rho artifacts are available at Maven Central and snapshots are available from the Sonatype repositories.
 
-__Currently there is an incompatibility with scalac 2.11.8 resulting in failure to resolve the requisite implicits for
-defining a route with statically known status codes. Hopefully this will be addressed soon. In the meantime, compiling
-with scalac 2.11.7 should work as advertised.__
-
 Read the [Rho Scaladocs](http://rho.http4s.org)
 
 ```scala
