@@ -58,14 +58,18 @@ private[rho] object PathTree {
   def splitPath(path: String): List[String] = {
     val buff = new ListBuffer[String]
     val len = path.length
+
     @tailrec
-    def go(i: Int, begin: Int): Unit = if (i < len) {
-      if (path.charAt(i) == '/') {
-        if (i > begin) buff += path.substring(begin, i)
-        go(i + 1, i + 1)
-      } else go(i + 1, begin)
-    } else {
-      buff += path.substring(begin, i)
+    def go(i: Int, begin: Int): Unit = {
+      def buffer(): Unit = buff += java.net.URLDecoder.decode(path.substring(begin, i), "UTF-8")
+      if (i < len) {
+        if (path.charAt(i) == '/') {
+          if (i > begin)  buffer()
+          go(i + 1, i + 1)
+        } else go(i + 1, begin)
+      } else {
+        buffer()
+      }
     }
 
     val i = if (path.nonEmpty && path.charAt(0) == '/') 1 else 0
