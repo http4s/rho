@@ -1,12 +1,13 @@
-package com.http4s.rho.swagger.demo
+package com.http4s.rho.hal.plus.swagger.demo
 
+import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
 import org.http4s.Service
-import org.http4s.rho.swagger.SwaggerSupport
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.server.{Server, ServerApp}
 import org.log4s.getLogger
 
 import scalaz.concurrent.Task
+
 
 object Main extends ServerApp {
   private val logger = getLogger
@@ -15,13 +16,14 @@ object Main extends ServerApp {
     .map(_.toInt)
     .getOrElse(8080)
 
-  logger.info(s"Starting Swagger example on '$port'")
+  logger.info(s"Starting Hal example on '$port'")
 
   def server(args: List[String]): Task[Server] = {
-    val middleware = SwaggerSupport()
+    val businessLayer = new UADetectorDatabase(new ResourceModuleXmlDataStore())
+    val routes = new Routes(businessLayer)
 
     BlazeBuilder
-      .mountService(Service.withFallback(StaticContentService.routes)(MyService.toService(middleware)))
+      .mountService(Service.withFallback(routes.staticContent)(routes.dynamicContent), "")
       .bindLocal(port)
       .start
   }
