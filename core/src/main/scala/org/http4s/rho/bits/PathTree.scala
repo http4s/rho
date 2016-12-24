@@ -3,18 +3,15 @@ package rho
 package bits
 
 import scala.language.existentials
-
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.ResponseGeneratorInstances._
-
+import org.http4s.util.UrlCodingUtils
 import org.log4s.getLogger
-
-import shapeless.{HNil, HList}
+import shapeless.{HList, HNil}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
-
 import scalaz.concurrent.Task
 
 
@@ -61,14 +58,13 @@ private[rho] object PathTree {
 
     @tailrec
     def go(i: Int, begin: Int): Unit = {
-      def buffer(): Unit = buff += java.net.URLDecoder.decode(path.substring(begin, i), "UTF-8")
       if (i < len) {
         if (path.charAt(i) == '/') {
-          if (i > begin)  buffer()
+          if (i > begin) buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
           go(i + 1, i + 1)
         } else go(i + 1, begin)
       } else {
-        buffer()
+        buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
       }
     }
 
