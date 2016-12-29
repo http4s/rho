@@ -3,18 +3,15 @@ package rho
 package bits
 
 import scala.language.existentials
-
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.ResponseGeneratorInstances._
-
+import org.http4s.util.UrlCodingUtils
 import org.log4s.getLogger
-
-import shapeless.{HNil, HList}
+import shapeless.{HList, HNil}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
-
 import scalaz.concurrent.Task
 
 
@@ -58,14 +55,17 @@ private[rho] object PathTree {
   def splitPath(path: String): List[String] = {
     val buff = new ListBuffer[String]
     val len = path.length
+
     @tailrec
-    def go(i: Int, begin: Int): Unit = if (i < len) {
-      if (path.charAt(i) == '/') {
-        if (i > begin) buff += path.substring(begin, i)
-        go(i + 1, i + 1)
-      } else go(i + 1, begin)
-    } else {
-      buff += path.substring(begin, i)
+    def go(i: Int, begin: Int): Unit = {
+      if (i < len) {
+        if (path.charAt(i) == '/') {
+          if (i > begin) buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
+          go(i + 1, i + 1)
+        } else go(i + 1, begin)
+      } else {
+        buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
+      }
     }
 
     val i = if (path.nonEmpty && path.charAt(0) == '/') 1 else 0

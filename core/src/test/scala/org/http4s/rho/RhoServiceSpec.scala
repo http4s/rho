@@ -39,6 +39,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     GET / "hello" / "compete" |>> Ok("route7")
 
+    GET / "hello" / "decoded" / pathVar[String]("v") |>> { foo: String => Ok("route7.5| "+foo)}
+
     // Testing query params
     GET / "query" / "twoparams" +? (param[Int]("foo") and param[String]("bar")) |>> { (foo: Int, bar: String) =>
       Ok("twoparams" + foo + bar)
@@ -131,6 +133,11 @@ class RhoServiceSpec extends Specification with RequestRunner {
     "Execute a route with a single param" in {
       val req = Get("/hello/world")
       checkOk(req) should_== "route3"
+    }
+
+    "Execute a route with a single url encoded param" in {
+      val req = Get("/hello/decoded/fa%23%24%25!%40sd")
+      checkOk(req) should_== "route7.5| fa#$%!@sd"
     }
 
     "Execute a route with a query" in {

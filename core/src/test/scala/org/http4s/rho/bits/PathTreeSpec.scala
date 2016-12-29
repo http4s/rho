@@ -28,6 +28,9 @@ class PathTreeSpec extends Specification {
     "Not swallow a trailing '/'" in {
       splitPath("/test/") must_== List("test", "")
     }
+    "Url Decode Path segments" in {
+      splitPath("/test/%23%24%25!%40/foobar") must_== List("test", "#$%!@", "foobar")
+    }
   }
 
   "Honor UriTranslations" in {
