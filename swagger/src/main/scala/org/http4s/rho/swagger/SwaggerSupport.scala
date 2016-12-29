@@ -19,10 +19,13 @@ object SwaggerSupport {
   def apply(
     swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
     apiPath: TypedPath[HNil] = "swagger.json",
-    apiInfo: Info = Info(title = "My API", version = "1.0.0")): RhoMiddleware = { routes =>
+    apiInfo: Info = Info(title = "My API", version = "1.0.0"),
+    swaggerRoutesInSwagger: Boolean = true): RhoMiddleware = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiPath, apiInfo)(routes ++ swaggerRoutes)
+      createSwagger(swaggerFormats, apiPath, apiInfo)(
+        routes ++ (if(swaggerRoutesInSwagger) swaggerRoutes else Seq.empty )
+      )
 
     lazy val swaggerRoutes: Seq[RhoRoute[_ <: HList]] = new RhoService {
       lazy val response = Ok(Json.mapper().writerWithDefaultPrettyPrinter().
