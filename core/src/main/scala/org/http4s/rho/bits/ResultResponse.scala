@@ -1,10 +1,9 @@
 package org.http4s.rho.bits
 
-import org.http4s.rho.bits.FailureResponse._
-import org.http4s.rho.bits.ResponseGeneratorInstances.{InternalServerError, BadRequest}
-import org.http4s.Response
+import org.http4s.{HttpService, Response}
 import org.http4s.rho.Result.BaseResult
-import org.http4s.HttpService
+import org.http4s.rho.bits.FailureResponse._
+import org.http4s.rho.bits.ResponseGeneratorInstances.{BadRequest, InternalServerError}
 
 import scalaz.concurrent.Task
 
@@ -20,7 +19,7 @@ sealed trait RouteResult[+T] {
     case _       => false
   }
 
-  final def toResponse(implicit ev: T<:<Task[Response]): Task[Response] = this match {
+  final def toResponse(implicit ev: T <:< Task[Response]): Task[Response] = this match {
       case SuccessResponse(t) => ev(t)
       case NoMatch            => HttpService.notFound
       case FailureResponse(r) => r.toResponse

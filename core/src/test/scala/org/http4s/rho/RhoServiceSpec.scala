@@ -1,9 +1,10 @@
 package org.http4s
 package rho
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.specs2.mutable.Specification
-import java.util.concurrent.atomic.AtomicInteger
 import scodec.bits.ByteVector
 
 import scalaz.concurrent.Task
@@ -336,7 +337,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
   }
 
-  "RhoService concatonation" should {
+  "RhoService and method" should {
     "concatonate service" in {
       val srvc1 = new RhoService {
         GET / "foo1" |>> "Foo1"
@@ -347,7 +348,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val both = (srvc1 and srvc2)
       val bothService = both.toService()
 
-      both.getRoutes() === srvc1.getRoutes() ++ srvc2.getRoutes()
+      both.getRoutes === srvc1.getRoutes ++ srvc2.getRoutes
 
       val req1 = Request(uri = uri("foo1"))
       getBody(bothService(req1).run.body) === "Foo1"
@@ -357,8 +358,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
   }
 
-  "RhoService prefixation" should {
-    "Prefix a RhoService" in {
+  "RhoService prefix operator" should {
+    "prefix a RhoService" in {
       val srvc1 = new RhoService {
         GET / "bar" |>> "bar"
       }
