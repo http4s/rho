@@ -21,7 +21,7 @@ class SwaggerSupportSpec extends Specification {
 
   "SwaggerSupport" should {
     "Expose an API listing" in {
-      val service = baseService.toService(SwaggerSupport())
+      val service = baseService.toService(SwaggerSupport(swaggerRoutesInSwagger = true))
 
       val r = Request(GET, Uri(path = "/swagger.json"))
 
@@ -32,7 +32,7 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Support prefixed routes" in {
-      val service = ("foo" /: baseService).toService(SwaggerSupport())
+      val service = ("foo" /: baseService).toService(SwaggerSupport(swaggerRoutesInSwagger = true))
       val r = Request(GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
