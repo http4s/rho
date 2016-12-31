@@ -338,7 +338,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
   }
 
   "RhoService and method" should {
-    "concatonate service" in {
+    "concatenate service" in {
       val srvc1 = new RhoService {
         GET / "foo1" |>> "Foo1"
       }
