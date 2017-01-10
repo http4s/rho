@@ -20,7 +20,7 @@ object SwaggerSupport {
     swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
     apiPath: TypedPath[HNil] = "swagger.json",
     apiInfo: Info = Info(title = "My API", version = "1.0.0"),
-    swaggerRoutesInSwagger: Boolean = true): RhoMiddleware = { routes =>
+    swaggerRoutesInSwagger: Boolean = false): RhoMiddleware = { routes =>
 
     lazy val swaggerSpec: Swagger =
       createSwagger(swaggerFormats, apiPath, apiInfo)(
