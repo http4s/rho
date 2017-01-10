@@ -118,7 +118,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case CaptureTail::xs           => PathParameter(`type` = "string", name = "tail...".some):: Nil
       }
 
-    linearizeStack(rr.path::Nil).map(go(_, Nil)).flatten
+    linearizeStack(rr.path::Nil).flatMap(go(_, Nil)).reverse
   }
 
   def collectBodyParams(rr: RhoRoute[_]): Option[BodyParameter] =
@@ -209,22 +209,30 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def mkOperation(pathStr: String, rr: RhoRoute[_]): Operation =
+  def mkOperation(pathStr: String, rr: RhoRoute[_]): Operation = {
+    val parameters = collectOperationParams(rr)
+
     Operation(
       tags        = pathStr.split("/").filterNot(_ == "").headOption.getOrElse("/") :: Nil,
       summary     = collectSummary(rr),
       consumes    = rr.validMedia.toList.map(_.renderString),
       produces    = rr.responseEncodings.toList.map(_.renderString),
-      operationId = mkOperationId(pathStr, rr.method).some,
-      parameters  = collectOperationParams(rr),
+      operationId = mkOperationId(pathStr, rr.method, parameters).some,
+      parameters  = parameters,
       responses   = collectResponses(rr))
+  }
 
-  def mkOperationId(path: String, method: Method): String = {
+  def mkOperationId(path: String, method: Method, parameters: List[Parameter]): String = {
+    val showParameters =
+      if (parameters.isEmpty) ""
+      else parameters.flatMap(_.name).mkString("-", "-", "")
+
     method.toString.toLowerCase +
-    path.split("/")
-      .filter(s => !s.isEmpty && !(s.startsWith("{") && s.endsWith("}")))
-      .map(_.capitalize)
-      .mkString
+      path.split("/")
+        .filter(s => !s.isEmpty && !(s.startsWith("{") && s.endsWith("}")))
+        .map(_.capitalize)
+        .mkString +
+      showParameters
   }
 
   def mkBodyParam(r: CodecRouter[_, _]): BodyParameter = {
