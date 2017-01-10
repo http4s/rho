@@ -1,10 +1,9 @@
 package org.http4s.rho
 
-import scala.language.existentials
-
 import org.http4s.{Method, Request, Uri}
-import org.http4s.rho.CompileService.ServiceBuilder
 import org.specs2.mutable.Specification
+
+import scala.language.existentials
 
 class CompileServiceSpec extends Specification {
 
@@ -36,8 +35,8 @@ class CompileServiceSpec extends Specification {
     }
 
     "Make routes from a collection of RhoRoutes" in {
-      import dsl._
       import CompileService.Implicit.compiler
+      import dsl._
 
       val routes =
         (GET / "hello" |>> "GetFoo") ::

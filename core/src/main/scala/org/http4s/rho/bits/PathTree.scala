@@ -2,7 +2,6 @@ package org.http4s
 package rho
 package bits
 
-import scala.language.existentials
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 import org.http4s.util.UrlCodingUtils
@@ -11,6 +10,7 @@ import shapeless.{HList, HNil}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.language.existentials
 import scala.util.control.NonFatal
 import scalaz.concurrent.Task
 
@@ -20,7 +20,7 @@ import scalaz.concurrent.Task
   * A [[PathTree]] contains a map of the known route paths. The values of the
   * tree are [[RhoRoute]]'s that can generate a reply to a `Request`.
   */
-final class PathTree private(private val paths: PathTree.MatchNode) {
+private[rho] final class PathTree private(private val paths: PathTree.MatchNode) {
   import PathTree._
 
   override def toString = paths.toString()

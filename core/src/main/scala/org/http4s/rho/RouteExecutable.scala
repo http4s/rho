@@ -24,12 +24,4 @@ trait RouteExecutable[T <: HList] extends TypedBuilder[T] { exec =>
   /** Compiles a HTTP request definition into an action */
   final def |>>[F, R](f: F)(implicit hltf: HListToFunc[T, F], srvc: CompileService[R]): R =
     srvc.compile(makeRoute(hltf.toAction(f)))
-
-  /** Provide an action from which to generate a complete route
-    * @return a function `Request => Option[Task[Response]]` which can be used as a complete route
-    */
-  final def runWith[F](f: F)(implicit hltf: HListToFunc[T, F]): Request => Task[Response] = {
-    val srvc = new RhoService { exec |>> f }.toService()
-    srvc.apply(_: Request)
-  }
 }
