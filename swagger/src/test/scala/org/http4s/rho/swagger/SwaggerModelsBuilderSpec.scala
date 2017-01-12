@@ -181,6 +181,18 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.mkOperation("/foo", ra).summary must_== "foo".some
     }
+
+    "Produce unique operation ids" in {
+      val routes = new RhoService {
+        "foo1" ** GET / "bar" |>> { () => "" }
+        "foo2" ** GET / "bar" / pathVar[String]("name") |>> { name: String => "" }
+        "foo3" ** GET / "bar" / pathVar[String]("name1") / pathVar[String]("name2") |>> { (name1: String, name2: String) => "" }
+      }.getRoutes()
+
+      val operationIds = routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(Info("", ""), r)(s)).paths.values.toList.flatMap(_.get).flatMap(_.operationId)
+
+      operationIds ==== List("getBar", "getBar-name", "getBar-name1-name2")
+      }
   }
 
   "SwaggerModelsBuilder.collectPaths" should {
