@@ -1,19 +1,18 @@
 package org.http4s.rho
 package swagger
 
+import scala.language.existentials
 import org.http4s._
 import org.http4s.Method._
 import org.http4s.headers._
-import org.http4s.rho.bits.{ StringParser, ResultResponse, SuccessResponse, FailureResponse }
-
+import org.http4s.rho.bits.{FailureResponse, ResultResponse, StringParser, SuccessResponse}
 import org.specs2.mutable.Specification
-
 import scodec.bits.ByteVector
 
 import scala.reflect._
 import scala.reflect.runtime.universe._
-
-import scalaz._, Scalaz._
+import scalaz._
+import Scalaz._
 import scalaz.stream._
 import scalaz.concurrent.Task
 
@@ -51,6 +50,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   case class ModelA(name: String, color: Int) extends Renderable
   case class ModelB(name: String, id: Long) extends Renderable
   case class ModelC(name: String, shape: String) extends Renderable
+  case class ModelMap(bar: String, baz: Map[String, Int]) extends Renderable
 
   val sb = new SwaggerModelsBuilder(DefaultSwaggerFormats)
   val fooPath = GET / "foo"
@@ -279,7 +279,7 @@ class SwaggerModelsBuilderSpec extends Specification {
           case 1 => NotFound(ModelB("modelb", 2))
           case 2 => PreconditionFailed(ModelC("modelc", "round"))
         }
-      }      
+      }
 
       sb.collectDefinitions(ra)(Swagger()) must havePairs(
 
@@ -329,6 +329,32 @@ class SwaggerModelsBuilderSpec extends Specification {
               "_1" -> AbstractProperty("integer", None, true, format = "int32".some),
               "_2" -> RefProperty(ref = "ModelA", required = true))))
     }
+
+    "collect response of case class containing a map of primitive types" in {
+      val ra = GET / "test" |>> { () => Ok(ModelMap("asdf", Map("foo"->1))) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = RefProperty("ModelMap",false,None,None,None).some
+        )
+      )
+      sb.collectDefinitions(ra)(Swagger()) must havePair(
+        "ModelMap" ->
+          ModelImpl(
+            id          = prefix + "ModelMap",
+            id2         = "ModelMap",
+            description = "ModelMap".some,
+            properties  =  Map(
+            "bar" -> AbstractProperty(`type` = "string", required = true),
+            "baz" -> MapProperty(
+              required = true,
+              additionalProperties = AbstractProperty("integer", format = "int32".some)
+            )
+          )
+        )
+      )
+    }
   }
 
   "SwaggerModelsBuilder.collectResponses" should {
@@ -368,6 +394,15 @@ class SwaggerModelsBuilderSpec extends Specification {
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = AbstractProperty(`type` = "string")).some))
+    }
+
+    "collect response of map of primitive types" in {
+      val ra = GET / "test" |>> { () => Ok(Map("foo"->"bar")) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = MapProperty(additionalProperties = AbstractProperty(`type` = "string")).some))
     }
 
     "collect response of collection of user-defined types" in {
@@ -472,6 +507,9 @@ class SwaggerModelsBuilderSpec extends Specification {
 
   implicit def listEntityEncoder[A]: EntityEncoder[List[A]] =
     EntityEncoder.simple[List[A]]()(_ => ByteVector.view("A".getBytes))
+
+  implicit def mapEntityEncoder[A,B]: EntityEncoder[Map[A,B]] =
+    EntityEncoder.simple[Map[A,B]]()(_ => ByteVector.view("A".getBytes))
 
   case class CsvFile()
 

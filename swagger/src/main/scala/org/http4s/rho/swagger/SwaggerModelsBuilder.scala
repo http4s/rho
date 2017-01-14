@@ -259,6 +259,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         None
       else if (tpe.isPrimitive)
         mkPrimitiveProperty(tpe).some
+      else if (tpe.isMap)
+        mkMapProperty(tpe)
       else if (tpe.isCollection)
         mkCollectionProperty(tpe)
       else if (tpe.isProcess)
@@ -293,6 +295,19 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           RefProperty(ref = param.simpleName).some 
 
       prop.map(p => ArrayProperty(items = p))
+    }
+
+    def mkMapProperty(tpe: Type): Option[Property] = {
+      val param = tpe.dealias.typeArgs.last
+      val prop =
+        if (param.isPrimitive)
+          mkPrimitiveProperty(param).some
+        else if (param.isCollection)
+          typeToProp(param)
+        else
+          RefProperty(ref = param.simpleName).some
+
+      prop.map(p => MapProperty(additionalProperties = p))
     }
 
     val schema = {

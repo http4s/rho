@@ -21,7 +21,7 @@ sealed trait RouteResult[+T] {
 
   final def toResponse(implicit ev: T <:< Task[Response]): Task[Response] = this match {
       case SuccessResponse(t) => ev(t)
-      case NoMatch            => HttpService.notFound
+      case NoMatch            => Response.fallthrough
       case FailureResponse(r) => r.toResponse
     }
 }
