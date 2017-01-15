@@ -710,6 +710,32 @@ object models {
       ap
     }
   }
+
+  case class MapProperty
+  (
+      additionalProperties  : Property
+    , required              : Boolean        = false
+    , title                 : Option[String] = None
+    , description           : Option[String] = None
+    , format                : Option[String] = None
+  ) extends Property {
+
+    override val `type` = "object"
+
+    def withRequired(required: Boolean): MapProperty =
+      copy(required = required)
+
+    def toJModel: jm.properties.Property = {
+      val ap = new jm.properties.MapProperty
+      ap.setType(`type`)
+      ap.setRequired(required)
+      ap.setTitle(fromOption(title))
+      ap.setDescription(fromOption(description))
+      ap.setFormat(fromOption(format))
+      ap.setAdditionalProperties(additionalProperties.toJModel)
+      ap
+    }
+  }
   
   case class ArrayProperty
     (

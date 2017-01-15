@@ -132,7 +132,12 @@ object TypeBuilder {
     sfs.customFieldSerializers.applyOrElse(tpe, { _: Type =>
       val TypeRef(_, ptSym: Symbol, _) = tpe
 
-      if (tpe.isCollection && !tpe.isNothingOrNull) {
+      if (tpe.isMap && !tpe.isNothingOrNull) {
+        val pType = tpe.dealias.typeArgs.last
+        val itemProperty = typeToProperty(pType, sfs).withRequired(false)
+        MapProperty(additionalProperties = itemProperty)
+      }
+      else if (tpe.isCollection && !tpe.isNothingOrNull) {
         val pType = tpe.dealias.typeArgs.head
         val itemProperty = typeToProperty(pType, sfs).withRequired(false)
         ArrayProperty(items = itemProperty)
