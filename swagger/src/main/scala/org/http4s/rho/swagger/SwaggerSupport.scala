@@ -27,13 +27,8 @@ object SwaggerSupport {
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoutes else Seq.empty )
       )
 
-    lazy val swaggerRoutes: Seq[RhoRoute[_ <: HList]] = new RhoService {
-      lazy val response = Ok(Json.mapper().writerWithDefaultPrettyPrinter().
-        writeValueAsString(swaggerSpec.toJModel)).
-        putHeaders(`Content-Type`(MediaType.`application/json`))
-
-      "Swagger documentation" ** GET / apiPath |>> (() => response)
-    }.getRoutes
+    lazy val swaggerRoutes: Seq[RhoRoute[_ <: HList]] =
+      createSwaggerRoutes(swaggerSpec, apiPath).getRoutes
 
     routes ++ swaggerRoutes
   }
@@ -47,6 +42,23 @@ object SwaggerSupport {
              apiInfo: Info = Info(title = "My API", version = "1.0.0"))(routes: Seq[RhoRoute[_]]): Swagger = {
     val sb = new SwaggerModelsBuilder(swaggerFormats)
     routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(apiInfo, r)(s))
+  }
+
+  /**
+   * Create a RhoService with the route to the Swagger json
+   * for the given Swagger Specification
+   */
+  def createSwaggerRoutes(
+    swagger: => Swagger,
+    apiPath: TypedPath[HNil] = "swagger.json"
+  ): RhoService = new RhoService {
+    lazy val response = Ok(
+      Json.mapper()
+        .writerWithDefaultPrettyPrinter()
+        .writeValueAsString(swagger.toJModel)
+    ).putHeaders(`Content-Type`(MediaType.`application/json`))
+
+    "Swagger documentation" ** GET / apiPath |>> (() => response)
   }
 }
 
