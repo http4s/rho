@@ -55,7 +55,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
                (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     paramR(name, {t =>
       if (validate(t)) None
-      else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
     })
 
   /** Define a query parameter that will be validated with the predicate
@@ -65,7 +65,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
               (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     paramR(name, default, { t =>
       if (validate(t)) None
-      else Some(BadRequest("Invalid query parameter: \"" + t + "\""))
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
     })
 
   /** Defines a parameter in query string that should be bound to a route definition. */
@@ -133,7 +133,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean): TypedHeader[HNil] =
     existsAndR(header){ h =>
       if (f(h)) None
-      else Some(BadRequest("Invalid header: " + h.value))
+      else Some(BadRequest(s"Invalid header: ${h.name} = ${h.value}"))
     }
 
   /** Check that the header exists and satisfies the condition
@@ -208,7 +208,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
             case -\/(r) => FailureResponse.result(r)
           } catch {
             case NonFatal(e) =>
-              logger.error(e)("Failure during header capture.")
+              logger.error(e)(s"""Failure during header capture: "${key.name}" = "${h.value}"""")
               FailureResponse.error("Error processing request.")
           }
 
