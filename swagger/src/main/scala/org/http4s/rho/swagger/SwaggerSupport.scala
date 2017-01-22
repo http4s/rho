@@ -24,13 +24,13 @@ object SwaggerSupport {
 
     lazy val swaggerSpec: Swagger =
       createSwagger(swaggerFormats, apiPath, apiInfo)(
-        routes ++ (if(swaggerRoutesInSwagger) swaggerRoutes else Seq.empty )
+        routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
-    lazy val swaggerRoutes: Seq[RhoRoute[_ <: HList]] =
-      createSwaggerRoutes(swaggerSpec, apiPath).getRoutes
+    lazy val swaggerRoute: Seq[RhoRoute[_ <: HList]] =
+      createSwaggerRoute(swaggerSpec, apiPath).getRoutes
 
-    routes ++ swaggerRoutes
+    routes ++ swaggerRoute
   }
 
   /**
@@ -48,7 +48,7 @@ object SwaggerSupport {
    * Create a RhoService with the route to the Swagger json
    * for the given Swagger Specification
    */
-  def createSwaggerRoutes(
+  def createSwaggerRoute(
     swagger: => Swagger,
     apiPath: TypedPath[HNil] = "swagger.json"
   ): RhoService = new RhoService {
