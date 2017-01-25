@@ -3,6 +3,8 @@ package rho
 package swagger
 
 import org.specs2.mutable.Specification
+import scalaz.NonEmptyList
+import scalaz.syntax.foldable1._
 
 import org.http4s.rho.bits.MethodAliases.GET
 
@@ -16,6 +18,11 @@ class SwaggerSupportSpec extends Specification {
   val baseService = new RhoService {
     GET / "hello" |>> { () => Ok("hello world") }
     GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
+  }
+
+  val moarRoutes = new RhoService {
+    GET / "goodbye" |>> { () => Ok("goodbye world") }
+    GET / "goodbye"/ pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
 
@@ -46,5 +53,20 @@ class SwaggerSupportSpec extends Specification {
 
       swaggerSpec.paths must haveSize(2)
     }
+
+    "Provide a way to agregate routes from multiple RhoServices" in {
+      val aggregateSwagger = SwaggerSupport.createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes)
+      val swaggerRoutes = SwaggerSupport.createSwaggerRoute(aggregateSwagger)
+      val httpServices = NonEmptyList(baseService, moarRoutes, swaggerRoutes).map(_.toService())
+      val allthogetherService = httpServices.foldLeft1(Service.withFallback(_)(_))
+
+      val r = Request(GET, Uri(path = "/swagger.json"))
+
+      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
+        parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"
+
+      Set(a, b, c, d) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}")
+    }
+
   }
 }
