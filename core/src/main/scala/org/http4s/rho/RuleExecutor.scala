@@ -4,7 +4,7 @@ package rho
 import org.http4s.rho.bits.RequestAST, RequestAST._
 import org.http4s.rho.bits.{ ResultResponse, SuccessResponse }
 
-import shapeless.{ HNil, HList }
+import shapeless.{ HNil, HList, :: }
 
 
 object RuleExecutor {
@@ -23,5 +23,7 @@ object RuleExecutor {
     case MetaRule(r, _) => runRequestRules(req, r, stack)
     case EmptyRule => SuccessResponse(stack)
     case IgnoreRule(r) => runRequestRules(req, r, stack).map(_ => stack)
+    case MapRule(a, f) =>
+      runRequestRules(req, a, HNil).map(f.asInstanceOf[HList => HList]).map(HList.unsafePrepend(_, stack))
   }
 }

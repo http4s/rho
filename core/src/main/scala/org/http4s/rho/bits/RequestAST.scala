@@ -1,10 +1,12 @@
 package org.http4s
 package rho.bits
 
-/** Rules for extracting non-path related data from the `Request``
+import shapeless.HList
+
+/** Rules for extracting non-path related data from the `Request`
   *
   * This AST is subject to change.
-  */
+  * */
 object RequestAST {
 
   /** Base trait of the AST */
@@ -12,6 +14,9 @@ object RequestAST {
 
   /** Captures data from the `Request` */
   case class CaptureRule[T](reader: Request => ResultResponse[T]) extends RequestRule
+
+  /** Transform data from the `Request` */
+  case class MapRule[T <: HList, R <: HList](rule: RequestRule, f: T => R) extends RequestRule
 
   /** Ignore any results obtained form the enclosed rules */
   case class IgnoreRule(rule: RequestRule) extends RequestRule
