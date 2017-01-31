@@ -4,7 +4,7 @@ package rho
 import org.http4s.rho.bits.RequestAST, RequestAST._
 import org.http4s.rho.bits.{ ResultResponse, SuccessResponse }
 
-import shapeless.{ HNil, HList, :: }
+import shapeless.{ HNil, HList }
 
 
 object RuleExecutor {

@@ -6,7 +6,7 @@ import shapeless.HList
 /** Rules for extracting non-path related data from the `Request`
   *
   * This AST is subject to change.
-  * */
+  */
 object RequestAST {
 
   /** Base trait of the AST */
