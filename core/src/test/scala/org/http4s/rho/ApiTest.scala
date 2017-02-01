@@ -8,7 +8,7 @@ import org.http4s.rho.bits.ResponseGeneratorInstances._
 import org.http4s.rho.bits._
 import org.specs2.mutable._
 import scodec.bits.ByteVector
-import shapeless.{HList, HNil}
+import shapeless.{::, HList, HNil}
 
 import scalaz.concurrent.Task
 import scalaz.stream.Process
@@ -45,7 +45,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request().putHeaders(lenheader)
-      val res = RuleExecutor.runRequestRules((RequireETag && RequireNonZeroLen).rule,badreq)
+      val res = RuleExecutor.runRequestRules((RequireETag && RequireNonZeroLen).rule, badreq)
 
       res must beAnInstanceOf[FailureResponse]
       res.asInstanceOf[FailureResponse].toResponse.run.status must_== Status.BadRequest
@@ -69,23 +69,42 @@ class ApiTest extends Specification {
       val req = Request().putHeaders(etag, lenheader)
       Seq({
         val c2 = capture(headers.`Content-Length`) && RequireETag
-        RuleExecutor.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader::HNil)
+        RuleExecutor.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader :: HNil)
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(ETag)
-        RuleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(etag::lenheader::HNil)
-      }).reduce( _ and _)
+        RuleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(etag :: lenheader :: HNil)
+      }).reduce(_ and _)
     }
 
     "Map header params" in {
       val req = Request().putHeaders(etag, lenheader)
       val c = captureMap(headers.`Content-Length`)(_.length)
-      RuleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(4::HNil)
+      RuleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(4 :: HNil)
     }
 
     "Map header params with exception" in {
       val req = Request().putHeaders(etag, lenheader)
       val c = captureMap(headers.`Content-Length`)(_.length / 0)
       RuleExecutor.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse]
+    }
+
+    "map simple header params into a complex type" in {
+      case class Foo(age: Long, s: java.time.Instant)
+      val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
+
+      val now = java.time.Instant.now()
+      val path = GET / "hello" +? paramFoo
+      val req = Request(
+        uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")),
+        headers = Headers(headers.`Content-Length`(10), headers.Date(now))
+      )
+
+      val expectedFoo = Foo(10, now)
+      val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
+
+      val result = route(req).run
+      result.status should_== Status.Ok
+      RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
     }
 
     "Map with possible default" in {
@@ -293,6 +312,20 @@ class ApiTest extends Specification {
       }
 
       route2(req).run.status should_== Status.Ok
+    }
+
+    "map simple query rules into a complex type" in {
+      case class Foo(i: Int, f: Double, s: String)
+      val paramFoo = param[Int]("i") & param[Double]("f") & param[String]("s") map Foo.apply _
+
+      val path = GET / "hello" +? paramFoo
+      val req = Request(uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")))
+
+      val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
+
+      val result = route(req).run
+      result.status should_== Status.Ok
+      RequestRunner.getBody(result.body) should_== "stuff Foo(32,3.2,Asdf)"
     }
   }
 

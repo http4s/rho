@@ -19,6 +19,9 @@ trait RequestRunner {
     else sys.error(s"Invalid response code: ${resp.status}")
   }
 
+  val getBody = RequestRunner.getBody _
+}
+object RequestRunner {
   def getBody(b: EntityBody): String = {
     new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
   }

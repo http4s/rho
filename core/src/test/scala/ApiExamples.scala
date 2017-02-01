@@ -3,6 +3,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho._
+import org.http4s.rho.bits.TypedQuery
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits.WebSocketFrame
 import org.http4s.{Request, UrlForm}
@@ -170,6 +171,25 @@ class ApiExamples extends Specification {
           Ok(s"You posted these things: $m")
         }
       }
+      /// end_src_inlined
+
+      /// src_inlined Composed parameters
+
+      new RhoService {
+        import shapeless.{::, HNil}
+        case class Foo(i: Int, v: String, a: Double)
+
+        val rawFoo = param[Int]("i") & param[String]("v") & param[Double]("a")
+
+        val paramFoobar: TypedQuery[Foo :: HNil] = rawFoo.map {
+          (i: Int, v: String, a: Double) => Foo(i,v,a)
+        }
+
+        GET / "foo2-test" +? paramFoobar |>> { (f: Foo) =>
+          Ok(s"You queried for foo: $f")
+        }
+      }
+
       /// end_src_inlined
 
       ok

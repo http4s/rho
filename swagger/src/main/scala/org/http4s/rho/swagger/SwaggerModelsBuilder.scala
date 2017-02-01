@@ -72,6 +72,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case AndRule(a, b)::xs                => go(a::b::xs)
         case OrRule(a, b)::xs                 => go(a::b::xs)
         case (EmptyRule | CaptureRule(_))::xs => go(xs)
+        case MapRule(r, _)::xs                => go(r::xs)
         case IgnoreRule(r)::xs                => go(r::xs)
         case MetaRule(x, q@QueryMetaData(_,_,_,_))::xs =>
           val tpe = q.m.tpe
@@ -162,6 +163,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     def go(stack: List[RequestRule]): List[Parameter] =
       stack match {
         case AndRule(a, b)::xs => go(a::b::xs)
+        case MapRule(r, _)::xs => go(r::xs)
         case (EmptyRule | CaptureRule(_))::xs => go(xs)
 
         case OrRule(a, b)::xs =>
@@ -196,6 +198,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case MetaRule(a,HeaderMetaData(key,d))::xs => mkHeaderParam(key, d)::go(a::xs)
         case MetaRule(a,_)::xs                     => go(a::xs)
         case (EmptyRule | CaptureRule(_))::xs      => go(xs)
+        case MapRule(r,_)::xs                      => go(r::xs)
         case IgnoreRule(r)::xs                     => go(r::xs)
         case OrRule(a, b)::xs =>
           val as = go(a::xs)

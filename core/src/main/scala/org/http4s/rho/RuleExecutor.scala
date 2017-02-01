@@ -23,5 +23,7 @@ object RuleExecutor {
     case MetaRule(r, _) => runRequestRules(req, r, stack)
     case EmptyRule => SuccessResponse(stack)
     case IgnoreRule(r) => runRequestRules(req, r, stack).map(_ => stack)
+    case MapRule(a, f) =>
+      runRequestRules(req, a, HNil).map(f.asInstanceOf[HList => HList]).map(HList.unsafePrepend(_, stack))
   }
 }

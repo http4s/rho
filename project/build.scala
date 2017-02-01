@@ -114,6 +114,7 @@ object RhoBuild extends Build {
         license,
 
         libraryDependencies <++= scalazVersion { sz => Seq(
+          shapeless,
           http4sServer(sz) % "provided",
           logbackClassic   % "test"
         ) ++ specs2(sz) },
@@ -218,6 +219,7 @@ object Dependencies {
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.1.3"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.09"
+  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.2"
 
   def specs2(zv: String)       = Seq("org.specs2"              %% "specs2-core"          ,
                                      "org.specs2"              %% "specs2-scalacheck"    ).map(_ % specs2Version(zv) % "test")
