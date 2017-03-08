@@ -249,7 +249,7 @@ object models {
       o.setDeprecated(deprecated)
       vendorExtensions.foreach { case (key, value) => o.setVendorExtension(key, value) }
       o
-    }      
+    }
   }
 
   case class Response
@@ -398,7 +398,7 @@ object models {
 
   object Parameter {
     implicit class Ops(val parameter: Parameter) extends AnyVal {
-      def withDesc(desc: Option[String]): Parameter = 
+      def withDesc(desc: Option[String]): Parameter =
         parameter match {
           case p : BodyParameter => p.copy(description = desc)
           case p : CookieParameter => p.copy(description = desc)
@@ -410,7 +410,7 @@ object models {
         }
     }
   }
-  
+
   case class BodyParameter
     (
       schema           : Option[Model]    = None
@@ -460,7 +460,7 @@ object models {
       cp.setName(fromOption(name))
       cp.setDescription(fromOption(description))
       cp.setRequired(required)
-      cp.setAccess(fromOption(access))      
+      cp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => cp.setVendorExtension(key, value) }
       cp
     }
@@ -495,7 +495,7 @@ object models {
       fp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => fp.setVendorExtension(key, value) }
       fp
-    }    
+    }
   }
 
   case class HeaderParameter
@@ -560,7 +560,7 @@ object models {
       vendorExtensions.foreach { case (key, value) => pp.setVendorExtension(key, value) }
       pp
     }
-      
+
   }
 
   case class QueryParameter
@@ -580,9 +580,9 @@ object models {
     ) extends Parameter {
 
     override val in = Some("query")
-    
+
     import com.fasterxml.jackson.annotation.JsonPropertyOrder
-    
+
     @JsonPropertyOrder(Array("name", "in", "description", "required", "type", "$ref", "items", "collectionFormat", "default"))
     private class QueryRefParameter extends jm.parameters.QueryParameter {
       protected var $ref: String = _
@@ -595,8 +595,8 @@ object models {
       def get$ref() = $ref
       def set$ref($ref: String) { this.$ref = $ref }
     }
-    
-    def toJModel: jm.parameters.Parameter = {      
+
+    def toJModel: jm.parameters.Parameter = {
       val qp = new QueryRefParameter()
       qp.setIn("query")
       qp.setType(if (isArray) "array" else fromOption(`type`))
@@ -611,7 +611,7 @@ object models {
       qp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => qp.setVendorExtension(key, value) }
       qp
-    }      
+    }
   }
 
   case class RefParameter
@@ -636,7 +636,7 @@ object models {
       rp
     }
   }
-  
+
   sealed trait Property {
     def `type`: String
     def required: Boolean
@@ -657,22 +657,22 @@ object models {
     , description : Option[String] = None
     , format      : Option[String] = None
     ) extends Property {
-    
+
     class RefProperty extends jm.properties.AbstractProperty {
       protected var $ref: String = _
-        
-      def $ref($ref: String) = { 
+
+      def $ref($ref: String) = {
         this.set$ref($ref)
         this
       }
-      
+
       def get$ref() = $ref
-      def set$ref($ref: String) { this.$ref = $ref }              
+      def set$ref($ref: String) { this.$ref = $ref }
     }
-    
+
     def withRequired(required: Boolean): AbstractProperty =
       copy(required = required)
-      
+
     def toJModel: jm.properties.Property = {
       val ap = new RefProperty
       ap.setType(`type`)
@@ -736,7 +736,7 @@ object models {
       ap
     }
   }
-  
+
   case class ArrayProperty
     (
       items       : Property
@@ -799,7 +799,7 @@ object models {
       ed.setDescription(description)
       ed.setUrl(url)
       ed
-    }      
+    }
   }
 
   private object JValue {
