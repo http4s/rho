@@ -3,6 +3,7 @@ package org.http4s.rho.swagger
 import io.swagger.{models => jm}
 
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object models {
   import JValue._
@@ -354,10 +355,10 @@ object models {
       val cm = new jm.ComposedModel
       cm.setDescription(fromOption(description))
       cm.setAllOf(fromList(allOf.map(_.toJModel)))
-      cm.setParent(fromOption(parent.map(_.toJModel)))
-      cm.setChild(fromOption(child.map(_.toJModel)))
-      cm.setInterfaces(fromList(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel])))
-      cm.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      parent.map(_.toJModel).foreach(p => cm.setParent(p))
+      child.map(_.toJModel).foreach(c => cm.setChild(c))
+      cm.setInterfaces(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel]).asJava)
+      cm.setProperties(properties.mapValues(_.toJModel).asJava)
       cm.setExample(fromOption(example))
       cm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       cm

@@ -80,6 +80,35 @@ object TypeBuilder {
 
           models ++ generics ++ children
 
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSealed(sym) =>
+          // TODO promote methods on sealed trait from children to model
+          modelToSwagger(tpe, sfs).map({ m =>
+            // TODO parameterize
+            val typeVar = "type"
+            m
+              .copy(discriminator = Some(typeVar))
+              .copy(`type` = Some("object"))
+              .copy(properties =
+                m.properties + (typeVar -> AbstractProperty(`type` = "string", required = true)))
+          }).toSet.flatMap({ model =>
+            val ref = RefModel(model.id + "Ref", model.id2 + "Ref", model.id2)
+            val children =
+              sym.asClass.knownDirectSubclasses
+                .flatMap({sym =>
+                  val tpe = sym.asType.toType
+                  val submodels = go(tpe, alreadyKnown, known)
+                  modelToSwagger(tpe, sfs).map({ subtype =>
+                    ComposedModel(
+                      id = subtype.id,
+                      id2 = subtype.id2,
+                      description = subtype.description,
+                      allOf = List(ref, subtype)
+                    )
+                  })
+                })
+            alreadyKnown ++ Set(model) ++ children
+          })
+
         case e =>
           Set.empty
       }
@@ -93,10 +122,13 @@ object TypeBuilder {
   private[this] def isCaseClass(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
 
+  private[this] def isSealed(sym: Symbol): Boolean =
+    sym.asClass.isSealed
+
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) =
     (defaultExcluded ++ excludes).exists(_ =:= t)
 
-  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[Model] =
+  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
       val props: Map[String, Property] =
