@@ -80,7 +80,7 @@ object TypeBuilder {
 
           models ++ generics ++ children
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSealed(sym) =>
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
           modelToSwagger(tpe, sfs).map({ m =>
             // TODO parameterize
@@ -122,8 +122,10 @@ object TypeBuilder {
   private[this] def isCaseClass(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
 
-  private[this] def isSealed(sym: Symbol): Boolean =
-    sym.asClass.isSealed
+  private[this] def isSumType(sym: Symbol): Boolean =
+    sym.asClass.isSealed && ! sym.asClass.knownDirectSubclasses.forall({ symbol =>
+      symbol.isModuleClass && symbol.asClass.isCaseClass
+    })
 
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) =
     (defaultExcluded ++ excludes).exists(_ =:= t)
