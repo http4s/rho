@@ -2,7 +2,6 @@ package org.http4s.rho.swagger
 
 import io.swagger.{models => jm}
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 object models {
@@ -244,7 +243,7 @@ object models {
       o.setParameters(fromList(parameters.map(_.toJModel)))
       o.setResponses(fromMap(responses.mapValues(_.toJModel)))
       o.setSecurity(fromList(security.map { m =>
-        m.mapValues(xs => xs : java.util.List[String]) : java.util.Map[String, java.util.List[String]]
+        m.mapValues(_.asJava).asJava
       }))
       o.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       o.setDeprecated(deprecated)
@@ -303,7 +302,7 @@ object models {
       m.setType(fromOption(`type`))
       m.setName(fromOption(name))
       m.setDescription(fromOption(description))
-      m.setRequired(required)
+      m.setRequired(required.asJava)
       m.setExample(fromOption(example))
       m.setProperties(fromMap(properties.mapValues(_.toJModel)))
       if (additionalProperties.nonEmpty) m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
@@ -809,9 +808,9 @@ object models {
       oa.getOrElse(null.asInstanceOf[A])
 
     def fromList[A](xs: List[A]): java.util.List[A] =
-      if (xs.isEmpty) null else xs
+      if (xs.isEmpty) null else xs.asJava
 
     def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
-      if (m.isEmpty) null else m
+      if (m.isEmpty) null else m.asJava
   }
 }
