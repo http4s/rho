@@ -12,6 +12,8 @@ import scala.util.control.NonFatal
 
 import scalaz._, Scalaz._
 
+case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
+
 object TypeBuilder {
   import models._
 
@@ -81,9 +83,8 @@ object TypeBuilder {
           models ++ generics ++ children
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
-          // TODO parameterize typeVar
           // TODO promote methods on sealed trait from children to model
-          modelToSwagger(tpe, sfs).map(addDiscriminator("type")).toSet.flatMap { model =>
+          modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { model =>
             val parent = RefModel(model.id + "Ref", model.id2 + "Ref", model.id2)
             val children =
               sym.asClass.knownDirectSubclasses.flatMap( sub =>
@@ -99,7 +100,12 @@ object TypeBuilder {
     go(t, alreadyKnown, known)
   }
 
-  private def addDiscriminator(typeVar: String)(model: ModelImpl): ModelImpl = {
+  private def addDiscriminator(sym: Symbol)(model: ModelImpl): ModelImpl = {
+    val typeVar = sym.annotations
+      .withFilter(_.tpe <:< typeOf[DiscriminatorField])
+      .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field } )
+      .headOption.getOrElse("type")
+
     model
       .copy(
         discriminator = Some(typeVar),
