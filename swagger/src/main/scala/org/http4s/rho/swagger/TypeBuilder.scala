@@ -81,39 +81,42 @@ object TypeBuilder {
           models ++ generics ++ children
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
+          // TODO parameterize typeVar
           // TODO promote methods on sealed trait from children to model
-          modelToSwagger(tpe, sfs).map({ m =>
-            // TODO parameterize
-            val typeVar = "type"
-            m
-              .copy(discriminator = Some(typeVar))
-              .copy(`type` = Some("object"))
-              .copy(properties =
-                m.properties + (typeVar -> AbstractProperty(`type` = "string", required = true)))
-          }).toSet.flatMap({ model =>
-            val ref = RefModel(model.id + "Ref", model.id2 + "Ref", model.id2)
+          modelToSwagger(tpe, sfs).map(addDiscriminator("type")).toSet.flatMap { model =>
+            val parent = RefModel(model.id + "Ref", model.id2 + "Ref", model.id2)
             val children =
-              sym.asClass.knownDirectSubclasses
-                .flatMap({sym =>
-                  val tpe = sym.asType.toType
-                  val submodels = go(tpe, alreadyKnown, known)
-                  modelToSwagger(tpe, sfs).map({ subtype =>
-                    ComposedModel(
-                      id = subtype.id,
-                      id2 = subtype.id2,
-                      description = subtype.description,
-                      allOf = List(ref, subtype)
-                    )
-                  })
-                })
+              sym.asClass.knownDirectSubclasses.flatMap( sub =>
+                  modelToSwagger(sub.asType.toType, sfs).map(composedModel(parent))
+                )
             alreadyKnown ++ Set(model) ++ children
-          })
+          }
 
         case e =>
           Set.empty
       }
 
     go(t, alreadyKnown, known)
+  }
+
+  private def addDiscriminator(typeVar: String)(model: ModelImpl): ModelImpl = {
+    model
+      .copy(
+        discriminator = Some(typeVar),
+        `type` = Some("object"),
+        properties =
+        model.properties + (typeVar -> AbstractProperty(`type` = "string", required = true))
+      )
+  }
+
+  private def composedModel(parent: Model)(subtype: Model): Model = {
+    ComposedModel(
+      id = subtype.id,
+      id2 = subtype.id2,
+      description = subtype.description,
+      allOf = List(parent, subtype),
+      parent = parent.some
+    )
   }
 
   private[this] val defaultExcluded =
@@ -123,9 +126,9 @@ object TypeBuilder {
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
 
   private[this] def isSumType(sym: Symbol): Boolean =
-    sym.asClass.isSealed && ! sym.asClass.knownDirectSubclasses.forall({ symbol =>
+    sym.asClass.isSealed && !sym.asClass.knownDirectSubclasses.forall { symbol =>
       symbol.isModuleClass && symbol.asClass.isCaseClass
-    })
+    }
 
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) =
     (defaultExcluded ++ excludes).exists(_ =:= t)
