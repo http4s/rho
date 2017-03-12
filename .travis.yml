@@ -6,12 +6,11 @@ jdk: oraclejdk8
 sudo: false
 cache:
   directories:
-  - "$HOME/.ivy2/cache"
+  - $HOME/.ivy2/cache
 env:
   global:
-  - secure: n0shGVhtGvg4jA9gQ5Dds7mbczjRjvbjon5RBk0+aXA9EPTGApvk4/zo/LFiCOxfBYPDfe+7EcljgiBFBw9DhggrTtlEKYEAJjqc81B0nZih5H7C9veQcsUWJ6WFEH4HPRSH4kk1PGwmjoDWsk1l6T3jnOblbjcV68pQqA02VBY=
+    secure: P9xSHdfi5NvRIzYKO9svLwN4l6BS2NENdDPrVapMAZH30S+JPi/tpuU8o96vTMnXILW1bnMtBkWG718yVWjGn4HrKuTD91lKUMZDLgK6+nKpmrtEMcimQbwInPgCWp/GMY7XhM10KSBoe/UF7y0vAT+a3rI24pyLKTZ582Ci3n4=
   matrix:
   - SCALAZ_VERSION=7.1.11
   - SCALAZ_VERSION=7.2.8
 script: bash bin/travis
-
