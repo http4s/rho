@@ -12,6 +12,8 @@ import scala.util.control.NonFatal
 
 import scalaz._, Scalaz._
 
+case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
+
 object TypeBuilder {
   import models._
 
@@ -80,11 +82,47 @@ object TypeBuilder {
 
           models ++ generics ++ children
 
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
+          // TODO promote methods on sealed trait from children to model
+          modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { model =>
+            val parent = RefModel(model.id + "Ref", model.id2 + "Ref", model.id2)
+            val children =
+              sym.asClass.knownDirectSubclasses.flatMap( sub =>
+                  modelToSwagger(sub.asType.toType, sfs).map(composedModel(parent))
+                )
+            alreadyKnown ++ Set(model) ++ children
+          }
+
         case e =>
           Set.empty
       }
 
     go(t, alreadyKnown, known)
+  }
+
+  private def addDiscriminator(sym: Symbol)(model: ModelImpl): ModelImpl = {
+    val typeVar = sym.annotations
+      .withFilter(_.tpe <:< typeOf[DiscriminatorField])
+      .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field } )
+      .headOption.getOrElse("type")
+
+    model
+      .copy(
+        discriminator = Some(typeVar),
+        `type` = Some("object"),
+        properties =
+        model.properties + (typeVar -> AbstractProperty(`type` = "string", required = true))
+      )
+  }
+
+  private def composedModel(parent: Model)(subtype: Model): Model = {
+    ComposedModel(
+      id = subtype.id,
+      id2 = subtype.id2,
+      description = subtype.description,
+      allOf = List(parent, subtype),
+      parent = parent.some
+    )
   }
 
   private[this] val defaultExcluded =
@@ -93,10 +131,15 @@ object TypeBuilder {
   private[this] def isCaseClass(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
 
+  private[this] def isSumType(sym: Symbol): Boolean =
+    sym.asClass.isSealed && !sym.asClass.knownDirectSubclasses.forall { symbol =>
+      symbol.isModuleClass && symbol.asClass.isCaseClass
+    }
+
   private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) =
     (defaultExcluded ++ excludes).exists(_ =:= t)
 
-  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[Model] =
+  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
       val props: Map[String, Property] =

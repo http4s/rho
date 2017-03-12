@@ -45,7 +45,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   import SwaggerModelsBuilderSpec._
 
   implicit def defaultCompiler: CompileService[RhoRoute.Tpe] = CompileService.identityCompiler
-  
+
   sealed abstract class Renderable
   case class ModelA(name: String, color: Int) extends Renderable
   case class ModelB(name: String, id: Long) extends Renderable
@@ -57,12 +57,12 @@ class SwaggerModelsBuilderSpec extends Specification {
   val barPath = GET / "bar"
 
   "SwaggerModelsBuilder.collectQueryParams" should {
-    
+
     "handle head request" in {
       val ra = HEAD / "foobar" |>> { "" }
       sb.collectPaths(ra)(Swagger()).get("/foobar").flatMap(_.head) must beSome[Operation]
     }
-    
+
     "handle an action with one query parameter" in {
       val ra = fooPath +? param[Int]("id") |>> { (i: Int) => "" }
 
@@ -103,10 +103,10 @@ class SwaggerModelsBuilderSpec extends Specification {
         QueryParameter(`type` = "integer".some, name = "id".some,  description = orStr("id2"), required = true),
         QueryParameter(`type` = "integer".some, name = "id2".some, description = orStr("id"),  required = true))
     }
-    
+
     "handle an action with one query parameter of complex data type" in {
        val ra = fooPath +? param[Foo]("foo") |>> { (_: Foo) => "" }
-       
+
        sb.collectQueryParams(ra) must_==
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
     }
@@ -127,7 +127,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "handle and action with two query parameters of complex data type" in {
       val ra = fooPath +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (_: Foo, _: Seq[Bar]) => "" }
-      
+
       sb.collectQueryParams(ra) must_==
       List(
         QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true),
@@ -200,42 +200,42 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a simple path - GET" in {
       val ra = GET / "foo" |>> { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
-      
+
       paths must havePair("/foo" -> Path(get = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PUT" in {
       val ra = PUT / "foo" |>> { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
-      
+
       paths must havePair("/foo" -> Path(put = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - POST" in {
       val ra = POST / "foo" |>> { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
-      
+
       paths must havePair("/foo" -> Path(post = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PATCH" in {
       val ra = PATCH / "foo" |>> { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
-      
+
       paths must havePair("/foo" -> Path(patch = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - OPTIONS" in {
       val ra = OPTIONS / "foo" |>> { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
-      
+
       paths must havePair("/foo" -> Path(options = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple and-path" in {
       val ra = GET / "foo" / "bar" |>> { () => "" }
       val paths = sb.collectPaths(ra)(Swagger())
-      
+
       paths must havePair("/foo/bar" -> Path(get = sb.mkOperation("/foo/bar", ra).some))
     }
 

@@ -2,7 +2,8 @@ package org.http4s.rho.swagger
 
 import io.swagger.{models => jm}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import java.util.ArrayList
 
 object models {
   import JValue._
@@ -243,13 +244,13 @@ object models {
       o.setParameters(fromList(parameters.map(_.toJModel)))
       o.setResponses(fromMap(responses.mapValues(_.toJModel)))
       o.setSecurity(fromList(security.map { m =>
-        m.mapValues(xs => xs : java.util.List[String]) : java.util.Map[String, java.util.List[String]]
+        m.mapValues(_.asJava).asJava
       }))
       o.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       o.setDeprecated(deprecated)
       vendorExtensions.foreach { case (key, value) => o.setVendorExtension(key, value) }
       o
-    }      
+    }
   }
 
   case class Response
@@ -302,7 +303,7 @@ object models {
       m.setType(fromOption(`type`))
       m.setName(fromOption(name))
       m.setDescription(fromOption(description))
-      m.setRequired(required)
+      m.setRequired(required.asJava)
       m.setExample(fromOption(example))
       m.setProperties(fromMap(properties.mapValues(_.toJModel)))
       if (additionalProperties.nonEmpty) m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
@@ -353,11 +354,11 @@ object models {
     def toJModel: jm.Model = {
       val cm = new jm.ComposedModel
       cm.setDescription(fromOption(description))
-      cm.setAllOf(fromList(allOf.map(_.toJModel)))
-      cm.setParent(fromOption(parent.map(_.toJModel)))
-      cm.setChild(fromOption(child.map(_.toJModel)))
-      cm.setInterfaces(fromList(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel])))
-      cm.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      cm.setAllOf(new ArrayList(allOf.map(_.toJModel).asJava))
+      parent.map(_.toJModel).foreach(p => cm.setParent(p))
+      child.map(_.toJModel).foreach(c => cm.setChild(c))
+      cm.setInterfaces(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel]).asJava)
+      cm.setProperties(properties.mapValues(_.toJModel).asJava)
       cm.setExample(fromOption(example))
       cm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       cm
@@ -398,7 +399,7 @@ object models {
 
   object Parameter {
     implicit class Ops(val parameter: Parameter) extends AnyVal {
-      def withDesc(desc: Option[String]): Parameter = 
+      def withDesc(desc: Option[String]): Parameter =
         parameter match {
           case p : BodyParameter => p.copy(description = desc)
           case p : CookieParameter => p.copy(description = desc)
@@ -410,7 +411,7 @@ object models {
         }
     }
   }
-  
+
   case class BodyParameter
     (
       schema           : Option[Model]    = None
@@ -460,7 +461,7 @@ object models {
       cp.setName(fromOption(name))
       cp.setDescription(fromOption(description))
       cp.setRequired(required)
-      cp.setAccess(fromOption(access))      
+      cp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => cp.setVendorExtension(key, value) }
       cp
     }
@@ -495,7 +496,7 @@ object models {
       fp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => fp.setVendorExtension(key, value) }
       fp
-    }    
+    }
   }
 
   case class HeaderParameter
@@ -560,7 +561,7 @@ object models {
       vendorExtensions.foreach { case (key, value) => pp.setVendorExtension(key, value) }
       pp
     }
-      
+
   }
 
   case class QueryParameter
@@ -580,9 +581,9 @@ object models {
     ) extends Parameter {
 
     override val in = Some("query")
-    
+
     import com.fasterxml.jackson.annotation.JsonPropertyOrder
-    
+
     @JsonPropertyOrder(Array("name", "in", "description", "required", "type", "$ref", "items", "collectionFormat", "default"))
     private class QueryRefParameter extends jm.parameters.QueryParameter {
       protected var $ref: String = _
@@ -595,8 +596,8 @@ object models {
       def get$ref() = $ref
       def set$ref($ref: String) { this.$ref = $ref }
     }
-    
-    def toJModel: jm.parameters.Parameter = {      
+
+    def toJModel: jm.parameters.Parameter = {
       val qp = new QueryRefParameter()
       qp.setIn("query")
       qp.setType(if (isArray) "array" else fromOption(`type`))
@@ -611,7 +612,7 @@ object models {
       qp.setAccess(fromOption(access))
       vendorExtensions.foreach { case (key, value) => qp.setVendorExtension(key, value) }
       qp
-    }      
+    }
   }
 
   case class RefParameter
@@ -636,7 +637,7 @@ object models {
       rp
     }
   }
-  
+
   sealed trait Property {
     def `type`: String
     def required: Boolean
@@ -657,22 +658,22 @@ object models {
     , description : Option[String] = None
     , format      : Option[String] = None
     ) extends Property {
-    
+
     class RefProperty extends jm.properties.AbstractProperty {
       protected var $ref: String = _
-        
-      def $ref($ref: String) = { 
+
+      def $ref($ref: String) = {
         this.set$ref($ref)
         this
       }
-      
+
       def get$ref() = $ref
-      def set$ref($ref: String) { this.$ref = $ref }              
+      def set$ref($ref: String) { this.$ref = $ref }
     }
-    
+
     def withRequired(required: Boolean): AbstractProperty =
       copy(required = required)
-      
+
     def toJModel: jm.properties.Property = {
       val ap = new RefProperty
       ap.setType(`type`)
@@ -736,7 +737,7 @@ object models {
       ap
     }
   }
-  
+
   case class ArrayProperty
     (
       items       : Property
@@ -799,7 +800,7 @@ object models {
       ed.setDescription(description)
       ed.setUrl(url)
       ed
-    }      
+    }
   }
 
   private object JValue {
@@ -808,9 +809,9 @@ object models {
       oa.getOrElse(null.asInstanceOf[A])
 
     def fromList[A](xs: List[A]): java.util.List[A] =
-      if (xs.isEmpty) null else xs
+      if (xs.isEmpty) null else xs.asJava
 
     def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
-      if (m.isEmpty) null else m
+      if (m.isEmpty) null else m.asJava
   }
 }

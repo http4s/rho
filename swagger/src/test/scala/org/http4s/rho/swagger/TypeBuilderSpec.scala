@@ -27,6 +27,12 @@ package object model {
   case class FooWithMap(l: Map[String, Int])
   case class FooVal(str: String) extends AnyVal
   case class BarWithFooVal(fooVal: FooVal)
+  @DiscriminatorField("foobar")
+  sealed trait Sealed {
+    def foo: String
+  }
+  case class FooSealed(a: Int, foo: String) extends Sealed
+  case class BarSealed(str: String, foo: String) extends Sealed
 }
 
 class TypeBuilderSpec extends Specification {
@@ -290,6 +296,17 @@ class TypeBuilderSpec extends Specification {
           name must_== "fooVal"
           prop.`type` must_== "string"
       }
+    }
+
+    "Build a model for sealed traits" in {
+      val ms = modelOf[Sealed]
+      ms.foreach(_.toJModel) // Testing that there are no exceptions
+      ms.size must_== 3
+      val Some(seal: models.ModelImpl) = ms.find(_.id2 == "Sealed")
+      seal.discriminator must_== Some("foobar")
+      val Some(foo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
+      val Some(fooRef) = foo.allOf.collectFirst {case ref: models.RefModel => ref}
+      fooRef.ref must_== "Sealed"
     }
   }
 
