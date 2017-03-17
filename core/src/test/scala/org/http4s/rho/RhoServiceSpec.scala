@@ -74,6 +74,11 @@ class RhoServiceSpec extends Specification with RequestRunner {
       Task(s"${i.getAndIncrement}")
     }
 
+    GET / "taskResult" |>> {
+      val i = new AtomicInteger(0)
+      Ok(Task(s"${i.getAndIncrement}"))
+    }
+
     GET / "terminal" / "" |>> "terminal/"
 
     GET / "terminal" |>> "terminal"
