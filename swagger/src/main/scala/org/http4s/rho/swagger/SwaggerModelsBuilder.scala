@@ -284,6 +284,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           AbstractProperty(`type` = name, description = qName)
         case DataType.ContainerDataType(name, tpe, uniqueItems) =>
           AbstractProperty(`type` = name)
+        case DataType.EnumDataType(enums) =>
+          StringProperty(enums = enums)
       }
     }
 
@@ -361,6 +363,15 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           name         = rule.name.some,
           required     = required,
           defaultValue = rule.default.map(_.toString)              
+        )
+
+      case TypeBuilder.DataType.EnumDataType(enums) =>
+        QueryParameter(
+          `type`       = "string".some,
+          name         = rule.name.some,
+          required     = required,
+          defaultValue = rule.default.map(_.toString),
+          enums        = enums.toList
         )
     }
   }
