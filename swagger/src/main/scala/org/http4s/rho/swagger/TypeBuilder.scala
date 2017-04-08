@@ -83,16 +83,16 @@ object TypeBuilder {
           models ++ generics ++ children
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isObjectEnum(sym) =>
-          Set()
+          Set.empty
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
           modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { model =>
             val refmodel = RefModel(model.id, model.id2, model.id2)
             val children =
-              sym.asClass.knownDirectSubclasses.flatMap({ sub =>
+              sym.asClass.knownDirectSubclasses.flatMap { sub =>
                 go(sub.asType.toType, alreadyKnown, known + tpe).map(composedModel(refmodel))
-              })
+              }
             alreadyKnown ++ Set(model) ++ children
           }
 

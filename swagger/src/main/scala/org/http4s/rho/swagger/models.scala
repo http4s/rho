@@ -578,7 +578,7 @@ object models {
     , access           : Option[String]   = None
     , vendorExtensions : Map[String, Any] = Map.empty
     , isArray          : Boolean          = false
-    , enums            : List[String]     = List()
+    , enums            : List[String]     = List.empty
     ) extends Parameter {
 
     override val in = Some("query")
