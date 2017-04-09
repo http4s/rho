@@ -36,7 +36,7 @@ object TypeBuilder {
 
         case tpe if tpe.isEither || tpe.isMap =>
           go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
-          go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
+            go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
 
         case tpe if (tpe.isCollection || tpe.isOption) && tpe.typeArgs.nonEmpty =>
           val ntpe = tpe.typeArgs.head
@@ -82,14 +82,17 @@ object TypeBuilder {
 
           models ++ generics ++ children
 
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isObjectEnum(sym) =>
+          Set.empty
+
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
           modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { model =>
-            val parent = RefModel(model.id + "Ref", model.id2 + "Ref", model.id2)
+            val refmodel = RefModel(model.id, model.id2, model.id2)
             val children =
-              sym.asClass.knownDirectSubclasses.flatMap( sub =>
-                  modelToSwagger(sub.asType.toType, sfs).map(composedModel(parent))
-                )
+              sym.asClass.knownDirectSubclasses.flatMap { sub =>
+                go(sub.asType.toType, alreadyKnown, known + tpe).map(composedModel(refmodel))
+              }
             alreadyKnown ++ Set(model) ++ children
           }
 
@@ -105,17 +108,18 @@ object TypeBuilder {
       .withFilter(_.tpe <:< typeOf[DiscriminatorField])
       .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field } )
       .headOption.getOrElse("type")
+    val subclasses = sym.asClass.knownDirectSubclasses.map(_.asType.toType.simpleName)
 
     model
       .copy(
         discriminator = Some(typeVar),
         `type` = Some("object"),
         properties =
-        model.properties + (typeVar -> AbstractProperty(`type` = "string", required = true))
+        model.properties + (typeVar -> StringProperty(required = true, enums = subclasses))
       )
   }
 
-  private def composedModel(parent: Model)(subtype: Model): Model = {
+  private def composedModel(parent: RefModel)(subtype: Model): Model = {
     ComposedModel(
       id = subtype.id,
       id2 = subtype.id2,
@@ -132,7 +136,12 @@ object TypeBuilder {
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
 
   private[this] def isSumType(sym: Symbol): Boolean =
-    sym.asClass.isSealed && !sym.asClass.knownDirectSubclasses.forall { symbol =>
+    sym.isClass && sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
+      !symbol.isModuleClass && symbol.asClass.isCaseClass
+    }
+
+  private[this] def isObjectEnum(sym: Symbol): Boolean =
+    sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
 
@@ -187,7 +196,7 @@ object TypeBuilder {
       }
       else if (tpe.isOption && !tpe.isNothingOrNull)
         typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-      else if (isCaseClass(ptSym) && !(tpe <:< typeOf[AnyVal]))
+      else if ((isCaseClass(ptSym) || isSumType(ptSym)) && !(tpe <:< typeOf[AnyVal]))
         RefProperty(tpe.simpleName)
       else
         DataType.fromType(tpe) match {
@@ -197,6 +206,8 @@ object TypeBuilder {
             AbstractProperty(`type` = name, description = qName)
           case DataType.ContainerDataType(name, tpe, uniqueItems) =>
             AbstractProperty(`type` = name)
+          case DataType.EnumDataType(enums) =>
+            StringProperty(enums = enums)
         }
     })
   }
@@ -210,6 +221,7 @@ object TypeBuilder {
     case class ValueDataType(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) extends DataType
     case class ContainerDataType(name: String, typeArg: Option[DataType] = None, uniqueItems: Boolean = false) extends DataType
     case class ComplexDataType(name: String, qualifiedName: Option[String] = None) extends DataType
+    case class EnumDataType(enums: Set[String]) extends DataType { val name = "string" }
 
     val Void = DataType("void")
     val String = DataType("string")
@@ -275,6 +287,8 @@ object TypeBuilder {
         else GenArray()
       } else if (klass <:< typeOf[AnyVal]) {
         fromType(klass.members.filter(_.isConstructor).flatMap(_.asMethod.paramLists.flatten).head.typeSignature)
+      } else if (isObjectEnum(klass.typeSymbol)) {
+        EnumDataType(klass.typeSymbol.asClass.knownDirectSubclasses.map(_.name.toString))
       } else {
         val stt = if (t.isOption) t.typeArgs.head else t
         ComplexDataType(stt.simpleName, qualifiedName = Option(stt.fullName))

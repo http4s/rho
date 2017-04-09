@@ -31,8 +31,14 @@ package object model {
   sealed trait Sealed {
     def foo: String
   }
-  case class FooSealed(a: Int, foo: String) extends Sealed
+  case class FooSealed(a: Int, foo: String, foo2: Foo) extends Sealed
   case class BarSealed(str: String, foo: String) extends Sealed
+
+  case class ContainsSealed(seal: Sealed)
+
+  sealed trait SealedEnum
+  case object FooEnum extends SealedEnum
+  case object BarEnum extends SealedEnum
 }
 
 class TypeBuilderSpec extends Specification {
@@ -301,7 +307,7 @@ class TypeBuilderSpec extends Specification {
     "Build a model for sealed traits" in {
       val ms = modelOf[Sealed]
       ms.foreach(_.toJModel) // Testing that there are no exceptions
-      ms.size must_== 3
+      ms.size must_== 4
       val Some(seal: models.ModelImpl) = ms.find(_.id2 == "Sealed")
       seal.discriminator must_== Some("foobar")
       val Some(foo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
@@ -331,6 +337,10 @@ class TypeBuilderSpec extends Specification {
       Result.foreach(datatypes) { case (anyValType, underlyingType) =>
         DataType(anyValType) === DataType(underlyingType)
       }
+    }
+
+    "Get the DataType for sealed enums" in {
+      DataType(typeTag[SealedEnum]) must_== DataType.EnumDataType(Set("BarEnum", "FooEnum"))
     }
   }
 }

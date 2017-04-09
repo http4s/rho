@@ -578,6 +578,7 @@ object models {
     , access           : Option[String]   = None
     , vendorExtensions : Map[String, Any] = Map.empty
     , isArray          : Boolean          = false
+    , enums            : List[String]     = List.empty
     ) extends Parameter {
 
     override val in = Some("query")
@@ -610,6 +611,7 @@ object models {
       qp.setDescription(fromOption(description))
       qp.setRequired(required)
       qp.setAccess(fromOption(access))
+      qp.setEnumValue(fromList(enums))
       vendorExtensions.foreach { case (key, value) => qp.setVendorExtension(key, value) }
       qp
     }
@@ -786,6 +788,38 @@ object models {
       rp.setDescription(fromOption(description))
       rp.setFormat(fromOption(format))
       rp
+    }
+  }
+
+  case class StringProperty
+    (
+      title       : Option[String] = None
+    , description : Option[String] = None
+    , format      : Option[String] = None
+    , required: Boolean = false
+    , enums: Set[String]
+    , minLength: Option[Int] = None
+    , maxLength: Option[Int] = None
+    , pattern: Option[String] = None
+    , default: Option[String] = None
+    ) extends Property {
+    override val `type` = "string"
+
+    def withRequired(required: Boolean): StringProperty =
+      copy(required = required)
+
+    def toJModel: jm.properties.Property = {
+      val sp = new jm.properties.StringProperty()
+      sp.setRequired(required)
+      sp.setTitle(fromOption(title))
+      sp.setDescription(fromOption(description))
+      sp.setFormat(fromOption(format))
+      sp.setEnum(fromList(enums.toList))
+      minLength.foreach(l => sp.setMinLength(new Integer(l)))
+      maxLength.foreach(l => sp.setMaxLength(new Integer(l)))
+      sp.setPattern(fromOption(pattern))
+      sp.setDefault(fromOption(default))
+      sp
     }
   }
 
