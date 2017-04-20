@@ -288,6 +288,7 @@ class SwaggerModelsBuilderSpec extends Specification {
             id          = modelAFullName,
             id2         = "ModelA",
             description = "ModelA".some,
+            `type`      = "object".some,
             properties  = Map(
               "name"  -> AbstractProperty("string", None, true),
               "color" -> AbstractProperty("integer", None, true, format = "int32".some))),
@@ -297,6 +298,7 @@ class SwaggerModelsBuilderSpec extends Specification {
             id          = modelBFullName,
             id2         = "ModelB",
             description = "ModelB".some,
+            `type`      = "object".some,
             properties  = Map(
               "name" -> AbstractProperty("string", None, true),
               "id"   -> AbstractProperty("integer", None, true, format = "int64".some))),
@@ -306,6 +308,7 @@ class SwaggerModelsBuilderSpec extends Specification {
             id          = modelCFullName,
             id2         = "ModelC",
             description = "ModelC".some,
+            `type`      = "object".some,
             properties  = Map(
               "name"  -> AbstractProperty("string", None, true),
               "shape" -> AbstractProperty("string", None, true)))
@@ -325,6 +328,7 @@ class SwaggerModelsBuilderSpec extends Specification {
             id          = s"scala.Tuple2«scala.Int,$modelAFullName»",
             id2         = "Tuple2«Int,ModelA»",
             description = "Tuple2«Int,ModelA»".some,
+            `type`      = "object".some,
             properties  = Map(
               "_1" -> AbstractProperty("integer", None, true, format = "int32".some),
               "_2" -> RefProperty(ref = "ModelA", required = true))))
@@ -345,6 +349,7 @@ class SwaggerModelsBuilderSpec extends Specification {
             id          = prefix + "ModelMap",
             id2         = "ModelMap",
             description = "ModelMap".some,
+            `type`      = "object".some,
             properties  =  Map(
             "bar" -> AbstractProperty(`type` = "string", required = true),
             "baz" -> MapProperty(
