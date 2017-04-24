@@ -164,6 +164,7 @@ object TypeBuilder {
         id          = tpe.fullName,
         id2         = tpe.simpleName,
         description = tpe.simpleName.some,
+        `type`      = "object".some,
         properties  = props).some
     } catch {
       case NonFatal(t) =>
