@@ -1,4 +1,5 @@
 import RhoBuild._
+borked! Is travis going to tell me?
 
 version       in ThisBuild := s"0.17.0${scalazCrossBuildSuffix(scalazVersion.value)}-SNAPSHOT"
 apiVersion    in ThisBuild <<= version.map(extractApiVersion)
