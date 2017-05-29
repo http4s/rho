@@ -16,7 +16,7 @@ object Main extends StreamApp {
 
   logger.info(s"Starting Swagger example on '$port'")
 
-  def stream(args: List[String]): Stream[Task, Unit] = {
+  def stream(args: List[String]): Stream[Task, Nothing] = {
     val middleware = SwaggerSupport()
 
     BlazeBuilder

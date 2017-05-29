@@ -92,8 +92,8 @@ object RhoBuild extends Build {
 
   lazy val buildSettings = publishing ++
      Seq(
-        scalaVersion := "2.11.8",
-        crossScalaVersions := Seq("2.11.8", "2.12.1"),
+        scalaVersion := "2.11.11",
+        crossScalaVersions := Seq("2.11.11", "2.12.2"),
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         fork in run := true,
@@ -190,7 +190,7 @@ object RhoBuild extends Build {
 object Dependencies {
   import RhoBuild._
 
-  lazy val http4sVersion = s"0.17.0-M2"
+  lazy val http4sVersion = s"0.17.0-M3"
   lazy val specs2Version = "3.8.6"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
