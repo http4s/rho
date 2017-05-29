@@ -7,8 +7,8 @@ import org.specs2.mutable.Specification
 
 import scala.reflect.runtime.universe._
 import shapeless.HList
-
 import Status._
+import fs2.Chunk
 
 class ResultMatcherSpec extends Specification {
 
@@ -32,7 +32,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match a single result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> { () => Ok("updated").run }
+        PUT / "foo" |>> { () => Ok("updated").unsafeRun }
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok)
@@ -114,8 +114,8 @@ class ResultMatcherSpec extends Specification {
       case class ModelA(name: String, color: Int)
       case class ModelB(name: String, id: Long)
 
-      implicit def w1: EntityEncoder[ModelA] = EntityEncoder.simple[ModelA]()(_ => ByteVector.view("A".getBytes))
-      implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => ByteVector.view("B".getBytes))
+      implicit def w1: EntityEncoder[ModelA] = EntityEncoder.simple[ModelA]()(_ => Chunk.bytes("A".getBytes))
+      implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => Chunk.bytes("B".getBytes))
 
       val srvc = new TRhoService {
         GET / "foo" |>> { () =>
@@ -150,11 +150,9 @@ class ResultMatcherSpec extends Specification {
 }
 
 object Foo {
-  import scodec.bits.ByteVector
-
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1: EntityEncoder[FooA] = EntityEncoder.simple[FooA]()(_ => ByteVector.view("A".getBytes))
-  implicit def w2: EntityEncoder[FooB] = EntityEncoder.simple[FooB]()(_ => ByteVector.view("B".getBytes))
+  implicit def w1: EntityEncoder[FooA] = EntityEncoder.simple[FooA]()(_ => Chunk.bytes("A".getBytes))
+  implicit def w2: EntityEncoder[FooB] = EntityEncoder.simple[FooB]()(_ => Chunk.bytes("B".getBytes))
 }

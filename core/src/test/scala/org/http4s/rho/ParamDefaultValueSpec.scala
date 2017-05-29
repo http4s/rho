@@ -8,10 +8,10 @@ import scodec.bits.ByteVector
 class ParamDefaultValueSpec extends Specification {
 
   def body(service: HttpService, r: Request): String =
-    new String(service(r).run.body.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
+    new String(service(r).unsafeRun.orNotFound.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
 
   def requestGet(s: String, h: Header*): Request =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   "GET /test1" should {
     val service = new RhoService {

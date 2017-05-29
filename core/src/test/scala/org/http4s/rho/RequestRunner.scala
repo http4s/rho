@@ -14,7 +14,7 @@ trait RequestRunner {
   def checkError(r: Request): String = checkStatus(r)(_ != Status.Ok)
 
   def checkStatus(r: Request)(isSuccess: Status => Boolean) = {
-    val resp = service(r).run
+    val resp = service(r).unsafeRun.orNotFound
     if (isSuccess(resp.status)) getBody(resp.body)
     else sys.error(s"Invalid response code: ${resp.status}")
   }
@@ -23,7 +23,7 @@ trait RequestRunner {
 }
 object RequestRunner {
   def getBody(b: EntityBody): String = {
-    new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
+    new String(b.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
   }
 }
 

@@ -7,11 +7,9 @@ import org.http4s.rho.swagger.models.AbstractProperty
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 
-import scalaz.concurrent.Task
-import scalaz.stream.Process
+import fs2.{Task, Stream}
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
-import scalaz._
-import Scalaz._
+import cats.syntax.all._
 
 package object model {
   case class Foo(a: Int, b: String)
@@ -81,8 +79,8 @@ class TypeBuilderSpec extends Specification {
       typeOf[Task[String]].isTask must_== true
       typeOf[String].isTask must_== false
 
-      typeOf[Process[Task,String]].isProcess must_== true
-      typeOf[String].isProcess must_== false
+      typeOf[Stream[Task,String]].isStream must_== true
+      typeOf[String].isStream must_== false
 
       typeOf[Array[String]].isArray must_== true
       typeOf[String].isArray must_== false
@@ -231,14 +229,13 @@ class TypeBuilderSpec extends Specification {
       modelOf[Map[String, Foo]] must_== modelOf[Foo]
     }
 
-    "Get types from a scalaz.stream.Process" in {
-      import scalaz.concurrent.Task
-      import scalaz.stream.Process
-      modelOf[Process[Task, Foo]] must_== modelOf[Foo]
+    "Get types from a fs2.Stream" in {
+      import fs2.{Task, Stream}
+      modelOf[Stream[Task, Foo]] must_== modelOf[Foo]
     }
 
-    "Get types from a scalaz.concurrent.Task" in {
-      import scalaz.concurrent.Task
+    "Get types from a fs2.Task" in {
+      import fs2.Task
       modelOf[Task[Foo]] must_== modelOf[Foo]
     }
 

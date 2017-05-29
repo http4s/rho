@@ -7,9 +7,8 @@ import org.http4s.Uri
 import org.http4s.rho.RhoService
 
 import JsonEncoder.AutoSerializable
-import scalaz.Scalaz._
-import scalaz.concurrent.Task
-import scalaz.stream.Process
+import cats.syntax.all._
+import fs2.{Stream, Task}
 
 object MyService extends RhoService {
   import org.http4s.rho._
@@ -36,14 +35,14 @@ object MyService extends RhoService {
   val hello = GET / "hello"
 
   "Simple hello world route" **
-    hello |>> Ok("Hello world!")    
-    
+    hello |>> Ok("Hello world!")
+
   "A variant of the hello route that takes an Int param" **
     hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
 
   "This route allows you to send head request" **
-    HEAD / "hello" |>> { Ok("Hello head!") }    
-    
+    HEAD / "hello" |>> { Ok("Hello head!") }
+
   "Generates some JSON data from a route param, and a query Int" **
     GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
@@ -56,7 +55,7 @@ object MyService extends RhoService {
   "This gets a simple counter for the number of times this route has been requested" **
     GET / "counter" |>> {
       val i = new AtomicInteger(0)
-      Task(s"The number is ${i.getAndIncrement()}")
+      Task.delay(s"The number is ${i.getAndIncrement()}")
     }
 
   "Adds the cookie Foo=bar to the client" **
@@ -91,7 +90,7 @@ object MyService extends RhoService {
   "This demonstrates using a process of entities" **
     GET / "stream" |>> {
       val s = 0 until 100 map (i => s"Hello $i\n")
-      val p: Process[Task, String] = Process.emitAll(s)
+      val p: Stream[Task, String] = Stream.emits(s)
       Ok(p)
     }
 
@@ -100,28 +99,28 @@ object MyService extends RhoService {
 
   import scala.reflect._
   import scala.reflect.runtime.universe._
-    
+
   import org.json4s._
   import org.json4s.jackson.JsonMethods
-  
+
   import org.http4s.rho.bits._
-  
+
   private implicit val format = DefaultFormats
-  
+
   implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[A] = new StringParser[A] {
     override val typeTag = implicitly[TypeTag[A]].some
     override def parse(s: String): ResultResponse[A] = {
-      
-      scalaz.\/.fromTryCatchNonFatal(JsonMethods.parse(s).extract[A]) match {
-        case scalaz.-\/(t) => FailureResponse.badRequest(t.getMessage())
-        case scalaz.\/-(t) => SuccessResponse(t)
+
+      Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
+        case Left(t) => FailureResponse.badRequest(t.getMessage)
+        case Right(t) => SuccessResponse(t)
       }
     }
   }
-    
+
   case class Foo(k: String, v: Int)
   case class Bar(id: Long, foo: Foo)
-  
+
   "This route demonstrates how to use a complex data type as parameters in route" **
   GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
     Ok(s"Received foo: $foo, bars: $bars")

@@ -3,8 +3,7 @@ package org.http4s.rho.swagger
 import scala.reflect.runtime.universe._
 
 import org.specs2.mutable.Specification
-
-import scalaz._, Scalaz._
+import cats.syntax.all._
 
 class SwaggerFormatsSpec extends Specification {
 

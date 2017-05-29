@@ -5,7 +5,7 @@ import bits.HListToFunc
 import org.http4s.HttpService
 import shapeless.HList
 
-import scalaz.concurrent.Task
+import fs2.Task
 
 /** Object which can be compiled into a complete route
   * The [[RouteExecutable]] is a complete set of HTTP method, path, query, and headers

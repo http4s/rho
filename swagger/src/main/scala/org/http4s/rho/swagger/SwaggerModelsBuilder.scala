@@ -11,7 +11,7 @@ import org.log4s.getLogger
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
-import scalaz._, Scalaz._
+import cats.syntax.all._
 
 private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   import models._
@@ -36,13 +36,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case "patch"   => p0.copy(patch = o.some)
         case "options" => p0.copy(options = o.some)
         case "head"    => p0.copy(head = o.some)
-        case unknown   => 
+        case unknown   =>
           logger.warn("unrecognized method: " + unknown)
           p0
       }
       ps -> p1
     }
-    pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.alter(s)(_ => p.some) }
+    pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.updated(s, p) }
   }
 
   def collectDefinitions(rr: RhoRoute[_])(s: Swagger): Map[String, Model] = {
@@ -58,13 +58,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case TypeOnly(tpe)         => tpe
       case StatusAndType(_, tpe) => tpe
     }
-    
+
   def collectCodecTypes(rr: RhoRoute[_]): Set[Type] =
     rr.router match {
       case r: CodecRouter[_, _] => Set(r.entityType)
       case _                    => Set.empty
     }
-  
+
   def collectQueryTypes(rr: RhoRoute[_]): Seq[Type] = {
     def go(stack: List[RequestRule]): List[Type] =
       stack match {
@@ -89,14 +89,14 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     go(rr.rules::Nil)
   }
-  
-  def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???    
-  
+
+  def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???
+
   def mkPathStrs(rr: RhoRoute[_]): List[String] = {
 
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
-        case Nil                       => pathStr.isEmpty.fold("/", pathStr)
+        case Nil                       => if(pathStr.isEmpty) "/" else pathStr
         case PathMatch("")::xs         => go(xs, pathStr)
         case PathMatch(s)::xs          => go(xs, pathStr + "/" + s)
         case MetaCons(_, _)::xs        => go(xs, pathStr)
@@ -126,7 +126,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     rr.router match {
       case r: CodecRouter[_, _] => mkBodyParam(r).some
       case _                    => none
-    }  
+    }
 
   def collectResponses(rr: RhoRoute[_]): Map[String, Response] =
     rr.resultInfo.collect {
@@ -168,7 +168,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
         case OrRule(a, b)::xs =>
           val as = go(a::xs)
-          val bs = go(b::xs)                   
+          val bs = go(b::xs)
           val set: (Parameter, String) => Parameter =
             (p, s) => p.withDesc(p.description.map(_ + s).orElse(s.some))
 
@@ -266,14 +266,14 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         mkMapProperty(tpe)
       else if (tpe.isCollection)
         mkCollectionProperty(tpe)
-      else if (tpe.isProcess)
+      else if (tpe.isStream)
         typeToProp(tpe.dealias.typeArgs(1))
       else if (tpe.isTask)
         typeToProp(tpe.dealias.typeArgs(0))
       else if (tpe.isSwaggerFile)
         AbstractProperty(`type` = "file").some
       else
-        RefProperty(ref = tpe.simpleName).some      
+        RefProperty(ref = tpe.simpleName).some
 
     def mkPrimitiveProperty(tpe: Type): Property = {
       import TypeBuilder._
@@ -297,7 +297,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         else if (param.isCollection)
           typeToProp(param)
         else
-          RefProperty(ref = param.simpleName).some 
+          RefProperty(ref = param.simpleName).some
 
       prop.map(p => ArrayProperty(items = p))
     }
@@ -336,7 +336,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           required     = required,
           defaultValue = rule.default.map(_ => "") // TODO ideally need to use the parser to serialize it into string
         )
-      // XXX uniqueItems is indeed part of `parameter` api, 
+      // XXX uniqueItems is indeed part of `parameter` api,
       // see here: http://swagger.io/specification/#parameterObject
       // however the java api does not include it...
       case TypeBuilder.DataType.ContainerDataType(_, dt, _) =>
@@ -348,7 +348,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
             models.AbstractProperty(tpe.name).some
           case None => None
         }
-        
+
         QueryParameter(
           name         = rule.name.some,
           items        = itemTpe,
@@ -357,12 +357,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           isArray      = true
         )
 
-      case TypeBuilder.DataType.ValueDataType(nm, _, _) => 
+      case TypeBuilder.DataType.ValueDataType(nm, _, _) =>
         QueryParameter(
           `type`       = nm.some,
           name         = rule.name.some,
           required     = required,
-          defaultValue = rule.default.map(_.toString)              
+          defaultValue = rule.default.map(_.toString)
         )
 
       case TypeBuilder.DataType.EnumDataType(enums) =>

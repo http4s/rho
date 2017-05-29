@@ -12,7 +12,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.language.existentials
 import scala.util.control.NonFatal
-import scalaz.concurrent.Task
+import fs2.Task
 
 
 /** Data structure for route execution
@@ -89,7 +89,7 @@ private[rho] object PathTree {
       case c @ CodecRouter(_, parser) =>
         Leaf { (req, pathstack) =>
           RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map{ i =>
-            parser.decode(req, false).run.flatMap(_.fold(e =>
+            parser.decode(req, false).value.flatMap(_.fold(e =>
               e.toHttpResponse(req.httpVersion),
               { body =>
                 // `asInstanceOf` to turn the untyped HList to type T

@@ -8,13 +8,13 @@ import scodec.bits.ByteVector
 class HListToFuncSpec extends Specification {
 
   def getBody(b: EntityBody): String = {
-    new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
+    new String(b.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
   }
 
-  def checkOk(r: Request): String = getBody(service(r).run.body)
+  def checkOk(r: Request): String = getBody(service(r).unsafeRun.orNotFound.body)
 
   def Get(s: String, h: Header*): Request =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
+    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
 
   val service = new RhoService {
     GET / "route1" |>> { () => Ok("foo") }

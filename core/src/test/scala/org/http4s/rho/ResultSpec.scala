@@ -15,53 +15,53 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
       val date = Date(Instant.ofEpochMilli(0))
       val resp = Ok("Foo")
                   .putHeaders(date)
-                  .run
+                  .unsafeRun
                   .resp
 
-      resp.headers.get(Date) must_== Some(date)
+      resp.headers.get(Date) must beSome(date)
 
-      val respNow = Ok("Foo").run
+      val respNow = Ok("Foo").unsafeRun
         .putHeaders(date)
         .resp
 
-      respNow.headers.get(Date) must_== Some(date)
+      respNow.headers.get(Date) must beSome(date)
     }
 
     "Add atributes" in {
       val attrKey = AttributeKey[String]("foo")
       val resp = Ok("Foo")
         .withAttribute(attrKey, "foo")
-        .run
+        .unsafeRun
         .resp
 
-      resp.attributes.get(attrKey) must_== Some("foo")
+      resp.attributes.get(attrKey) must beSome("foo")
 
       val resp2 = Ok("Foo")
-        .run
+        .unsafeRun
         .withAttribute(attrKey, "foo")
         .resp
 
-      resp2.attributes.get(attrKey) must_== Some("foo")
+      resp2.attributes.get(attrKey) must beSome("foo")
     }
 
     "Add a body" in {
       val newbody = "foobar"
       val resp = Ok("foo")
                   .withBody(newbody)
-                  .run
+                  .unsafeRun
                   .resp
 
-      new String(resp.body.runLog.run.head.toArray) must_== newbody
-      resp.headers.get(`Content-Length`) must_== Some(`Content-Length`(newbody.getBytes.length))
+      new String(resp.body.runLog.unsafeRun.toArray) must_== newbody
+      resp.headers.get(`Content-Length`) must beSome(`Content-Length`(newbody.getBytes.length))
 
       val resp2 = Ok("foo")
-        .run
+        .unsafeRun
         .withBody(newbody)
-        .run
+        .unsafeRun
         .resp
 
-      new String(resp2.body.runLog.run.head.toArray) must_== newbody
-      resp2.headers.get(`Content-Length`) must_== Some(`Content-Length`(newbody.getBytes.length))
+      new String(resp2.body.runLog.unsafeRun.toArray) must_== newbody
+      resp2.headers.get(`Content-Length`) must beSome(`Content-Length`(newbody.getBytes.length))
     }
 
 

@@ -7,7 +7,7 @@ import org.http4s.rho.bits.ResultInfo
 
 import shapeless.{HNil, HList}
 
-import scalaz.concurrent.Task
+import fs2.Task
 
 /** A type to bundle everything needed to define a route */
 final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T])

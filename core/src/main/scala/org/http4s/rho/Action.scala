@@ -4,7 +4,7 @@ import org.http4s.{Response, Request, MediaType}
 import org.http4s.rho.bits.ResultInfo
 import shapeless.HList
 
-import scalaz.concurrent.Task
+import fs2.Task
 
 /** Encapsulation of metadata and a result generator
   *

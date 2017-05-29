@@ -9,8 +9,7 @@ import org.http4s.websocket.WebsocketBits.WebSocketFrame
 import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification
 
-import scalaz.concurrent.Task
-import scalaz.stream
+import fs2.{Task, Stream}
 
 
 class ApiExamples extends Specification {
@@ -138,19 +137,18 @@ class ApiExamples extends Specification {
         private def getCount(): String = counter.incrementAndGet().toString
         // Don't want status codes? Anything with an `EntityEncoder` will work.
         GET / "nostatus" |>> { () => "No status!" }
-        GET / "taskNoStatus" |>> { () => Task(getCount())
+        GET / "taskNoStatus" |>> { () => Task.delay(getCount())
         }
 
         /* Results need not be functions: they can be anything that has
            an `EntityEncoder` instance in scope */
         GET / "nostatus2" |>> "This is a constant result!"
-        GET / "taskNoStatus2" |>> Task(getCount())
+        GET / "taskNoStatus2" |>> Task.delay(getCount())
 
         /* We can use a standard http4s.Response, but we don't get any metadata
            with it. Useful for things like Websocket support. */
         GET / "websockets" |>> { () =>
-          val exchange: stream.Exchange[WebSocketFrame,WebSocketFrame] = ???
-          WS(exchange)
+          WS(???, ???)
         }
       }
       /// end_src_inlined

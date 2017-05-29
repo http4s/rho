@@ -1,8 +1,9 @@
 package org.http4s
 package rho
 
-import scalaz.{\/, EitherT}
-import scalaz.concurrent.Task
+import cats.data.EitherT
+
+import fs2.Task
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
@@ -92,7 +93,7 @@ trait ResultSyntaxInstances {
       Result(r.resp.copy(status = status))
 
     override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[DecodeFailure\/T] = r.resp.attemptAs(decoder).run
+      val t: Task[Either[DecodeFailure, T]] = r.resp.attemptAs(decoder).value
       EitherT[Task, DecodeFailure, T](t)
     }
 
@@ -115,8 +116,8 @@ trait ResultSyntaxInstances {
     }
 
     override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[DecodeFailure\/T] = r.flatMap { t =>
-        t.resp.attemptAs(decoder).run
+      val t: Task[Either[DecodeFailure, T]] = r.flatMap { t =>
+        t.resp.attemptAs(decoder).value
       }
       EitherT[Task, DecodeFailure, T](t)
     }
