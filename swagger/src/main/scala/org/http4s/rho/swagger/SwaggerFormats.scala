@@ -4,45 +4,53 @@ import scala.reflect.runtime.universe._
 
 import models._
 
-sealed trait SwaggerFormats { self =>
+final case class SwaggerFormats(customSerializers: PartialFunction[Type, Set[Model]],
+                                customFieldSerializers: PartialFunction[Type, Property]) {
 
-  def customSerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
-  def customFieldSerializers: PartialFunction[Type, Property] = PartialFunction.empty
+  def withSerializers(serializer: PartialFunction[Type, Set[Model]]): SwaggerFormats =
+    this.copy(customSerializers = serializer orElse this.customSerializers)
 
-  /** Construct a new SwaggerFormats with custom model serializers */
-  def withSerializers(s: PartialFunction[Type, Set[Model]]): SwaggerFormats = new SwaggerFormats {
-    override val customSerializers: PartialFunction[Type, Set[Model]] = s orElse self.customSerializers
-    override val customFieldSerializers: PartialFunction[Type, Property] = self.customFieldSerializers
+  def withSerializers(t: Type, models: Set[Model]): SwaggerFormats = withSerializers {
+    case tpe if tpe =:= t => models
   }
 
-  /** Construct a new SwaggerFormats with custom model serializers */
-  def withSerializers(t: Type, ms: Set[Model]): SwaggerFormats = withSerializers {
-    case tpe if tpe =:= t => ms
-  }
+  def withFieldSerializers(fieldSerializer: PartialFunction[Type, Property]): SwaggerFormats =
+    this.copy(customFieldSerializers = fieldSerializer orElse this.customFieldSerializers)
 
-  /** Construct a new SwaggerFormats with custom field serializers */
-  def withFieldSerializers(f: PartialFunction[Type, Property]): SwaggerFormats = new SwaggerFormats {
-    override val customSerializers: PartialFunction[Type, Set[Model]] = self.customSerializers
-    override val customFieldSerializers: PartialFunction[Type, Property] = f orElse self.customFieldSerializers
-  }
-
-  /** Construct a new SwaggerFormats with custom field serializers */
-  def withFieldSerializers(t: Type, ms: Property): SwaggerFormats = withFieldSerializers {
-    case tpe if tpe =:= t => ms
+  def withFieldSerializers(t: Type, property: Property): SwaggerFormats = withFieldSerializers {
+      case tpe if tpe =:= t => property
   }
 }
 
-object DefaultSwaggerFormats extends SwaggerFormats {
+object SwaggerFormats {
+  private type F = PartialFunction[Type, Set[Model]]
 
-  type F = PartialFunction[Type, Set[Model]]
-
-  val ignoreExistentialType: F = {
+  private val ignoreExistentialType: F = {
     case ExistentialType(_, _) => Set.empty
   }
 
-  val ignoreNothingOrNull: F = {
+  private val ignoreNothingOrNull: F = {
     case tpe if tpe.isNothingOrNull => Set.empty
   }
 
-  override def customSerializers = ignoreNothingOrNull orElse ignoreExistentialType
+  val emptySerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
+
+  val emptyFieldSerializers: PartialFunction[Type, Property] = PartialFunction.empty
+
+  val defaultSwaggerFormats: SwaggerFormats =
+    SwaggerFormats(ignoreNothingOrNull orElse ignoreExistentialType, emptyFieldSerializers)
+
+  val emptySwaggerFormats: SwaggerFormats =
+    SwaggerFormats(emptySerializers, emptyFieldSerializers)
+
+  def withSerializers(serializer: PartialFunction[Type, Set[Model]]): SwaggerFormats = {
+    SwaggerFormats(serializer, emptyFieldSerializers)
+  }
+
+  def withFieldSerializers(fieldSerializer: PartialFunction[Type, Property]): SwaggerFormats = {
+    SwaggerFormats(emptySerializers, fieldSerializer)
+  }
 }
+
+
+
