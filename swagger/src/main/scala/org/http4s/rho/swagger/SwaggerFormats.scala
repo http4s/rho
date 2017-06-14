@@ -23,16 +23,6 @@ final case class SwaggerFormats(customSerializers: PartialFunction[Type, Set[Mod
 }
 
 object SwaggerFormats {
-  private type F = PartialFunction[Type, Set[Model]]
-
-  private val ignoreExistentialType: F = {
-    case ExistentialType(_, _) => Set.empty
-  }
-
-  private val ignoreNothingOrNull: F = {
-    case tpe if tpe.isNothingOrNull => Set.empty
-  }
-
   val emptySerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
 
   val emptyFieldSerializers: PartialFunction[Type, Property] = PartialFunction.empty
