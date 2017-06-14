@@ -52,7 +52,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   case class ModelC(name: String, shape: String) extends Renderable
   case class ModelMap(bar: String, baz: Map[String, Int]) extends Renderable
 
-  val sb = new SwaggerModelsBuilder(SwaggerFormats.defaultSwaggerFormats)
+  val sb = new SwaggerModelsBuilder(DefaultSwaggerFormats)
   val fooPath = GET / "foo"
   val barPath = GET / "bar"
 

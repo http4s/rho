@@ -17,7 +17,7 @@ object SwaggerSupport {
    * representing the full API
    */
   def apply(
-             swaggerFormats: SwaggerFormats = SwaggerFormats.defaultSwaggerFormats,
+             swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
              apiPath: TypedPath[HNil] = "swagger.json",
              apiInfo: Info = Info(title = "My API", version = "1.0.0"),
              swaggerRoutesInSwagger: Boolean = false): RhoMiddleware = { routes =>
@@ -37,7 +37,7 @@ object SwaggerSupport {
    * Create the swagger model for a set of routes
    */
   def createSwagger(
-                     swaggerFormats: SwaggerFormats = SwaggerFormats.defaultSwaggerFormats,
+                     swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
                      apiPath: TypedPath[HNil] = "swagger.json",
                      apiInfo: Info = Info(title = "My API", version = "1.0.0"))(routes: Seq[RhoRoute[_]]): Swagger = {
     val sb = new SwaggerModelsBuilder(swaggerFormats)

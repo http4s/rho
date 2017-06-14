@@ -36,20 +36,6 @@ object SwaggerFormats {
   val emptySerializers: PartialFunction[Type, Set[Model]] = PartialFunction.empty
 
   val emptyFieldSerializers: PartialFunction[Type, Property] = PartialFunction.empty
-
-  val defaultSwaggerFormats: SwaggerFormats =
-    SwaggerFormats(ignoreNothingOrNull orElse ignoreExistentialType, emptyFieldSerializers)
-
-  val emptySwaggerFormats: SwaggerFormats =
-    SwaggerFormats(emptySerializers, emptyFieldSerializers)
-
-  def withSerializers(serializer: PartialFunction[Type, Set[Model]]): SwaggerFormats = {
-    SwaggerFormats(serializer, emptyFieldSerializers)
-  }
-
-  def withFieldSerializers(fieldSerializer: PartialFunction[Type, Property]): SwaggerFormats = {
-    SwaggerFormats(emptySerializers, fieldSerializer)
-  }
 }
 
 

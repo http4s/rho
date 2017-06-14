@@ -23,7 +23,7 @@ class SwaggerFormatsSpec extends Specification {
 
     "withSerializers" in {
       val m = ModelImpl(id = "fruit-box", id2 = "fruit-box", description = "model.FruitBox".some)
-      val sfs = SwaggerFormats.defaultSwaggerFormats.withSerializers(typeOf[FruitBox], Set(m))
+      val sfs = DefaultSwaggerFormats.withSerializers(typeOf[FruitBox], Set(m))
 
       def modelOf[T](t: TypeTag[T]): Set[Model] =
         TypeBuilder.collectModels(t.tpe, Set.empty, sfs)
@@ -36,7 +36,7 @@ class SwaggerFormatsSpec extends Specification {
 
     "withFieldSerializers" in {
       val arrProp = ArrayProperty(items = RefProperty("Fruit"), required = true, uniqueItems = false)
-      val sfs = SwaggerFormats.defaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], arrProp)
+      val sfs = DefaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], arrProp)
 
       def modelOf[T](t: TypeTag[T]): Set[Model] =
         TypeBuilder.collectModels(t.tpe, Set.empty, sfs)

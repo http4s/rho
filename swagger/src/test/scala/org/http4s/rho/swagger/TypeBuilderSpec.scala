@@ -46,7 +46,7 @@ class TypeBuilderSpec extends Specification {
   import models.{ArrayProperty, Model, RefProperty}
 
   def modelOf[T](implicit t: TypeTag[T]): Set[Model] =
-    modelOfWithFormats(SwaggerFormats.defaultSwaggerFormats)
+    modelOfWithFormats(DefaultSwaggerFormats)
 
   def modelOfWithFormats[T](formats: SwaggerFormats)(implicit t: TypeTag[T]): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, formats)
@@ -71,7 +71,7 @@ class TypeBuilderSpec extends Specification {
       )
 
       val ms = primitives.foldLeft(Set.empty[Model]) { (s, t) =>
-        TypeBuilder.collectModels(t.tpe, s, SwaggerFormats.defaultSwaggerFormats)
+        TypeBuilder.collectModels(t.tpe, s, DefaultSwaggerFormats)
       }
 
       ms.isEmpty must_== true
@@ -214,7 +214,7 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Build a model from an Option with overridden formats" in {
-      val formats = SwaggerFormats.defaultSwaggerFormats.withFieldSerializers({
+      val formats = DefaultSwaggerFormats.withFieldSerializers({
         case x if x =:= typeOf[String] => AbstractProperty(`type`="a_string")
       })
 
