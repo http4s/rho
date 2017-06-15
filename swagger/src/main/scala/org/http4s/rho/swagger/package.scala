@@ -2,9 +2,11 @@ package org.http4s.rho
 
 import java.sql.Timestamp
 import java.util.Date
+
 import org.http4s.Method
-import org.http4s.rho.bits.{TextMetaData, PathAST}
+import org.http4s.rho.bits.{PathAST, TextMetaData}
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
+import org.http4s.rho.swagger.models.Model
 import shapeless.HNil
 
 import scala.reflect.runtime.universe._
@@ -99,4 +101,23 @@ package object swagger {
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]
   }
+
+  val DefaultSwaggerFormats: SwaggerFormats = {
+    val ignoreExistentialType: PartialFunction[Type, Set[Model]] = {
+      case ExistentialType(_, _) => Set.empty
+    }
+
+    val ignoreNothingOrNull: PartialFunction[Type, Set[Model]] = {
+      case tpe if tpe.isNothingOrNull => Set.empty
+    }
+
+    SwaggerFormats(
+      ignoreNothingOrNull orElse ignoreExistentialType,
+      SwaggerFormats.emptyFieldSerializers
+    )
+  }
+
+  val EmptySwaggerFormats: SwaggerFormats =
+    SwaggerFormats(SwaggerFormats.emptySerializers, SwaggerFormats.emptyFieldSerializers)
+
 }
