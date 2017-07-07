@@ -11,10 +11,8 @@ import scodec.bits.ByteVector
 
 import scala.reflect._
 import scala.reflect.runtime.universe._
-import scalaz._
-import Scalaz._
-import scalaz.stream._
-import scalaz.concurrent.Task
+import fs2.{Chunk, Stream, Task}
+import cats.syntax.all._
 
 object SwaggerModelsBuilderSpec {
   case class Foo(a: String, b: Int)
@@ -30,9 +28,9 @@ object SwaggerModelsBuilderSpec {
     override val typeTag = implicitly[TypeTag[A]].some
     override def parse(s: String): ResultResponse[A] = {
 
-      \/.fromTryCatchNonFatal(JsonMethods.parse(s).extract[A]) match {
-        case -\/(t) => FailureResponse.badRequest(t.getMessage())
-        case \/-(t) => SuccessResponse(t)
+      Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
+        case Left(t) => FailureResponse.badRequest(t.getMessage)
+        case Right(t) => SuccessResponse(t)
       }
     }
   }
@@ -166,7 +164,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "set required = false if there is a default value for the header" in {
-      val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(\/-(_)) |>> { (_: `Content-Length`) => "" }
+      val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(Right(_)) |>> { (_: `Content-Length`) => "" }
 
       sb.collectHeaderParams(ra) must_==
         List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
@@ -437,9 +435,9 @@ class SwaggerModelsBuilderSpec extends Specification {
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
     }
 
-    "collect response of a Process of primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Process.eval(Task(""))) }
-      val ra2 = GET / "test" |>> { () => Ok(Process.emit("")) }
+    "collect response of a Stream of primitives" in {
+      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(Task.delay(""))) }
+      val ra2 = GET / "test" |>> { () => Ok(Stream.emit("")) }
 
       sb.collectResponses(ra1) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
@@ -448,9 +446,9 @@ class SwaggerModelsBuilderSpec extends Specification {
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
-    "collect response of a Process of non-primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Process.eval(Task(List((0, ModelA("", 0)))))) }
-      val ra2 = GET / "test" |>> { () => Ok(Process.emit(List((0, ModelA("", 0))))) }
+    "collect response of a Stream of non-primitives" in {
+      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(Task.delay(List((0, ModelA("", 0)))))) }
+      val ra2 = GET / "test" |>> { () => Ok(Stream.emit(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra1) must havePair(
         "200" -> Response(
@@ -464,14 +462,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a Task of a primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task("")) }
+      val ra = GET / "test" |>> { () => Ok(Task.delay("")) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of a Task of a non-primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task(List((0, ModelA("", 0))))) }
+      val ra = GET / "test" |>> { () => Ok(Task.delay(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -511,10 +509,10 @@ class SwaggerModelsBuilderSpec extends Specification {
       .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[A]: EntityEncoder[List[A]] =
-    EntityEncoder.simple[List[A]]()(_ => ByteVector.view("A".getBytes))
+    EntityEncoder.simple[List[A]]()(_ => Chunk.bytes("A".getBytes))
 
   implicit def mapEntityEncoder[A,B]: EntityEncoder[Map[A,B]] =
-    EntityEncoder.simple[Map[A,B]]()(_ => ByteVector.view("A".getBytes))
+    EntityEncoder.simple[Map[A,B]]()(_ => Chunk.bytes("A".getBytes))
 
   case class CsvFile()
 
@@ -522,7 +520,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     implicit def EntityEncoderCsvFile: EntityEncoder[CsvFile] =
       EntityEncoder.encodeBy[CsvFile](`Content-Type`(MediaType.`text/csv`, Some(Charset.`UTF-8`))) { file: CsvFile =>
         ByteVector.encodeUtf8("file content").fold(Task.fail, bv =>
-          Task.now(EntityEncoder.Entity(scalaz.stream.Process.emit(bv), Some(bv.length))))
+          Task.now(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length))))
       }
   }
 

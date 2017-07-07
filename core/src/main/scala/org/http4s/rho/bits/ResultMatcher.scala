@@ -4,7 +4,7 @@ import org.http4s.{Request, Response, Status, EntityEncoder, MediaType}
 import org.http4s.rho.Result
 
 import scala.reflect.runtime.universe.{ Type, WeakTypeTag }
-import scalaz.concurrent.Task
+import fs2.Task
 
 
 trait ResultMatcher[-R] {

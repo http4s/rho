@@ -10,8 +10,7 @@ import org.http4s.rho.swagger.models.Model
 import shapeless.HNil
 
 import scala.reflect.runtime.universe._
-import scalaz.stream.Process
-import scalaz.concurrent.Task
+import fs2.{Task, Stream}
 
 package object swagger {
 
@@ -92,8 +91,8 @@ package object swagger {
       Reflector.primitives.exists(_ =:= t) ||
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
-    def isProcess: Boolean =
-      t <:< typeOf[Process[Task, _]]
+    def isStream: Boolean =
+      t <:< typeOf[Stream[Task, _]]
 
     def isTask: Boolean =
       t <:< typeOf[Task[_]]

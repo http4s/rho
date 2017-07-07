@@ -3,16 +3,14 @@ package rho
 package swagger
 
 import org.specs2.mutable.Specification
-import scalaz.NonEmptyList
-import scalaz.syntax.foldable1._
-
+import cats.data.NonEmptyList
+import cats.syntax.all._
 import org.http4s.rho.bits.MethodAliases.GET
 
 class SwaggerSupportSpec extends Specification {
 
   import org.json4s.JsonAST._
   import org.json4s.jackson._
-
 
 
   val baseService = new RhoService {
@@ -57,8 +55,8 @@ class SwaggerSupportSpec extends Specification {
     "Provide a way to agregate routes from multiple RhoServices" in {
       val aggregateSwagger = SwaggerSupport.createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes)
       val swaggerRoutes = SwaggerSupport.createSwaggerRoute(aggregateSwagger)
-      val httpServices = NonEmptyList(baseService, moarRoutes, swaggerRoutes).map(_.toService())
-      val allthogetherService = httpServices.foldLeft1(Service.withFallback(_)(_))
+      val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())
+      val allthogetherService = httpServices.reduceLeft(Service.withFallback(_)(_))
 
       val r = Request(GET, Uri(path = "/swagger.json"))
 

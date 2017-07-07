@@ -13,8 +13,7 @@ import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
 import scala.util.control.NonFatal
-import scalaz.{-\/, \/, \/-}
-import scalaz.concurrent.Task
+import fs2.Task
 
 import org.log4s.getLogger
 
@@ -144,8 +143,8 @@ package object rho extends Http4s with ResultSyntaxInstances {
     */
   def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
     captureMapR(header, None){ h => f(h) match {
-        case Some(r) => -\/(r)
-        case None    => \/-(())
+        case Some(r) => Left(r)
+        case None    => Right(())
       }
     }.ignore
 
@@ -160,7 +159,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param f mapping function
     */
   def captureMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R): TypedHeader[R :: HNil] =
-    captureMapR(key, None)(f andThen (\/-(_)))
+    captureMapR(key, None)(f andThen (Right(_)))
 
   /** Capture a specific header and map its value with an optional default
     *
@@ -168,7 +167,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param default optional default for the case of a missing header
     * @param f mapping function
     */
-  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]] = None)(f: H#HeaderT => Task[BaseResult]\/R): TypedHeader[R :: HNil] =
+  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]] = None)(f: H#HeaderT => Either[Task[BaseResult], R]): TypedHeader[R :: HNil] =
     _captureMapR(key, default)(f)
 
   /** Create a header capture rule using the `Request`'s `Headers`
@@ -199,13 +198,13 @@ package object rho extends Http4s with ResultSyntaxInstances {
       }
     }.withMetadata(QueryMetaData(name, parser, default = default, m))
 
-  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]])(f: H#HeaderT => Task[BaseResult]\/R): TypedHeader[R :: HNil] =
+  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]])(f: H#HeaderT => Either[Task[BaseResult], R]): TypedHeader[R :: HNil] =
     genericHeaderCapture { headers =>
       headers.get(key) match {
         case Some(h) =>
           try f(h) match {
-            case \/-(r) => SuccessResponse(r)
-            case -\/(r) => FailureResponse.result(r)
+            case Right(r) => SuccessResponse(r)
+            case Left(r) => FailureResponse.result(r)
           } catch {
             case NonFatal(e) =>
               logger.error(e)(s"""Failure during header capture: "${key.name}" = "${h.value}"""")

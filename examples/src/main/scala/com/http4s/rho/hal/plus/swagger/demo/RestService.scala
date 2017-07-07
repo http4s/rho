@@ -11,8 +11,6 @@ import org.http4s.rho.hal.{ ResourceObjectBuilder => ResObjBuilder }
 import org.http4s.rho._
 import org.http4s.rho.swagger._
 
-import scalaz.{ -\/, \/- }
-
 class RestService(val businessLayer: BusinessLayer) extends RhoService {
 
   // # Query Parameters
@@ -261,7 +259,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
     else self +? (firstResult, first) +? (maxResults, max)
   }
 
-  // use JSON messages if a non-successful HTTP status must be send 
+  // use JSON messages if a non-successful HTTP status must be send
 
   def message(text: String, `type`: MessageType): Message = {
     Message(text, `type`)

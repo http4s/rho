@@ -4,12 +4,12 @@ package rho
 import org.specs2.mutable.Specification
 
 import scodec.bits.ByteVector
-import scalaz.stream.Process
+import fs2.Stream
 
 class CodecRouterSpec extends Specification {
 
   def bodyAndStatus(resp: Response): (String, Status) = {
-    val rbody = new String(resp.body.runLog.run.reduce(_ ++ _).toArray)
+    val rbody = new String(resp.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
     (rbody, resp.status)
   }
 
@@ -22,10 +22,10 @@ class CodecRouterSpec extends Specification {
 
     "Decode a valid body" in {
 
-      val b = Process.emit(ByteVector.view("hello".getBytes))
+      val b = Stream.emits("hello".getBytes)
       val h = Headers(headers.`Content-Type`(MediaType.`text/plain`))
       val req = Request(Method.POST, Uri(path = "/foo"), headers = h, body = b)
-      val result = service(req).run
+      val result = service(req).unsafeRun.orNotFound
       val (bb, s) = bodyAndStatus(result)
 
       s must_== Status.Ok
@@ -33,11 +33,11 @@ class CodecRouterSpec extends Specification {
     }
 
     "Fail on invalid body" in {
-      val b = Process.emit(ByteVector.view("hello =".getBytes))
+      val b = Stream.emits("hello =".getBytes)
       val h = Headers(headers.`Content-Type`(MediaType.`application/x-www-form-urlencoded`))
       val req = Request(Method.POST, Uri(path = "/form"), headers = h, body = b)
 
-      service(req).run.status must_== Status.BadRequest
+      service(req).unsafeRun.orNotFound.status must_== Status.BadRequest
     }
   }
 

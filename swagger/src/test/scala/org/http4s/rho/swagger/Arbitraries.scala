@@ -1,9 +1,16 @@
 package org.http4s.rho.swagger
 
 import models._
-import org.scalacheck._, Gen._, Arbitrary._
-import scalaz._, Scalaz.{option=>_,_}
-import org.http4s.MediaType, MediaType._
+import org.scalacheck._
+import Gen._
+import Arbitrary._
+import org.http4s.MediaType
+import MediaType._
+import cats.{Applicative, Functor, Monad}
+import cats.syntax.all._
+import cats.instances.all._
+
+import scala.annotation.tailrec
 
 /**
  * Arbitraries for the creation of Swagger models
@@ -75,7 +82,7 @@ object Arbitraries {
     mapOf(arbitrary[T])
 
   def mapOf[T](gen: Gen[T]): Gen[Map[String, T]] =
-    choose(1, 10).flatMap(n => listOfN(n, (identifier |@| gen)((_,_))).map(_.toMap))
+    choose(1, 10).flatMap(n => listOfN(n, (identifier |@| gen).tupled).map(_.toMap))
 
   def genPath(definitions: Map[String, Model]): Gen[Path] =
     for {
@@ -212,12 +219,13 @@ object Arbitraries {
   def genExternalDocs: Gen[ExternalDocs] =
     Gen.const(ExternalDocs("description", "url"))
 
-  implicit def GenMonad: Monad[Gen] = new Monad[Gen] {
-    def point[A](a: =>A): Gen[A] =
-      Gen.const(a)
-
-    def bind[A, B](fa: Gen[A])(f: A => Gen[B]): Gen[B] =
-      fa.flatMap(f)
+  implicit def GenApplicative: Applicative[Gen] = new Applicative[Gen] {
+    def pure[A](x: A): Gen[A] = Gen.const(x)
+    def ap[A, B](ff: Gen[(A) => B])(fa: Gen[A]): Gen[B] = {
+      fa.flatMap { a =>
+        ff.map(f => f(a))
+      }
+    }
   }
 
 }

@@ -4,14 +4,10 @@ package bits
 import scodec.bits.ByteVector
 
 import scala.language.higherKinds
-
-
-import org.http4s.headers.{ `Content-Length`, Location }
-import org.http4s.EntityEncoder.Entity
+import org.http4s.headers.{Location, `Content-Length`}
 import org.http4s._
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
-
-import scalaz.concurrent.Task
+import fs2.{Chunk, Task}
 
 /** Helpers to aid in the construction of a response function
   *
@@ -32,7 +28,7 @@ object ResponseGenerator {
   object EmptyRe {
     // This is just a dummy so that the implicits in ResultMatcher will work.
     implicit val w: EntityEncoder[EmptyRe] = {
-      EntityEncoder.simple[EmptyRe]()(_ => ByteVector.empty)
+      EntityEncoder.simple[EmptyRe]()(_ => Chunk.empty)
     }
   }
 }

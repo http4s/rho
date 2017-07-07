@@ -23,18 +23,11 @@ object RhoBuild extends Build {
 
   val apiVersion = TaskKey[(Int, Int)]("api-version", "Defines the API compatibility version for the project.")
 
-  val scalazVersion = settingKey[String]("The version of Scalaz used for building.")
-  def scalazCrossBuildSuffix(scalazVersion: String) =
-    VersionNumber(scalazVersion).numbers match {
-      case Seq(7, 1, _*) => ""
-      case Seq(7, 2, _*) => "a"
-    }
-
   lazy val rho = project
                   .in(file("."))
                   .settings(buildSettings: _*)
                   .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-examples`)
-   
+
   lazy val `rho-core` = project
                     .in(file("core"))
                     .settings(buildSettings: _*)
@@ -83,9 +76,7 @@ object RhoBuild extends Build {
                                   Revolver.settings ++
                                   Seq(
                                     exampleDeps,
-                                    libraryDependencies <++= scalazVersion(sz => 
-                                      Seq(logbackClassic, http4sXmlInstances(sz))
-                                    ),
+                                    libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
                                     dontPublish
                                   ) :_*)
                         .dependsOn(`rho-swagger`, `rho-hal`)
@@ -101,11 +92,10 @@ object RhoBuild extends Build {
 
   lazy val buildSettings = publishing ++
      Seq(
-        scalaVersion := "2.11.8",
-        crossScalaVersions := Seq("2.11.8", "2.12.1"),
+        scalaVersion := "2.11.11",
+        crossScalaVersions := Seq("2.11.11", "2.12.2"),
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
-        resolvers += "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases",
         fork in run := true,
 
         organization in ThisBuild := "org.http4s",
@@ -113,11 +103,12 @@ object RhoBuild extends Build {
         description := "A self documenting DSL build upon the http4s framework",
         license,
 
-        libraryDependencies <++= scalazVersion { sz => Seq(
+        libraryDependencies ++= Seq(
           shapeless,
-          http4sServer(sz) % "provided",
+          http4sServer     % "provided",
           logbackClassic   % "test"
-        ) ++ specs2(sz) },
+        ),
+        libraryDependencies ++= specs2,
         libraryDependencies += `scala-reflect` % scalaVersion.value
     )
 
@@ -158,7 +149,7 @@ object RhoBuild extends Build {
   }
 
   def scaladocOptions(base: File, version: String, apiVersion: (Int, Int)): List[String] = {
-    val sourceLoc = 
+    val sourceLoc =
       if (version.endsWith("SNAPSHOT")) {
         s"$homepageUrl/tree/master€{FILE_PATH}.scala"
       } else {
@@ -166,7 +157,7 @@ object RhoBuild extends Build {
         s"$homepageUrl/tree/v$major.$minor.0€{FILE_PATH}.scala"
       }
 
-    val opts = List("-implicits", 
+    val opts = List("-implicits",
                     "-doc-source-url", sourceLoc,
                     "-sourcepath", base.getAbsolutePath
                     )
@@ -199,20 +190,15 @@ object RhoBuild extends Build {
 object Dependencies {
   import RhoBuild._
 
-  def specs2Version(scalazVersion: String) =
-    VersionNumber(scalazVersion).numbers match {
-      case Seq(7, 1, _*) => "3.8.6-scalaz-7.1"
-      case Seq(7, 2, _*) => "3.8.6"
-    }
-  def http4sVersion(scalazVersion: String) =
-    s"0.15.0${scalazCrossBuildSuffix(scalazVersion)}"
+  lazy val http4sVersion = s"0.17.0-M3"
+  lazy val specs2Version = "3.8.6"
 
-  def http4sServer(zv: String) = "org.http4s"                 %% "http4s-server"         % http4sVersion(zv)
-  def http4sDSL(zv: String)    = "org.http4s"                 %% "http4s-dsl"            % http4sVersion(zv)
-  def http4sBlaze(zv: String)  = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion(zv)
-  def http4sJetty(zv: String)  = "org.http4s"                 %% "http4s-servlet"        % http4sVersion(zv)
-  def http4sJson4sJackson(zv: String) = "org.http4s"          %% "http4s-json4s-jackson" % http4sVersion(zv)
-  def http4sXmlInstances(zv: String) = "org.http4s"           %% "http4s-scala-xml"      % http4sVersion(zv)
+  lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
+  lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
+  lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion
+  lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
+  lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
+  lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
   lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.5.0"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.5.10"
@@ -221,8 +207,8 @@ object Dependencies {
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.09"
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.2"
 
-  def specs2(zv: String)       = Seq("org.specs2"              %% "specs2-core"          ,
-                                     "org.specs2"              %% "specs2-scalacheck"    ).map(_ % specs2Version(zv) % "test")
+  lazy val specs2              = Seq("org.specs2"              %% "specs2-core"          % specs2Version % "test",
+                                     "org.specs2"              %% "specs2-scalacheck"    % specs2Version % "test" )
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
@@ -236,12 +222,12 @@ object Dependencies {
     swaggerModels
   )
 
-  lazy val exampleDeps = libraryDependencies <++= scalazVersion(sz => Seq(
-    http4sBlaze(sz),
-    http4sDSL(sz),
+  lazy val exampleDeps = libraryDependencies ++= Seq(
+    http4sBlaze,
+    http4sDSL,
     json4s,
     json4sJackson,
-    http4sJson4sJackson(sz),
+    http4sJson4sJackson,
     uadetector
-  ))
+  )
 }

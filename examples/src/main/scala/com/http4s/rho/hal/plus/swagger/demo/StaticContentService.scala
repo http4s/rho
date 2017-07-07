@@ -6,7 +6,7 @@ import org.http4s.Response
 import org.http4s.StaticFile
 import org.http4s.dsl._
 import org.http4s.HttpService
-import scalaz.concurrent.Task
+import fs2.Task
 
 object StaticContentService {
 

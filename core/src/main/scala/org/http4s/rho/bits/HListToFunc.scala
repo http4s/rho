@@ -3,7 +3,7 @@ package rho.bits
 
 import org.http4s.rho.Action
 import shapeless.{HNil, ::, HList}
-import scalaz.concurrent.Task
+import fs2.Task
 
 /** Converter of an value of type F to the HList of type T
   *

@@ -10,7 +10,7 @@ import org.log4s.getLogger
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
-import scalaz._, Scalaz._
+import cats.syntax.all._
 
 case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
 
@@ -43,7 +43,7 @@ object TypeBuilder {
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
 
-        case tpe if tpe.isProcess =>
+        case tpe if tpe.isStream =>
           val ntpe = tpe.typeArgs.apply(1)
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
@@ -87,7 +87,7 @@ object TypeBuilder {
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
-          modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { model =>
+          modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { (model: Model) =>
             val refmodel = RefModel(model.id, model.id2, model.id2)
             val children =
               sym.asClass.knownDirectSubclasses.flatMap { sub =>
@@ -283,7 +283,7 @@ object TypeBuilder {
       } else if (t.isArray || isCollection(klass)) {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs.head))
         else GenArray()
-      } else if (t.isProcess) {
+      } else if (t.isStream) {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs(1)))
         else GenArray()
       } else if (klass <:< typeOf[AnyVal]) {
