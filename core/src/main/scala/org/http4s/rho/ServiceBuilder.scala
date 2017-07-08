@@ -7,7 +7,7 @@ import shapeless.HList
 import scala.collection.immutable.VectorBuilder
 
 /** CompileService which accumulates routes and can build a `HttpService` */
-final class ServiceBuilder private(internalRoutes: VectorBuilder[RhoRoute.Tpe]) extends CompileService[RhoRoute.Tpe] {
+class ServiceBuilder (internalRoutes: VectorBuilder[RhoRoute.Tpe]) extends CompileService[RhoRoute.Tpe] {
   private val logger = getLogger
 
   /** Turn the accumulated routes into an `HttpService`
