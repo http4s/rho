@@ -23,23 +23,13 @@ object Auth {
 
 class AuthedRhoServiceSpec extends Specification {
 
-  implicit val userAuthInfo = new AuthInfo[User] {
-    override def serialize(u: User): String = s"${u.name},${u.id}"
-
-    override def fromString(sv: String): User = {
-      val params = sv.split(",")
-      User(params(0), UUID.fromString(params(1)))
-    }
-  }
-
   val service = Auth.authenticated(new AuthedRhoService[User] {
     GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
-      withAuth(req) { user =>
-        if (user.name == "Test User") {
-          Ok(s"just root with parameter 'foo=$foo'")
-        } else {
-          BadRequest("This should not have happened.")
-        }
+      val user = getAuth(req)
+      if (user.name == "Test User") {
+        Ok(s"just root with parameter 'foo=$foo'")
+      } else {
+        BadRequest("This should not have happened.")
       }
     }
   }.toService())

@@ -15,20 +15,18 @@ import shapeless.{HNil, HList}
   * {{{
   *   val srvc = new AuthedRhoService[U] {
   *     POST / "foo" / pathVar[Int] +? param[String]("param") |>> { (req: Request, p1: Int, param: String) =>
-  *       withAuth(req) { authInfo: U =>
-  *         Ok("success")
-  *       }
+  *       val authInfo: U = getAuth(req)
+  *       ...
   *     }
   *   }
   *
   * }}}
   *
-  * @tparam U [[AuthInfo]] type for this service.
+  * @tparam U authInfo type for this service.
   * @param routes Routes to prepend before elements in the constructor.
-  * @param ev implicit AuthInfo typeclass instance for U
   *
   */
-class AuthedRhoService[U](routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)(implicit ev: AuthInfo[U])
+class AuthedRhoService[U](routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
   extends bits.MethodAliases
     with bits.ResponseGeneratorInstances
     with RoutePrependable[AuthedRhoService[U]]
@@ -46,7 +44,7 @@ class AuthedRhoService[U](routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)(impl
     * @return A new [[AuthedRhoService]] that contains the routes of the other service appended
     *         the the routes contained in this service.
     */
-  final def and(other: AuthedRhoService[U]): AuthedRhoService[U] = new AuthedRhoService(this.getRoutes ++ other.getRoutes)(ev)
+  final def and(other: AuthedRhoService[U]): AuthedRhoService[U] = new AuthedRhoService(this.getRoutes ++ other.getRoutes)
 
   /** Get a snapshot of the collection of [[RhoRoute]]'s accumulated so far */
   final def getRoutes: Seq[RhoRoute[_ <: HList]] = serviceBuilder.routes()
@@ -57,12 +55,11 @@ class AuthedRhoService[U](routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)(impl
   final override def toString: String = s"AuthedRhoService(${serviceBuilder.routes().toString()})"
 
   final override def /:(prefix: TypedPath[HNil]): AuthedRhoService[U] = {
-    new AuthedRhoService(serviceBuilder.routes().map { prefix /: _ })(ev)
+    new AuthedRhoService(serviceBuilder.routes().map { prefix /: _ })
   }
 
-  def withAuth[R](req: Request)(f: U => R): R = {
-    val user = ev.fromString(req.attributes.get(AttributeKey[String](ev.attrKey)).get)
-    f(user)
+  def getAuth(req: Request): U = {
+    req.attributes.get[U](serviceBuilder.authKey).get
   }
 }
 

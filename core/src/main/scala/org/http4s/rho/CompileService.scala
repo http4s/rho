@@ -43,20 +43,4 @@ object CompileService {
     val tree = filter(routes).foldLeft(PathTree()){ (t, r) => t.appendRoute(r) }
     Service.lift { req => tree.getResult(req).toResponse }
   }
-
-
-  /** Convert the `Seq` of [[RhoRoute]]'s into a `AuthedService`
-    *
-    * @tparam U AuthInfo type for this service
-    * @param routes `Seq` of routes to bundle into a service.
-    * @param filter [[RhoMiddleware]] to apply to the routes.
-    * @param ev [[AuthInfo]] instance for U
-    * @return An `AuthedService`
-    */
-  def foldAuthedServices[U](routes: Seq[RhoRoute.Tpe], filter: RhoMiddleware = identity)(implicit ev: AuthInfo[U]): AuthedService[U] = {
-    val tree = filter(routes).foldLeft(PathTree()){ (t, r) => t.appendRoute(r) }
-    Service.lift { req =>
-      tree.getResult(req.req.withAttribute[String](AttributeKey[String](ev.attrKey), ev.serialize(req.authInfo))).toResponse
-    }
-  }
 }
