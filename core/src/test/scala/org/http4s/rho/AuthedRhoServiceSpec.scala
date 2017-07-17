@@ -2,11 +2,12 @@ package org.http4s
 package rho
 
 import java.util.UUID
-import org.specs2.mutable.Specification
-import fs2.{Stream, Task}
-import scodec.bits.ByteVector
+
 import cats.data._
+import fs2.Task
 import org.http4s.server.AuthMiddleware
+import org.specs2.mutable.Specification
+import scodec.bits.ByteVector
 
 
 case class User(name: String, id: UUID)
@@ -21,18 +22,24 @@ object Auth {
 }
 
 
+object MyAuth extends AuthedRhoService[User]
+
+object MyService extends RhoService {
+  import MyAuth._
+
+  GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
+    val user = getAuth(req)
+    if (user.name == "Test User") {
+      Ok(s"just root with parameter 'foo=$foo'")
+    } else {
+      BadRequest("This should not have happened.")
+    }
+  }
+}
+
 class AuthedRhoServiceSpec extends Specification {
 
-  val service = Auth.authenticated(new AuthedRhoService[User] {
-    GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
-      val user = getAuth(req)
-      if (user.name == "Test User") {
-        Ok(s"just root with parameter 'foo=$foo'")
-      } else {
-        BadRequest("This should not have happened.")
-      }
-    }
-  }.toService())
+  val service = Auth.authenticated(MyAuth.toService(MyService))
 
   "AuthedRhoService execution" should {
 

@@ -1,65 +1,59 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.PathAST.TypedPath
-import org.http4s.AuthedService
-import org.log4s.getLogger
-import shapeless.{HNil, HList}
 
-/** Constructor class for defining routes
-  *
-  * The [[AuthedRhoService]] provides a convenient way to define routes in a style
-  * similar to scalatra etc by providing implicit conversions and an implicit
-  * [[CompileService]] inside the constructor.
-  *
+/** The [[AuthedRhoService]] provides a convenient way to define a RhoService
+  * which works with http4s authentication middleware.
   * {{{
-  *   val srvc = new AuthedRhoService[U] {
-  *     POST / "foo" / pathVar[Int] +? param[String]("param") |>> { (req: Request, p1: Int, param: String) =>
-  *       val authInfo: U = getAuth(req)
-  *       ...
-  *     }
-  *   }
+  *     case class User(name: String, id: UUID)
   *
+  *     object Auth {
+  *       val authUser: Service[Request, User] = Kleisli({ _ =>
+  *         Task.now(User("Test User", UUID.randomUUID()))
+  *       })
+  *
+  *       val authenticated = AuthMiddleware(authUser)
+  *     }
+  *
+  *     object MyAuth extends AuthedRhoService[User]
+  *
+  *     object MyService extends RhoService {
+  *       import MyAuth._
+  *       GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
+  *         val user = getAuth(req)
+  *         if (user.name == "Test User") {
+  *           Ok(s"just root with parameter 'foo=$foo'")
+  *         } else {
+  *           BadRequest("This should not have happened.")
+  *         }
+  *       }
+  *     }
+  *
+  *     val service = Auth.authenticated(MyAuth.toService(MyService))
   * }}}
   *
   * @tparam U authInfo type for this service.
-  * @param routes Routes to prepend before elements in the constructor.
-  *
   */
-class AuthedRhoService[U](routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
-  extends bits.MethodAliases
-    with bits.ResponseGeneratorInstances
-    with RoutePrependable[AuthedRhoService[U]]
-    with EntityEncoderInstances
-{
-  final private val serviceBuilder = AuthedServiceBuilder[U](routes, ev)
+class AuthedRhoService[U] {
 
-  final protected val logger = getLogger
+  /* Attribute key to lookup authInfo in request attributeMap . */
+  final private val authKey = AttributeKey[U]("authInfo")
 
-  final implicit protected def compileService: CompileService[RhoRoute.Tpe] = serviceBuilder
-
-  /** Create a new [[AuthedRhoService]] by appending the routes of the passed [[AuthedRhoService]]
+  /** Turn the [[HttpService]] into an `AuthedService`
     *
-    * @param other [[AuthedRhoService]] whos routes are to be appended.
-    * @return A new [[AuthedRhoService]] that contains the routes of the other service appended
-    *         the the routes contained in this service.
+    * @param rhoService [[RhoService]] to convert
+    * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  final def and(other: AuthedRhoService[U]): AuthedRhoService[U] = new AuthedRhoService(this.getRoutes ++ other.getRoutes)
-
-  /** Get a snapshot of the collection of [[RhoRoute]]'s accumulated so far */
-  final def getRoutes: Seq[RhoRoute[_ <: HList]] = serviceBuilder.routes()
-
-  /** Convert the [[RhoRoute]]'s accumulated into a `AuthedService` */
-  final def toService(filter: RhoMiddleware = identity): AuthedService[U] = serviceBuilder.toAuthedService(filter)
-
-  final override def toString: String = s"AuthedRhoService(${serviceBuilder.routes().toString()})"
-
-  final override def /:(prefix: TypedPath[HNil]): AuthedRhoService[U] = {
-    new AuthedRhoService(serviceBuilder.routes().map { prefix /: _ })
+  def toService(rhoService: RhoService): AuthedService[U] = {
+    val service = rhoService.toService()
+    Service.lift { case AuthedRequest(authInfo, req) =>
+      service(req.withAttribute[U](authKey, authInfo))
+    }
   }
 
+  /* Get the authInfo object from request. */
   def getAuth(req: Request): U = {
-    req.attributes.get[U](serviceBuilder.authKey).get
+    req.attributes.get[U](authKey).get
   }
 }
 
