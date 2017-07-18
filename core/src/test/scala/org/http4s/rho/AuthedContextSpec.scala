@@ -22,7 +22,7 @@ object Auth {
 }
 
 
-object MyAuth extends AuthedRhoService[User]
+object MyAuth extends AuthedContext[User]
 
 object MyService extends RhoService {
   import MyAuth._
@@ -37,11 +37,11 @@ object MyService extends RhoService {
   }
 }
 
-class AuthedRhoServiceSpec extends Specification {
+class AuthedContextSpec extends Specification {
 
   val service = Auth.authenticated(MyAuth.toService(MyService))
 
-  "AuthedRhoService execution" should {
+  "AuthedContext execution" should {
 
     "Be able to have access to authInfo" in {
       val request = Request(Method.GET, Uri(path = "/"))

@@ -2,7 +2,7 @@ package org.http4s
 package rho
 
 
-/** The [[AuthedRhoService]] provides a convenient way to define a RhoService
+/** The [[AuthedContext]] provides a convenient way to define a RhoService
   * which works with http4s authentication middleware.
   * {{{
   *     case class User(name: String, id: UUID)
@@ -15,7 +15,7 @@ package rho
   *       val authenticated = AuthMiddleware(authUser)
   *     }
   *
-  *     object MyAuth extends AuthedRhoService[User]
+  *     object MyAuth extends AuthedContext[User]
   *
   *     object MyService extends RhoService {
   *       import MyAuth._
@@ -34,7 +34,7 @@ package rho
   *
   * @tparam U authInfo type for this service.
   */
-class AuthedRhoService[U] {
+class AuthedContext[U] {
 
   /* Attribute key to lookup authInfo in request attributeMap . */
   final private val authKey = AttributeKey[U]("authInfo")
