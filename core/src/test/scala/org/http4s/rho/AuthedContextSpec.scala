@@ -27,8 +27,7 @@ object MyAuth extends AuthedContext[User]
 object MyService extends RhoService {
   import MyAuth._
 
-  GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
-    val user = getAuth(req)
+  GET +? param("foo", "bar") >>> auth |>> { (req: Request, foo: String, user: User) =>
     if (user.name == "Test User") {
       Ok(s"just root with parameter 'foo=$foo'")
     } else {

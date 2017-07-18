@@ -1,6 +1,9 @@
 package org.http4s
 package rho
 
+import shapeless.{HNil, ::}
+import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
+
 
 /** The [[AuthedContext]] provides a convenient way to define a RhoService
   * which works with http4s authentication middleware.
@@ -54,6 +57,13 @@ class AuthedContext[U] {
   /* Get the authInfo object from request. */
   def getAuth(req: Request): U = {
     req.attributes.get[U](authKey).get
+  }
+
+  final val auth: TypedHeader[U :: HNil] = rho.genericRequestHeaderCapture { req =>
+    req.attributes.get(authKey) match {
+      case Some(authInfo) => SuccessResponse(authInfo)
+      case None => FailureResponse.error("Invalid auth configuration")
+    }
   }
 }
 
