@@ -32,7 +32,7 @@ import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
   *       }
   *     }
   *
-  *     val service = Auth.authenticated(MyAuth.toService(MyService))
+  *     val service = Auth.authenticated(MyAuth.toService(MyService.toService(SwaggerSupport())))
   * }}}
   *
   * @tparam U authInfo type for this service.
@@ -44,11 +44,10 @@ class AuthedContext[U] {
 
   /** Turn the [[HttpService]] into an `AuthedService`
     *
-    * @param rhoService [[RhoService]] to convert
+    * @param service [[HttpService]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService(rhoService: RhoService): AuthedService[U] = {
-    val service = rhoService.toService()
+  def toService(service: HttpService): AuthedService[U] = {
     Service.lift { case AuthedRequest(authInfo, req) =>
       service(req.withAttribute[U](authKey, authInfo))
     }
