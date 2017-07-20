@@ -38,7 +38,7 @@ object MyService extends RhoService {
 
 class AuthedContextSpec extends Specification {
 
-  val service = Auth.authenticated(MyAuth.toService(MyService))
+  val service = Auth.authenticated(MyAuth.toService(MyService.toService()))
 
   "AuthedContext execution" should {
 
