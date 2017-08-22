@@ -7,6 +7,7 @@ import org.http4s.StaticFile
 import org.http4s.dsl._
 import org.http4s.HttpService
 import fs2.Task
+import fs2.interop.cats._
 
 object StaticContentService {
 
@@ -14,9 +15,7 @@ object StaticContentService {
   private val swaggerUiDir = "/swagger-ui"
 
   def fetchResource(path: String, req: Request): Task[Response] = {
-    StaticFile.fromResource(path, Some(req))
-      .map(Task.now)
-      .getOrElse(NotFound())
+    StaticFile.fromResource(path, Some(req)).getOrElseF(NotFound())
   }
 
   /**

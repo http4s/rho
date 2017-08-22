@@ -2,7 +2,7 @@ package org.http4s.rho
 
 import java.time.Instant
 
-import org.http4s.AttributeKey
+import org.http4s.{AttributeKey, HttpDate}
 import org.http4s.headers._
 import org.specs2.mutable.Specification
 
@@ -12,7 +12,7 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
 
   "ResultSyntax" should {
     "Add headers" in {
-      val date = Date(Instant.ofEpochMilli(0))
+      val date = Date(HttpDate.Epoch)
       val resp = Ok("Foo")
                   .putHeaders(date)
                   .unsafeRun
@@ -28,7 +28,7 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
     }
 
     "Add atributes" in {
-      val attrKey = AttributeKey[String]("foo")
+      val attrKey = AttributeKey[String]
       val resp = Ok("Foo")
         .withAttribute(attrKey, "foo")
         .unsafeRun
@@ -52,7 +52,7 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
                   .resp
 
       new String(resp.body.runLog.unsafeRun.toArray) must_== newbody
-      resp.headers.get(`Content-Length`) must beSome(`Content-Length`(newbody.getBytes.length))
+      resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
 
       val resp2 = Ok("foo")
         .unsafeRun
@@ -61,7 +61,7 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
         .resp
 
       new String(resp2.body.runLog.unsafeRun.toArray) must_== newbody
-      resp2.headers.get(`Content-Length`) must beSome(`Content-Length`(newbody.getBytes.length))
+      resp2.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
     }
 
 

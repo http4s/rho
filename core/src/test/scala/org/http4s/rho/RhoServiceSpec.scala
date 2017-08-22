@@ -312,7 +312,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val uri = Uri.fromString("/foo/1?param=myparam").right.getOrElse(sys.error("Failed."))
       val req = Request(method = Method.POST, uri = uri, body = body)
                     .putHeaders(`Content-Type`(MediaType.`text/plain`),
-                                `Content-Length`("foo".length))
+                                `Content-Length`.unsafeFromLong("foo".length))
 
       val r = srvc.toService()(req)
       getBody(r.unsafeRun.orNotFound.body) must_== "success"
