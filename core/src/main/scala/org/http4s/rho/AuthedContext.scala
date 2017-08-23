@@ -40,7 +40,7 @@ import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
 class AuthedContext[U] {
 
   /* Attribute key to lookup authInfo in request attributeMap . */
-  final private val authKey = AttributeKey[U]("authInfo")
+  final private val authKey = AttributeKey[U]
 
   /** Turn the [[HttpService]] into an `AuthedService`
     *

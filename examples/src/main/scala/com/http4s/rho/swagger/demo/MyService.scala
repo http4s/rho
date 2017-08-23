@@ -5,7 +5,7 @@ import java.time.Instant
 
 import org.http4s.Uri
 import org.http4s.rho.RhoService
-
+import org.http4s.HttpDate
 import JsonEncoder.AutoSerializable
 import cats.syntax.all._
 import fs2.{Stream, Task}
@@ -76,7 +76,7 @@ object MyService extends RhoService {
       val hs = req.headers.get(headers.Cookie) match {
         case None => Headers.empty
         case Some(cookie) =>
-          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(Instant.ofEpochMilli(0)), maxAge = Some(0)))})
+          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
       }
 
       Ok("Deleted cookies!").replaceAllHeaders(hs)

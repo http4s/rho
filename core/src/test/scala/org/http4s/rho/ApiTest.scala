@@ -19,7 +19,7 @@ class ApiTest extends Specification {
     srvc.apply(_: Request)
   }
 
-  val lenheader = headers.`Content-Length`(4)
+  val lenheader = headers.`Content-Length`.unsafeFromLong(4)
   val etag = ETag(ETag.EntityTag("foo"))
 
   val RequireETag = exists(ETag)
@@ -86,17 +86,17 @@ class ApiTest extends Specification {
     }
 
     "map simple header params into a complex type" in {
-      case class Foo(age: Long, s: java.time.Instant)
+      case class Foo(age: Long, s: HttpDate)
       val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
 
       val now = java.time.Instant.now()
       val path = GET / "hello" +? paramFoo
       val req = Request(
         uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")),
-        headers = Headers(headers.`Content-Length`(10), headers.Date(now))
+        headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
       )
 
-      val expectedFoo = Foo(10, now)
+      val expectedFoo = Foo(10, HttpDate.now)
       val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
 
       val result = route(req).unsafeRun.orNotFound
@@ -367,7 +367,7 @@ class ApiTest extends Specification {
       val path = GET / "hello"
 
       val req = Request(uri = uri("/hello"))
-                  .putHeaders(headers.`Content-Length`("foo".length))
+                  .putHeaders(headers.`Content-Length`.unsafeFromLong("foo".length))
 
       val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length < 2}
       val route1 = runWith(path.validate(reqHeader)) { () =>
@@ -388,7 +388,7 @@ class ApiTest extends Specification {
       val path = GET / "hello"
 
       val req = Request(uri = uri("/hello?foo=bar"))
-                  .putHeaders(`Content-Length`("foo".length))
+                  .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
 
       val route1 = runWith(path +? param[Int]("foo")) { i: Int =>
         Ok("shouldn't get here.")
