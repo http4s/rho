@@ -92,8 +92,8 @@ object RhoBuild extends Build {
 
   lazy val buildSettings = publishing ++
      Seq(
-        scalaVersion := "2.11.11",
-        crossScalaVersions := Seq("2.11.11", "2.12.3"),
+        scalaVersion := "2.12.3",
+        crossScalaVersions := Seq("2.12.3", "2.11.11"),
         scalacOptions ++= compileFlags,
         resolvers += Resolver.sonatypeRepo("snapshots"),
         fork in run := true,

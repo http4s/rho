@@ -32,7 +32,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
   implicit def pathMatch(s: String): TypedPath[HNil] = TypedPath(PathMatch(s))
 
   implicit def pathMatch(s: Symbol): TypedPath[String :: HNil] =
-    TypedPath(PathCapture(s.name, StringParser.strParser, stringTag))
+    TypedPath(PathCapture(s.name, None, StringParser.strParser, stringTag))
 
   val PathEmpty: PathRule = PathMatch("")
 
@@ -41,11 +41,23 @@ package object rho extends Http4s with ResultSyntaxInstances {
    * @param name name of the parameter in query
    */
   def param[T](name: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    _paramR(name, None, _ => None)
+    _paramR(name, None, None, _ => None)
+
+  /**
+    * Defines a parameter in query string that should be bound to a route definition.
+    * @param name name of the parameter in query
+    * @param description description of the parameter
+    */
+  def paramWithDesc[T](name: String, description: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    _paramR(name, Some(description), None, _ => None)
 
   /** Define a query parameter with a default value */
   def param[T](name: String, default: T)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    _paramR(name, Some(default), _ => None)
+    _paramR(name, None, Some(default), _ => None)
+
+  /** Define a query parameter with description and a default value */
+  def param[T](name: String, default: T, description: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    _paramR(name, Some(description), Some(default), _ => None)
 
   /** Define a query parameter that will be validated with the predicate
     *
@@ -57,23 +69,51 @@ package object rho extends Http4s with ResultSyntaxInstances {
       else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
     })
 
+  /** Define a query parameter with description that will be validated with the predicate
+    *
+    * Failure of the predicate results in a '403: BadRequest' response. */
+  def paramWithDesc[T](name: String, description: String, validate: T => Boolean)
+              (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    paramR(name, description, { t: T =>
+      if (validate(t)) None
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
+    })
+
   /** Define a query parameter that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
   def param[T](name: String, default: T, validate: T => Boolean)
               (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    paramR(name, default, { t =>
+    paramR(name, default, { t: T =>
+      if (validate(t)) None
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
+    })
+
+  /** Define a query parameter with description that will be validated with the predicate
+    *
+    * Failure of the predicate results in a '403: BadRequest' response. */
+  def param[T](name: String, description: String, default: T, validate: T => Boolean)
+              (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    paramR(name, description, default, { t =>
       if (validate(t)) None
       else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
     })
 
   /** Defines a parameter in query string that should be bound to a route definition. */
   def paramR[T](name: String, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    _paramR(name, None, validate)
+    _paramR(name, None, None, validate)
+
+  /** Defines a parameter in query string with description that should be bound to a route definition. */
+  def paramR[T](name: String, description: String, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    _paramR(name, Some(description), None, validate)
 
   /** Defines a parameter in query string that should be bound to a route definition. */
   def paramR[T](name: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
-    _paramR(name, Some(default), validate)
+    _paramR(name, None, Some(default), validate)
+
+  /** Defines a parameter in query string with description that should be bound to a route definition. */
+  def paramR[T](name: String, description: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+    _paramR(name, Some(description), Some(default), validate)
 
   /** Create a query capture rule using the `Request`'s `Uri`
     *
@@ -103,7 +143,13 @@ package object rho extends Http4s with ResultSyntaxInstances {
    * Defines a path variable of a URI that should be bound to a route definition
    */
   def pathVar[T](id: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
-    TypedPath(PathCapture(id, parser, stringTag))
+    TypedPath(PathCapture(id, None, parser, stringTag))
+
+  /**
+    * Defines a path variable of a URI with description that should be bound to a route definition
+    */
+  def pathVar[T](id: String, description: String)(implicit parser: StringParser[T], m: TypeTag[T]): TypedPath[T :: HNil] =
+    TypedPath(PathCapture(id, Some(description), parser, stringTag))
 
   /**
    * Helper to be able to define a path with one level only.
@@ -188,7 +234,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     TypedHeader(CaptureRule(f))
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  private def _paramR[T](name: String, default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  private def _paramR[T](name: String, description: Option[String], default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     genericRequestQueryCapture { req =>
         val result = parser.collect(name, req.uri.multiParams, default)
         result.flatMap { r => validate(r) match {
@@ -196,7 +242,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
           case Some(resp) => FailureResponse.pure(resp.map(_.resp))
         }
       }
-    }.withMetadata(QueryMetaData(name, parser, default = default, m))
+    }.withMetadata(QueryMetaData(name, description, parser, default = default, m))
 
   private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]])(f: H#HeaderT => Either[Task[BaseResult], R]): TypedHeader[R :: HNil] =
     genericHeaderCapture { headers =>

@@ -176,7 +176,7 @@ private[rho] object PathTree {
           val next = matches.getOrElse(s, MatchNode(s)).append(tail, method, action)
           clone(matches.updated(s, next), captures, variadic, end)
 
-        case PathCapture(_, p, _) =>
+        case PathCapture(_, _, p, _) =>
           val exists = captures.exists{ case CaptureNode(p1,_,_,_,_) => p1 eq p }
           val all = if (exists) captures.map {
             case n@ CaptureNode(p1,_,_,_,_) if p1 eq p => n.append(tail, method, action)
