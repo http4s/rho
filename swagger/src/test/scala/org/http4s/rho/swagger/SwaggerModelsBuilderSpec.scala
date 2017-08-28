@@ -13,6 +13,7 @@ import scala.reflect._
 import scala.reflect.runtime.universe._
 import fs2.{Chunk, Stream, Task}
 import cats.syntax.all._
+import org.http4s.rho.bits.PathAST.{PathCapture, PathAnd}
 
 object SwaggerModelsBuilderSpec {
   case class Foo(a: String, b: Int)
@@ -68,6 +69,13 @@ class SwaggerModelsBuilderSpec extends Specification {
       List(QueryParameter(`type` = "integer".some, name = "id".some, required = true))
     }
 
+    "handle an action with one query parameter with description" in {
+      val ra = fooPath +? paramD[Int]("id", "int id") |>> { (i: Int) => "" }
+
+      sb.collectQueryParams(ra) must_==
+        List(QueryParameter(`type` = "integer".some, name = "id".some, required = true, description = "int id".some))
+    }
+
     "handle an action with one optional query parameter" in {
       val ra = fooPath +? param[Option[String]]("name") |>> { (s: Option[String]) => "" }
 
@@ -80,6 +88,13 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectQueryParams(ra) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false))
+    }
+
+    "handle an action with one query parameter with default value and description" in {
+      val ra = fooPath +? paramD[Int]("id", 6, "id with default") |>> { (i: Int) => "" }
+
+      sb.collectQueryParams(ra) must_==
+        List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false, description = "id with default".some))
     }
 
     "handle an action with two query parameters" in {
@@ -258,6 +273,21 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectPaths(ra)(Swagger()) must havePair(
         "/foo/{number}" -> Path(get = sb.mkOperation("foo/{number}", ra).some))
+    }
+
+    "find a simple path with a capture with description" in {
+      val ra = GET / pathVar[Int]("number", "int pathVar") |>> { (i: Int) => "" }
+
+      sb.collectPaths(ra)(Swagger()) must havePair(
+      "/{number}" -> Path(get = sb.mkOperation("/{number}", ra).some))
+
+      ra.path match {
+        case PathAnd(_, p) =>
+          p.isInstanceOf[PathCapture] must_== true
+          p.asInstanceOf[PathCapture].description must_== "int pathVar".some
+
+        case _ => false must_== true
+      }
     }
   }
 

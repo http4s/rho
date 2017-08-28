@@ -48,7 +48,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param name name of the parameter in query
     * @param description description of the parameter
     */
-  def paramWithDesc[T](name: String, description: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramD[T](name: String, description: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, Some(description), None, _ => None)
 
   /** Define a query parameter with a default value */
@@ -56,7 +56,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     _paramR(name, None, Some(default), _ => None)
 
   /** Define a query parameter with description and a default value */
-  def param[T](name: String, default: T, description: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramD[T](name: String, default: T, description: String)(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, Some(description), Some(default), _ => None)
 
   /** Define a query parameter that will be validated with the predicate
@@ -72,7 +72,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
   /** Define a query parameter with description that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
-  def paramWithDesc[T](name: String, description: String, validate: T => Boolean)
+  def paramD[T](name: String, description: String, validate: T => Boolean)
               (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     paramR(name, description, { t: T =>
       if (validate(t)) None
@@ -92,7 +92,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
   /** Define a query parameter with description that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
-  def param[T](name: String, description: String, default: T, validate: T => Boolean)
+  def paramD[T](name: String, description: String, default: T, validate: T => Boolean)
               (implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     paramR(name, description, default, { t =>
       if (validate(t)) None
