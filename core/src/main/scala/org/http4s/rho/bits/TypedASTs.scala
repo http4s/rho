@@ -126,13 +126,13 @@ final case class TypedQuery[T <: HList](rule: RequestRule) extends UriConvertibl
     @scala.annotation.tailrec
     def go(rule: List[RequestRule], acc: List[String]): List[String] = rule match {
       case Nil => acc
-      case MetaRule(q, QueryMetaData(n,_,_,_)) :: rs  => go(q :: rs, n :: acc)
-      case MetaRule(q, _) :: rs                       => go(q :: rs, acc)
-      case AndRule(a, b) :: rs                        => go(a :: b :: rs, acc)
-      case OrRule(a, _) :: rs                         => go(a :: rs, acc)
-      case IgnoreRule(r) :: rs                        => go(r :: rs, acc)
-      case MapRule(r, _) :: rs                        => go(r :: rs, acc)
-      case (EmptyRule | CaptureRule(_)) :: rs         => go(rs, acc)
+      case MetaRule(q, QueryMetaData(n,_,_,_,_)) :: rs  => go(q :: rs, n :: acc)
+      case MetaRule(q, _) :: rs                         => go(q :: rs, acc)
+      case AndRule(a, b) :: rs                          => go(a :: b :: rs, acc)
+      case OrRule(a, _) :: rs                           => go(a :: rs, acc)
+      case IgnoreRule(r) :: rs                          => go(r :: rs, acc)
+      case MapRule(r, _) :: rs                          => go(r :: rs, acc)
+      case (EmptyRule | CaptureRule(_)) :: rs           => go(rs, acc)
     }
     go(List(rule), Nil).reverse
   }
@@ -153,14 +153,14 @@ object TypedQuery {
       getKey(t.rule).getOrElse(sys.error("Empty Query doesn't have a key name"))
 
     private def getKey(rule: RequestRule): Option[QueryParameterKey] = rule match {
-      case MetaRule(_,QueryMetaData(n,_,_,_)) => Some(QueryParameterKey(n))
-      case MetaRule(r,_)                      => getKey(r)
-      case OrRule(a, b)                       => getKey(a) orElse getKey(b)
-      case IgnoreRule(r)                      => getKey(r)
-      case AndRule(a, b)                      => getKey(a) orElse getKey(b) // shouldn't get here
-      case MapRule(r, _)                      => getKey(r)                  // shouldn't get here
-      case CaptureRule(_)                     => None                       // shouldn't get here
-      case EmptyRule                          => None                       // shouldn't get here
+      case MetaRule(_,QueryMetaData(n,_,_,_,_)) => Some(QueryParameterKey(n))
+      case MetaRule(r,_)                        => getKey(r)
+      case OrRule(a, b)                         => getKey(a) orElse getKey(b)
+      case IgnoreRule(r)                        => getKey(r)
+      case AndRule(a, b)                        => getKey(a) orElse getKey(b) // shouldn't get here
+      case MapRule(r, _)                        => getKey(r)                  // shouldn't get here
+      case CaptureRule(_)                       => None                       // shouldn't get here
+      case EmptyRule                            => None                       // shouldn't get here
     }
   }
 }

@@ -74,7 +74,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case (EmptyRule | CaptureRule(_))::xs => go(xs)
         case MapRule(r, _)::xs                => go(r::xs)
         case IgnoreRule(r)::xs                => go(r::xs)
-        case MetaRule(x, q@QueryMetaData(_,_,_,_))::xs =>
+        case MetaRule(x, q@QueryMetaData(_,_,_,_,_))::xs =>
           val tpe = q.m.tpe
           TypeBuilder.DataType.fromType(tpe) match {
             case _ : TypeBuilder.DataType.ComplexDataType =>
@@ -96,12 +96,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
-        case Nil                       => if(pathStr.isEmpty) "/" else pathStr
-        case PathMatch("")::xs         => go(xs, pathStr)
-        case PathMatch(s)::xs          => go(xs, pathStr + "/" + s)
-        case MetaCons(_, _)::xs        => go(xs, pathStr)
-        case PathCapture(id, p, _)::xs => go(xs, s"$pathStr/{$id}")
-        case CaptureTail::xs           => pathStr + "/{tail...}"
+        case Nil                          => if(pathStr.isEmpty) "/" else pathStr
+        case PathMatch("")::xs            => go(xs, pathStr)
+        case PathMatch(s)::xs             => go(xs, pathStr + "/" + s)
+        case MetaCons(_, _)::xs           => go(xs, pathStr)
+        case PathCapture(id, _, p, _)::xs => go(xs, s"$pathStr/{$id}")
+        case CaptureTail::xs              => pathStr + "/{tail...}"
       }
 
     linearizeStack(rr.path::Nil).map(go(_, ""))
@@ -111,12 +111,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[PathOperation], pps: List[PathParameter]): List[PathParameter] =
       stack match {
-        case Nil                       => pps
-        case PathMatch("")::xs         => go(xs, pps)
-        case PathMatch(s)::xs          => go(xs, pps)
-        case MetaCons(_, _)::xs        => go(xs, pps)
-        case PathCapture(id, p, _)::xs => go(xs, mkPathParam(id, p)::pps)
-        case CaptureTail::xs           => PathParameter(`type` = "string", name = "tail...".some):: Nil
+        case Nil                             => pps
+        case PathMatch("")::xs               => go(xs, pps)
+        case PathMatch(s)::xs                => go(xs, pps)
+        case MetaCons(_, _)::xs              => go(xs, pps)
+        case PathCapture(id, desc, p, _)::xs => go(xs, mkPathParam(id, desc, p)::pps)
+        case CaptureTail::xs                 => PathParameter(`type` = "string", name = "tail...".some):: Nil
       }
 
     linearizeStack(rr.path::Nil).flatMap(go(_, Nil)).reverse
@@ -139,10 +139,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[PathOperation], summary: Option[String]): Option[String] =
       stack match {
-        case PathMatch("")::Nil             => go(Nil, summary)
-        case PathMatch(s)::xs               => go(xs, summary)
-        case PathCapture(id, parser, _)::xs => go(xs, summary)
-        case CaptureTail::xs                => summary
+        case PathMatch("")::Nil                => go(Nil, summary)
+        case PathMatch(s)::xs                  => go(xs, summary)
+        case PathCapture(id, _, parser, _)::xs => go(xs, summary)
+        case CaptureTail::xs                   => summary
 
         case MetaCons(_, meta)::xs =>
           meta match {
@@ -175,7 +175,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           addOrDescriptions(set)(as, bs, "params") :::
           addOrDescriptions(set)(bs, as, "params")
 
-        case MetaRule(rs, q@QueryMetaData(_,_,_,_))::xs => mkQueryParam(q)::go(rs::xs)
+        case MetaRule(rs, q@QueryMetaData(_,_,_,_,_))::xs => mkQueryParam(q)::go(rs::xs)
 
         case MetaRule(rs, m: TextMetaData)::xs =>
           go(rs::Nil).map(_.withDesc(m.msg.some)) ::: go(xs)
@@ -250,9 +250,9 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       description = tpe.simpleName.some)
   }
 
-  def mkPathParam(name: String, parser: StringParser[_]): PathParameter = {
+  def mkPathParam(name: String, description: Option[String], parser: StringParser[_]): PathParameter = {
     val tpe = parser.typeTag.map(tag => getType(tag.tpe)).getOrElse("string")
-    PathParameter(`type` = tpe, name = name.some, required = true)
+    PathParameter(`type` = tpe, name = name.some, description = description, required = true)
   }
 
   def mkResponse(code: String, descr: String, otpe: Option[Type]): (String, Response) = {
@@ -333,6 +333,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         QueryParameter(
           $ref         = nm.some,
           name         = rule.name.some,
+          description  = rule.description,
           required     = required,
           defaultValue = rule.default.map(_ => "") // TODO ideally need to use the parser to serialize it into string
         )
@@ -353,6 +354,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           name         = rule.name.some,
           items        = itemTpe,
           required     = required,
+          description  = rule.description,
           defaultValue = rule.default.map(_ => ""), // TODO ideally need to put something like [...] here
           isArray      = true
         )
@@ -361,6 +363,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         QueryParameter(
           `type`       = nm.some,
           name         = rule.name.some,
+          description  = rule.description,
           required     = required,
           defaultValue = rule.default.map(_.toString)
         )
@@ -369,6 +372,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         QueryParameter(
           `type`       = "string".some,
           name         = rule.name.some,
+          description  = rule.description,
           required     = required,
           defaultValue = rule.default.map(_.toString),
           enums        = enums.toList
