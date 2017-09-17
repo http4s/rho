@@ -190,7 +190,7 @@ object RhoBuild extends Build {
 object Dependencies {
   import RhoBuild._
 
-  lazy val http4sVersion = "0.17.0"
+  lazy val http4sVersion = "0.17.1"
   lazy val specs2Version = "3.8.6"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
