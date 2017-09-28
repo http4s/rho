@@ -1,6 +1,6 @@
 package org.http4s.rho.bits
 
-import org.http4s.{HttpService, MaybeResponse, Pass, Response}
+import org.http4s._
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.FailureResponse._
 import org.http4s.rho.bits.ResponseGeneratorInstances.{BadRequest, InternalServerError}
@@ -63,13 +63,13 @@ object FailureResponse {
     *
     * @param reason Description of the failure
     */
-  def badRequest(reason: String): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
+  def badRequest[T : EntityEncoder](reason: T): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
 
   /** Construct a `500 InternalServerError` FailureResponse
     *
     * @param reason Description of the failure
     */
-  def error(reason: String): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(reason)))
+  def error[T : EntityEncoder](reason: T): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(reason)))
 
   /** Construct a [[FailureResponse]] using the provided thunk. */
   def pure(response: =>Task[Response]): FailureResponse = FailureResponse(new ResponseReason(response))
