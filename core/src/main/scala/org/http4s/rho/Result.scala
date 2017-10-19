@@ -1,12 +1,12 @@
 package org.http4s
 package rho
 
+import cats.{FlatMap, Functor, Monad}
 import cats.data.EitherT
-
-import fs2.Task
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
+F[_],
 +CONTINUE,
 +SWITCHINGPROTOCOLS,
 +PROCESSING,
@@ -68,70 +68,69 @@ sealed case class Result[
 +LOOPDETECTED,
 +NOTEXTENDED,
 +NETWORKAUTHENTICATIONREQUIRED
-](resp: Response)
+](resp: Response[F])
 
 object Result {
 
   /** Result type with completely ambiguous return types */
-  type BaseResult = Result[Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]
+  type BaseResult[F[_]] = Result[F, Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]
 
   /** Result with no inferred return types */
-  type TopResult  = Result[Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type TopResult[F[_]]  = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
 
   /** Existential result type */
-  type ExResult   = Result[_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]
+  type ExResult[F[_]]   = Result[F, _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]
 }
 
 import Result._
 
 trait ResultSyntaxInstances {
 
-  implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends ResponseOps {
+  implicit class ResultSyntax[F[_], T >: Result.TopResult[F] <: BaseResult[F]](r: T) extends ResponseOps[F] {
     override type Self = T
 
-    override def withStatus(status: Status): Self =
+    override def withStatus(status: Status)(implicit F: Functor[F]): Self =
       Result(r.resp.copy(status = status))
 
-    override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[Either[DecodeFailure, T]] = r.resp.attemptAs(decoder).value
-      EitherT[Task, DecodeFailure, T](t)
+    override def attemptAs[U](implicit F: FlatMap[F], decoder: EntityDecoder[F, U]): DecodeResult[F, U] = {
+      val t: F[Either[DecodeFailure, U]] = r.resp.attemptAs(F, decoder).value
+      EitherT[F, DecodeFailure, U](t)
     }
 
-    override def transformHeaders(f: (Headers) => Headers): T =
+    override def transformHeaders(f: (Headers) => Headers)(implicit F: Functor[F]): T =
       Result(r.resp.transformHeaders(f))
 
-    override def withAttribute[A](key: AttributeKey[A], value: A): Self =
+    override def withAttribute[A](key: AttributeKey[A], value: A)(implicit F: Functor[F]): Self =
       Result(r.resp.withAttribute(key, value))
 
-    def withBody[T](b: T)(implicit w: EntityEncoder[T]): Task[Self] = {
-      r.resp.withBody(b)(w).map(Result(_))
-    }
+    def withBody[U](b: U)(implicit F: Monad[F], w: EntityEncoder[F, U]): F[Self] =
+      F.map(r.resp.withBody(b))(Result(_))
   }
 
-  implicit class TaskResultSyntax[T >: Result.TopResult <: BaseResult](r: Task[T]) extends ResponseOps {
-    override type Self = Task[T]
+  implicit class FResultSyntax[F[_], T >: Result.TopResult[F] <: BaseResult[F]](r: F[T]) extends ResponseOps[F] {
+    override type Self = F[T]
 
-    def withStatus(status: Status): Self = r.map{ result =>
+    override def withStatus(status: Status)(implicit F: Functor[F]): Self = F.map(r){ result =>
       Result(result.resp.copy(status = status))
     }
 
-    override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[Either[DecodeFailure, T]] = r.flatMap { t =>
-        t.resp.attemptAs(decoder).value
+    override def attemptAs[U](implicit F: FlatMap[F], decoder: EntityDecoder[F, U]): DecodeResult[F, U] = {
+      val t: F[Either[DecodeFailure, U]] = F.flatMap(r) { t =>
+        t.resp.attemptAs(F, decoder).value
       }
-      EitherT[Task, DecodeFailure, T](t)
+      EitherT[F, DecodeFailure, U](t)
     }
 
-    override def withAttribute[A](key: AttributeKey[A], value: A): Self =
-      r.map(r => Result(r.resp.withAttribute(key, value)))
+    override def withAttribute[A](key: AttributeKey[A], value: A)(implicit F: Functor[F]): Self =
+      F.map(r)(r => Result(r.resp.withAttribute(key, value)(F)))
 
-
-    override def transformHeaders(f: (Headers) => Headers): Task[T] = r.map { result =>
+    override def transformHeaders(f: (Headers) => Headers)(implicit F: Functor[F]): F[T] = F.map(r) { result =>
       Result(result.resp.transformHeaders(f))
     }
 
-    def withBody[T](b: T)(implicit w: EntityEncoder[T]): Self = {
-      r.flatMap(_.withBody(b)(w))
+    def withBody[U](b: U)(implicit F: Monad[F], w: EntityEncoder[F, U]): Self = {
+      val resp = F.flatMap(r)(_.resp.withBody(b))
+      F.map(resp)(Result(_))
     }
   }
 }

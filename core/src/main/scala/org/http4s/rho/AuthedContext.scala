@@ -1,7 +1,9 @@
 package org.http4s
 package rho
 
-import shapeless.{HNil, ::}
+import cats.{Functor, Monad}
+import cats.data.{Kleisli, OptionT}
+import shapeless.{::, HNil}
 import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
 
 
@@ -37,7 +39,7 @@ import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
   *
   * @tparam U authInfo type for this service.
   */
-class AuthedContext[U] {
+class AuthedContext[F[_], U] {
 
   /* Attribute key to lookup authInfo in request attributeMap . */
   final private val authKey = AttributeKey[U]
@@ -47,22 +49,24 @@ class AuthedContext[U] {
     * @param service [[HttpService]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService(service: HttpService): AuthedService[U] = {
-    Service.lift { case AuthedRequest(authInfo, req) =>
-      service(req.withAttribute[U](authKey, authInfo))
-    }
+  def toService(service: HttpService[F]): AuthedService[F, U] = {
+    // TODO: fix
+//    Service.lift { case AuthedRequest(authInfo, req) =>
+//      service(req.withAttribute[U](authKey, authInfo))
+//    }
+
+    ???
   }
 
   /* Get the authInfo object from request. */
-  def getAuth(req: Request): U = {
+  def getAuth(req: Request[F]): U = {
     req.attributes.get[U](authKey).get
   }
 
-  final val auth: TypedHeader[U :: HNil] = rho.genericRequestHeaderCapture { req =>
+  def auth(implicit F: Monad[F]): TypedHeader[F, U :: HNil] = rho.genericRequestHeaderCapture[F, U] { req =>
     req.attributes.get(authKey) match {
       case Some(authInfo) => SuccessResponse(authInfo)
-      case None => FailureResponse.error("Invalid auth configuration")
+      case None => FailureResponse.error[F, String]("Invalid auth configuration")
     }
   }
 }
-

@@ -23,17 +23,17 @@ import shapeless.{HNil, HList}
   *
   * @param routes Routes to prepend before elements in the constructor.
   */
-class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
+class RhoService[F[_]](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances
-    with RoutePrependable[RhoService]
+    with RoutePrependable[F, RhoService[F]]
     with EntityEncoderInstances
 {
   final private val serviceBuilder = ServiceBuilder(routes)
 
   final protected val logger = getLogger
 
-  final implicit protected def compileService: CompileService[RhoRoute.Tpe] = serviceBuilder
+  final implicit protected def compileService: CompileService[F, RhoRoute.Tpe[F]] = serviceBuilder
 
   /** Create a new [[RhoService]] by appending the routes of the passed [[RhoService]]
     *
@@ -41,18 +41,17 @@ class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
     * @return A new [[RhoService]] that contains the routes of the other service appended
     *         the the routes contained in this service.
     */
-  final def and(other: RhoService): RhoService = new RhoService(this.getRoutes ++ other.getRoutes)
+  final def and(other: RhoService[F]): RhoService[F] = new RhoService(this.getRoutes ++ other.getRoutes)
 
   /** Get a snapshot of the collection of [[RhoRoute]]'s accumulated so far */
-  final def getRoutes: Seq[RhoRoute[_ <: HList]] = serviceBuilder.routes()
+  final def getRoutes: Seq[RhoRoute[F, _ <: HList]] = serviceBuilder.routes()
 
   /** Convert the [[RhoRoute]]'s accumulated into a `HttpService` */
-  final def toService(filter: RhoMiddleware = identity): HttpService = serviceBuilder.toService(filter)
+  final def toService(filter: RhoMiddleware[F] = identity): HttpService[F] = serviceBuilder.toService(filter)
 
   final override def toString: String = s"RhoService(${serviceBuilder.routes().toString()})"
 
-  final override def /:(prefix: TypedPath[HNil]): RhoService = {
+  final override def /:(prefix: TypedPath[F, HNil]): RhoService[F] = {
     new RhoService(serviceBuilder.routes().map { prefix /: _ })
   }
 }
-

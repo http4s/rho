@@ -1,16 +1,16 @@
 package org.http4s.rho.bits
 
-import org.http4s.{Request, Response, Status, EntityEncoder, MediaType}
+import cats.{Applicative, FlatMap, Monad}
+import org.http4s.{EntityEncoder, MediaType, Request, Response, Status}
 import org.http4s.rho.Result
 
-import scala.reflect.runtime.universe.{ Type, WeakTypeTag }
-import fs2.Task
+import scala.reflect.runtime.universe.{Type, WeakTypeTag}
 
-
-trait ResultMatcher[-R] {
+trait ResultMatcher[F[_], R] {
   def encodings: Set[MediaType]
   def resultInfo: Set[ResultInfo]
-  def conv(req: Request, r: R): Task[Response]
+
+  def conv(req: Request[F], r: R)(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]]
 }
 
 object ResultMatcher {
@@ -32,7 +32,7 @@ object ResultMatcher {
 
     /* Allowing the `Writable` to be `null` only matches real results but allows for
        situations where you return the same status with two types */
-    implicit def maybeIsWritable[T](implicit t: WeakTypeTag[T], w: EntityEncoder[T] = null): MaybeWritable[T] = new MaybeWritable[T] {
+    implicit def maybeIsWritable[F[_], T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable[T] = new MaybeWritable[T] {
       private val ww = Option(w)
       override def contentType: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
       override def encodings: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
@@ -41,6 +41,7 @@ object ResultMatcher {
   }
 
   implicit def statusMatcher[
+  F[_],
   CONTINUE,
   SWITCHINGPROTOCOLS,
   PROCESSING,
@@ -157,7 +158,8 @@ object ResultMatcher {
                                mINSUFFICIENTSTORAGE: MaybeWritable[INSUFFICIENTSTORAGE],
                                       mLOOPDETECTED: MaybeWritable[LOOPDETECTED],
                                        mNOTEXTENDED: MaybeWritable[NOTEXTENDED],
-                     mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable[NETWORKAUTHENTICATIONREQUIRED]): ResultMatcher[Result[
+                     mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable[NETWORKAUTHENTICATIONREQUIRED]): ResultMatcher[F, Result[
+    F,
     CONTINUE,
     SWITCHINGPROTOCOLS,
     PROCESSING,
@@ -219,7 +221,8 @@ object ResultMatcher {
     LOOPDETECTED,
     NOTEXTENDED,
     NETWORKAUTHENTICATIONREQUIRED]] =
-  new ResultMatcher[Result[
+  new ResultMatcher[F, Result[
+    F,
     CONTINUE,
     SWITCHINGPROTOCOLS,
     PROCESSING,
@@ -284,7 +287,8 @@ object ResultMatcher {
     override lazy val encodings: Set[MediaType] =
       allTpes.flatMap { case (_, m) => m.encodings }.toSet
 
-    override def conv(req: Request, r: Result[
+    override def conv(req: Request[F], r: Result[
+      F,
       CONTINUE,
       SWITCHINGPROTOCOLS,
       PROCESSING,
@@ -345,7 +349,7 @@ object ResultMatcher {
       INSUFFICIENTSTORAGE,
       LOOPDETECTED,
       NOTEXTENDED,
-      NETWORKAUTHENTICATIONREQUIRED]): Task[Response] = Task.now(r.resp)
+      NETWORKAUTHENTICATIONREQUIRED])(implicit F: Monad[F], w: EntityEncoder[F, Result[F, CONTINUE, SWITCHINGPROTOCOLS, PROCESSING, OK, CREATED, ACCEPTED, NONAUTHORITATIVEINFORMATION, NOCONTENT, RESETCONTENT, PARTIALCONTENT, MULTISTATUS, ALREADYREPORTED, IMUSED, MULTIPLECHOICES, MOVEDPERMANENTLY, FOUND, SEEOTHER, NOTMODIFIED, USEPROXY, TEMPORARYREDIRECT, PERMANENTREDIRECT, BADREQUEST, UNAUTHORIZED, PAYMENTREQUIRED, FORBIDDEN, NOTFOUND, METHODNOTALLOWED, NOTACCEPTABLE, PROXYAUTHENTICATIONREQUIRED, REQUESTTIMEOUT, CONFLICT, GONE, LENGTHREQUIRED, PRECONDITIONFAILED, PAYLOADTOOLARGE, URITOOLONG, UNSUPPORTEDMEDIATYPE, RANGENOTSATISFIABLE, EXPECTATIONFAILED, UNPROCESSABLEENTITY, LOCKED, FAILEDDEPENDENCY, UPGRADEREQUIRED, PRECONDITIONREQUIRED, TOOMANYREQUESTS, REQUESTHEADERFIELDSTOOLARGE, INTERNALSERVERERROR, NOTIMPLEMENTED, BADGATEWAY, SERVICEUNAVAILABLE, GATEWAYTIMEOUT, HTTPVERSIONNOTSUPPORTED, VARIANTALSONEGOTIATES, INSUFFICIENTSTORAGE, LOOPDETECTED, NOTEXTENDED, NETWORKAUTHENTICATIONREQUIRED]]): F[Response[F]] = F.pure(r.resp)
 
     override def resultInfo: Set[ResultInfo] = {
       allTpes.flatMap { case (s, mw) =>
@@ -417,31 +421,35 @@ object ResultMatcher {
     }
   }
 
-  implicit def optionMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[Option[O]] {
+  implicit def optionMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, Option[R]]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] {
     override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
-    override def conv(req: Request, r: Option[O]): Task[Response] = r match {
-      case Some(r) => ResponseGeneratorInstances.Ok.pure(r)
-      case None    => ResponseGeneratorInstances.NotFound.pure(req.uri.path)
+
+    override def conv(req: Request[F], r: Option[R])(implicit F: Monad[F], w: EntityEncoder[F, Option[R]]): F[Response[F]] = r match {
+      case Some(`r`) => ResponseGeneratorInstances.Ok.pure(r)
+      case None      => ResponseGeneratorInstances.NotFound.pure(req.uri.path)
     }
   }
 
-  implicit def writableMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[O] {
+  implicit def writableMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] {
     override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
-    override def conv(req: Request, r: O): Task[Response] = ResponseGeneratorInstances.Ok.pure(r)
+
+    override def conv(req: Request[F], r: R)(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = ResponseGeneratorInstances.Ok.pure(r)
   }
 
-  implicit def taskMatcher[R](implicit r: ResultMatcher[R]): ResultMatcher[Task[R]] = new ResultMatcher[Task[R]] {
+  implicit def fMatcher[F[_], R](implicit F: FlatMap[F], r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
-    override def conv(req: Request, t: Task[R]): Task[Response] = t.flatMap(r.conv(req, _))
+
+    override def conv(req: Request[F], t: F[R])(implicit F: Monad[F], w: EntityEncoder[F, F[R]]): F[Response[F]] = F.flatMap(t)(r.conv(req, _))
   }
 
-  implicit object ResponseMatcher extends ResultMatcher[Response] {
+  implicit def responseMatcher[F[_]](implicit F: Applicative[F]): ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
-    override def conv(req: Request, r: Response): Task[Response] = Task.now(r)
     override def resultInfo: Set[ResultInfo] = Set.empty
+
+    override def conv(req: Request[F], r: Response[F])(implicit F: Monad[F], w: EntityEncoder[F, Response[F]]): F[Response[F]] = F.pure(r)
   }
 }
