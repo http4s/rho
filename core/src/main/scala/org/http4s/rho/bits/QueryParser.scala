@@ -63,7 +63,7 @@ object QueryParser {
   }
 
   /** Extract an element from the `Query` using a [[StringParser]] */
-  implicit def standardCollector[F[_], A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, A] {
+  implicit def standardCollector[F[_], A](implicit F: Monad[F], p: StringParser[F, A], w: EntityEncoder[F, A]) = new QueryParser[F, A] {
     override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] = {
       params.get(name) match {
         case Some(Seq(value, _*)) => p.parse(value)

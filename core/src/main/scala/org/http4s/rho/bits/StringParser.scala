@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe.TypeTag
 trait StringParser[F[_], T] {
 
   /** Attempt to parse the `String`. */
-  def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, T]
+  def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, T]): ResultResponse[F, T]
 
   /** TypeTag of the type T */
   def typeTag: Option[TypeTag[T]]
@@ -22,7 +22,7 @@ trait StringParser[F[_], T] {
 class BooleanParser[F[_]] extends StringParser[F, Boolean] {
   override val typeTag: Some[TypeTag[Boolean]] = Some(implicitly[TypeTag[Boolean]])
 
-  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Boolean] = s match {
+  override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Boolean]): ResultResponse[F, Boolean] = s match {
     case "true"  => SuccessResponse(true)
     case "false" => SuccessResponse(false)
     case _       => FailureResponse.pure[F] { BadRequest.pure(s"Invalid boolean format: '$s'") }
@@ -32,41 +32,41 @@ class BooleanParser[F[_]] extends StringParser[F, Boolean] {
 class DoubleParser[F[_]] extends StringParser[F, Double] {
   override val typeTag: Some[TypeTag[Double]] = Some(implicitly[TypeTag[Double]])
 
-  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Double] =
+  override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Double]): ResultResponse[F, Double] =
     try SuccessResponse(s.toDouble)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat[F, Double](s) }
 }
 
 class FloatParser[F[_]] extends StringParser[F, Float] {
   override val typeTag: Some[TypeTag[Float]] = Some(implicitly[TypeTag[Float]])
 
-  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Float] =
+  override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Float]): ResultResponse[F, Float] =
     try SuccessResponse(s.toFloat)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat[F, Float](s) }
 }
 
 class IntParser[F[_]] extends StringParser[F, Int] {
   override val typeTag: Some[TypeTag[Int]] = Some(implicitly[TypeTag[Int]])
 
-  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Int] =
+  override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Int]): ResultResponse[F, Int] =
     try SuccessResponse(s.toInt)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat[F, Int](s) }
 }
 
 class LongParser[F[_]] extends StringParser[F, Long] {
   override val typeTag: Some[TypeTag[Long]] = Some(implicitly[TypeTag[Long]])
 
-  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Long] =
+  override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Long]): ResultResponse[F, Long] =
     try SuccessResponse(s.toLong)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat[F, Long](s) }
 }
 
 class ShortParser[F[_]] extends StringParser[F, Short] {
   override val typeTag: Some[TypeTag[Short]] = Some(implicitly[TypeTag[Short]])
 
-  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Short] =
+  override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Short]): ResultResponse[F, Short] =
     try SuccessResponse(s.toShort)
-    catch { case e: NumberFormatException => StringParser.invalidNumberFormat(s) }
+    catch { case e: NumberFormatException => StringParser.invalidNumberFormat[F, Short](s) }
 }
 
 object StringParser {
@@ -87,7 +87,7 @@ object StringParser {
       SuccessResponse(s)
   }
 
-  def invalidNumberFormat[F[_], A](n : String)(implicit w: EntityEncoder[F, A], F: Monad[F]): FailureResponse[F] = FailureResponse.pure[F] {
+  def invalidNumberFormat[F[_], A](n : String)(implicit F: Monad[F], w: EntityEncoder[F, A]): FailureResponse[F] = FailureResponse.pure[F] {
     BadRequest.pure(s"Invalid number format: '$n'")
   }
 }

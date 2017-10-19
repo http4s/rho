@@ -3,6 +3,7 @@ package rho
 
 import cats.Applicative
 import cats.data.{Kleisli, OptionT}
+import org.http4s.rho.RhoRoute.Tpe
 import org.http4s.rho.bits.PathTree
 import shapeless.HList
 
@@ -25,15 +26,13 @@ trait CompileService[F[_], RouteType] {
 object CompileService {
 
   /** [[CompileService]] that simply returns its argument */
-  def identityCompiler[F[_]] = new CompileService[F, RhoRoute.Tpe[F]] {
-    def compile[T <: HList](route: RhoRoute[F, T]) = route
+  def identityCompiler[F[_]]: CompileService[F, Tpe[F]] = new CompileService[F, RhoRoute.Tpe[F]] {
+    def compile[T <: HList](route: RhoRoute[F, T]): RhoRoute[F, T] = route
   }
 
   /** Importable implicit identity compiler */
   object Implicit {
-    // TODO: check if this is a problem, does this implicit work?
-
-    implicit def compiler[F[_]]: CompileService[F, RhoRoute.Tpe[F]] = identityCompiler
+    implicit def compiler[F[_]]: CompileService[F, RhoRoute.Tpe[F]] = identityCompiler[F]
   }
 
 
