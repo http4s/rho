@@ -175,7 +175,7 @@ private[rho] object PathTree {
 
           // the rest of the types need to rewrite a node
         case PathMatch(s) =>
-          val next = matches.getOrElse(s, MatchNode(s)).append(tail, method, action)
+          val next = matches.getOrElse(s, MatchNode[F](s)).append(tail, method, action)
           clone(matches.updated(s, next), captures, variadic, end)
 
         case PathCapture(_, _, p, _) =>
@@ -184,7 +184,8 @@ private[rho] object PathTree {
             case n@ CaptureNode(p1,_,_,_,_) if p1 eq p => n.append(tail, method, action)
             case n => n
           }
-          else CaptureNode(p).append(tail, method, action)::captures
+          // TODO: can we avoid this casting?
+          else CaptureNode[F](p.asInstanceOf[StringParser[F, _]]).append(tail, method, action)::captures
 
           clone(matches, all, variadic, end)
 
@@ -260,6 +261,7 @@ private[rho] object PathTree {
                 F.map(MethodNotAllowed.pure(msg))(
                   _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
 
+                // TODO: remove this!
                 ???
               }
 
@@ -288,7 +290,7 @@ private[rho] object PathTree {
   }
 
   final case class CaptureNode[F[_]](parser:   StringParser[F, _],
-                                     matches:  Map[String, MatchNode[F]] = Map.empty,
+                                     matches:  Map[String, MatchNode[F]] = Map.empty[String, MatchNode[F]],
                                      captures: List[CaptureNode[F]] = Nil,
                                      variadic: Map[Method, Leaf[F]] = Map.empty,
                                      end:      Map[Method, Leaf[F]] = Map.empty) extends Node[F, CaptureNode[F]] {

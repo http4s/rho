@@ -116,7 +116,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param f function generating the result or failure
     */
   def genericQueryCapture[F[_], R](f: Query => ResultResponse[F, R]): TypedQuery[F, R :: HNil] =
-    genericRequestQueryCapture(req => f(req.uri.query))
+    genericRequestQueryCapture[F, R](req => f(req.uri.query))
 
   /** Create a query capture rule using the `Request`
     *
@@ -139,13 +139,13 @@ package object rho extends Http4s with ResultSyntaxInstances {
    * Defines a path variable of a URI that should be bound to a route definition
    */
   def pathVar[F[_], T](id: String)(implicit parser: StringParser[F, T], m: TypeTag[T]): TypedPath[F, T :: HNil] =
-    TypedPath(PathCapture(id, None, parser, stringTag))
+    TypedPath(PathCapture[F](id, None, parser, stringTag))
 
   /**
     * Defines a path variable of a URI with description that should be bound to a route definition
     */
   def pathVar[F[_], T](id: String, description: String)(implicit parser: StringParser[F, T], m: TypeTag[T]): TypedPath[F, T :: HNil] =
-    TypedPath(PathCapture(id, Some(description), parser, stringTag))
+    TypedPath(PathCapture[F](id, Some(description), parser, stringTag))
 
   /**
    * Helper to be able to define a path with one level only.
@@ -172,7 +172,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     *          header and aborts evaluation with a _BadRequest_ response.
     */
   def existsAnd[F[_], H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean)(implicit F: Monad[F]): TypedHeader[F, HNil] =
-    existsAndR(header){ h =>
+    existsAndR[F, H](header){ h =>
       if (f(h)) None
       else Some(BadRequest(s"Invalid header: ${h.name} = ${h.value}"))
     }
@@ -217,7 +217,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param f function generating the result or failure
     */
   def genericHeaderCapture[F[_], R](f: Headers => ResultResponse[F, R]): TypedHeader[F, R :: HNil] =
-    genericRequestHeaderCapture(req => f(req.headers))
+    genericRequestHeaderCapture[F, R](req => f(req.headers))
 
   /** Create a header capture rule using the `Request`
     *
@@ -227,11 +227,11 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param f function generating the result or failure
     */
   def genericRequestHeaderCapture[F[_], R](f: Request[F] => ResultResponse[F, R]): TypedHeader[F, R :: HNil] =
-    TypedHeader(CaptureRule(f))
+    TypedHeader[F, R :: HNil](CaptureRule(f))
 
   /** Defines a parameter in query string that should be bound to a route definition. */
   private def _paramR[F[_], T](name: String, description: Option[String], default: Option[T], validate: T => Option[F[BaseResult[F]]])(implicit F: Functor[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    genericRequestQueryCapture { req =>
+    genericRequestQueryCapture[F, T] { req =>
         val result = parser.collect(name, req.uri.multiParams, default)
         result.flatMap { r => validate(r) match {
           case None       => result
