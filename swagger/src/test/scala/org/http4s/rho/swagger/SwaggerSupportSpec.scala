@@ -23,6 +23,10 @@ class SwaggerSupportSpec extends Specification {
     GET / "goodbye"/ pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
+  val trailingSlashService = new RhoService {
+    GET / "foo" / "" |>> { () => Ok("hello world") }
+  }
+
 
   "SwaggerSupport" should {
     "Expose an API listing" in {
@@ -64,6 +68,14 @@ class SwaggerSupportSpec extends Specification {
         parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"
 
       Set(a, b, c, d) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}")
+    }
+
+    "Support endpoints which end in a slash" in {
+      val service = trailingSlashService.toService(SwaggerSupport())
+      val r = Request(GET, Uri(path = "/swagger.json"))
+      val JObject(List((a, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
+
+      a should_== "/foo/"
     }
 
   }
