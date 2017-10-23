@@ -31,6 +31,7 @@ object CompileService {
   }
 
   /** Importable implicit identity compiler */
+  // TODO: this is not used, is this part of rho's public API ?
   object Implicit {
     implicit def compiler[F[_]]: CompileService[F, RhoRoute.Tpe[F]] = identityCompiler[F]
   }
