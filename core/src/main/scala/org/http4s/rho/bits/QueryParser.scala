@@ -20,7 +20,7 @@ object QueryParser {
   type Params = Map[String, Seq[String]]
 
   /** Optionally extract the value from the `Query` */
-  implicit def optionParse[F[_], A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, Option[A]] {
+  implicit def optionParse[F[_], A](implicit F: Monad[F], p: StringParser[F, A], w: EntityEncoder[F, A]) = new QueryParser[F, Option[A]] {
     override def collect(name: String, params: Params, default: Option[Option[A]]): ResultResponse[F, Option[A]] = {
       params.get(name) match {
         case Some(Seq(value, _*)) =>
@@ -37,7 +37,7 @@ object QueryParser {
     *
     * The elements must have the same name and each be a valid representation of the requisite type.
     */
-  implicit def multipleParse[F[_], A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
+  implicit def multipleParse[F[_], A, B[_]](implicit F: Monad[F], p: StringParser[F, A], w: EntityEncoder[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
     override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[F, B[A]] = {
       val b = cbf()
       params.get(name) match {
