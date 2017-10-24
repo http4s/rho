@@ -65,14 +65,14 @@ object FailureResponse {
     * @param reason Description of the failure
     */
   def badRequest[F[_], T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
-    FailureResponse[F](new ResponseReason[F](BadRequest.pure(reason)))
+    FailureResponse[F](new ResponseReason[F](BadRequest[F].pure(reason)))
 
   /** Construct a `500 InternalServerError` FailureResponse
     *
     * @param reason Description of the failure
     */
   def error[F[_], T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
-    FailureResponse[F](new ResponseReason[F](InternalServerError.pure(reason)))
+    FailureResponse[F](new ResponseReason[F](InternalServerError[F].pure(reason)))
 
   /** Construct a [[FailureResponse]] using the provided thunk. */
   def pure[F[_]](response: => F[Response[F]]): FailureResponse[F] = FailureResponse(new ResponseReason(response))

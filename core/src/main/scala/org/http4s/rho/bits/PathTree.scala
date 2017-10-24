@@ -258,7 +258,7 @@ private[rho] object PathTree {
                 val allowedMethods = ms.mkString(", ")
                 val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
 
-                F.map(MethodNotAllowed.pure(msg))(
+                F.map(MethodNotAllowed[F].pure(msg))(
                   _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
 
                 // TODO: remove this!

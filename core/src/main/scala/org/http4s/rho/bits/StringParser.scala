@@ -25,7 +25,7 @@ class BooleanParser[F[_]] extends StringParser[F, Boolean] {
   override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, Boolean]): ResultResponse[F, Boolean] = s match {
     case "true"  => SuccessResponse(true)
     case "false" => SuccessResponse(false)
-    case _       => FailureResponse.pure[F] { BadRequest.pure(s"Invalid boolean format: '$s'") }
+    case _       => FailureResponse.pure[F] { BadRequest[F].pure(s"Invalid boolean format: '$s'") }
   }
 }
 
@@ -88,6 +88,6 @@ object StringParser {
   }
 
   def invalidNumberFormat[F[_], A](n : String)(implicit F: Monad[F], w: EntityEncoder[F, A]): FailureResponse[F] = FailureResponse.pure[F] {
-    BadRequest.pure(s"Invalid number format: '$n'")
+    BadRequest[F].pure(s"Invalid number format: '$n'")
   }
 }

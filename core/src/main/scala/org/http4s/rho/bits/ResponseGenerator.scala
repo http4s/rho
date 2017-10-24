@@ -159,7 +159,12 @@ trait ResponseGeneratorInstances {
   object SwitchingProtocols            extends EmptyResponseGenerator(Status.SwitchingProtocols) { type T[F[_]] = SWITCHINGPROTOCOLS[F] }
   object Processing                    extends EmptyResponseGenerator(Status.Processing) { type T[F[_]] = PROCESSING[F] }
 
-  object Ok                            extends EntityResponseGenerator(Status.Ok) { type T[F[_], A] = OK[F, A] }
+  object Ok {
+    def apply[F[_]] = new EntityResponseGenerator(Status.Ok) {
+      type T[A] = OK[F, A]
+    }
+  }
+
   object Created                       extends EntityResponseGenerator(Status.Created) { type T[F[_], A] = CREATED[F, A] }
   object Accepted                      extends EntityResponseGenerator(Status.Accepted) { type T[F[_], A] = ACCEPTED[F, A] }
   object NonAuthoritativeInformation   extends EntityResponseGenerator(Status.NonAuthoritativeInformation) { type T[F[_], A] = NONAUTHORITATIVEINFORMATION[F, A] }
@@ -179,12 +184,28 @@ trait ResponseGeneratorInstances {
   object TemporaryRedirect             extends LocationResponseGenerator(Status.TemporaryRedirect) { type T[F[_]] = TEMPORARYREDIRECT[F] }
   object PermanentRedirect             extends LocationResponseGenerator(Status.PermanentRedirect) { type T[F[_]] = PERMANENTREDIRECT[F] }
 
-  object BadRequest                    extends EntityResponseGenerator(Status.BadRequest) { type T[F[_], A] = BADREQUEST[F, A] }
+  object BadRequest {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.BadRequest) {
+      type T[A] = BADREQUEST[F, A]
+    }
+  }
+
   object Unauthorized                  extends EntityResponseGenerator(Status.Unauthorized) { type T[F[_], A] = UNAUTHORIZED[F, A] }
   object PaymentRequired               extends EntityResponseGenerator(Status.PaymentRequired) { type T[F[_], A] = PAYMENTREQUIRED[F, A] }
   object Forbidden                     extends EntityResponseGenerator(Status.Forbidden) { type T[F[_], A] = FORBIDDEN[F, A] }
-  object NotFound                      extends EntityResponseGenerator(Status.NotFound) { type T[F[_], A] = NOTFOUND[F, A] }
-  object MethodNotAllowed              extends EntityResponseGenerator(Status.MethodNotAllowed) { type T[F[_], A] = METHODNOTALLOWED[F, A] }
+
+  object NotFound {
+    def apply[F[_]] = new EntityResponseGenerator(Status.NotFound) {
+      type T[A] = NOTFOUND[F, A]
+    }
+  }
+
+  object MethodNotAllowed {
+    def apply[F[_]] = new EntityResponseGenerator(Status.MethodNotAllowed) {
+      type T[A] = METHODNOTALLOWED[F, A]
+    }
+  }
+
   object NotAcceptable                 extends EntityResponseGenerator(Status.NotAcceptable) { type T[F[_], A] = NOTACCEPTABLE[F, A] }
   object ProxyAuthenticationRequired   extends EntityResponseGenerator(Status.ProxyAuthenticationRequired) { type T[F[_], A] = PROXYAUTHENTICATIONREQUIRED[F, A] }
   object RequestTimeout                extends EntityResponseGenerator(Status.RequestTimeout) { type T[F[_], A] = REQUESTTIMEOUT[F, A] }
@@ -205,7 +226,12 @@ trait ResponseGeneratorInstances {
   object TooManyRequests               extends EntityResponseGenerator(Status.TooManyRequests) { type T[F[_], A] = TOOMANYREQUESTS[F, A] }
   object RequestHeaderFieldsTooLarge   extends EntityResponseGenerator(Status.RequestHeaderFieldsTooLarge) { type T[F[_], A] = REQUESTHEADERFIELDSTOOLARGE[F, A] }
 
-  object InternalServerError           extends EntityResponseGenerator(Status.InternalServerError) { type T[F[_], A] = INTERNALSERVERERROR[F, A] }
+  object InternalServerError {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.InternalServerError) {
+      type T[A] = INTERNALSERVERERROR[F, A]
+    }
+  }
+
   object NotImplemented                extends EntityResponseGenerator(Status.NotImplemented) { type T[F[_], A] = NOTIMPLEMENTED[F, A] }
   object BadGateway                    extends EntityResponseGenerator(Status.BadGateway) { type T[F[_], A] = BADGATEWAY[F, A] }
   object ServiceUnavailable            extends EntityResponseGenerator(Status.ServiceUnavailable) { type T[F[_], A] = SERVICEUNAVAILABLE[F, A] }

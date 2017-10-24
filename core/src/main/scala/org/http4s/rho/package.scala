@@ -1,5 +1,6 @@
 package org.http4s
 
+import cats.syntax.functor._
 import cats.{FlatMap, Functor, Monad}
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.PathAST._
@@ -62,7 +63,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
                     (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, {t =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
+      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Define a query parameter with description that will be validated with the predicate
@@ -70,29 +71,29 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * Failure of the predicate results in a '403: BadRequest' response. */
   def paramD[F[_], T](name: String, description: String, validate: T => Boolean)
                      (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    paramR(name, description, { t: T =>
+    paramRDescr(name, description, { t: T =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
+      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Define a query parameter that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
   def param[F[_], T](name: String, default: T, validate: T => Boolean)
-                    (implicit F: FlatMap[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
+                    (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, default, { t: T =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
+      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Define a query parameter with description that will be validated with the predicate
     *
     * Failure of the predicate results in a '403: BadRequest' response. */
   def paramD[F[_], T](name: String, description: String, default: T, validate: T => Boolean)
-                     (implicit F: FlatMap[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
+                     (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, description, default, { t =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t""""))
+      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Defines a parameter in query string that should be bound to a route definition. */
@@ -100,7 +101,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     _paramR(name, None, None, validate)
 
   /** Defines a parameter in query string with description that should be bound to a route definition. */
-  def paramR[F[_], T](name: String, description: String, validate: T => Option[F[BaseResult[F]]])(implicit F: FlatMap[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
+  def paramRDescr[F[_], T](name: String, description: String, validate: T => Option[F[BaseResult[F]]])(implicit F: FlatMap[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     _paramR(name, Some(description), None, validate)
 
   /** Defines a parameter in query string that should be bound to a route definition. */
@@ -174,7 +175,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
   def existsAnd[F[_], H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean)(implicit F: Monad[F]): TypedHeader[F, HNil] =
     existsAndR[F, H](header){ h =>
       if (f(h)) None
-      else Some(BadRequest(s"Invalid header: ${h.name} = ${h.value}"))
+      else Some(BadRequest[F](s"Invalid header: ${h.name} = ${h.value}").widen)
     }
 
   /** Check that the header exists and satisfies the condition

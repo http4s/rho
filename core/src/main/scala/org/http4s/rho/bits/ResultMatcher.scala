@@ -427,8 +427,8 @@ object ResultMatcher {
                                                    StatusOnly(Status.NotFound))
 
     override def conv(req: Request[F], r: Option[R])(implicit F: Monad[F], w: EntityEncoder[F, Option[R]]): F[Response[F]] = r match {
-      case Some(`r`) => ResponseGeneratorInstances.Ok.pure(r)
-      case None      => ResponseGeneratorInstances.NotFound.pure(req.uri.path)
+      case Some(`r`) => ResponseGeneratorInstances.Ok[F].pure(r)
+      case None      => ResponseGeneratorInstances.NotFound[F].pure(req.uri.path)
     }
   }
 
@@ -436,7 +436,7 @@ object ResultMatcher {
     override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
 
-    override def conv(req: Request[F], r: R)(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = ResponseGeneratorInstances.Ok.pure(r)
+    override def conv(req: Request[F], r: R)(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = ResponseGeneratorInstances.Ok[F].pure(r)
   }
 
   implicit def fMatcher[F[_], R](implicit F: FlatMap[F], r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
