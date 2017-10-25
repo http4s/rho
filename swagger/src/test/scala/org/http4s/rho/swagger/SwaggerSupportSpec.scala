@@ -67,7 +67,7 @@ class SwaggerSupportSpec extends Specification {
       swaggerSpec.paths must haveSize(2)
     }
 
-    "Provide a way to agregate routes from multiple RhoServices" in {
+    "Provide a way to aggregate routes from multiple RhoServices" in {
       val aggregateSwagger = SwaggerSupport.createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes)
       val swaggerRoutes = SwaggerSupport.createSwaggerRoute(aggregateSwagger)
       val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())

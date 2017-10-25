@@ -141,6 +141,7 @@ trait ResponseGeneratorInstances {
   type PRECONDITIONREQUIRED[F[_], A]          = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
   type TOOMANYREQUESTS[F[_], A]               = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
   type REQUESTHEADERFIELDSTOOLARGE[F[_], A]   = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
+  type UNAVAILABLEFORLEGALREASONS[F[_], A]    = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
   // type 5xx
   type INTERNALSERVERERROR[F[_], A]           = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
   type NOTIMPLEMENTED[F[_], A]                = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
@@ -155,91 +156,351 @@ trait ResponseGeneratorInstances {
   type NETWORKAUTHENTICATIONREQUIRED[F[_], A] = Result[F, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing ,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,  A    ]
 
 
-  object Continue                      extends EmptyResponseGenerator(Status.Continue) { type T[F[_]]  = CONTINUE[F] }
-  object SwitchingProtocols            extends EmptyResponseGenerator(Status.SwitchingProtocols) { type T[F[_]] = SWITCHINGPROTOCOLS[F] }
-  object Processing                    extends EmptyResponseGenerator(Status.Processing) { type T[F[_]] = PROCESSING[F] }
+  // 1xx
+  object Continue {
+    def apply[F[_]] = new EmptyResponseGenerator[F](Status.Continue) {
+      type T = CONTINUE[F]
+    }
+  }
 
+  object SwitchingProtocols {
+    def apply[F[_]] = new EmptyResponseGenerator[F](Status.SwitchingProtocols) {
+      type T = SWITCHINGPROTOCOLS[F]
+    }
+  }
+
+  object Processing {
+    def apply[F[_]] = new EmptyResponseGenerator[F](Status.Processing) {
+      type T = PROCESSING[F]
+    }
+  }
+
+  // 2xx
   object Ok {
-    def apply[F[_]] = new EntityResponseGenerator(Status.Ok) {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Ok) {
       type T[A] = OK[F, A]
     }
   }
 
-  object Created                       extends EntityResponseGenerator(Status.Created) { type T[F[_], A] = CREATED[F, A] }
-  object Accepted                      extends EntityResponseGenerator(Status.Accepted) { type T[F[_], A] = ACCEPTED[F, A] }
-  object NonAuthoritativeInformation   extends EntityResponseGenerator(Status.NonAuthoritativeInformation) { type T[F[_], A] = NONAUTHORITATIVEINFORMATION[F, A] }
-  object NoContent                     extends EmptyResponseGenerator(Status.NoContent) { type T[F[_]] = NOCONTENT[F] }
-  object ResetContent                  extends EmptyResponseGenerator(Status.ResetContent) { type T[F[_]] = RESETCONTENT[F] }
-  object PartialContent                extends EntityResponseGenerator(Status.PartialContent) { type T[F[_], A] = PARTIALCONTENT[F, A] }
-  object MultiStatus                   extends EntityResponseGenerator(Status.MultiStatus) { type T[F[_], A] = MULTISTATUS[F, A] }
-  object AlreadyReported               extends EntityResponseGenerator(Status.AlreadyReported) { type T[F[_], A] = ALREADYREPORTED[F, A] }
-  object IMUsed                        extends EntityResponseGenerator(Status.IMUsed) { type T[F[_], A] = IMUSED[F, A] }
+  object Created {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Created) {
+      type T[A] = CREATED[F, A]
+    }
+  }
 
-  object MultipleChoices               extends LocationResponseGenerator(Status.MultipleChoices) { type T[F[_]] = MULTIPLECHOICES[F] }
-  object MovedPermanently              extends LocationResponseGenerator(Status.MovedPermanently) { type T[F[_]] = MOVEDPERMANENTLY[F] }
-  object Found                         extends LocationResponseGenerator(Status.Found) { type T[F[_]] = FOUND[F] }
-  object SeeOther                      extends LocationResponseGenerator(Status.SeeOther) { type T[F[_]] = SEEOTHER[F] }
-  object NotModified                   extends EmptyResponseGenerator(Status.NotModified) { type T[F[_]] = NOTMODIFIED[F] }
+  object Accepted {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Accepted) {
+      type T[A] = ACCEPTED[F, A]
+    }
+  }
+
+  object NonAuthoritativeInformation {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.NonAuthoritativeInformation) {
+      type T[A] = NONAUTHORITATIVEINFORMATION[F, A]
+    }
+  }
+
+  object NoContent {
+    def apply[F[_]] = new EmptyResponseGenerator[F](Status.NoContent) {
+      type T = NOCONTENT[F]
+    }
+  }
+
+  object ResetContent {
+    def apply[F[_]] = new EmptyResponseGenerator[F](Status.ResetContent) {
+      type T = RESETCONTENT[F]
+    }
+  }
+
+  object PartialContent {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.PartialContent) {
+      type T[A] = PARTIALCONTENT[F, A]
+    }
+  }
+
+  object MultiStatus {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.MultiStatus) {
+      type T[A] = MULTISTATUS[F, A]
+    }
+  }
+
+  object AlreadyReported {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.AlreadyReported) {
+      type T[A] = ALREADYREPORTED[F, A]
+    }
+  }
+
+  object IMUsed {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.IMUsed) {
+      type T[A] = IMUSED[F, A]
+    }
+  }
+
+  // 3xx
+  object MultipleChoices {
+    def apply[F[_]] = new LocationResponseGenerator[F](Status.MultipleChoices) {
+      type T = MULTIPLECHOICES[F]
+    }
+  }
+
+  object MovedPermanently {
+    def apply[F[_]] = new LocationResponseGenerator[F](Status.MovedPermanently) {
+      type T = MOVEDPERMANENTLY[F]
+    }
+  }
+
+  object Found {
+    def apply[F[_]] = new LocationResponseGenerator[F](Status.Found) {
+      type T = FOUND[F]
+    }
+  }
+
+  object SeeOther {
+    def apply[F[_]] = new LocationResponseGenerator[F](Status.SeeOther) {
+      type T = SEEOTHER[F]
+    }
+  }
+
+  object NotModified {
+    def apply[F[_]] = new EmptyResponseGenerator[F](Status.NotModified) {
+      type T = NOTMODIFIED[F]
+    }
+  }
+
   // UseProxy has been deprecated in RFC7231 so it is omitted.
-  object TemporaryRedirect             extends LocationResponseGenerator(Status.TemporaryRedirect) { type T[F[_]] = TEMPORARYREDIRECT[F] }
-  object PermanentRedirect             extends LocationResponseGenerator(Status.PermanentRedirect) { type T[F[_]] = PERMANENTREDIRECT[F] }
+  object TemporaryRedirect {
+    def apply[F[_]] = new LocationResponseGenerator[F](Status.TemporaryRedirect) {
+      type T = TEMPORARYREDIRECT[F]
+    }
+  }
 
+  object PermanentRedirect {
+    def apply[F[_]] = new LocationResponseGenerator[F](Status.PermanentRedirect) {
+      type T = PERMANENTREDIRECT[F]
+    }
+  }
+
+  // 4xx
   object BadRequest {
     def apply[F[_]] = new EntityResponseGenerator[F](Status.BadRequest) {
       type T[A] = BADREQUEST[F, A]
     }
   }
 
-  object Unauthorized                  extends EntityResponseGenerator(Status.Unauthorized) { type T[F[_], A] = UNAUTHORIZED[F, A] }
-  object PaymentRequired               extends EntityResponseGenerator(Status.PaymentRequired) { type T[F[_], A] = PAYMENTREQUIRED[F, A] }
-  object Forbidden                     extends EntityResponseGenerator(Status.Forbidden) { type T[F[_], A] = FORBIDDEN[F, A] }
+  object Unauthorized {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Unauthorized) {
+      type T[A] = UNAUTHORIZED[F, A]
+    }
+  }
+
+  object PaymentRequired {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.PaymentRequired) {
+      type T[A] = PAYMENTREQUIRED[F, A]
+    }
+  }
+
+  object Forbidden {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Forbidden) {
+      type T[A] = FORBIDDEN[F, A]
+    }
+  }
 
   object NotFound {
-    def apply[F[_]] = new EntityResponseGenerator(Status.NotFound) {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.NotFound) {
       type T[A] = NOTFOUND[F, A]
     }
   }
 
   object MethodNotAllowed {
-    def apply[F[_]] = new EntityResponseGenerator(Status.MethodNotAllowed) {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.MethodNotAllowed) {
       type T[A] = METHODNOTALLOWED[F, A]
     }
   }
 
-  object NotAcceptable                 extends EntityResponseGenerator(Status.NotAcceptable) { type T[F[_], A] = NOTACCEPTABLE[F, A] }
-  object ProxyAuthenticationRequired   extends EntityResponseGenerator(Status.ProxyAuthenticationRequired) { type T[F[_], A] = PROXYAUTHENTICATIONREQUIRED[F, A] }
-  object RequestTimeout                extends EntityResponseGenerator(Status.RequestTimeout) { type T[F[_], A] = REQUESTTIMEOUT[F, A] }
-  object Conflict                      extends EntityResponseGenerator(Status.Conflict) { type T[F[_], A] = CONFLICT[F, A] }
-  object Gone                          extends EntityResponseGenerator(Status.Gone) { type T[F[_], A] = GONE[F, A] }
-  object LengthRequired                extends EntityResponseGenerator(Status.LengthRequired) { type T[F[_], A] = LENGTHREQUIRED[F, A] }
-  object PreconditionFailed            extends EntityResponseGenerator(Status.PreconditionFailed) { type T[F[_], A] = PRECONDITIONFAILED[F, A] }
-  object PayloadTooLarge               extends EntityResponseGenerator(Status.PayloadTooLarge) { type T[F[_], A] = PAYLOADTOOLARGE[F, A] }
-  object UriTooLong                    extends EntityResponseGenerator(Status.UriTooLong) { type T[F[_], A] = URITOOLONG[F, A] }
-  object UnsupportedMediaType          extends EntityResponseGenerator(Status.UnsupportedMediaType) { type T[F[_], A] = UNSUPPORTEDMEDIATYPE[F, A] }
-  object RangeNotSatisfiable           extends EntityResponseGenerator(Status.RangeNotSatisfiable) { type T[F[_], A] = RANGENOTSATISFIABLE[F, A] }
-  object ExpectationFailed             extends EntityResponseGenerator(Status.ExpectationFailed) { type T[F[_], A] = EXPECTATIONFAILED[F, A] }
-  object UnprocessableEntity           extends EntityResponseGenerator(Status.UnprocessableEntity) { type T[F[_], A] = UNPROCESSABLEENTITY[F, A] }
-  object Locked                        extends EntityResponseGenerator(Status.Locked) { type T[F[_], A] = LOCKED[F, A] }
-  object FailedDependency              extends EntityResponseGenerator(Status.FailedDependency) { type T[F[_], A] = FAILEDDEPENDENCY[F, A] }
-  object UpgradeRequired               extends EntityResponseGenerator(Status.UpgradeRequired) { type T[F[_], A] = UPGRADEREQUIRED[F, A] }
-  object PreconditionRequired          extends EntityResponseGenerator(Status.PreconditionRequired) { type T[F[_], A] = PRECONDITIONREQUIRED[F, A] }
-  object TooManyRequests               extends EntityResponseGenerator(Status.TooManyRequests) { type T[F[_], A] = TOOMANYREQUESTS[F, A] }
-  object RequestHeaderFieldsTooLarge   extends EntityResponseGenerator(Status.RequestHeaderFieldsTooLarge) { type T[F[_], A] = REQUESTHEADERFIELDSTOOLARGE[F, A] }
+  object NotAcceptable {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.NotAcceptable) {
+      type T[A] = NOTACCEPTABLE[F, A]
+    }
+  }
 
+  object ProxyAuthenticationRequired {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.ProxyAuthenticationRequired) {
+      type T[A] = PROXYAUTHENTICATIONREQUIRED[F, A]
+    }
+  }
+
+  object RequestTimeout {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.RequestTimeout) {
+      type T[A] = REQUESTTIMEOUT[F, A]
+    }
+  }
+
+  object Conflict {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Conflict) {
+      type T[A] = CONFLICT[F, A]
+    }
+  }
+
+  object Gone {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Gone) {
+      type T[A] = GONE[F, A]
+    }
+  }
+
+  object LengthRequired {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.LengthRequired) {
+      type T[A] = LENGTHREQUIRED[F, A]
+    }
+  }
+
+  object PreconditionFailed {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.PreconditionFailed) {
+      type T[A] = PRECONDITIONFAILED[F, A]
+    }
+  }
+
+  object PayloadTooLarge {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.PayloadTooLarge) {
+      type T[A] = PAYLOADTOOLARGE[F, A]
+    }
+  }
+
+  object UriTooLong {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.UriTooLong) {
+      type T[A] = URITOOLONG[F, A]
+    }
+  }
+
+  object UnsupportedMediaType {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.UnsupportedMediaType) {
+      type T[A] = UNSUPPORTEDMEDIATYPE[F, A]
+    }
+  }
+
+  object RangeNotSatisfiable {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.RangeNotSatisfiable) {
+      type T[A] = RANGENOTSATISFIABLE[F, A]
+    }
+  }
+
+  object ExpectationFailed {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.ExpectationFailed) {
+      type T[A] = EXPECTATIONFAILED[F, A]
+    }
+  }
+
+  object UnprocessableEntity {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.UnprocessableEntity) {
+      type T[A] = UNPROCESSABLEENTITY[F, A]
+    }
+  }
+
+  object Locked {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.Locked) {
+      type T[A] = LOCKED[F, A]
+    }
+  }
+
+  object FailedDependency {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.FailedDependency) {
+      type T[A] = FAILEDDEPENDENCY[F, A]
+    }
+  }
+
+  object UpgradeRequired {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.UpgradeRequired) {
+      type T[A] = UPGRADEREQUIRED[F, A]
+    }
+  }
+
+  object PreconditionRequired {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.PreconditionRequired) {
+      type T[A] = PRECONDITIONREQUIRED[F, A]
+    }
+  }
+
+  object TooManyRequests {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.TooManyRequests) {
+      type T[A] = TOOMANYREQUESTS[F, A]
+    }
+  }
+
+  object RequestHeaderFieldsTooLarge {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.RequestHeaderFieldsTooLarge) {
+      type T[A] = REQUESTHEADERFIELDSTOOLARGE[F, A]
+    }
+  }
+
+  object UnavailableForLegalReasons {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.UnavailableForLegalReasons) {
+      type T[A] = UNAVAILABLEFORLEGALREASONS[F, A]
+    }
+  }
+
+  // 5xx
   object InternalServerError {
     def apply[F[_]] = new EntityResponseGenerator[F](Status.InternalServerError) {
       type T[A] = INTERNALSERVERERROR[F, A]
     }
   }
 
-  object NotImplemented                extends EntityResponseGenerator(Status.NotImplemented) { type T[F[_], A] = NOTIMPLEMENTED[F, A] }
-  object BadGateway                    extends EntityResponseGenerator(Status.BadGateway) { type T[F[_], A] = BADGATEWAY[F, A] }
-  object ServiceUnavailable            extends EntityResponseGenerator(Status.ServiceUnavailable) { type T[F[_], A] = SERVICEUNAVAILABLE[F, A] }
-  object GatewayTimeout                extends EntityResponseGenerator(Status.GatewayTimeout) { type T[F[_], A] = GATEWAYTIMEOUT[F, A] }
-  object HttpVersionNotSupported       extends EntityResponseGenerator(Status.HttpVersionNotSupported) { type T[F[_], A] = HTTPVERSIONNOTSUPPORTED[F, A] }
-  object VariantAlsoNegotiates         extends EntityResponseGenerator(Status.VariantAlsoNegotiates) { type T[F[_], A] = VARIANTALSONEGOTIATES[F, A] }
-  object InsufficientStorage           extends EntityResponseGenerator(Status.InsufficientStorage) { type T[F[_], A] = INSUFFICIENTSTORAGE[F, A] }
-  object LoopDetected                  extends EntityResponseGenerator(Status.LoopDetected) { type T[F[_], A] = LOOPDETECTED[F, A] }
-  object NotExtended                   extends EntityResponseGenerator(Status.NotExtended) { type T[F[_], A] = NOTEXTENDED[F, A] }
-  object NetworkAuthenticationRequired extends EntityResponseGenerator(Status.NetworkAuthenticationRequired) { type T[F[_], A] = NETWORKAUTHENTICATIONREQUIRED[F, A] }
+  object NotImplemented {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.NotImplemented) {
+      type T[A] = NOTIMPLEMENTED[F, A]
+    }
+  }
+
+  object BadGateway {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.BadGateway) {
+      type T[A] = BADGATEWAY[F, A]
+    }
+  }
+
+  object ServiceUnavailable {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.ServiceUnavailable) {
+      type T[A] = SERVICEUNAVAILABLE[F, A]
+    }
+  }
+
+  object GatewayTimeout {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.GatewayTimeout) {
+      type T[A] = GATEWAYTIMEOUT[F, A]
+    }
+  }
+
+  object HttpVersionNotSupported {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.HttpVersionNotSupported) {
+      type T[A] = HTTPVERSIONNOTSUPPORTED[F, A]
+    }
+  }
+
+  object VariantAlsoNegotiates {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.VariantAlsoNegotiates) {
+      type T[A] = VARIANTALSONEGOTIATES[F, A]
+    }
+  }
+
+  object InsufficientStorage {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.InsufficientStorage) {
+      type T[A] = INSUFFICIENTSTORAGE[F, A]
+    }
+  }
+
+  object LoopDetected {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.LoopDetected) {
+      type T[A] = LOOPDETECTED[F, A]
+    }
+  }
+
+  object NotExtended {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.NotExtended) {
+      type T[A] = NOTEXTENDED[F, A]
+    }
+  }
+
+  object NetworkAuthenticationRequired {
+    def apply[F[_]] = new EntityResponseGenerator[F](Status.NetworkAuthenticationRequired) {
+      type T[A] = NETWORKAUTHENTICATIONREQUIRED[F, A]
+    }
+  }
 }
