@@ -93,7 +93,7 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.12.3",
+    scalaVersion := "2.12.4",
     crossScalaVersions := Seq("2.12.3", "2.11.11"),
     scalacOptions ++= compileFlags,
     resolvers += Resolver.sonatypeRepo("snapshots"),
