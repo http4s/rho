@@ -23,6 +23,16 @@ class SwaggerSupportSpec extends Specification {
     GET / "goodbye"/ pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
+  val trailingSlashService = new RhoService {
+    GET / "foo" / "" |>> { () => Ok("hello world") }
+  }
+
+  val mixedTrailingSlashesService = new RhoService {
+    GET / "foo" / "" |>> { () => Ok("hello world") }
+    GET / "foo" |>> { () => Ok("hello world") }
+    GET / "bar" |>> { () => Ok("hello world") }
+  }
+
 
   "SwaggerSupport" should {
     "Expose an API listing" in {
@@ -65,6 +75,39 @@ class SwaggerSupportSpec extends Specification {
 
       Set(a, b, c, d) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}")
     }
+
+    "Support endpoints which end in a slash" in {
+      val service = trailingSlashService.toService(SwaggerSupport())
+      val r = Request(GET, Uri(path = "/swagger.json"))
+      val JObject(List((a, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
+
+      a should_== "/foo/"
+    }
+
+    "Support endpoints which end in a slash being mixed with normal endpoints"  in {
+      val service = mixedTrailingSlashesService.toService(SwaggerSupport())
+      val r = Request(GET, Uri(path = "/swagger.json"))
+      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
+
+      Set(a, b, c) should_== Set("/foo/", "/foo", "/bar")
+    }
+
+    "Provide a way to agregate routes from multiple RhoServices, with mixed trailing slashes and non-trailing slashes" in {
+      val aggregateSwagger = SwaggerSupport.createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes  ++ mixedTrailingSlashesService.getRoutes)
+      val swaggerRoutes = SwaggerSupport.createSwaggerRoute(aggregateSwagger)
+      val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())
+      val allthogetherService = httpServices.reduceLeft(Service.withFallback(_)(_))
+
+      val r = Request(GET, Uri(path = "/swagger.json"))
+
+      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)), (e, JObject(_)), (f, JObject(_)), (g, JObject(_)))) =
+        parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"
+
+      Set(a, b, c, d, e, f, g) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}", "/foo/", "/foo", "/bar")
+    }
+
+
+
 
   }
 }

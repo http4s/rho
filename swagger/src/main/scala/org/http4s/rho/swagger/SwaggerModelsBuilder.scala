@@ -97,6 +97,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
         case Nil                          => if(pathStr.isEmpty) "/" else pathStr
+        case PathMatch("")::Nil           => pathStr + "/"
         case PathMatch("")::xs            => go(xs, pathStr)
         case PathMatch(s)::xs             => go(xs, pathStr + "/" + s)
         case MetaCons(_, _)::xs           => go(xs, pathStr)
