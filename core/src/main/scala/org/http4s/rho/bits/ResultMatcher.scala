@@ -443,7 +443,7 @@ object ResultMatcher {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
 
-    override def conv(req: Request[F], t: F[R])(implicit F: Monad[F], w: EntityEncoder[F, F[R]]): F[Response[F]] = F.flatMap(t)(r.conv(req, _))
+    override def conv(req: Request[F], t: F[R])(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = F.flatMap(t)(r.conv(req, _))
   }
 
   implicit def responseMatcher[F[_]](implicit F: Applicative[F]): ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
