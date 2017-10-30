@@ -54,10 +54,10 @@ final case class TypedHeader[T <: HList](rule: RequestRule) {
     *
     * The new rule will have all the original metadata.
     */
-  def map[TR <: HList, F, R](f: F)(implicit rev: Reverse.Aux[T, TR], fp: FnToProduct.Aux[F, TR => R]): TypedQuery[shapeless.::[R, HNil]] = {
+  def map[TR <: HList, F, R](f: F)(implicit rev: Reverse.Aux[T, TR], fp: FnToProduct.Aux[F, TR => R]): TypedHeader[shapeless.::[R, HNil]] = {
     import shapeless.::
     val fn: T => R :: HNil = t => fp(f)(t.reverse) :: HNil
-    TypedQuery(MapRule[T, R :: HNil](this.rule, fn))
+    TypedHeader(MapRule[T, R :: HNil](this.rule, fn))
   }
 }
 

@@ -90,7 +90,7 @@ class ApiTest extends Specification {
       val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
 
       val now = java.time.Instant.now()
-      val path = GET / "hello" +? paramFoo
+      val path = GET / "hello" >>> paramFoo
       val req = Request(
         uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")),
         headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
