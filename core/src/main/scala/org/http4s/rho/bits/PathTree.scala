@@ -271,10 +271,10 @@ private[rho] object PathTree {
   }
 
   final case class MatchNode[F[_]](name:     String,
-                                   matches:  Map[String, MatchNode[F]] = Map.empty,
+                                   matches:  Map[String, MatchNode[F]] = Map.empty[String, MatchNode[F]],
                                    captures: List[CaptureNode[F]] = Nil,
-                                   variadic: Map[Method, Leaf[F]] = Map.empty,
-                                   end:      Map[Method, Leaf[F]] = Map.empty) extends Node[F, MatchNode[F]] {
+                                   variadic: Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]],
+                                   end:      Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]]) extends Node[F, MatchNode[F]] {
 
     override def clone(matches: Map[String, MatchNode[F]], captures: List[CaptureNode[F]], variadic: Map[Method, Leaf[F]], end: Map[Method, Leaf[F]]): MatchNode[F] =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
@@ -292,8 +292,8 @@ private[rho] object PathTree {
   final case class CaptureNode[F[_]](parser:   StringParser[F, _],
                                      matches:  Map[String, MatchNode[F]] = Map.empty[String, MatchNode[F]],
                                      captures: List[CaptureNode[F]] = Nil,
-                                     variadic: Map[Method, Leaf[F]] = Map.empty,
-                                     end:      Map[Method, Leaf[F]] = Map.empty) extends Node[F, CaptureNode[F]] {
+                                     variadic: Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]],
+                                     end:      Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]]) extends Node[F, CaptureNode[F]] {
 
     override def clone(matches: Map[String, MatchNode[F]], captures: List[CaptureNode[F]], variadic: Map[Method, Leaf[F]], end: Map[Method, Leaf[F]]): CaptureNode[F] =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
