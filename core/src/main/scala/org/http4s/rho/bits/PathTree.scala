@@ -88,16 +88,15 @@ private[rho] object PathTree {
 
       case c @ CodecRouter(_, parser) =>
         Leaf[F] { (req, pathstack) =>
-          ???
-
-//          RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map { i =>
+          RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map { i =>
+            ??? // TODO: impl
 //            parser.decode(req, false).value.flatMap(_.fold(e =>
 //              e.toHttpResponse(req.httpVersion),
 //              { body =>
 //                 `asInstanceOf` to turn the untyped HList to type T
 //                route.action.act(req, (body :: i).asInstanceOf[T])
 //              }))
-//          }
+          }
         }
     }
   }
@@ -164,28 +163,27 @@ private[rho] object PathTree {
 
     // Add elements to the tree
     final protected def append(tail: List[PathRule], method: Method, action: Leaf[F]): Self = tail match {
-      case h::tail => h match {
-        case PathAnd(p1, p2) => append(p1::p2::tail, method, action)
+      case h::t => h match {
+        case PathAnd(p1, p2) => append(p1::p2::t, method, action)
 
-        case PathOr(p1, p2) => append(p1::tail, method, action).append(p2::tail, method, action)
+        case PathOr(p1, p2) => append(p1::t, method, action).append(p2::t, method, action)
 
-        case MetaCons(r, _) => append(r::tail, method, action)  // discard metadata
+        case MetaCons(r, _) => append(r::t, method, action)  // discard metadata
 
-        case PathMatch("") if !tail.isEmpty => append(tail, method, action) // "" is a NOOP in the middle of a path
+        case PathMatch("") if !t.isEmpty => append(t, method, action) // "" is a NOOP in the middle of a path
 
-          // the rest of the types need to rewrite a node
+        // the rest of the types need to rewrite a node
         case PathMatch(s) =>
-          val next = matches.getOrElse(s, MatchNode[F](s)).append(tail, method, action)
+          val next = matches.getOrElse(s, MatchNode[F](s)).append(t, method, action)
           clone(matches.updated(s, next), captures, variadic, end)
 
         case PathCapture(_, _, p, _) =>
           val exists = captures.exists{ case CaptureNode(p1,_,_,_,_) => p1 eq p }
           val all = if (exists) captures.map {
-            case n@ CaptureNode(p1,_,_,_,_) if p1 eq p => n.append(tail, method, action)
+            case n @ CaptureNode(p1,_,_,_,_) if p1 eq p => n.append(t, method, action)
             case n => n
           }
-          // TODO: can we avoid this casting?
-          else CaptureNode[F](p.asInstanceOf[StringParser[F, _]]).append(tail, method, action)::captures
+          else CaptureNode[F](p.asInstanceOf[StringParser[F, _]]).append(t, method, action)::captures
 
           clone(matches, all, variadic, end)
 
@@ -227,7 +225,7 @@ private[rho] object PathTree {
           }
 
           @tailrec
-          def go(children: List[CaptureNode[F]], error: RouteResult[F, Response[F]])(implicit F: Monad[F]): RouteResult[F, Response[F]] = children match {
+          def go(children: List[CaptureNode[F]], error: RouteResult[F, Response[F]]): RouteResult[F, Response[F]] = children match {
               case (c@CaptureNode(p,_,cs,_,_))::ns =>
                 p.parse(h) match {
                   case SuccessResponse(r) =>
@@ -236,11 +234,10 @@ private[rho] object PathTree {
                     else if (error.isEmpty) go(ns, n)
                     else                    go(ns, error)
 
-                    // TODO: can I avoid this cast?
-                  case r@FailureResponse(_) => go(ns, if (error.isEmpty) r.asInstanceOf[FailureResponse[F]] else error)
+                  case r @ FailureResponse(_) => go(ns, if (error.isEmpty) r.asInstanceOf[FailureResponse[F]] else error)
                 }
 
-              case Nil => tryVariadic(error)// try the variadiac
+              case Nil => tryVariadic(error)
           }
 
           if (exact.isSuccess) exact
