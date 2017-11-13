@@ -4,6 +4,7 @@ package bits
 
 import cats.Monad
 import org.http4s.rho.bits.PathAST._
+import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 import org.http4s.util.UrlCodingUtils
 import org.log4s.getLogger
@@ -76,30 +77,32 @@ private[rho] object PathTree {
   /** Generates a list of tokens that represent the path */
   private def keyToPath[F[_]](key: Request[F]): List[String] = splitPath(key.pathInfo)
 
-  private def makeLeaf[F[_], T <: HList](route: RhoRoute[F, T]): Leaf[F] = {
-    route.router match {
-      case Router(method, _, rules) =>
-        Leaf[F] { (req, pathstack) =>
-          RuleExecutor.runRequestRules(req, rules, pathstack).map { i =>
-            ??? // TODO: impl
-//            route.action.act(req, i.asInstanceOf[T])
-          }
-        }
-
-      case c @ CodecRouter(_, parser) =>
-        Leaf[F] { (req, pathstack) =>
-          RuleExecutor.runRequestRules(req, c.router.rules, pathstack).map { i =>
-            ??? // TODO: impl
-//            parser.decode(req, false).value.flatMap(_.fold(e =>
-//              e.toHttpResponse(req.httpVersion),
-//              { body =>
-//                 `asInstanceOf` to turn the untyped HList to type T
-//                route.action.act(req, (body :: i).asInstanceOf[T])
-//              }))
-          }
-        }
+  private def leafFromRouter[F[_]](rules: RequestRule[F]): Leaf[F] =
+    Leaf[F] { (req, pathstack) =>
+      RuleExecutor.runRequestRules(req, rules, pathstack).map { i =>
+        ??? // TODO: impl
+        //            route.action.act(req, i.asInstanceOf[T])
+      }
     }
-  }
+
+  private def leafFromCodecRouter[F[_]](rules: RequestRule[F]): Leaf[F] =
+    Leaf[F] { (req, pathstack) =>
+      RuleExecutor.runRequestRules(req, rules, pathstack).map { i =>
+        ??? // TODO: impl
+        //            parser.decode(req, false).value.flatMap(_.fold(e =>
+        //              e.toHttpResponse(req.httpVersion),
+        //              { body =>
+        //                 `asInstanceOf` to turn the untyped HList to type T
+        //                route.action.act(req, (body :: i).asInstanceOf[T])
+        //              }))
+      }
+    }
+
+  private def makeLeaf[F[_], T <: HList](route: RhoRoute[F, T]): Leaf[F] =
+    route.router match {
+      case Router(method, _, rules) => leafFromRouter(rules)
+      case c: CodecRouter[_, _, _] => leafFromCodecRouter(c.rules)
+    }
 
   //////////////////////////////////////////////////////
 
