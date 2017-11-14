@@ -10,7 +10,7 @@ import org.http4s.rho.swagger.models.Model
 import shapeless.{HList, HNil}
 
 import scala.reflect.runtime.universe._
-import fs2.{Task, Stream}
+import fs2.Stream
 
 package object swagger {
 
@@ -19,9 +19,9 @@ package object swagger {
 
   /** Add support for adding documentation before a route using the ** operator */
   implicit class StrOps(description: String) {
-    def **(method: Method): PathBuilder[HNil] = **(new PathBuilder[HNil](method, PathEmpty))
+    def **[F[_]](method: Method): PathBuilder[F, HNil] = **(new PathBuilder[F, HNil](method, PathEmpty))
 
-    def **[T<: HNil](builder: PathBuilder[T]): PathBuilder[T] =
+    def **[F[_], T<: HNil](builder: PathBuilder[F, T]): PathBuilder[F, T] =
       new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteDesc(description)))
   }
 
@@ -61,7 +61,7 @@ package object swagger {
     def isExcluded(t: Type, extra: Set[Type] = Set.empty) = (excludes ++ extra).exists(t <:< _)
   }
 
-  implicit class ReflectionHelpers(t: Type) {
+  implicit class ReflectionHelpers[F[_]](t: Type) {
     import scala.reflect.runtime.universe._
 
     val genericStart = "«"
@@ -106,10 +106,10 @@ package object swagger {
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isStream: Boolean =
-      t <:< typeOf[Stream[Task, _]]
+      t <:< typeOf[Stream[F, _]]
 
     def isTask: Boolean =
-      t <:< typeOf[Task[_]]
+      t <:< typeOf[F[_]]
 
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]

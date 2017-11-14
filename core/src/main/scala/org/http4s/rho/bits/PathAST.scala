@@ -106,7 +106,7 @@ object PathAST {
 
   case class PathMatch(s: String) extends PathOperation
 
-  case class PathCapture[F[_]](name: String, description: Option[String], parser: StringParser[F, _], m: TypeTag[_]) extends PathOperation
+  case class PathCapture[F[_]](name: String, description: Option[String], parser: StringParser[F, String], m: TypeTag[_]) extends PathOperation
 
   case object CaptureTail extends PathOperation
 

@@ -133,19 +133,19 @@ package object rho extends Http4s with ResultSyntaxInstances {
   /**
    * Defines a path variable of a URI that should be bound to a route definition
    */
-  def pathVar[F[_], T](implicit parser: StringParser[F, T], m: TypeTag[T]): TypedPath[F, T :: HNil] =
+  def pathVar[F[_], T](implicit parser: StringParser[F, String], m: TypeTag[T]): TypedPath[F, T :: HNil] =
     pathVar(m.tpe.toString.toLowerCase)(parser, m)
 
   /**
    * Defines a path variable of a URI that should be bound to a route definition
    */
-  def pathVar[F[_], T](id: String)(implicit parser: StringParser[F, T], m: TypeTag[T]): TypedPath[F, T :: HNil] =
+  def pathVar[F[_], T](id: String)(implicit parser: StringParser[F, String], m: TypeTag[T]): TypedPath[F, T :: HNil] =
     TypedPath(PathCapture[F](id, None, parser, stringTag))
 
   /**
     * Defines a path variable of a URI with description that should be bound to a route definition
     */
-  def pathVar[F[_], T](id: String, description: String)(implicit parser: StringParser[F, T], m: TypeTag[T]): TypedPath[F, T :: HNil] =
+  def pathVar[F[_], T](id: String, description: String)(implicit parser: StringParser[F, String], m: TypeTag[T]): TypedPath[F, T :: HNil] =
     TypedPath(PathCapture[F](id, Some(description), parser, stringTag))
 
   /**

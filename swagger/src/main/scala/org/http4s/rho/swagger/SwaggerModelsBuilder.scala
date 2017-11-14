@@ -18,13 +18,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   private[this] val logger = getLogger
 
-  def mkSwagger(info: Info, rr: RhoRoute[_])(s: Swagger): Swagger =
+  def mkSwagger[F[_]](info: Info, rr: RhoRoute[F, _])(s: Swagger): Swagger =
     Swagger(
       info        = info.some,
       paths       = collectPaths(rr)(s),
       definitions = collectDefinitions(rr)(s))
 
-  def collectPaths(rr: RhoRoute[_])(s: Swagger): Map[String, Path] = {
+  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger): Map[String, Path] = {
     val pairs = mkPathStrs(rr).map { ps =>
       val o = mkOperation(ps, rr)
       val p0 = s.paths.get(ps).getOrElse(Path())
@@ -45,7 +45,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.updated(s, p) }
   }
 
-  def collectDefinitions(rr: RhoRoute[_])(s: Swagger): Map[String, Model] = {
+  def collectDefinitions[F[_]](rr: RhoRoute[F, _])(s: Swagger): Map[String, Model] = {
     val initial: Set[Model] = s.definitions.values.toSet
     (collectResultTypes(rr) ++ collectCodecTypes(rr) ++ collectQueryTypes(rr))
       .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
@@ -53,27 +53,27 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       .toMap
   }
 
-  def collectResultTypes(rr: RhoRoute[_]): Set[Type] =
+  def collectResultTypes[F[_]](rr: RhoRoute[F, _]): Set[Type] =
     rr.resultInfo.collect {
       case TypeOnly(tpe)         => tpe
       case StatusAndType(_, tpe) => tpe
     }
 
-  def collectCodecTypes(rr: RhoRoute[_]): Set[Type] =
+  def collectCodecTypes[F[_]](rr: RhoRoute[F, _]): Set[Type] =
     rr.router match {
-      case r: CodecRouter[_, _] => Set(r.entityType)
+      case r: CodecRouter[F, _, _] => Set(r.entityType)
       case _                    => Set.empty
     }
 
-  def collectQueryTypes(rr: RhoRoute[_]): Seq[Type] = {
-    def go(stack: List[RequestRule]): List[Type] =
+  def collectQueryTypes[F[_]](rr: RhoRoute[F, _]): Seq[Type] = {
+    def go(stack: List[RequestRule[F]]): List[Type] =
       stack match {
-        case Nil                              => Nil
-        case AndRule(a, b)::xs                => go(a::b::xs)
-        case OrRule(a, b)::xs                 => go(a::b::xs)
-        case (EmptyRule | CaptureRule(_))::xs => go(xs)
-        case MapRule(r, _)::xs                => go(r::xs)
-        case IgnoreRule(r)::xs                => go(r::xs)
+        case Nil                                         => Nil
+        case AndRule(a, b)::xs                           => go(a::b::xs)
+        case OrRule(a, b)::xs                            => go(a::b::xs)
+        case (EmptyRule() | CaptureRule(_))::xs          => go(xs)
+        case MapRule(r, _)::xs                           => go(r::xs)
+        case IgnoreRule(r)::xs                           => go(r::xs)
         case MetaRule(x, q@QueryMetaData(_,_,_,_,_))::xs =>
           val tpe = q.m.tpe
           TypeBuilder.DataType.fromType(tpe) match {
@@ -90,9 +90,9 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def collectQueryParamTypes(rr: RhoRoute[_]): Set[Type] = ???
+  def collectQueryParamTypes[F[_]](rr: RhoRoute[F, _]): Set[Type] = ???
 
-  def mkPathStrs(rr: RhoRoute[_]): List[String] = {
+  def mkPathStrs[F[_]](rr: RhoRoute[F, _]): List[String] = {
 
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
@@ -108,7 +108,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).map(go(_, ""))
   }
 
-  def collectPathParams(rr: RhoRoute[_]): List[PathParameter] = {
+  def collectPathParams[F[_]](rr: RhoRoute[F, _]): List[PathParameter] = {
 
     def go(stack: List[PathOperation], pps: List[PathParameter]): List[PathParameter] =
       stack match {
@@ -116,27 +116,27 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case PathMatch("")::xs               => go(xs, pps)
         case PathMatch(s)::xs                => go(xs, pps)
         case MetaCons(_, _)::xs              => go(xs, pps)
-        case PathCapture(id, desc, p, _)::xs => go(xs, mkPathParam(id, desc, p)::pps)
-        case CaptureTail::xs                 => PathParameter(`type` = "string", name = "tail...".some):: Nil
+        case PathCapture(id, desc, p, _)::xs => go(xs, mkPathParam[F](id, desc, p.asInstanceOf[StringParser[F, String]])::pps)
+        case CaptureTail::xs                 => PathParameter(`type` = "string", name = "tail...".some) :: Nil
       }
 
     linearizeStack(rr.path::Nil).flatMap(go(_, Nil)).reverse
   }
 
-  def collectBodyParams(rr: RhoRoute[_]): Option[BodyParameter] =
+  def collectBodyParams[F[_]](rr: RhoRoute[F, _]): Option[BodyParameter] =
     rr.router match {
-      case r: CodecRouter[_, _] => mkBodyParam(r).some
-      case _                    => none
+      case r: CodecRouter[_, _, _] => mkBodyParam(r).some
+      case _                       => none
     }
 
-  def collectResponses(rr: RhoRoute[_]): Map[String, Response] =
+  def collectResponses[F[_]](rr: RhoRoute[F, _]): Map[String, Response] =
     rr.resultInfo.collect {
       case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some).some
       case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some).some
       case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none).some
     }.flatten.toMap
 
-  def collectSummary(rr: RhoRoute[_]): Option[String] = {
+  def collectSummary[F[_]](rr: RhoRoute[F, _]): Option[String] = {
 
     def go(stack: List[PathOperation], summary: Option[String]): Option[String] =
       stack match {
@@ -170,15 +170,15 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
      linearizeStack(rr.path::Nil).flatMap(go)
   }
 
-  def collectOperationParams(rr: RhoRoute[_]): List[Parameter] =
+  def collectOperationParams[F[_]](rr: RhoRoute[F, _]): List[Parameter] =
     collectPathParams(rr) ::: collectQueryParams(rr) ::: collectHeaderParams(rr) ::: collectBodyParams(rr).toList
 
-  def collectQueryParams(rr: RhoRoute[_]): List[Parameter] = {
-    def go(stack: List[RequestRule]): List[Parameter] =
+  def collectQueryParams[F[_]](rr: RhoRoute[F, _]): List[Parameter] = {
+    def go(stack: List[RequestRule[F]]): List[Parameter] =
       stack match {
         case AndRule(a, b)::xs => go(a::b::xs)
         case MapRule(r, _)::xs => go(r::xs)
-        case (EmptyRule | CaptureRule(_))::xs => go(xs)
+        case (EmptyRule() | CaptureRule(_))::xs => go(xs)
 
         case OrRule(a, b)::xs =>
           val as = go(a::xs)
@@ -189,7 +189,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           addOrDescriptions(set)(as, bs, "params") :::
           addOrDescriptions(set)(bs, as, "params")
 
-        case MetaRule(rs, q@QueryMetaData(_,_,_,_,_))::xs => mkQueryParam(q)::go(rs::xs)
+        case MetaRule(rs, q@QueryMetaData(_,_,_,_,_))::xs => mkQueryParam[F](q.asInstanceOf[QueryMetaData[F, _]])::go(rs::xs)
 
         case MetaRule(rs, m: TextMetaData)::xs =>
           go(rs::Nil).map(_.withDesc(m.msg.some)) ::: go(xs)
@@ -204,14 +204,14 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def collectHeaderParams(rr: RhoRoute[_]): List[HeaderParameter] = {
-    def go(stack: List[RequestRule]): List[HeaderParameter] =
+  def collectHeaderParams[F[_]](rr: RhoRoute[F, _]): List[HeaderParameter] = {
+    def go(stack: List[RequestRule[F]]): List[HeaderParameter] =
       stack match {
         case Nil                                   => Nil
         case AndRule(a,b)::xs                      => go(a::b::xs)
         case MetaRule(a,HeaderMetaData(key,d))::xs => mkHeaderParam(key, d)::go(a::xs)
         case MetaRule(a,_)::xs                     => go(a::xs)
-        case (EmptyRule | CaptureRule(_))::xs      => go(xs)
+        case (EmptyRule() | CaptureRule(_))::xs    => go(xs)
         case MapRule(r,_)::xs                      => go(r::xs)
         case IgnoreRule(r)::xs                     => go(r::xs)
         case OrRule(a, b)::xs =>
@@ -226,7 +226,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def mkOperation(pathStr: String, rr: RhoRoute[_]): Operation = {
+  def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _]): Operation = {
     val parameters = collectOperationParams(rr)
 
     Operation(
@@ -253,7 +253,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       showParameters
   }
 
-  def mkBodyParam(r: CodecRouter[_, _]): BodyParameter = {
+  def mkBodyParam[F[_]](r: CodecRouter[F, _, _]): BodyParameter = {
     val tpe = r.entityType
     val model = if (tpe.isPrimitive) {
       val name = TypeBuilder.DataType(tpe).name
@@ -265,7 +265,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       description = tpe.simpleName.some)
   }
 
-  def mkPathParam(name: String, description: Option[String], parser: StringParser[_]): PathParameter = {
+  def mkPathParam[F[_]](name: String, description: Option[String], parser: StringParser[F, String]): PathParameter = {
     val tpe = parser.typeTag.map(tag => getType(tag.tpe)).getOrElse("string")
     PathParameter(`type` = tpe, name = name.some, description = description, required = true)
   }
@@ -340,7 +340,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     code -> Response(description = descr, schema = schema)
   }
 
-  def mkQueryParam(rule: QueryMetaData[_]): Parameter = {
+  def mkQueryParam[F[_]](rule: QueryMetaData[F, _]): Parameter = {
     val required = !(rule.m.tpe.isOption || rule.default.isDefined)
 
     TypeBuilder.DataType(rule.m.tpe) match {

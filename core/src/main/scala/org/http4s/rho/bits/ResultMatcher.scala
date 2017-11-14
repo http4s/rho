@@ -10,7 +10,7 @@ trait ResultMatcher[F[_], R] {
   def encodings: Set[MediaType]
   def resultInfo: Set[ResultInfo]
 
-  def conv(req: Request[F], r: R)(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]]
+  def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]]
 }
 
 object ResultMatcher {
@@ -349,7 +349,7 @@ object ResultMatcher {
       INSUFFICIENTSTORAGE,
       LOOPDETECTED,
       NOTEXTENDED,
-      NETWORKAUTHENTICATIONREQUIRED])(implicit F: Monad[F], w: EntityEncoder[F, Result[F, CONTINUE, SWITCHINGPROTOCOLS, PROCESSING, OK, CREATED, ACCEPTED, NONAUTHORITATIVEINFORMATION, NOCONTENT, RESETCONTENT, PARTIALCONTENT, MULTISTATUS, ALREADYREPORTED, IMUSED, MULTIPLECHOICES, MOVEDPERMANENTLY, FOUND, SEEOTHER, NOTMODIFIED, USEPROXY, TEMPORARYREDIRECT, PERMANENTREDIRECT, BADREQUEST, UNAUTHORIZED, PAYMENTREQUIRED, FORBIDDEN, NOTFOUND, METHODNOTALLOWED, NOTACCEPTABLE, PROXYAUTHENTICATIONREQUIRED, REQUESTTIMEOUT, CONFLICT, GONE, LENGTHREQUIRED, PRECONDITIONFAILED, PAYLOADTOOLARGE, URITOOLONG, UNSUPPORTEDMEDIATYPE, RANGENOTSATISFIABLE, EXPECTATIONFAILED, UNPROCESSABLEENTITY, LOCKED, FAILEDDEPENDENCY, UPGRADEREQUIRED, PRECONDITIONREQUIRED, TOOMANYREQUESTS, REQUESTHEADERFIELDSTOOLARGE, INTERNALSERVERERROR, NOTIMPLEMENTED, BADGATEWAY, SERVICEUNAVAILABLE, GATEWAYTIMEOUT, HTTPVERSIONNOTSUPPORTED, VARIANTALSONEGOTIATES, INSUFFICIENTSTORAGE, LOOPDETECTED, NOTEXTENDED, NETWORKAUTHENTICATIONREQUIRED]]): F[Response[F]] = F.pure(r.resp)
+      NETWORKAUTHENTICATIONREQUIRED])(implicit F: Monad[F]): F[Response[F]] = F.pure(r.resp)
 
     override def resultInfo: Set[ResultInfo] = {
       allTpes.flatMap { case (s, mw) =>
@@ -421,13 +421,13 @@ object ResultMatcher {
     }
   }
 
-  implicit def optionMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, Option[R]]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] {
+  implicit def optionMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] {
     override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
 
-    override def conv(req: Request[F], r: Option[R])(implicit F: Monad[F], w: EntityEncoder[F, Option[R]]): F[Response[F]] = r match {
-      case Some(`r`) => ResponseGeneratorInstances.Ok[F].pure(r)
+    override def conv(req: Request[F], r: Option[R])(implicit F: Monad[F]): F[Response[F]] = r match {
+      case Some(res) => ResponseGeneratorInstances.Ok[F].pure(res)
       case None      => ResponseGeneratorInstances.NotFound[F].pure(req.uri.path)
     }
   }
@@ -436,20 +436,22 @@ object ResultMatcher {
     override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
 
-    override def conv(req: Request[F], r: R)(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = ResponseGeneratorInstances.Ok[F].pure(r)
+    override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = ResponseGeneratorInstances.Ok[F].pure(r)
   }
 
-  implicit def fMatcher[F[_], R](implicit F: FlatMap[F], r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
-    override def encodings: Set[MediaType] = r.encodings
-    override def resultInfo: Set[ResultInfo] = r.resultInfo
-
-    override def conv(req: Request[F], t: F[R])(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = F.flatMap(t)(r.conv(req, _))
-  }
+  // TODO: put back ?
+//  implicit def fMatcher[F[_], R](implicit F: FlatMap[F], r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
+//    override def encodings: Set[MediaType] = r.encodings
+//    override def resultInfo: Set[ResultInfo] = r.resultInfo
+//
+////    override def conv(req: Request[F], r: F[R])(implicit F: Monad[F], w: EntityEncoder[F, F[R]]) = ???
+//    override def conv(req: Request[F], t: F[R])(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = F.flatMap(t)(r.conv(req, _))
+//  }
 
   implicit def responseMatcher[F[_]](implicit F: Applicative[F]): ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
     override def resultInfo: Set[ResultInfo] = Set.empty
 
-    override def conv(req: Request[F], r: Response[F])(implicit F: Monad[F], w: EntityEncoder[F, Response[F]]): F[Response[F]] = F.pure(r)
+    override def conv(req: Request[F], r: Response[F])(implicit F: Monad[F]): F[Response[F]] = F.pure(r)
   }
 }
