@@ -49,7 +49,7 @@ class AuthedContext[F[_], U] {
     * @param service [[HttpService]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService(service: HttpService[F]): AuthedService[F, U] = {
+  def toService(service: HttpService[F]): AuthedService[U, F] = {
     // TODO: fix
 //    Service.lift { case AuthedRequest(authInfo, req) =>
 //      service(req.withAttribute[U](authKey, authInfo))
