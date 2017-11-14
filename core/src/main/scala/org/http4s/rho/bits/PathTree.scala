@@ -186,7 +186,7 @@ private[rho] object PathTree {
             case n @ CaptureNode(p1,_,_,_,_) if p1 eq p => n.append(t, method, action)
             case n => n
           }
-          else CaptureNode[F](p.asInstanceOf[StringParser[F, _]]).append(t, method, action)::captures
+          else CaptureNode[F](p.asInstanceOf[StringParser[F, String]]).append(t, method, action)::captures
 
           clone(matches, all, variadic, end)
 
@@ -220,48 +220,53 @@ private[rho] object PathTree {
           case Some(l) => l.attempt(req, path::stack)
         }
 
+      def walkHeadTail(h: String, t: List[String]): RouteResult[F, Response[F]] = {
+        val exact: RouteResult[F, Response[F]] = matches.get(h) match {
+          case Some(n) => n.walk(method, req, t, stack)
+          case None    => NoMatch()
+        }
+
+        @tailrec
+        def go(children: List[CaptureNode[F]], error: RouteResult[F, Response[F]]): RouteResult[F, Response[F]] = children match {
+          case (c@CaptureNode(p,_,cs,_,_))::ns =>
+            p.parse(h) match {
+              case SuccessResponse(r) =>
+                val n = c.walk(method, req, t, r::stack)
+                if (n.isSuccess)        n
+                else if (error.isEmpty) go(ns, n)
+                else                    go(ns, error)
+
+              case r @ FailureResponse(_) => go(ns, if (error.isEmpty) r.asInstanceOf[FailureResponse[F]] else error)
+            }
+
+          case Nil => tryVariadic(error)
+        }
+
+        if (exact.isSuccess) exact
+        else go(captures, exact)
+      }
+
+      def walkNil(): RouteResult[F, Response[F]] = {
+        end.get(method) match {
+          case Some(l) => l.attempt(req, stack)
+          case None =>
+            val result = tryVariadic(NoMatch())
+
+            if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
+            else FailureResponse.pure {
+              val ms = end.keys
+              val allowedMethods = ms.mkString(", ")
+              val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
+
+              F.map(MethodNotAllowed[F].pure(msg))(
+                _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
+            }
+        }
+      }
+
       path match {
-        case h::t =>
-          val exact: RouteResult[F, Response[F]] = matches.get(h) match {
-            case Some(n) => n.walk(method, req, t, stack)
-            case None    => NoMatch()
-          }
-
-          @tailrec
-          def go(children: List[CaptureNode[F]], error: RouteResult[F, Response[F]]): RouteResult[F, Response[F]] = children match {
-              case (c@CaptureNode(p,_,cs,_,_))::ns =>
-                p.parse(h) match {
-                  case SuccessResponse(r) =>
-                    val n = c.walk(method, req, t, r::stack)
-                    if (n.isSuccess)        n
-                    else if (error.isEmpty) go(ns, n)
-                    else                    go(ns, error)
-
-                  case r @ FailureResponse(_) => go(ns, if (error.isEmpty) r.asInstanceOf[FailureResponse[F]] else error)
-                }
-
-              case Nil => tryVariadic(error)
-          }
-
-          if (exact.isSuccess) exact
-          else go(captures, exact)
-
-        case Nil =>
-          end.get(method) match {
-            case Some(l) => l.attempt(req, stack)
-            case None =>
-              val result = tryVariadic(NoMatch())
-
-              if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
-              else FailureResponse.pure {
-                val ms = end.keys
-                val allowedMethods = ms.mkString(", ")
-                val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
-
-                F.map(MethodNotAllowed[F].pure(msg))(
-                  _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
-              }
-          }
+        case h::t => walkHeadTail(h, t)
+        case Nil => walkNil()
       }
     }
   }
@@ -285,7 +290,7 @@ private[rho] object PathTree {
     }
   }
 
-  final case class CaptureNode[F[_]](parser:   StringParser[F, _],
+  final case class CaptureNode[F[_]](parser:   StringParser[F, String],
                                      matches:  Map[String, MatchNode[F]] = Map.empty[String, MatchNode[F]],
                                      captures: List[CaptureNode[F]] = Nil,
                                      variadic: Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]],

@@ -81,9 +81,10 @@ object StringParser {
   implicit def shortParser[F[_]]: ShortParser[F] = new ShortParser[F]()
 
   implicit def strParser[F[_]]: StringParser[F, String] = new StringParser[F, String] {
+
     override val typeTag: Some[TypeTag[String]] = Some(implicitly[TypeTag[String]])
 
-    override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, String] =
+    override def parse(s: String)(implicit F: Monad[F], w: EntityEncoder[F, String]): ResultResponse[F, String] =
       SuccessResponse(s)
   }
 
