@@ -260,11 +260,7 @@ private[rho] object PathTree {
 
                 F.map(MethodNotAllowed[F].pure(msg))(
                   _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
-
-                // TODO: remove this!
-                ???
               }
-
           }
       }
     }
