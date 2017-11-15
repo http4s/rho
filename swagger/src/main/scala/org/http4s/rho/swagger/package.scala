@@ -106,10 +106,12 @@ package object swagger {
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isStream: Boolean =
-      t <:< typeOf[Stream[F, _]]
+      ???
+//      t <:< typeOf[Stream[F, _]] // TODO: we can't really use F here, can we? no TypeTag will be found
 
     def isTask: Boolean =
-      t <:< typeOf[F[_]]
+      ???
+//      t <:< typeOf[F[_]] // TODO: we can't really use F here, can we? no TypeTag will be found
 
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]
