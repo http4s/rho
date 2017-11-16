@@ -71,21 +71,26 @@ object SwaggerSupport {
   }
 
   /**
-    * Create a RhoService with the route to the Swagger json
-    * for the given Swagger Specification
-    */
-  def createSwaggerRoute[F[_]: Monad](
+   * Create a RhoService with the route to the Swagger json
+   * for the given Swagger Specification
+   */
+  def createSwaggerRoute[F[_]](
     swagger: => Swagger,
     apiPath: TypedPath[F, HNil] = "swagger.json"
-  ): RhoService[F] = new RhoService[F] {
+  )(implicit F: Monad[F]): RhoService[F] = new RhoService[F] {
 
-    lazy val response = Ok[F](
-      Json.mapper()
-        .writerWithDefaultPrettyPrinter()
-        .writeValueAsString(swagger.toJModel)
-    ).putHeaders(`Content-Type`(MediaType.`application/json`))
+    lazy val response: F[OK[F, String]] = {
+      val fOk = Ok[F].apply(
+        Json.mapper()
+          .writerWithDefaultPrettyPrinter()
+          .writeValueAsString(swagger.toJModel)
+      )
+
+      F.map(fOk) { ok =>
+        ok.copy(resp = ok.resp.putHeaders(`Content-Type`(MediaType.`application/json`)))
+      }
+    }
 
     "Swagger documentation" ** GET / apiPath |>> (() => response)
   }
 }
-
