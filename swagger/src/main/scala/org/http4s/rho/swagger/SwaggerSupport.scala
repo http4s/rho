@@ -5,6 +5,7 @@ package swagger
 import cats.Monad
 import io.swagger.util.Json
 import headers.`Content-Type`
+import org.http4s.rho.bits.HListToFunc
 import org.http4s.rho.bits.PathAST.TypedPath
 import org.http4s.rho.swagger.models._
 import shapeless._

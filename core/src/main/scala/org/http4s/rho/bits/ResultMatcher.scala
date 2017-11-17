@@ -439,16 +439,14 @@ object ResultMatcher {
     override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = ResponseGeneratorInstances.Ok[F].pure(r)
   }
 
-  // TODO: put back ?
-//  implicit def fMatcher[F[_], R](implicit F: FlatMap[F], r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
-//    override def encodings: Set[MediaType] = r.encodings
-//    override def resultInfo: Set[ResultInfo] = r.resultInfo
-//
-////    override def conv(req: Request[F], r: F[R])(implicit F: Monad[F], w: EntityEncoder[F, F[R]]) = ???
-//    override def conv(req: Request[F], t: F[R])(implicit F: Monad[F], w: EntityEncoder[F, R]): F[Response[F]] = F.flatMap(t)(r.conv(req, _))
-//  }
+  implicit def fMatcher[F[_], R](implicit r: ResultMatcher[F, R], w: EntityEncoder[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
+    override def encodings: Set[MediaType] = r.encodings
+    override def resultInfo: Set[ResultInfo] = r.resultInfo
 
-  implicit def responseMatcher[F[_]](implicit F: Applicative[F]): ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
+    override def conv(req: Request[F], f: F[R])(implicit F: Monad[F]): F[Response[F]] = F.flatMap(f)(r.conv(req, _))
+  }
+
+  implicit def responseMatcher[F[_]]: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
     override def resultInfo: Set[ResultInfo] = Set.empty
 
