@@ -18,6 +18,12 @@ trait TextMetaData extends Metadata {
   def msg: String
 }
 
+/** Security Scope meta data */
+trait SecurityScopesMetaData extends Metadata {
+  def definitions: Map[String, List[String]] // Like `auth0_jwk` -> List('admin', user)
+
+}
+
 /** Metadata about a query rule */
 case class QueryMetaData[T](name: String, description: Option[String], p: QueryParser[T], default: Option[T], m: TypeTag[T]) extends Metadata
 
