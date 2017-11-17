@@ -10,7 +10,7 @@ import org.http4s.rho.swagger.models.Model
 import shapeless.{HList, HNil}
 
 import scala.reflect.runtime.universe._
-import fs2.{Stream, Task}
+import fs2.{Task, Stream}
 
 package object swagger {
 
@@ -34,12 +34,10 @@ package object swagger {
 
     def ^^(route: RhoRoute.Tpe): PathBuilder[HNil] = new PathBuilder(route.method, PathAST.MetaCons(route.path, RouteSecurityScope(definitions)))
 
-
     def ^^[T<: HList](builder: PathBuilder[T]): PathBuilder[T] =
       new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteSecurityScope(definitions)))
 
   }
-
 
   object Reflector {
     import scala.reflect.runtime.universe._
