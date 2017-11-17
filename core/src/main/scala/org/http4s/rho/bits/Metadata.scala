@@ -21,7 +21,6 @@ trait TextMetaData extends Metadata {
 /** Security Scope meta data */
 trait SecurityScopesMetaData extends Metadata {
   def definitions: Map[String, List[String]] // Like `auth0_jwk` -> List('admin', user)
-
 }
 
 /** Metadata about a query rule */
