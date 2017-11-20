@@ -5,7 +5,7 @@ package swagger
 import io.swagger.util.Json
 import headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.TypedPath
-import org.http4s.rho.swagger.models.{Info, Scheme, SecuritySchemeDefinition, SecurityRequirement, Swagger}
+import org.http4s.rho.swagger.models._
 import shapeless._
 
 object SwaggerSupport {
@@ -25,10 +25,11 @@ object SwaggerSupport {
              consumes: List[String] = Nil,
              produces: List[String] = Nil,
              security: List[SecurityRequirement] = Nil,
-             securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty): RhoMiddleware = { routes =>
+             securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+             vendorExtensions: Map[String, AnyRef] = Map.empty): RhoMiddleware = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiPath, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions)(
+      createSwagger(swaggerFormats, apiPath, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, vendorExtensions)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -51,7 +52,8 @@ object SwaggerSupport {
                      consumes: List[String] = Nil,
                      produces: List[String] = Nil,
                      security: List[SecurityRequirement] = Nil,
-                     securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty)(routes: Seq[RhoRoute[_]]): Swagger = {
+                     securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+                     vendorExtensions: Map[String, AnyRef] = Map.empty)(routes: Seq[RhoRoute[_]]): Swagger = {
     val sb = new SwaggerModelsBuilder(swaggerFormats)
     routes.foldLeft(Swagger(
       host = host
@@ -61,6 +63,7 @@ object SwaggerSupport {
       , produces = produces
       , security = security
       , securityDefinitions = securityDefinitions
+      , vendorExtensions = vendorExtensions
     ))((s, r) => sb.mkSwagger(apiInfo, r)(s))
   }
 
