@@ -4,9 +4,8 @@ package swagger
 
 import io.swagger.util.Json
 import headers.`Content-Type`
-import io.swagger.models.SecurityRequirement
 import org.http4s.rho.bits.PathAST.TypedPath
-import org.http4s.rho.swagger.models.{Info, Scheme, SecuritySchemeDefinition, Swagger}
+import org.http4s.rho.swagger.models.{Info, Scheme, SecuritySchemeDefinition, SecurityRequirement, Swagger}
 import shapeless._
 
 object SwaggerSupport {
