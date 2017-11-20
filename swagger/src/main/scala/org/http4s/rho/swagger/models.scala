@@ -192,8 +192,7 @@ object models {
 
     def toJModel: jm.SecurityRequirement = {
       val sr = new jm.SecurityRequirement
-      sr.setName(name)
-      sr.setScopes(fromList(scopes))
+      sr.setRequirements(name, scopes.asJava)
       sr
     }
   }
