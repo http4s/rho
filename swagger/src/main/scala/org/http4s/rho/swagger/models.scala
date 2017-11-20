@@ -122,6 +122,31 @@ object models {
     }
   }
 
+  case class OAuth2VendorExtensionsDefinition
+  (
+      authorizationUrl : String
+    , vendorExtensions : Map[String, AnyRef]
+    , flow             : String
+    , scopes           : Map[String, String]
+    , tokenUrl         : Option[String] = None
+  ) extends SecuritySchemeDefinition {
+
+    override val `type` = "oauth2"
+
+    def toJModel: jm.auth.OAuth2Definition = {
+      val oa2d = new jm.auth.OAuth2Definition
+      oa2d.setAuthorizationUrl(authorizationUrl)
+      oa2d.setVendorExtensions(fromMap(vendorExtensions))
+      oa2d.setFlow(flow)
+      oa2d.setScopes(fromMap(scopes))
+
+      if(tokenUrl.isDefined)
+        oa2d.setTokenUrl(tokenUrl.get)
+
+      oa2d
+    }
+  }
+
   case class ApiKeyAuthDefinition
   (
     name : String
