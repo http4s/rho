@@ -9,11 +9,11 @@ trait RequestRunner {
 
   def service: HttpService
 
-  def checkOk(r: Request): String = checkStatus(r)(_ == Status.Ok)
+  def checkOk(r: Request[IO]): String = checkStatus(r)(_ == Status.Ok)
 
-  def checkError(r: Request): String = checkStatus(r)(_ != Status.Ok)
+  def checkError(r: Request[IO]): String = checkStatus(r)(_ != Status.Ok)
 
-  def checkStatus(r: Request)(isSuccess: Status => Boolean) = {
+  def checkStatus(r: Request[IO])(isSuccess: Status => Boolean) = {
     val resp = service(r).unsafeRun.orNotFound
     if (isSuccess(resp.status)) getBody(resp.body)
     else sys.error(s"Invalid response code: ${resp.status}")

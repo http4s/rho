@@ -2,12 +2,12 @@ package org.http4s
 package rho
 
 import bits.PathAST._
-import org.http4s.rho.bits.{TypedHeader, HeaderAppendable}
+import cats.effect.IO
+import org.http4s.rho.bits.{HeaderAppendable, TypedHeader}
 import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
 
 import scala.reflect.runtime.universe.{Type, TypeTag}
-
-import shapeless.{HNil, ::, HList}
+import shapeless.{::, HList, HNil}
 import shapeless.ops.hlist.Prepend
 
 sealed trait RoutingEntity[T <: HList] {
@@ -50,14 +50,14 @@ case class Router[T <: HList](method: Method,
 
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(this, action)
 
-  override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
+  override def decoding[R](decoder: EntityDecoder[IO, R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
     CodecRouter(this, decoder)
 
   def withMethod(other: Method): Self =
     copy(method = other)
 }
 
-case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[R])(implicit t: TypeTag[R])
+case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[IO, R])(implicit t: TypeTag[R])
   extends HeaderAppendable[T]
     with RouteExecutable[R::T]
     with RoutingEntity[R::T]
@@ -84,7 +84,7 @@ case class CodecRouter[T <: HList, R](router: Router[T], decoder: EntityDecoder[
 
   override val rules: RequestRule = router.rules
 
-  override def decoding[R2 >: R](decoder2: EntityDecoder[R2])(implicit t: TypeTag[R2]): CodecRouter[T, R2] =
+  override def decoding[R2 >: R](decoder2: EntityDecoder[IO, R2])(implicit t: TypeTag[R2]): CodecRouter[T, R2] =
     CodecRouter(router, decoder orElse decoder2)
 
   def entityType: Type = t.tpe

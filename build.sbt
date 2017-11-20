@@ -1,22 +1,18 @@
-import sbt._
+import sbt.{CrossVersion, _}
 import Keys._
 import spray.revolver.RevolverPlugin._
-
 import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGhPages.GhPagesKeys
-
 import com.typesafe.sbt.SbtSite.SiteKeys.siteMappings
 import com.typesafe.sbt.SbtSite.site
-
 import com.typesafe.sbt.SbtGit.git
-
 import sbtunidoc.Plugin.ScalaUnidoc
 import sbtunidoc.Plugin.unidocSettings
 import sbtunidoc.Plugin.UnidocKeys._
 
 import scala.util.Properties.envOrNone
-
-import Dependencies._, RhoPlugin._
+import Dependencies._
+import RhoPlugin._
 
 lazy val rho = project
   .in(file("."))
@@ -81,7 +77,7 @@ lazy val `rho-examples` = project
       ): _*)
   .dependsOn(`rho-swagger`, `rho-hal`)
 
-lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
+lazy val compileFlags = Seq("-feature", "-Ypartial-unification") //, "-Xlog-implicits")
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -108,7 +104,8 @@ lazy val buildSettings = publishing ++
       logbackClassic % "test"
     ),
     libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value
+    libraryDependencies += `scala-reflect` % scalaVersion.value,
+    addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersion.binary)
   )
 
 lazy val publishing = Seq(

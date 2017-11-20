@@ -12,7 +12,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.language.existentials
 import scala.util.control.NonFatal
-import fs2.Task
+import cats.effect.IO
 
 
 /** Data structure for route execution
@@ -42,13 +42,13 @@ private[rho] final class PathTree private(private val paths: PathTree.MatchNode)
   def merge(other: PathTree): PathTree = new PathTree(paths merge other.paths)
 
   /** Attempt to generate a `Response` by executing the tree. */
-  def getResult(req: Request): RouteResult[Task[Response]] = paths.walkTree(req.method, req)
+  def getResult(req: Request[IO]): RouteResult[IO[Response[IO]]] = paths.walkTree(req.method, req)
 }
 
 private[rho] object PathTree {
   private val logger = getLogger
 
-  type Action = ResultResponse[Task[Response]]
+  type Action = ResultResponse[IO[Response[IO]]]
 
   def apply(): PathTree = new PathTree(MatchNode(""))
 
@@ -75,7 +75,7 @@ private[rho] object PathTree {
   }
 
   /** Generates a list of tokens that represent the path */
-  private def keyToPath(key: Request): List[String] = splitPath(key.pathInfo)
+  private def keyToPath(key: Request[IO]): List[String] = splitPath(key.pathInfo)
 
   private def makeLeaf[T <: HList](route: RhoRoute[T]): Leaf = {
     route.router match {
@@ -103,13 +103,13 @@ private[rho] object PathTree {
   //////////////////////////////////////////////////////
 
   object Leaf {
-    def apply(f: (Request, HList) => Action): Leaf = SingleLeaf(f)
+    def apply(f: (Request[IO], HList) => Action): Leaf = SingleLeaf(f)
   }
 
   /** Leaves of the PathTree */
   sealed trait Leaf {
     /** Attempt to match this leaf */
-    def attempt(req: Request, stack: HList): Action
+    def attempt(req: Request[IO], stack: HList): Action
 
     /** Concatenate this leaf with another, giving the first precedence */
     final def ++(l: Leaf): Leaf = (this, l) match {
@@ -120,19 +120,19 @@ private[rho] object PathTree {
     }
   }
 
-  final private case class SingleLeaf(f: (Request, HList) => Action) extends Leaf {
-    override def attempt(req: Request, stack: HList): Action = {
+  final private case class SingleLeaf(f: (Request[IO], HList) => Action) extends Leaf {
+    override def attempt(req: Request[IO], stack: HList): Action = {
       try f(req, stack)
       catch { case NonFatal(t) =>
         logger.error(t)("Error in action execution")
-        SuccessResponse(Task.now(Response(status = Status.InternalServerError)))
+        SuccessResponse(IO.pure(Response(status = Status.InternalServerError)))
       }
     }
   }
 
 
   final private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
-    override def attempt(req: Request, stack: HList): Action = {
+    override def attempt(req: Request[IO], stack: HList): Action = {
       def go(l: List[SingleLeaf], error: ResultResponse[Nothing]): Action = {
         if (l.nonEmpty) l.head.attempt(req, stack) match {
           case r@SuccessResponse(_)     => r
@@ -203,14 +203,14 @@ private[rho] object PathTree {
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    final def walkTree(method: Method, req: Request): RouteResult[Task[Response]] = {
+    final def walkTree(method: Method, req: Request[IO]): RouteResult[IO[Response[IO]]] = {
       val path = keyToPath(req)
       walk(method, req, path, HNil)
     }
 
     // This should scan all forward paths.
-    final protected def walk(method: Method, req: Request, path: List[String], stack: HList): RouteResult[Task[Response]] = {
-      def tryVariadic(result: RouteResult[Task[Response]]): RouteResult[Task[Response]] =
+    final protected def walk(method: Method, req: Request[IO], path: List[String], stack: HList): RouteResult[IO[Response[IO]]] = {
+      def tryVariadic(result: RouteResult[IO[Response[IO]]]): RouteResult[IO[Response[IO]]] =
         variadic.get(method) match {
           case None    => result
           case Some(l) => l.attempt(req, path::stack)
@@ -224,7 +224,7 @@ private[rho] object PathTree {
           }
 
           @tailrec
-          def go(children: List[CaptureNode], error: RouteResult[Task[Response]]): RouteResult[Task[Response]] = children match {
+          def go(children: List[CaptureNode], error: RouteResult[IO[Response[IO]]]): RouteResult[IO[Response[IO]]] = children match {
               case (c@CaptureNode(p,_,cs,_,_))::ns =>
                 p.parse(h) match {
                   case SuccessResponse(r) =>

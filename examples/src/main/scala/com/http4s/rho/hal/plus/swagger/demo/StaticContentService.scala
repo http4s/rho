@@ -4,17 +4,16 @@ import scala.concurrent.ExecutionContext
 import org.http4s.Request
 import org.http4s.Response
 import org.http4s.StaticFile
-import org.http4s.dsl._
+import org.http4s.dsl.io._
 import org.http4s.HttpService
-import fs2.Task
-import fs2.interop.cats._
+import cats.effect.IO
 
 object StaticContentService {
 
   private val halUiDir = "/hal-browser"
   private val swaggerUiDir = "/swagger-ui"
 
-  def fetchResource(path: String, req: Request): Task[Response] = {
+  def fetchResource(path: String, req: Request[IO]): IO[Response[IO]]= {
     StaticFile.fromResource(path, Some(req)).getOrElseF(NotFound())
   }
 
@@ -22,7 +21,7 @@ object StaticContentService {
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
    * but its nice to keep it self contained
    */
-  def routes(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService = HttpService {
+  def routes(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService[IO] = HttpService[IO] {
 
     // JSON HAL User Interface
     case req if req.uri.path.startsWith("/js/") =>

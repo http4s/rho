@@ -1,9 +1,9 @@
 package org.http4s
 package rho
 
+import cats.{FlatMap, Functor, Monad}
 import cats.data.EitherT
-
-import fs2.Task
+import cats.effect.IO
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
@@ -68,7 +68,7 @@ sealed case class Result[
 +LOOPDETECTED,
 +NOTEXTENDED,
 +NETWORKAUTHENTICATIONREQUIRED
-](resp: Response)
+](resp: Response[IO])
 
 object Result {
 
@@ -86,51 +86,52 @@ import Result._
 
 trait ResultSyntaxInstances {
 
-  implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends ResponseOps {
+  implicit class ResultSyntax[T >: Result.TopResult <: BaseResult](r: T) extends ResponseOps[IO] {
     override type Self = T
 
-    override def withStatus(status: Status): Self =
+    override def withStatus(status: Status)(implicit F: Functor[IO]): Self =
       Result(r.resp.copy(status = status))
 
-    override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[Either[DecodeFailure, T]] = r.resp.attemptAs(decoder).value
-      EitherT[Task, DecodeFailure, T](t)
+
+    override def attemptAs[T](implicit F: FlatMap[IO], decoder: EntityDecoder[IO, T]): DecodeResult[IO, T] = {
+      val t: IO[Either[DecodeFailure, T]] = r.resp.attemptAs(FlatMap[IO], decoder).value
+      EitherT[IO, DecodeFailure, T](t)
     }
 
-    override def transformHeaders(f: (Headers) => Headers): T =
+    override def transformHeaders(f: (Headers) => Headers)(implicit F: Functor[IO]): T =
       Result(r.resp.transformHeaders(f))
 
-    override def withAttribute[A](key: AttributeKey[A], value: A): Self =
+    override def withAttribute[A](key: AttributeKey[A], value: A)(implicit F: Functor[IO]): Self =
       Result(r.resp.withAttribute(key, value))
 
-    def withBody[T](b: T)(implicit w: EntityEncoder[T]): Task[Self] = {
-      r.resp.withBody(b)(w).map(Result(_))
+    def withBody[T](b: T)(implicit w: EntityEncoder[IO, T]): IO[Self] = {
+      r.resp.withBody(b)(Monad[IO], w).map(Result(_))
     }
   }
 
-  implicit class TaskResultSyntax[T >: Result.TopResult <: BaseResult](r: Task[T]) extends ResponseOps {
-    override type Self = Task[T]
+  implicit class IOResultSyntax[T >: Result.TopResult <: BaseResult](r: IO[T]) extends ResponseOps[IO] {
+    override type Self = IO[T]
 
-    def withStatus(status: Status): Self = r.map{ result =>
+    override def withStatus(status: Status)(implicit F: Functor[IO]): Self = r.map{ result =>
       Result(result.resp.copy(status = status))
     }
 
-    override def attemptAs[T](implicit decoder: EntityDecoder[T]): DecodeResult[T] = {
-      val t: Task[Either[DecodeFailure, T]] = r.flatMap { t =>
-        t.resp.attemptAs(decoder).value
+    override def attemptAs[T](implicit F: FlatMap[IO], decoder: EntityDecoder[IO, T]): DecodeResult[IO, T] = {
+      val t: IO[Either[DecodeFailure, T]] = r.flatMap { t =>
+        t.resp.attemptAs(FlatMap[IO], decoder).value
       }
-      EitherT[Task, DecodeFailure, T](t)
+      EitherT[IO, DecodeFailure, T](t)
     }
 
-    override def withAttribute[A](key: AttributeKey[A], value: A): Self =
+    override def withAttribute[A](key: AttributeKey[A], value: A)(implicit F: Functor[IO]): Self =
       r.map(r => Result(r.resp.withAttribute(key, value)))
 
 
-    override def transformHeaders(f: (Headers) => Headers): Task[T] = r.map { result =>
+    override def transformHeaders(f: (Headers) => Headers)(implicit F: Functor[IO]): IO[T] = r.map { result =>
       Result(result.resp.transformHeaders(f))
     }
 
-    def withBody[T](b: T)(implicit w: EntityEncoder[T]): Self = {
+    def withBody[T](b: T)(implicit w: EntityEncoder[IO, T]): Self = {
       r.flatMap(_.withBody(b)(w))
     }
   }

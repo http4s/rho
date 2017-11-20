@@ -2811,8 +2811,8 @@ JQueryHttpClient.prototype.execute = function(obj) {
     }
 
     var out = {
-      url: request.url,
-      method: request.method,
+      url: Request[IO].url,
+      method: Request[IO].method,
       status: response.status,
       data: response.responseText,
       headers: headers

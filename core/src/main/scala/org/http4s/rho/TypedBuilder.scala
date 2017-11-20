@@ -1,10 +1,10 @@
 package org.http4s
 package rho
 
+import cats.effect.IO
 import org.http4s.rho.bits.PathAST.PathRule
 import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits.UriConverter
-
 import shapeless.HList
 
 
@@ -24,6 +24,6 @@ trait TypedBuilder[T <: HList] extends UriConvertible {
       q <- UriConverter.createQuery(rules)
     } yield UriTemplate(path = p, query = q)
 
-  final override def asUriTemplate(request: Request) =
+  final override def asUriTemplate(request: Request[IO]) =
     UriConvertible.respectPathInfo(uriTemplate, request)
 }

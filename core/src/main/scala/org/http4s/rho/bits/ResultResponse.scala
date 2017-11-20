@@ -1,10 +1,11 @@
 package org.http4s.rho.bits
 
+import cats.data.OptionT
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.FailureResponse._
 import org.http4s.rho.bits.ResponseGeneratorInstances.{BadRequest, InternalServerError}
-import fs2.Task
+import cats.effect.IO
 
 /** Types that represent the result of executing a step of the route */
 sealed trait RouteResult[+T] {
@@ -18,10 +19,10 @@ sealed trait RouteResult[+T] {
     case _       => false
   }
 
-  final def toResponse(implicit ev: T <:< Task[MaybeResponse]): Task[MaybeResponse] = this match {
-      case SuccessResponse(t) => ev(t)
-      case NoMatch            => Pass.now
-      case FailureResponse(r) => r.toResponse
+  final def toResponse(implicit ev: T <:< IO[Response[IO]]): OptionT[IO, Response[IO]] = this match {
+      case SuccessResponse(t) => OptionT.liftF(t)
+      case NoMatch            => OptionT.none
+      case FailureResponse(r) => OptionT.liftF(r.toResponse)
     }
 }
 
@@ -51,10 +52,10 @@ final case class SuccessResponse[+T](result: T) extends ResultResponse[T]
 
 /** Response that signifies an error
   *
-  * @param reason The reason for failure which can be turned into a `Task[Response]`.
+  * @param reason The reason for failure which can be turned into a `IO[Response[IO]`.
   */
 final case class FailureResponse(reason: ResponseReason) extends ResultResponse[Nothing] {
-  def toResponse: Task[Response] = reason.toResponse
+  def toResponse: IO[Response[IO]]= reason.toResponse
 }
 
 object FailureResponse {
@@ -63,22 +64,22 @@ object FailureResponse {
     *
     * @param reason Description of the failure
     */
-  def badRequest[T : EntityEncoder](reason: T): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
+  def badRequest[T](reason: T)(implicit w: EntityEncoder[IO, T]): FailureResponse = FailureResponse(new ResponseReason(BadRequest.pure(reason)))
 
   /** Construct a `500 InternalServerError` FailureResponse
     *
     * @param reason Description of the failure
     */
-  def error[T : EntityEncoder](reason: T): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(reason)))
+  def error[T](reason: T)(implicit w: EntityEncoder[IO, T]): FailureResponse = FailureResponse(new ResponseReason(InternalServerError.pure(reason)))
 
   /** Construct a [[FailureResponse]] using the provided thunk. */
-  def pure(response: =>Task[Response]): FailureResponse = FailureResponse(new ResponseReason(response))
+  def pure(response: =>IO[Response[IO]]): FailureResponse = FailureResponse(new ResponseReason(response))
 
   /** Construct a [[FailureResponse]] using the provided thunk. */
-  def result(result: =>Task[BaseResult]): FailureResponse = pure(result.map(_.resp))
+  def result(result: =>IO[BaseResult]): FailureResponse = pure(result.map(_.resp))
 
   /** Concrete representation of the `FailureResponse` */
-  final class ResponseReason(response: =>Task[Response]) {
+  final class ResponseReason(response: =>IO[Response[IO]]) {
     def toResponse = response
   }
 }

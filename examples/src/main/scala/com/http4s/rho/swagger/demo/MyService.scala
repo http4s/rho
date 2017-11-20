@@ -8,7 +8,8 @@ import org.http4s.rho.RhoService
 import org.http4s.HttpDate
 import JsonEncoder.AutoSerializable
 import cats.syntax.all._
-import fs2.{Stream, Task}
+import fs2.Stream
+import cats.effect.IO
 
 object MyService extends RhoService {
   import org.http4s.rho._
@@ -55,7 +56,7 @@ object MyService extends RhoService {
   "This gets a simple counter for the number of times this route has been requested" **
     GET / "counter" |>> {
       val i = new AtomicInteger(0)
-      Task.delay(s"The number is ${i.getAndIncrement()}")
+      IO(s"The number is ${i.getAndIncrement()}")
     }
 
   "Adds the cookie Foo=bar to the client" **
@@ -72,7 +73,7 @@ object MyService extends RhoService {
     GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
 
   "Clears the cookies" **
-    GET / "clearcookies" |>> { req: Request =>
+    GET / "clearcookies" |>> { req: Request[IO] =>
       val hs = req.headers.get(headers.Cookie) match {
         case None => Headers.empty
         case Some(cookie) =>
@@ -90,7 +91,7 @@ object MyService extends RhoService {
   "This demonstrates using a process of entities" **
     GET / "stream" |>> {
       val s = 0 until 100 map (i => s"Hello $i\n")
-      val p: Stream[Task, String] = Stream.emits(s)
+      val p: Stream[IO, String] = Stream.emits(s)
       Ok(p)
     }
 

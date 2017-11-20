@@ -7,7 +7,7 @@ import org.http4s.rho.swagger.models.AbstractProperty
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 
-import fs2.{Task, Stream}
+import fs2.{IO, Stream}
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
 import cats.syntax.all._
 
@@ -76,10 +76,10 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Identify types" in {
-      typeOf[Task[String]].isTask must_== true
-      typeOf[String].isTask must_== false
+      typeOf[IO[String]].isIO must_== true
+      typeOf[String].isIO must_== false
 
-      typeOf[Stream[Task,String]].isStream must_== true
+      typeOf[Stream[IO,String]].isStream must_== true
       typeOf[String].isStream must_== false
 
       typeOf[Array[String]].isArray must_== true
@@ -230,13 +230,13 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Get types from a fs2.Stream" in {
-      import fs2.{Task, Stream}
-      modelOf[Stream[Task, Foo]] must_== modelOf[Foo]
+      import fs2.{IO, Stream}
+      modelOf[Stream[IO, Foo]] must_== modelOf[Foo]
     }
 
-    "Get types from a fs2.Task" in {
-      import fs2.Task
-      modelOf[Task[Foo]] must_== modelOf[Foo]
+    "Get types from a cats.effect.IO" in {
+      import cats.effect.IO
+      modelOf[IO[Foo]] must_== modelOf[Foo]
     }
 
     "Get types from a SwaggerFileResponse" in {

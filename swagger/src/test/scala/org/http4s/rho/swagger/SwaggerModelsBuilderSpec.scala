@@ -11,7 +11,7 @@ import scodec.bits.ByteVector
 
 import scala.reflect._
 import scala.reflect.runtime.universe._
-import fs2.{Chunk, Stream, Task}
+import fs2.{Chunk, Stream, IO}
 import cats.syntax.all._
 import org.http4s.rho.bits.PathAST.{PathCapture, PathAnd}
 
@@ -466,7 +466,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a Stream of primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(Task.delay(""))) }
+      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(IO.delay(""))) }
       val ra2 = GET / "test" |>> { () => Ok(Stream.emit("")) }
 
       sb.collectResponses(ra1) must havePair(
@@ -477,7 +477,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of a Stream of non-primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(Task.delay(List((0, ModelA("", 0)))))) }
+      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(IO.delay(List((0, ModelA("", 0)))))) }
       val ra2 = GET / "test" |>> { () => Ok(Stream.emit(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra1) must havePair(
@@ -491,15 +491,15 @@ class SwaggerModelsBuilderSpec extends Specification {
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
     }
 
-    "collect response of a Task of a primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task.delay("")) }
+    "collect response of a IO of a primitive" in {
+      val ra = GET / "test" |>> { () => Ok(IO.delay("")) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
-    "collect response of a Task of a non-primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task.delay(List((0, ModelA("", 0))))) }
+    "collect response of a IO of a non-primitive" in {
+      val ra = GET / "test" |>> { () => Ok(IO.delay(List((0, ModelA("", 0))))) }
 
       sb.collectResponses(ra) must havePair(
         "200" -> Response(
@@ -549,8 +549,8 @@ class SwaggerModelsBuilderSpec extends Specification {
   object CsvFile {
     implicit def EntityEncoderCsvFile: EntityEncoder[CsvFile] =
       EntityEncoder.encodeBy[CsvFile](`Content-Type`(MediaType.`text/csv`, Some(Charset.`UTF-8`))) { file: CsvFile =>
-        ByteVector.encodeUtf8("file content").fold(Task.fail, bv =>
-          Task.now(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length))))
+        ByteVector.encodeUtf8("file content").fold(IO.fail, bv =>
+          IO.pure(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length))))
       }
   }
 

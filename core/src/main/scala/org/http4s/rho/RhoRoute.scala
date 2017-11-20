@@ -7,7 +7,7 @@ import org.http4s.rho.bits.ResultInfo
 
 import shapeless.{HNil, HList}
 
-import fs2.Task
+import cats.effect.IO
 
 /** A type to bundle everything needed to define a route */
 final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T])
@@ -20,7 +20,7 @@ final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T
     * @param hlist Parameters obtained by executing the rules.
     * @return A `Response` to the `Request`.
     */
-  def apply(req: Request, hlist: T): Task[Response] = action.act(req, hlist)
+  def apply(req: Request[IO], hlist: T): IO[Response[IO]] = action.act(req, hlist)
 
   /** Prefix the [[RhoRoute]] with non-capturing path rules
     *

@@ -1,15 +1,14 @@
 package org.http4s
 package rho.bits
 
+import cats.effect.IO
+
 import scala.language.existentials
-
-import rho.{ RequestLineBuilder, QueryBuilder }
-
+import rho.{QueryBuilder, RequestLineBuilder}
 import shapeless.ops.hlist.Prepend
-import shapeless.{ ::, HList }
+import shapeless.{::, HList}
 
 import scala.reflect.runtime.universe.TypeTag
-
 import org.http4s.rho.UriConvertible
 
 /** Actual elements which build up the AST */
@@ -89,7 +88,7 @@ object PathAST {
       for (p <- UriConverter.createPath(rule))
         yield UriTemplate(path = p)
 
-    override def asUriTemplate(request: Request) =
+    override def asUriTemplate(request: Request[IO]) =
       UriConvertible.respectPathInfo(uriTemplate, request)
   }
 

@@ -7,13 +7,13 @@ import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
-import fs2.{Task, Stream}
+import fs2.{IO, Stream}
 
 class RhoServiceSpec extends Specification with RequestRunner {
 
-  def construct(method: Method, s: String, h: Header*): Request = Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
-  def Get(s: String, h: Header*): Request = construct(Method.GET, s, h:_*)
-  def Put(s: String, h: Header*): Request = construct(Method.PUT, s, h:_*)
+  def construct(method: Method, s: String, h: Header*): Request[IO] = Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+  def Get(s: String, h: Header*): Request[IO] = construct(Method.GET, s, h:_*)
+  def Put(s: String, h: Header*): Request[IO] = construct(Method.PUT, s, h:_*)
 
   val service = new RhoService {
     GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
@@ -63,14 +63,14 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => Ok(os.mkString(" ")) }
 
-    GET / "withreq" +? param[String]("foo") |>> { (req: Request, foo: String) => Ok(s"req $foo") }
+    GET / "withreq" +? param[String]("foo") |>> { (req: Request[IO], foo: String) => Ok(s"req $foo") }
 
     val rootSome = root / "some"
     GET / rootSome |>> (Ok("root to some"))
 
-    GET / "directTask" |>> {
+    GET / "directIO" |>> {
       val i = new AtomicInteger(0)
-      Task.delay(s"${i.getAndIncrement}")
+      IO.delay(s"${i.getAndIncrement}")
     }
 
     GET / "terminal" / "" |>> "terminal/"
@@ -238,8 +238,8 @@ class RhoServiceSpec extends Specification with RequestRunner {
       checkOk(req1) should_== "root to some"
     }
 
-    "Execute a directly provided Task every invocation" in {
-      val req = Request(Method.GET, Uri(path = "directTask"))
+    "Execute a directly provided IO every invocation" in {
+      val req = Request(Method.GET, Uri(path = "directIO"))
       checkOk(req) should_== "0"
       checkOk(req) should_== "1"
     }

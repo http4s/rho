@@ -10,7 +10,8 @@ import org.http4s.rho.swagger.models.Model
 import shapeless.HNil
 
 import scala.reflect.runtime.universe._
-import fs2.{Task, Stream}
+import fs2.Stream
+import cats.effect.IO
 
 package object swagger {
 
@@ -92,10 +93,10 @@ package object swagger {
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isStream: Boolean =
-      t <:< typeOf[Stream[Task, _]]
+      t <:< typeOf[Stream[IO, _]]
 
-    def isTask: Boolean =
-      t <:< typeOf[Task[_]]
+    def isIO: Boolean =
+      t <:< typeOf[IO[_]]
 
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]

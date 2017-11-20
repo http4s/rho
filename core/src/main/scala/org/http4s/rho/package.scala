@@ -13,7 +13,7 @@ import org.http4s.rho.bits._
 
 import scala.reflect.runtime.universe.TypeTag
 import scala.util.control.NonFatal
-import fs2.Task
+import cats.effect.IO
 
 import org.log4s.getLogger
 
@@ -100,19 +100,19 @@ package object rho extends Http4s with ResultSyntaxInstances {
     })
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  def paramR[T](name: String, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String, validate: T => Option[IO[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, None, None, validate)
 
   /** Defines a parameter in query string with description that should be bound to a route definition. */
-  def paramR[T](name: String, description: String, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String, description: String, validate: T => Option[IO[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, Some(description), None, validate)
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  def paramR[T](name: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String, default: T, validate: T => Option[IO[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, None, Some(default), validate)
 
   /** Defines a parameter in query string with description that should be bound to a route definition. */
-  def paramR[T](name: String, description: String, default: T, validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  def paramR[T](name: String, description: String, default: T, validate: T => Option[IO[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     _paramR(name, Some(description), Some(default), validate)
 
   /** Create a query capture rule using the `Request`'s `Uri`
@@ -129,7 +129,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     *
     * @param f function generating the result or failure
     */
-  def genericRequestQueryCapture[R](f: Request => ResultResponse[R]): TypedQuery[R :: HNil] =
+  def genericRequestQueryCapture[R](f: Request[IO] => ResultResponse[R]): TypedQuery[R :: HNil] =
     TypedQuery(CaptureRule(f))
 
   /////////////////////////////// Path helpers //////////////////////////////////////
@@ -187,7 +187,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param f function that evaluates the header and returns a Some(Response) to
     *          immediately send back to the user or None to continue evaluation.
     */
-  def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[Task[BaseResult]]): TypedHeader[HNil] =
+  def existsAndR[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Option[IO[BaseResult]]): TypedHeader[HNil] =
     captureMapR(header, None){ h => f(h) match {
         case Some(r) => Left(r)
         case None    => Right(())
@@ -213,7 +213,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
     * @param default optional default for the case of a missing header
     * @param f mapping function
     */
-  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]] = None)(f: H#HeaderT => Either[Task[BaseResult], R]): TypedHeader[R :: HNil] =
+  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[IO[BaseResult]] = None)(f: H#HeaderT => Either[IO[BaseResult], R]): TypedHeader[R :: HNil] =
     _captureMapR(key, default)(f)
 
   /** Create a header capture rule using the `Request`'s `Headers`
@@ -230,11 +230,11 @@ package object rho extends Http4s with ResultSyntaxInstances {
     *
     * @param f function generating the result or failure
     */
-  def genericRequestHeaderCapture[R](f: Request => ResultResponse[R]): TypedHeader[R :: HNil] =
+  def genericRequestHeaderCapture[R](f: Request[IO] => ResultResponse[R]): TypedHeader[R :: HNil] =
     TypedHeader(CaptureRule(f))
 
   /** Defines a parameter in query string that should be bound to a route definition. */
-  private def _paramR[T](name: String, description: Option[String], default: Option[T], validate: T => Option[Task[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
+  private def _paramR[T](name: String, description: Option[String], default: Option[T], validate: T => Option[IO[BaseResult]])(implicit parser: QueryParser[T], m: TypeTag[T]): TypedQuery[T :: HNil] =
     genericRequestQueryCapture { req =>
         val result = parser.collect(name, req.uri.multiParams, default)
         result.flatMap { r => validate(r) match {
@@ -244,7 +244,7 @@ package object rho extends Http4s with ResultSyntaxInstances {
       }
     }.withMetadata(QueryMetaData(name, description, parser, default = default, m))
 
-  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[Task[BaseResult]])(f: H#HeaderT => Either[Task[BaseResult], R]): TypedHeader[R :: HNil] =
+  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[IO[BaseResult]])(f: H#HeaderT => Either[IO[BaseResult], R]): TypedHeader[R :: HNil] =
     genericHeaderCapture { headers =>
       headers.get(key) match {
         case Some(h) =>

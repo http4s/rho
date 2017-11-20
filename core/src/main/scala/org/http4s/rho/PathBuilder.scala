@@ -3,9 +3,9 @@ package rho
 
 import bits.PathAST._
 import bits._
-import org.http4s.rho.bits.RequestAST.{RequestRule, EmptyRule}
-
-import shapeless.{ HNil, ::, HList }
+import cats.effect.IO
+import org.http4s.rho.bits.RequestAST.{EmptyRule, RequestRule}
+import shapeless.{::, HList, HNil}
 import shapeless.ops.hlist.Prepend
 
 import scala.reflect.runtime.universe.TypeTag
@@ -85,7 +85,7 @@ final class PathBuilder[T <: HList](val method: Method, val path: PathRule)
   override def >>>[T1 <: HList](h2: TypedHeader[T1])(implicit prep: Prepend[T1, T]): Router[prep.Out] =
     Router(method, path, h2.rule)
 
-  override def decoding[R](decoder: EntityDecoder[R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
+  override def decoding[R](decoder: EntityDecoder[IO, R])(implicit t: TypeTag[R]): CodecRouter[T, R] =
     CodecRouter(>>>(TypedHeader[HNil](EmptyRule)), decoder)
 
   override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, EmptyRule), action)
