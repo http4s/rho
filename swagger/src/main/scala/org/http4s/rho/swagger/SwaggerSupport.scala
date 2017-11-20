@@ -3,27 +3,31 @@ package rho
 package swagger
 
 import io.swagger.util.Json
-
 import headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.TypedPath
-import org.http4s.rho.swagger.models.{Swagger, Info}
-
+import org.http4s.rho.swagger.models.{Info, Scheme, SecuritySchemeDefinition, Swagger}
 import shapeless._
 
 object SwaggerSupport {
 
   /**
-   * Create a RhoMiddleware adding a route to get the Swagger json file
-   * representing the full API
-   */
+    * Create a RhoMiddleware adding a route to get the Swagger json file
+    * representing the full API
+    */
   def apply(
-    swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-    apiPath: TypedPath[HNil] = "swagger.json",
-    apiInfo: Info = Info(title = "My API", version = "1.0.0"),
-    swaggerRoutesInSwagger: Boolean = false): RhoMiddleware = { routes =>
+             swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
+             apiPath: TypedPath[HNil] = "swagger.json",
+             apiInfo: Info = Info(title = "My API", version = "1.0.0"),
+             swaggerRoutesInSwagger: Boolean = false,
+             host: Option[String] = None,
+             basePath: Option[String] = None,
+             schemes: List[Scheme] = Nil,
+             consumes: List[String] = Nil,
+             produces: List[String] = Nil,
+             securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty): RhoMiddleware = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiPath, apiInfo)(
+      createSwagger(swaggerFormats, apiPath, apiInfo, host, basePath, schemes, consumes, produces, securityDefinitions)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -34,24 +38,37 @@ object SwaggerSupport {
   }
 
   /**
-   * Create the swagger model for a set of routes
-   */
+    * Create the swagger model for a set of routes
+    */
   def createSwagger(
-             swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-             apiPath: TypedPath[HNil] = "swagger.json",
-             apiInfo: Info = Info(title = "My API", version = "1.0.0"))(routes: Seq[RhoRoute[_]]): Swagger = {
+                     swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
+                     apiPath: TypedPath[HNil] = "swagger.json",
+                     apiInfo: Info = Info(title = "My API", version = "1.0.0"),
+                     host: Option[String] = None,
+                     basePath: Option[String] = None,
+                     schemes: List[Scheme] = Nil,
+                     consumes: List[String] = Nil,
+                     produces: List[String] = Nil,
+                     securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty)(routes: Seq[RhoRoute[_]]): Swagger = {
     val sb = new SwaggerModelsBuilder(swaggerFormats)
-    routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(apiInfo, r)(s))
+    routes.foldLeft(Swagger(
+      host = host
+      , basePath = basePath
+      , schemes = schemes
+      , consumes = consumes
+      , produces = produces
+      , securityDefinitions = securityDefinitions
+    ))((s, r) => sb.mkSwagger(apiInfo, r)(s))
   }
 
   /**
-   * Create a RhoService with the route to the Swagger json
-   * for the given Swagger Specification
-   */
+    * Create a RhoService with the route to the Swagger json
+    * for the given Swagger Specification
+    */
   def createSwaggerRoute(
-    swagger: => Swagger,
-    apiPath: TypedPath[HNil] = "swagger.json"
-  ): RhoService = new RhoService {
+                          swagger: => Swagger,
+                          apiPath: TypedPath[HNil] = "swagger.json"
+                        ): RhoService = new RhoService {
     lazy val response = Ok(
       Json.mapper()
         .writerWithDefaultPrettyPrinter()
