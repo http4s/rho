@@ -4,6 +4,7 @@ package swagger
 
 import io.swagger.util.Json
 import headers.`Content-Type`
+import io.swagger.models.SecurityRequirement
 import org.http4s.rho.bits.PathAST.TypedPath
 import org.http4s.rho.swagger.models.{Info, Scheme, SecuritySchemeDefinition, Swagger}
 import shapeless._
@@ -24,10 +25,11 @@ object SwaggerSupport {
              schemes: List[Scheme] = Nil,
              consumes: List[String] = Nil,
              produces: List[String] = Nil,
+             security: List[SecurityRequirement] = Nil,
              securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty): RhoMiddleware = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiPath, apiInfo, host, basePath, schemes, consumes, produces, securityDefinitions)(
+      createSwagger(swaggerFormats, apiPath, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -49,6 +51,7 @@ object SwaggerSupport {
                      schemes: List[Scheme] = Nil,
                      consumes: List[String] = Nil,
                      produces: List[String] = Nil,
+                     security: List[SecurityRequirement] = Nil,
                      securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty)(routes: Seq[RhoRoute[_]]): Swagger = {
     val sb = new SwaggerModelsBuilder(swaggerFormats)
     routes.foldLeft(Swagger(
@@ -57,6 +60,7 @@ object SwaggerSupport {
       , schemes = schemes
       , consumes = consumes
       , produces = produces
+      , security = security
       , securityDefinitions = securityDefinitions
     ))((s, r) => sb.mkSwagger(apiInfo, r)(s))
   }

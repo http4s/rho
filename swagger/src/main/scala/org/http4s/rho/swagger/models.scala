@@ -22,6 +22,7 @@ object models {
     , definitions         : Map[String, Model]                    = Map.empty
     , parameters          : Map[String, Parameter]                = Map.empty
     , externalDocs        : Option[ExternalDocs]                  = None
+    , security            : List[SecurityRequirement]             = Nil
     ) {
 
     def toJModel: jm.Swagger = {
@@ -33,6 +34,7 @@ object models {
       s.setConsumes(fromList(consumes))
       s.setProduces(fromList(produces))
       s.setPaths(fromMap(paths.mapValues(_.toJModel)))
+      s.setSecurity(fromList(security.map(_.toJModel)))
       s.setSecurityDefinitions(fromMap(securityDefinitions.mapValues(_.toJModel)))
       s.setDefinitions(fromMap(definitions.mapValues(_.toJModel)))
       s.setParameters(fromMap(parameters.mapValues(_.toJModel)))
