@@ -159,23 +159,15 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def collectSecurityScopes(rr: RhoRoute[_]): List[Map[String, List[String]]] = {
 
-    def go(stack: List[PathOperation], summary: Option[Map[String, List[String]]]): Option[Map[String, List[String]]] =
+    def go(stack: List[PathOperation]): Option[Map[String, List[String]]] =
+
       stack match {
-        case PathMatch("")::Nil                => go(Nil, summary)
-        case PathMatch(s)::xs                  => go(xs, summary)
-        case PathCapture(id, _, parser, _)::xs => go(xs, summary)
-        case CaptureTail::xs                   => summary
-
-        case MetaCons(_, meta)::xs =>
-          meta match {
-            case RouteSecurityScope(secScope) => secScope.some
-            case _               => go(xs, summary)
-          }
-
-        case Nil => summary
+        case Nil => None
+        case MetaCons(_, RouteSecurityScope(secScope)) :: _ => secScope.some
+        case _ :: xs => go(xs)
       }
 
-    linearizeStack(rr.path::Nil).flatMap(go(_, None))
+     linearizeStack(rr.path::Nil).flatMap(go)
   }
 
   def collectOperationParams(rr: RhoRoute[_]): List[Parameter] =
