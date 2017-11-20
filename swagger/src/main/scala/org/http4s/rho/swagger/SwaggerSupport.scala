@@ -55,16 +55,15 @@ object SwaggerSupport {
                      securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
                      vendorExtensions: Map[String, AnyRef] = Map.empty)(routes: Seq[RhoRoute[_]]): Swagger = {
     val sb = new SwaggerModelsBuilder(swaggerFormats)
-    routes.foldLeft(Swagger(
-      host = host
+    routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(apiInfo, r)(s)).copy(
+        host = host
       , basePath = basePath
       , schemes = schemes
       , consumes = consumes
       , produces = produces
       , security = security
       , securityDefinitions = securityDefinitions
-      , vendorExtensions = vendorExtensions
-    ))((s, r) => sb.mkSwagger(apiInfo, r)(s))
+      , vendorExtensions = vendorExtensions)
   }
 
   /**
