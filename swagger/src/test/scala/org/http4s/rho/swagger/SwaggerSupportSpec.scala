@@ -132,7 +132,7 @@ class SwaggerSupportSpec extends Specification {
             vendorExtensions = Map(
               "x-vendor-issuer" -> "https://www.test.com/",
               "x-vendor-jwks_uri" -> "https://www.test.com/.well-known/jwks.json",
-              "x-vendor-audiences" -> "clientid",
+              "x-vendor-audiences" -> "clientid"
             ),
             scopes = Map("openid" -> "Open ID info", "admin" -> "Admin rights")
           )
