@@ -1,7 +1,10 @@
 package org.http4s
 package rho
 
-import shapeless.{HNil, ::}
+import cats.Functor
+import cats.data.{Kleisli, OptionT}
+import cats.effect.IO
+import shapeless.{::, HNil}
 import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
 
 
@@ -12,7 +15,7 @@ import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
   *
   *     object Auth {
   *       val authUser: Service[Request, User] = Kleisli({ _ =>
-  *         Task.now(User("Test User", UUID.randomUUID()))
+  *         IO.pure(User("Test User", UUID.randomUUID()))
   *       })
   *
   *       val authenticated = AuthMiddleware(authUser)
@@ -22,7 +25,7 @@ import org.http4s.rho.bits.{FailureResponse, SuccessResponse, TypedHeader}
   *
   *     object MyService extends RhoService {
   *       import MyAuth._
-  *       GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
+  *       GET +? param("foo", "bar") |>> { (req: Request[IO], foo: String) =>
   *         val user = getAuth(req)
   *         if (user.name == "Test User") {
   *           Ok(s"just root with parameter 'foo=$foo'")
@@ -47,14 +50,14 @@ class AuthedContext[U] {
     * @param service [[HttpService]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService(service: HttpService): AuthedService[U] = {
-    Service.lift { case AuthedRequest(authInfo, req) =>
-      service(req.withAttribute[U](authKey, authInfo))
+  def toService(service: HttpService[IO]): AuthedService[U, IO] = {
+    Kleisli[OptionT[IO, ?], AuthedRequest[IO, U], Response[IO]] { (a: AuthedRequest[IO, U]) =>
+      service(a.req.withAttribute[U](authKey, a.authInfo))
     }
   }
 
   /* Get the authInfo object from request. */
-  def getAuth(req: Request): U = {
+  def getAuth(req: Request[IO]): U = {
     req.attributes.get[U](authKey).get
   }
 

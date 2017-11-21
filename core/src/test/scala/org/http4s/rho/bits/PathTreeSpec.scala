@@ -8,6 +8,8 @@ import org.http4s.HttpService
 import org.specs2.mutable.Specification
 import org.http4s.server.middleware.URITranslation
 import scodec.bits.ByteVector
+import cats.effect.IO
+
 
 class PathTreeSpec extends Specification {
   import PathTree._
@@ -37,11 +39,11 @@ class PathTreeSpec extends Specification {
     val svc = URITranslation.translateRoot("/bar")(new RhoService {
       GET / "foo" |>> "foo"
     }.toService())
-    val req = Request(Method.GET, uri = Uri(path = "/bar/foo"))
-    val resp = svc(req).unsafeRun.orNotFound
+    val req = Request[IO](Method.GET, uri = Uri(path = "/bar/foo"))
+    val resp = svc(req).getOrElse(Response.notFound[IO]).unsafeRunSync()
 
     resp.status must_== Status.Ok
-    val b = new String(resp.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray, StandardCharsets.UTF_8)
+    val b = new String(resp.body.runLogSync.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray, StandardCharsets.UTF_8)
     b must_== "foo"
   }
 
@@ -53,18 +55,18 @@ class PathTreeSpec extends Specification {
     }.toService()
 
     "Handle a valid OPTIONS request" in {
-      val req = Request(Method.OPTIONS, uri = uri("/bar"))
-      svc(req).unsafeRun.orNotFound.status must_== Status.Ok
+      val req = Request[IO](Method.OPTIONS, uri = uri("/bar"))
+      svc(req).getOrElse(Response.notFound[IO]).unsafeRunSync().status must_== Status.Ok
     }
 
     "Provide a 405 MethodNotAllowed when an incorrect method is used for a resource" in {
-      val req = Request(Method.POST, uri = uri("/foo"))
-      svc(req).unsafeRun.orNotFound.status must_== Status.MethodNotAllowed
+      val req = Request[IO](Method.POST, uri = uri("/foo"))
+      svc(req).getOrElse(Response.notFound[IO]).unsafeRunSync().status must_== Status.MethodNotAllowed
     }
 
     "Provide a 404 NotFound when the OPTIONS method is used for a resource without an OPTIONS" in {
-      val req = Request(Method.OPTIONS, uri = uri("/foo"))
-      svc(req).unsafeRun.orNotFound.status must_== Status.NotFound
+      val req = Request[IO](Method.OPTIONS, uri = uri("/foo"))
+      svc(req).getOrElse(Response.notFound[IO]).unsafeRunSync().status must_== Status.NotFound
     }
   }
 

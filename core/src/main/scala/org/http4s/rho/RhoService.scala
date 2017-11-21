@@ -1,10 +1,10 @@
 package org.http4s
 package rho
 
+import cats.effect.IO
 import org.http4s.rho.bits.PathAST.TypedPath
-
 import org.log4s.getLogger
-import shapeless.{HNil, HList}
+import shapeless.{HList, HNil}
 
 /** Constructor class for defining routes
   *
@@ -47,7 +47,7 @@ class RhoService(routes: Seq[RhoRoute[_ <: HList]] = Vector.empty)
   final def getRoutes: Seq[RhoRoute[_ <: HList]] = serviceBuilder.routes()
 
   /** Convert the [[RhoRoute]]'s accumulated into a `HttpService` */
-  final def toService(filter: RhoMiddleware = identity): HttpService = serviceBuilder.toService(filter)
+  final def toService(filter: RhoMiddleware = identity): HttpService[IO] = serviceBuilder.toService(filter)
 
   final override def toString: String = s"RhoService(${serviceBuilder.routes().toString()})"
 

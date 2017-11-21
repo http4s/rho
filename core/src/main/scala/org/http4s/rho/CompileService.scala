@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import cats.data.{Kleisli, OptionT}
+import cats.effect.IO
 import org.http4s.rho.bits.PathTree
 import shapeless.HList
 
@@ -39,8 +41,9 @@ object CompileService {
     * @param filter [[RhoMiddleware]] to apply to the routes.
     * @return An `HttpService`
     */
-  def foldServices(routes: Seq[RhoRoute.Tpe], filter: RhoMiddleware = identity): HttpService = {
+  def foldServices(routes: Seq[RhoRoute.Tpe], filter: RhoMiddleware = identity): HttpService[IO] = {
     val tree = filter(routes).foldLeft(PathTree()){ (t, r) => t.appendRoute(r) }
-    Service.lift { req => tree.getResult(req).toResponse }
+    Kleisli[OptionT[IO, ?], Request[IO], Response[IO]]((req: Request[IO]) => tree.getResult(req).toResponse)
+//    Service.lift { req => tree.getResult(req).toResponse }
   }
 }

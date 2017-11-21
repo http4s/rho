@@ -1,6 +1,7 @@
 package org.http4s
 package rho.bits
 
+import cats.effect.IO
 import shapeless.HList
 
 /** Rules for extracting non-path related data from the `Request`
@@ -13,7 +14,7 @@ object RequestAST {
   sealed trait RequestRule
 
   /** Captures data from the `Request` */
-  case class CaptureRule[T](reader: Request => ResultResponse[T]) extends RequestRule
+  case class CaptureRule[T](reader: Request[IO] => ResultResponse[T]) extends RequestRule
 
   /** Transform data from the `Request` */
   case class MapRule[T <: HList, R <: HList](rule: RequestRule, f: T => R) extends RequestRule

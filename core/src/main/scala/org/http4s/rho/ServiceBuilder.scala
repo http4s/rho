@@ -1,5 +1,6 @@
 package org.http4s.rho
 
+import cats.effect.IO
 import org.http4s._
 import org.log4s._
 import shapeless.HList
@@ -15,7 +16,7 @@ final class ServiceBuilder private(internalRoutes: VectorBuilder[RhoRoute.Tpe]) 
     * @param filter [[RhoMiddleware]] to apply to the collection of routes.
     * @return An `HttpService` which can be mounted by http4s servers.
     */
-  def toService(filter: RhoMiddleware = identity): HttpService =
+  def toService(filter: RhoMiddleware = identity): HttpService[IO] =
     CompileService.foldServices(internalRoutes.result(), filter)
 
   /** Get a snapshot of the currently acquired routes */

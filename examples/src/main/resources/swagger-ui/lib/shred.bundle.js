@@ -1140,18 +1140,18 @@ var createRequest = function(request) {
   request.log.debug(request);
 
   var reqParams = {
-    host: request.host,
-    port: request.port,
-    method: request.method,
-    path: request.path + (request.query ? '?'+request.query : ""),
-    headers: request.getHeaders(),
+    host: Request[IO].host,
+    port: Request[IO].port,
+    method: Request[IO].method,
+    path: Request[IO].path + (request.query ? '?'+request.query : ""),
+    headers: Request[IO].getHeaders(),
     // Node's HTTP/S modules will ignore this, but we are using the
     // browserify-http module in the browser for both HTTP and HTTPS, and this
     // is how you differentiate the two.
-    scheme: request.scheme,
+    scheme: Request[IO].scheme,
     // Use a provided agent.  'Undefined' is the default, which uses a global
     // agent.
-    agent: request.agent
+    agent: Request[IO].agent
   };
 
   if (request.logCurl) {

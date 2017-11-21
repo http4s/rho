@@ -1,11 +1,13 @@
 package com.http4s.rho.hal.plus.swagger
 
 
+import cats.Applicative
+import cats.effect.IO
+
 import scala.language.implicitConversions
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.http4s.Charset
 import org.http4s.headers.`Content-Type`
 import org.http4s.MediaType
@@ -33,15 +35,15 @@ package object demo {
       new LinkObjectSerializer +
       new ResourceObjectSerializer
 
-  implicit def resourceObjectAsJsonEncoder[A, B]: EntityEncoder[ResourceObject[A, B]] =
+  implicit def resourceObjectAsJsonEncoder[A, B]: EntityEncoder[IO, ResourceObject[A, B]] =
     EntityEncoder
-      .stringEncoder(Charset.`UTF-8`)
+      .stringEncoder[IO](Applicative[IO], Charset.`UTF-8`)
       .contramap { r: ResourceObject[A, B] => compact(render(json(r))) }
       .withContentType(`Content-Type`(MediaType.`application/hal+json`, Charset.`UTF-8`))
 
-  implicit def messageAsJsonEncoder: EntityEncoder[Message] =
+  implicit def messageAsJsonEncoder: EntityEncoder[IO, Message] =
     EntityEncoder
-      .stringEncoder(Charset.`UTF-8`)
+      .stringEncoder[IO](Applicative[IO], Charset.`UTF-8`)
       .contramap { r: Message => compact(render(json(r))) }
       .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 

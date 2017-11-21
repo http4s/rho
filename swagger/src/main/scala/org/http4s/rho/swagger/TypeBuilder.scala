@@ -48,7 +48,7 @@ object TypeBuilder {
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
 
-        case tpe if tpe.isTask =>
+        case tpe if tpe.isIO =>
           val ntpe = tpe.typeArgs.head
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty

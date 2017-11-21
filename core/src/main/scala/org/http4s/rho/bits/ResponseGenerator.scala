@@ -7,7 +7,8 @@ import scala.language.higherKinds
 import org.http4s.headers.{Location, `Content-Length`}
 import org.http4s._
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
-import fs2.{Chunk, Task}
+import fs2.{Chunk}
+import cats.effect.IO
 
 /** Helpers to aid in the construction of a response function
   *
@@ -27,54 +28,54 @@ object ResponseGenerator {
 
   object EmptyRe {
     // This is just a dummy so that the implicits in ResultMatcher will work.
-    implicit val w: EntityEncoder[EmptyRe] = {
-      EntityEncoder.simple[EmptyRe]()(_ => Chunk.empty)
+    implicit val w: EntityEncoder[IO, EmptyRe] = {
+      EntityEncoder.simple[IO, EmptyRe]()(_ => Chunk.empty)
     }
   }
 }
 
 abstract class EmptyResponseGenerator(val status: Status) extends ResponseGenerator {
   type T <: Result.BaseResult
-  private val pureResult: Task[Response] = Task.now(Response(status))
-  private val result: Task[T] = pureResult.map(Result(_).asInstanceOf[T])
+  private val pureResult: IO[Response[IO]]= IO.pure(Response(status))
+  private val result: IO[T] = pureResult.map(Result(_).asInstanceOf[T])
 
   /** Generate a [[Result]] that carries the type information */
-  def apply(): Task[T] = result
+  def apply(): IO[T] = result
 
   /** Generate wrapper free `Response` */
-  def pure(): Task[Response] = pureResult
+  def pure(): IO[Response[IO]]= pureResult
 }
 
 abstract class EntityResponseGenerator(val status: Status) extends ResponseGenerator {
   type T[_] <: Result.BaseResult
 
   /** Generate a [[Result]] that carries the type information */
-  def apply[A](body: A)(implicit w: EntityEncoder[A]): Task[T[A]] =
+  def apply[A](body: A)(implicit w: EntityEncoder[IO, A]): IO[T[A]] =
     apply(body, Headers.empty)(w)
 
   /** Generate a [[Result]] that carries the type information */
-  def apply[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[T[A]] = {
+  def apply[A](body: A, headers: Headers)(implicit w: EntityEncoder[IO, A]): IO[T[A]] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
         case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
         case None    => (w.headers ++ headers)
       }
-      Task.now(Result(Response(status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
+      IO.pure(Result(Response(status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
     }
   }
 
   /** Generate wrapper free `Response` */
-  def pure[A](body: A)(implicit w: EntityEncoder[A]): Task[Response] =
+  def pure[A](body: A)(implicit w: EntityEncoder[IO, A]): IO[Response[IO]]=
     pure(body, Headers.empty)(w)
 
   /** Generate wrapper free `Response` */
-  def pure[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[Response] = {
+  def pure[A](body: A, headers: Headers)(implicit w: EntityEncoder[IO, A]): IO[Response[IO]]= {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
         case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
         case None    => (w.headers ++ headers)
       }
-      Task.now(Response(status = status, headers = hs, body = proc))
+      IO.pure(Response(status = status, headers = hs, body = proc))
     }
   }
 
@@ -82,8 +83,8 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
 
 abstract class LocationResponseGenerator(val status: Status) extends ResponseGenerator {
   type T <: Result.BaseResult
-  def apply(location: Uri): Task[T] =
-    Task.now(Result(Response(status).putHeaders(Location(location))).asInstanceOf[T])
+  def apply(location: Uri): IO[T] =
+    IO.pure(Result(Response(status).putHeaders(Location(location))).asInstanceOf[T])
 }
 
 object ResponseGeneratorInstances extends ResponseGeneratorInstances

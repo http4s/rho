@@ -6,6 +6,7 @@ import org.http4s.rho.bits.RequestAST._
 import shapeless.ops.function.FnToProduct
 import shapeless.{HList, HNil}
 import shapeless.ops.hlist.{Prepend, Reverse}
+import cats.effect.IO
 
 
 
@@ -141,7 +142,7 @@ final case class TypedQuery[T <: HList](rule: RequestRule) extends UriConvertibl
     for (q <- UriConverter.createQuery(rule))
       yield UriTemplate(query = q)
 
-  override def asUriTemplate(request: Request) =
+  override def asUriTemplate(request: Request[IO]) =
     UriConvertible.respectPathInfo(uriTemplate, request)
 }
 

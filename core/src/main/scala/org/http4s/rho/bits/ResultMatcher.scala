@@ -4,13 +4,13 @@ import org.http4s.{Request, Response, Status, EntityEncoder, MediaType}
 import org.http4s.rho.Result
 
 import scala.reflect.runtime.universe.{ Type, WeakTypeTag }
-import fs2.Task
+import cats.effect.IO
 
 
 trait ResultMatcher[-R] {
   def encodings: Set[MediaType]
   def resultInfo: Set[ResultInfo]
-  def conv(req: Request, r: R): Task[Response]
+  def conv(req: Request[IO], r: R): IO[Response[IO]]
 }
 
 object ResultMatcher {
@@ -32,7 +32,7 @@ object ResultMatcher {
 
     /* Allowing the `Writable` to be `null` only matches real results but allows for
        situations where you return the same status with two types */
-    implicit def maybeIsWritable[T](implicit t: WeakTypeTag[T], w: EntityEncoder[T] = null): MaybeWritable[T] = new MaybeWritable[T] {
+    implicit def maybeIsWritable[T](implicit t: WeakTypeTag[T], w: EntityEncoder[IO, T] = null): MaybeWritable[T] = new MaybeWritable[T] {
       private val ww = Option(w)
       override def contentType: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
       override def encodings: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
@@ -284,7 +284,7 @@ object ResultMatcher {
     override lazy val encodings: Set[MediaType] =
       allTpes.flatMap { case (_, m) => m.encodings }.toSet
 
-    override def conv(req: Request, r: Result[
+    override def conv(req: Request[IO], r: Result[
       CONTINUE,
       SWITCHINGPROTOCOLS,
       PROCESSING,
@@ -345,7 +345,7 @@ object ResultMatcher {
       INSUFFICIENTSTORAGE,
       LOOPDETECTED,
       NOTEXTENDED,
-      NETWORKAUTHENTICATIONREQUIRED]): Task[Response] = Task.now(r.resp)
+      NETWORKAUTHENTICATIONREQUIRED]): IO[Response[IO]]= IO.pure(r.resp)
 
     override def resultInfo: Set[ResultInfo] = {
       allTpes.flatMap { case (s, mw) =>
@@ -417,31 +417,31 @@ object ResultMatcher {
     }
   }
 
-  implicit def optionMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[Option[O]] {
+  implicit def optionMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[IO, O]) = new ResultMatcher[Option[O]] {
     override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
-    override def conv(req: Request, r: Option[O]): Task[Response] = r match {
+    override def conv(req: Request[IO], r: Option[O]): IO[Response[IO]]= r match {
       case Some(r) => ResponseGeneratorInstances.Ok.pure(r)
       case None    => ResponseGeneratorInstances.NotFound.pure(req.uri.path)
     }
   }
 
-  implicit def writableMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[O]) = new ResultMatcher[O] {
+  implicit def writableMatcher[O](implicit o: WeakTypeTag[O], w: EntityEncoder[IO, O]) = new ResultMatcher[O] {
     override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
-    override def conv(req: Request, r: O): Task[Response] = ResponseGeneratorInstances.Ok.pure(r)
+    override def conv(req: Request[IO], r: O): IO[Response[IO]]= ResponseGeneratorInstances.Ok.pure(r)
   }
 
-  implicit def taskMatcher[R](implicit r: ResultMatcher[R]): ResultMatcher[Task[R]] = new ResultMatcher[Task[R]] {
+  implicit def IOMatcher[R](implicit r: ResultMatcher[R]): ResultMatcher[IO[R]] = new ResultMatcher[IO[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
-    override def conv(req: Request, t: Task[R]): Task[Response] = t.flatMap(r.conv(req, _))
+    override def conv(req: Request[IO], t: IO[R]): IO[Response[IO]]= t.flatMap(r.conv(req, _))
   }
 
-  implicit object ResponseMatcher extends ResultMatcher[Response] {
+  implicit object ResponseMatcher extends ResultMatcher[Response[IO]] {
     override def encodings: Set[MediaType] = Set.empty
-    override def conv(req: Request, r: Response): Task[Response] = Task.now(r)
+    override def conv(req: Request[IO], r: Response[IO]): IO[Response[IO]]= IO.pure(r)
     override def resultInfo: Set[ResultInfo] = Set.empty
   }
 }
