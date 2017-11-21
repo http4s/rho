@@ -3,13 +3,17 @@ import Keys._
 
 import RhoPlugin.autoImport.apiVersion
 
-import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
+import com.typesafe.sbt.sbtghpages.GhpagesKeys
 import com.typesafe.sbt.SbtGit.GitKeys._
 import com.typesafe.sbt.git.GitRunner
 
 // Copied from sbt-ghpages to avoid blowing away the old API
 // https://github.com/sbt/sbt-ghpages/issues/10
 object VersionedGhPages {
+
+  object autoImport extends GhpagesKeys
+  import autoImport._
+
   def cleanSiteForRealz(dir: File, git: GitRunner, s: TaskStreams, apiVersion: (Int, Int)): Unit = {
     val toClean = IO.listFiles(dir).collect {
       case f if f.getName == "api" => new java.io.File(f, s"${apiVersion._1}.${apiVersion._2}")
@@ -21,14 +25,14 @@ object VersionedGhPages {
   }
 
   def cleanSite0 = Def.task {
-    cleanSiteForRealz(updatedRepository.value, gitRunner.value, streams.value, apiVersion.value)
+    cleanSiteForRealz(ghpagesUpdatedRepository.value, gitRunner.value, streams.value, apiVersion.value)
   }
 
   def synchLocal0 = Def.task {
-    val repo = updatedRepository.value
+    val repo = ghpagesUpdatedRepository.value
     val apiV@(major, minor) = apiVersion.value
     // TODO - an sbt.Synch with cache of previous mappings to make this more efficient. */
-    val betterMappings =  privateMappings.value map { case (file, target) => (file, repo / target) }
+    val betterMappings =  ghpagesPrivateMappings.value map { case (file, target) => (file, repo / target) }
     // First, remove 'stale' files.
     cleanSiteForRealz(repo, gitRunner.value, streams.value, apiV)
     // Now copy files.

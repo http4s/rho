@@ -1,6 +1,7 @@
 import sbt.{CrossVersion, _}
 import Keys._
 import spray.revolver.RevolverPlugin._
+
 import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGhPages.GhPagesKeys
 import com.typesafe.sbt.SbtSite.SiteKeys.siteMappings
@@ -36,9 +37,9 @@ lazy val `rho-swagger` = project
 lazy val docs = project
   .in(file("docs"))
   .settings(buildSettings)
-  .settings(unidocSettings)
-  .settings(ghpages.settings ++ site.settings)
-  .settings(site.includeScaladoc())
+  .enablePlugins(ScalaUnidocPlugin)
+  .enablePlugins(SiteScaladocPlugin)
+  .enablePlugins(GhpagesPlugin)
   .settings(Seq(
     dontPublish,
     description := "Api Documentation",
@@ -54,9 +55,9 @@ lazy val docs = project
       `rho-swagger`
     ),
     git.remoteRepo := "git@github.com:http4s/rho.git",
-    GhPagesKeys.cleanSite := VersionedGhPages.cleanSite0.value,
-    GhPagesKeys.synchLocal := VersionedGhPages.synchLocal0.value,
-    siteMappings := {
+    ghpagesCleanSite := VersionedGhPages.cleanSite0.value,
+    ghpagesSynchLocal := VersionedGhPages.synchLocal0.value,
+    mappings in makeSite := {
       val (major, minor) = apiVersion.value
       for {
         (f, d) <- (mappings in (ScalaUnidoc, packageDoc)).value
@@ -114,7 +115,7 @@ lazy val publishing = Seq(
   publishMavenStyle in ThisBuild := true,
   publishArtifact in (ThisBuild, Test) := false,
   // Don't publish root pom.  It's not needed.
-  packagedArtifacts in file(".") := Map.empty,
+  packagedArtifacts in LocalRootProject := Map.empty,
   publishArtifact in Test := false,
   publishTo in ThisBuild := Some(nexusRepoFor(version.value)),
   scmInfo in ThisBuild := {
