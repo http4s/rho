@@ -41,7 +41,12 @@ object models {
       s.setDefinitions(fromMap(definitions.mapValues(_.toJModel)))
       s.setParameters(fromMap(parameters.mapValues(_.toJModel)))
       s.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
-      vendorExtensions.foreach { case (key, value) => s.setVendorExtension(key, value) }
+      vendorExtensions.foreach {
+        case (key, value:Map[_,_]) => s.setVendorExtension(key, fromMap(value))
+        case (key, value:Option[_]) => s.setVendorExtension(key, fromOption(value))
+        case (key, value:List[_]) => s.setVendorExtension(key, fromList(value))
+        case (key, value) => s.setVendorExtension(key, value)
+      }
       s
     }
   }
