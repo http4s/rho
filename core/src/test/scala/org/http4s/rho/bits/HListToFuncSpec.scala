@@ -9,7 +9,7 @@ import scodec.bits.ByteVector
 class HListToFuncSpec extends Specification {
 
   def getBody(b: EntityBody[IO]): String = {
-    new String(b.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+    new String(b.runLogSync.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
   }
 
   def checkOk(r: Request[IO]): String = getBody(service(r).getOrElse(Response.notFound[IO]).unsafeRunSync().body)

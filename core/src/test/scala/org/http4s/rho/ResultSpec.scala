@@ -15,12 +15,12 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
       val date = Date(HttpDate.Epoch)
       val resp = Ok("Foo")
                   .putHeaders(date)
-                  .unsafeRun
+                  .unsafeRunSync
                   .resp
 
       resp.headers.get(Date) must beSome(date)
 
-      val respNow = Ok("Foo").unsafeRun
+      val respNow = Ok("Foo").unsafeRunSync
         .putHeaders(date)
         .resp
 
@@ -31,13 +31,13 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
       val attrKey = AttributeKey[String]
       val resp = Ok("Foo")
         .withAttribute(attrKey, "foo")
-        .unsafeRun
+        .unsafeRunSync
         .resp
 
       resp.attributes.get(attrKey) must beSome("foo")
 
       val resp2 = Ok("Foo")
-        .unsafeRun
+        .unsafeRunSync
         .withAttribute(attrKey, "foo")
         .resp
 
@@ -48,19 +48,19 @@ class ResultSpec extends Specification with ResultSyntaxInstances {
       val newbody = "foobar"
       val resp = Ok("foo")
                   .withBody(newbody)
-                  .unsafeRun
+                  .unsafeRunSync
                   .resp
 
-      new String(resp.body.runLog.unsafeRun.toArray) must_== newbody
+      new String(resp.body.runLogSync.unsafeRunSync.toArray) must_== newbody
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
 
       val resp2 = Ok("foo")
-        .unsafeRun
+        .unsafeRunSync
         .withBody(newbody)
-        .unsafeRun
+        .unsafeRunSync
         .resp
 
-      new String(resp2.body.runLog.unsafeRun.toArray) must_== newbody
+      new String(resp2.body.runLogSync.unsafeRunSync.toArray) must_== newbody
       resp2.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
     }
 

@@ -180,10 +180,10 @@ class ApiTest extends Specification {
       val f = runWith(GET / (p1 || p2)) { (s: String) => Ok("").putHeaders(ETag(ETag.EntityTag(s))) }
 
       val req1 = Request[IO](uri = Uri.fromString("/one/two").right.getOrElse(sys.error("Failed.")))
-      checkETag(f(req1), "two")
+      checkETag(f(req1).getOrElse(Response.notFound[IO]), "two")
 
       val req2 = Request[IO](uri = Uri.fromString("/three/four").right.getOrElse(sys.error("Failed.")))
-      checkETag(f(req2), "four")
+      checkETag(f(req2).getOrElse(Response.notFound[IO]), "four")
     }
 
     "Execute a complicated route" in {
@@ -204,12 +204,12 @@ class ApiTest extends Specification {
         .withBody("cool")
         .unsafeRunSync()
 
-      checkETag(route(req), "foo")
+      checkETag(route(req).getOrElse(Response.notFound[IO]), "foo")
     }
 
     "Deal with 'no entity' responses" in {
       val route = runWith(GET / "foo") { () => SwitchingProtocols() }
-      val req = Request(GET, uri = Uri.fromString("/foo").right.getOrElse(sys.error("Fail")))
+      val req = Request[IO](GET, uri = Uri.fromString("/foo").right.getOrElse(sys.error("Fail")))
 
       val result = route(req).getOrElse(Response.notFound[IO]).unsafeRunSync()
       result.headers.size must_== 0
@@ -239,7 +239,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
 
       val f = runWith(stuff) { () => Ok("Cool.").putHeaders(ETag(ETag.EntityTag("foo"))) }
-      checkETag(f(req), "foo")
+      checkETag(f(req).getOrElse(Response.notFound[IO]), "foo")
     }
 
     "Not match a path to long" in {
@@ -256,7 +256,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
 
       val f = runWith(stuff) { str: String => Ok("Cool.").putHeaders(ETag(ETag.EntityTag(str))) }
-      checkETag(f(req), "hello")
+      checkETag(f(req).getOrElse(Response.notFound[IO]), "hello")
     }
 
     "work directly" in {
@@ -265,7 +265,7 @@ class ApiTest extends Specification {
 
       val f = runWith(stuff) { () => Ok("Cool.").putHeaders(ETag(ETag.EntityTag("foo"))) }
 
-      checkETag(f(req), "foo")
+      checkETag(f(req).getOrElse(Response.notFound[IO]), "foo")
     }
 
     "capture end with nothing" in {
@@ -273,7 +273,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
       val f = runWith(stuff) { path: List[String] => Ok("Cool.").putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))) }
 
-      checkETag(f(req), "go")
+      checkETag(f(req).getOrElse(Response.notFound[IO]), "go")
     }
 
     "capture remaining" in {
@@ -281,7 +281,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = Uri.fromString("/hello/world/foo").right.getOrElse(sys.error("Failed.")))
       val f = runWith(stuff) { path: List[String] => Ok("Cool.").putHeaders(ETag(ETag.EntityTag(path.mkString))) }
 
-      checkETag(f(req), "worldfoo")
+      checkETag(f(req).getOrElse(Response.notFound[IO]), "worldfoo")
     }
   }
 
@@ -292,7 +292,7 @@ class ApiTest extends Specification {
 
       val route = runWith(path) { i: Int => Ok("stuff").putHeaders(ETag(ETag.EntityTag((i + 1).toString))) }
 
-      checkETag(route(req), "33")
+      checkETag(route(req).getOrElse(Response.notFound[IO]), "33")
     }
 
     "accept compound or sequential query rules" in {
@@ -347,7 +347,7 @@ class ApiTest extends Specification {
         Ok("stuff").putHeaders(ETag(ETag.EntityTag(str)))
       }
 
-      checkETag(route(req1), "foo")
+      checkETag(route(req1).getOrElse(Response.notFound[IO]), "foo")
       route(req2).getOrElse(Response.notFound[IO]).unsafeRunSync().status should_== Status.BadRequest
     }
 
@@ -362,7 +362,7 @@ class ApiTest extends Specification {
         Ok("stuff").putHeaders(ETag(ETag.EntityTag(str)))
       }
 
-      checkETag(route(req), "foo")
+      checkETag(route(req).getOrElse(Response.notFound[IO]), "foo")
     }
 
     "Fail on a header" in {

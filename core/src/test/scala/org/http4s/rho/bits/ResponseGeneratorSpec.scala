@@ -4,16 +4,17 @@ import org.http4s.headers.{Location, `Content-Length`, `Content-Type`, `Transfer
 import org.http4s._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
+import cats.effect.IO
 
 class ResponseGeneratorSpec extends Specification {
   import ResponseGeneratorInstances._
 
   "ResponseGenerator" should {
     "Build a response with a body" in {
-      val result = Ok("Foo").unsafeRun
+      val result = Ok("Foo").unsafeRunSync
       val resp = result.resp
 
-      val str = new String(resp.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+      val str = new String(resp.body.runLogSync.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
       str must_== "Foo"
 
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong("Foo".getBytes.length))
@@ -21,10 +22,10 @@ class ResponseGeneratorSpec extends Specification {
     }
 
     "Build a response without a body" in {
-      val result = SwitchingProtocols().unsafeRun
+      val result = SwitchingProtocols().unsafeRunSync
       val resp = result.resp
 
-      resp.body.runLog.unsafeRun.length must_== 0
+      resp.body.runLogSync.unsafeRunSync.length must_== 0
       resp.status must_== Status.SwitchingProtocols
       resp.headers.get(`Content-Length`) must beNone
       resp.headers.get(`Transfer-Encoding`) must beNone
@@ -32,10 +33,10 @@ class ResponseGeneratorSpec extends Specification {
 
     "Build a redirect response" in {
       val location = Uri.fromString("/foo").right.getOrElse(sys.error("Fail."))
-      val result = MovedPermanently(location).unsafeRun
+      val result = MovedPermanently(location).unsafeRunSync
       val resp = result.resp
 
-      resp.body.runLog.unsafeRun.length must_== 0
+      resp.body.runLogSync.unsafeRunSync.length must_== 0
       resp.status must_== Status.MovedPermanently
       resp.headers.get(`Content-Length`) must beNone
       resp.headers.get(`Transfer-Encoding`) must beNone
@@ -43,10 +44,10 @@ class ResponseGeneratorSpec extends Specification {
     }
 
     "Explicitly added headers have priority" in {
-      val w = EntityEncoder.encodeBy[String](`Content-Type`(MediaType.`text/html`))(EntityEncoder.stringEncoder.toEntity(_))
+      val w = EntityEncoder.encodeBy[IO, String](`Content-Type`(MediaType.`text/html`))(EntityEncoder.stringEncoder[IO].toEntity(_))
 
          Ok("some content", Headers(`Content-Type`(MediaType.`application/json`)))(w)
-          .unsafeRun.resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.`application/json`)
+          .unsafeRunSync.resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.`application/json`)
     }
   }
 }

@@ -8,6 +8,7 @@ import org.specs2.mutable.Specification
 import scala.reflect.runtime.universe._
 import shapeless.HList
 import Status._
+import cats.effect.IO
 import fs2.Chunk
 
 class ResultMatcherSpec extends Specification {
@@ -32,7 +33,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match a single result type" in {
       val srvc = new TRhoService {
-        PUT / "foo" |>> { () => Ok("updated").unsafeRun }
+        PUT / "foo" |>> { () => Ok("updated").unsafeRunSync() }
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok)
@@ -114,8 +115,8 @@ class ResultMatcherSpec extends Specification {
       case class ModelA(name: String, color: Int)
       case class ModelB(name: String, id: Long)
 
-      implicit def w1: EntityEncoder[ModelA] = EntityEncoder.simple[ModelA]()(_ => Chunk.bytes("A".getBytes))
-      implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => Chunk.bytes("B".getBytes))
+      implicit def w1: EntityEncoder[IO, ModelA] = EntityEncoder.simple[IO, ModelA]()(_ => Chunk.bytes("A".getBytes))
+      implicit def w2: EntityEncoder[IO, ModelB] = EntityEncoder.simple[IO, ModelB]()(_ => Chunk.bytes("B".getBytes))
 
       val srvc = new TRhoService {
         GET / "foo" |>> { () =>
@@ -153,6 +154,6 @@ object Foo {
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1: EntityEncoder[FooA] = EntityEncoder.simple[FooA]()(_ => Chunk.bytes("A".getBytes))
-  implicit def w2: EntityEncoder[FooB] = EntityEncoder.simple[FooB]()(_ => Chunk.bytes("B".getBytes))
+  implicit def w1: EntityEncoder[IO, FooA] = EntityEncoder.simple[IO, FooA]()(_ => Chunk.bytes("A".getBytes))
+  implicit def w2: EntityEncoder[IO, FooB] = EntityEncoder.simple[IO, FooB]()(_ => Chunk.bytes("B".getBytes))
 }

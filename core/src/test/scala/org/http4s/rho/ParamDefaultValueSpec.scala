@@ -1,17 +1,18 @@
 package org.http4s
 package rho
 
+import cats.effect.IO
 import org.http4s.HttpService
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
 class ParamDefaultValueSpec extends Specification {
 
-  def body(service: HttpService, r: Request[IO]): String =
-    new String(service(r).unsafeRun.orNotFound.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+  def body(service: HttpService[IO], r: Request[IO]): String =
+    new String(service(r).getOrElse(Response.notFound[IO]).unsafeRunSync().body.runLogSync.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
 
   def requestGet(s: String, h: Header*): Request[IO] =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+    Request[IO](bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   "GET /test1" should {
     val service = new RhoService {

@@ -6,6 +6,7 @@ import org.specs2.mutable.Specification
 import cats.data.NonEmptyList
 import cats.syntax.all._
 import org.http4s.rho.bits.MethodAliases.GET
+import cats.effect.IO
 
 class SwaggerSupportSpec extends Specification {
 
@@ -38,7 +39,7 @@ class SwaggerSupportSpec extends Specification {
     "Expose an API listing" in {
       val service = baseService.toService(SwaggerSupport(swaggerRoutesInSwagger = true))
 
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
@@ -48,7 +49,7 @@ class SwaggerSupportSpec extends Specification {
 
     "Support prefixed routes" in {
       val service = ("foo" /: baseService).toService(SwaggerSupport(swaggerRoutesInSwagger = true))
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
@@ -66,9 +67,9 @@ class SwaggerSupportSpec extends Specification {
       val aggregateSwagger = SwaggerSupport.createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes)
       val swaggerRoutes = SwaggerSupport.createSwaggerRoute(aggregateSwagger)
       val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())
-      val allthogetherService = httpServices.reduceLeft(Service.withFallback(_)(_))
+      val allthogetherService = httpServices.reduceLeft((a, b) => b <+> a)
 
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
         parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"
@@ -78,7 +79,7 @@ class SwaggerSupportSpec extends Specification {
 
     "Support endpoints which end in a slash" in {
       val service = trailingSlashService.toService(SwaggerSupport())
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
       val JObject(List((a, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
       a should_== "/foo/"
@@ -86,7 +87,7 @@ class SwaggerSupportSpec extends Specification {
 
     "Support endpoints which end in a slash being mixed with normal endpoints"  in {
       val service = mixedTrailingSlashesService.toService(SwaggerSupport())
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
       Set(a, b, c) should_== Set("/foo/", "/foo", "/bar")
@@ -96,9 +97,9 @@ class SwaggerSupportSpec extends Specification {
       val aggregateSwagger = SwaggerSupport.createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes  ++ mixedTrailingSlashesService.getRoutes)
       val swaggerRoutes = SwaggerSupport.createSwaggerRoute(aggregateSwagger)
       val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())
-      val allthogetherService = httpServices.reduceLeft(Service.withFallback(_)(_))
+      val allthogetherService = httpServices.reduceLeft((a, b) => b <+> a)
 
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)), (e, JObject(_)), (f, JObject(_)), (g, JObject(_)))) =
         parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"

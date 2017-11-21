@@ -6,8 +6,8 @@ import java.util.Date
 import org.http4s.rho.swagger.models.AbstractProperty
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
-
-import fs2.{IO, Stream}
+import cats.effect.IO
+import fs2.Stream
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
 import cats.syntax.all._
 
@@ -230,7 +230,7 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Get types from a fs2.Stream" in {
-      import fs2.{IO, Stream}
+      import fs2.Stream
       modelOf[Stream[IO, Foo]] must_== modelOf[Foo]
     }
 

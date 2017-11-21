@@ -138,18 +138,18 @@ class ApiExamples extends Specification {
         private def getCount(): String = counter.incrementAndGet().toString
         // Don't want status codes? Anything with an `EntityEncoder` will work.
         GET / "nostatus" |>> { () => "No status!" }
-        GET / "IONoStatus" |>> { () => IO.delay(getCount())
+        GET / "IONoStatus" |>> { () => IO(getCount())
         }
 
         /* Results need not be functions: they can be anything that has
            an `EntityEncoder` instance in scope */
         GET / "nostatus2" |>> "This is a constant result!"
-        GET / "IONoStatus2" |>> IO.delay(getCount())
+        GET / "IONoStatus2" |>> IO(getCount())
 
         /* We can use a standard http4s.Response, but we don't get any metadata
            with it. Useful for things like Websocket support. */
         GET / "websockets" |>> { () =>
-          WS(???, ???)
+          WS[IO](???, ???)
         }
       }
       /// end_src_inlined

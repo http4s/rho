@@ -10,14 +10,14 @@ import JsonEncoder.AutoSerializable
 import cats.syntax.all._
 import fs2.Stream
 import cats.effect.IO
+import org.http4s.rho._
+import org.http4s.rho.swagger._
+import org.http4s.EntityDecoder
+
+import org.http4s.headers
+import org.http4s.{Request, Headers}
 
 object MyService extends RhoService {
-  import org.http4s.rho._
-  import org.http4s.rho.swagger._
-  import org.http4s.EntityDecoder
-
-  import org.http4s.headers
-  import org.http4s.{Request, Headers}
 
   case class JsonResult(name: String, number: Int) extends AutoSerializable
 

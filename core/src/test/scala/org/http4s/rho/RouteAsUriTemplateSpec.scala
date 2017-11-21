@@ -6,12 +6,13 @@ import org.specs2.mutable.Specification
 import UriTemplate.ParamExp
 import UriTemplate.PathElm
 import UriTemplate.PathExp
+import cats.effect.IO
 
 import bits.MethodAliases.GET
 
 class RouteAsUriTemplateSpec extends Specification {
 
-  val request = Request()
+  val request = Request[IO]()
 
   "PathBuilder.asUriTemplate" should {
     "convert to /hello" in {
