@@ -6,7 +6,6 @@ import org.http4s._
 import org.http4s.headers.{Location, `Content-Length`}
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 
-// TODO: ????
 import fs2.Chunk
 
 /** Helpers to aid in the construction of a response function

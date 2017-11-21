@@ -71,7 +71,12 @@ lazy val `rho-examples` = project
       ): _*)
   .dependsOn(`rho-swagger`, `rho-hal`)
 
-lazy val compileFlags = Seq("-feature", "-language:higherKinds", "-language:existentials", "-language:implicitConversions") //, "-Xlog-implicits")
+lazy val compileFlags = Seq(
+  "-feature",
+  "-Ypartial-unification",
+  "-language:higherKinds",
+  "-language:existentials",
+  "-language:implicitConversions") //, "-Xlog-implicits")
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -98,7 +103,8 @@ lazy val buildSettings = publishing ++
       logbackClassic % "test"
     ),
     libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value
+    libraryDependencies += `scala-reflect` % scalaVersion.value,
+    addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersion.binary)
   )
 
 lazy val publishing = Seq(
