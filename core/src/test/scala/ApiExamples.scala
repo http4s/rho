@@ -123,7 +123,7 @@ class ApiExamples extends Specification {
            handler function.
          */
         GET / "request" |>> { req: Request =>
-          Ok("I don't acutally need a request...")
+          Ok("I don't actually need a request...")
         }
         GET / "request" / 'foo |>> { (req: Request, foo: String) =>
           Ok("I wanted a request")
