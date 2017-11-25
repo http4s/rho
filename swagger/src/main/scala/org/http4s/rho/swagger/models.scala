@@ -22,10 +22,13 @@ object models {
     , definitions         : Map[String, Model]                    = Map.empty
     , parameters          : Map[String, Parameter]                = Map.empty
     , externalDocs        : Option[ExternalDocs]                  = None
+    , security            : List[SecurityRequirement]             = Nil
+    , vendorExtensions    : Map[String, Any]                      = Map.empty
     ) {
 
     def toJModel: jm.Swagger = {
       val s = new jm.Swagger
+
       s.info(fromOption(info.map(_.toJModel)))
       s.host(fromOption(host))
       s.basePath(fromOption(basePath))
@@ -33,10 +36,17 @@ object models {
       s.setConsumes(fromList(consumes))
       s.setProduces(fromList(produces))
       s.setPaths(fromMap(paths.mapValues(_.toJModel)))
+      s.setSecurity(fromList(security.map(_.toJModel)))
       s.setSecurityDefinitions(fromMap(securityDefinitions.mapValues(_.toJModel)))
       s.setDefinitions(fromMap(definitions.mapValues(_.toJModel)))
       s.setParameters(fromMap(parameters.mapValues(_.toJModel)))
       s.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
+      vendorExtensions.foreach {
+        case (key, value:Map[_,_]) => s.setVendorExtension(key, fromMap(value))
+        case (key, value:Option[_]) => s.setVendorExtension(key, fromOption(value))
+        case (key, value:List[_]) => s.setVendorExtension(key, fromList(value))
+        case (key, value) => s.setVendorExtension(key, value)
+      }
       s
     }
   }
@@ -122,6 +132,31 @@ object models {
     }
   }
 
+  case class OAuth2VendorExtensionsDefinition
+  (
+      authorizationUrl : String
+    , vendorExtensions : Map[String, AnyRef]
+    , flow             : String
+    , scopes           : Map[String, String]
+    , tokenUrl         : Option[String] = None
+  ) extends SecuritySchemeDefinition {
+
+    override val `type` = "oauth2"
+
+    def toJModel: jm.auth.OAuth2Definition = {
+      val oa2d = new jm.auth.OAuth2Definition
+      oa2d.setAuthorizationUrl(authorizationUrl)
+      oa2d.setVendorExtensions(fromMap(vendorExtensions))
+      oa2d.setFlow(flow)
+      oa2d.setScopes(fromMap(scopes))
+
+      if(tokenUrl.isDefined)
+        oa2d.setTokenUrl(tokenUrl.get)
+
+      oa2d
+    }
+  }
+
   case class ApiKeyAuthDefinition
   (
     name : String
@@ -162,8 +197,7 @@ object models {
 
     def toJModel: jm.SecurityRequirement = {
       val sr = new jm.SecurityRequirement
-      sr.setName(name)
-      sr.setScopes(fromList(scopes))
+      sr.setRequirements(name, scopes.asJava)
       sr
     }
   }

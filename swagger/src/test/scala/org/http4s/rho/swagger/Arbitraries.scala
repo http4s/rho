@@ -191,6 +191,7 @@ object Arbitraries {
   def genSecurityDefinition: Gen[SecuritySchemeDefinition] =
     Gen.oneOf(
       OAuth2Definition("authorizationUrl", "tokenUrl", "flow", Map.empty),
+      OAuth2VendorExtensionsDefinition("authorizationUrl", Map("x-issuer"->"issuer", "x-audiences"->"audience"), "flow", Map.empty),
       ApiKeyAuthDefinition("name", In.HEADER),
       BasicAuthDefinition)
 

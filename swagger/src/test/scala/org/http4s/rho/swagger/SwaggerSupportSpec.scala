@@ -2,10 +2,10 @@ package org.http4s
 package rho
 package swagger
 
-import org.specs2.mutable.Specification
 import cats.data.NonEmptyList
-import cats.syntax.all._
 import org.http4s.rho.bits.MethodAliases.GET
+import org.http4s.rho.swagger.models._
+import org.specs2.mutable.Specification
 
 class SwaggerSupportSpec extends Specification {
 
@@ -106,7 +106,60 @@ class SwaggerSupportSpec extends Specification {
       Set(a, b, c, d, e, f, g) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}", "/foo/", "/foo", "/bar")
     }
 
+    "Swagger support for complex meta data" in {
+      val service = baseService.toService(SwaggerSupport(
+        apiPath = "swagger-test.json",
+        apiInfo =  Info(
+          title = "Complex Meta Data API",
+          description = Some("Complex Meta Data API to verify in unit test"),
+          version = "1.0.0",
+          contact = Some(Contact("Name", Some("http://www.test.com/contact"), Some("test@test.com"))),
+          license = Some(License("Apache 2.0", "http://www.apache.org/licenses/LICENSE-2.0.html")),
+          termsOfService = Some("http://www.test.com/tos")
+        ),
+        swaggerRoutesInSwagger = true,
+        host = Some("www.test.com"),
+        schemes = List(Scheme.HTTP, Scheme.HTTPS),
+        basePath = Some("/v1"),
+        consumes = List("application/json"),
+        produces = List("application/json"),
+        security= List(SecurityRequirement("apiKey", Nil),SecurityRequirement("vendor_jwk", List("admin"))),
+        securityDefinitions = Map(
+          "api_key" -> ApiKeyAuthDefinition("key", In.QUERY, None),
+          "vendor_jwk" -> OAuth2VendorExtensionsDefinition(
+            authorizationUrl = "https://www.test.com/authorize",
+            flow = "implicit",
+            vendorExtensions = Map(
+              "x-vendor-issuer" -> "https://www.test.com/",
+              "x-vendor-jwks_uri" -> "https://www.test.com/.well-known/jwks.json",
+              "x-vendor-audiences" -> "clientid"
+            ),
+            scopes = Map("openid" -> "Open ID info", "admin" -> "Admin rights")
+          )
+        ),
+        vendorExtensions = Map(
+          "x-vendor-endpoints" -> Map("name" -> "www.test.com", "target" -> "298.0.0.1")
+        )
+      ))
 
+      val r = Request(GET, Uri(path = "/swagger-test.json"))
+      val json = parseJson(RRunner(service).checkOk(r))
+
+      val JString(icn) = json \ "info" \ "contact" \ "name"
+      val JString(h) = json \ "host"
+      val JArray(List(JString(s1), JString(s2)))  = json \ "schemes"
+      val JString(bp) = json \ "basePath"
+      val JArray(List(JString(c))) = json \ "consumes"
+      val JArray(List(JString(p))) = json \ "produces"
+      val JArray(List(JArray(sec1))) =json \ "security" \ "apiKey"
+      val JArray(List(JArray(List(JString(sec2))))) =json \ "security" \ "vendor_jwk"
+      val JString(t) = json \ "securityDefinitions" \ "api_key" \ "type"
+      val JString(vi) = json \ "securityDefinitions" \ "vendor_jwk" \ "x-vendor-issuer"
+      val JString(ve) = json \ "x-vendor-endpoints" \ "target"
+
+      Set(icn, h, s1, s2, bp, c, p, sec2, t, vi, ve) should_== Set("Name", "www.test.com", "http", "https", "/v1","application/json","application/json", "admin", "apiKey","https://www.test.com/", "298.0.0.1")
+      sec1 should_== Nil
+    }
 
 
   }
