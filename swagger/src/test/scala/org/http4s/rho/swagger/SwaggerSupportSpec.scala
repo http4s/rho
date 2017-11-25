@@ -111,6 +111,24 @@ class SwaggerSupportSpec extends Specification {
       Set(a, b, c, d, e, f, g) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}", "/foo/", "/foo", "/bar")
     }
 
+
+    "Check metadata in API listing" in {
+      val service = metaDataService.toService(SwaggerSupport(swaggerRoutesInSwagger = true))
+
+      val r = Request(GET, Uri(path = "/swagger.json"))
+
+      val json = parseJson(RRunner(service).checkOk(r))
+
+      val JObject(List((a, JArray(List(JObject(List((e,JArray(List(JString(f))))))))), (b, JArray(List(JObject(List((g,JArray(List(JString(h))))))))))) = json \\ "security"
+      val JObject(List((c, JString(i)), (d, JString(j)), _)) = json \\ "summary"
+
+      Set(a,b) should_== Set("security", "security")
+      Set(c,d) should_== Set("summary", "summary")
+      Set(e,f) should_== Set("hello", "bye")
+      Set(g,h) should_== Set("bye", "hello")
+      Set(i,j) should_== Set("Hello", "Bye")
+    }
+
     "Swagger support for complex meta data" in {
       val service = baseService.toService(SwaggerSupport(
         apiPath = "swagger-test.json",
