@@ -28,7 +28,7 @@ package object swagger {
   /** Scopes carrier for specific routes */
   case class RouteSecurityScope(definitions: Map[String, List[String]]) extends SecurityScopesMetaData
 
-  /** Add support for adding documentation before a route using the ## operator */
+  /** Add support for adding security scopes before a route using the ^^ operator */
   implicit class SecOps(definitions: Map[String, List[String]]) {
     def ^^(method: Method): PathBuilder[HNil] = ^^(new PathBuilder[HNil](method, PathEmpty))
 
