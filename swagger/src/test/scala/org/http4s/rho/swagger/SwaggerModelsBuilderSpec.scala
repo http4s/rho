@@ -206,6 +206,22 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       operationIds ==== List("getBar", "getBar-name", "getBar-name1-name2")
       }
+
+    "Create Security Scope" in {
+      val x:Map[String, List[String]]  = Map("oauth" -> List("admin"))
+
+      val ra = x ^^ "foo1" ** GET / "bar" |>> { () => "" }
+
+      sb.mkOperation("/foo", ra).security must_== List(x)
+    }
+
+    "Create Security Scopes" in {
+      val x:Map[String, List[String]]  = Map("oauth" -> List("admin", "read"),"apiKey" -> List("read"))
+
+      val ra = x ^^ "foo1" ** GET / "bar" |>> { () => "" }
+
+      sb.mkOperation("/foo", ra).security must_== List(x)
+    }
   }
 
   "SwaggerModelsBuilder.collectPaths" should {

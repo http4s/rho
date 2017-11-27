@@ -157,6 +157,19 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).flatMap(go(_, None)).headOption
   }
 
+  def collectSecurityScopes(rr: RhoRoute[_]): List[Map[String, List[String]]] = {
+
+    def go(stack: List[PathOperation]): Option[Map[String, List[String]]] =
+
+      stack match {
+        case Nil => None
+        case MetaCons(_, RouteSecurityScope(secScope)) :: _ => secScope.some
+        case _ :: xs => go(xs)
+      }
+
+     linearizeStack(rr.path::Nil).flatMap(go)
+  }
+
   def collectOperationParams(rr: RhoRoute[_]): List[Parameter] =
     collectPathParams(rr) ::: collectQueryParams(rr) ::: collectHeaderParams(rr) ::: collectBodyParams(rr).toList
 
@@ -223,6 +236,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       produces    = rr.responseEncodings.toList.map(_.renderString),
       operationId = mkOperationId(pathStr, rr.method, parameters).some,
       parameters  = parameters,
+      security    = collectSecurityScopes(rr),
       responses   = collectResponses(rr))
   }
 

@@ -4,10 +4,10 @@ import java.sql.Timestamp
 import java.util.Date
 
 import org.http4s.Method
-import org.http4s.rho.bits.{PathAST, TextMetaData}
+import org.http4s.rho.bits.{PathAST, SecurityScopesMetaData, TextMetaData}
 import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 import org.http4s.rho.swagger.models.Model
-import shapeless.HNil
+import shapeless.{HList, HNil}
 
 import scala.reflect.runtime.universe._
 import fs2.{Task, Stream}
@@ -23,6 +23,20 @@ package object swagger {
 
     def **[T<: HNil](builder: PathBuilder[T]): PathBuilder[T] =
       new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteDesc(description)))
+  }
+
+  /** Scopes carrier for specific routes */
+  case class RouteSecurityScope(definitions: Map[String, List[String]]) extends SecurityScopesMetaData
+
+  /** Add support for adding security scopes before a route using the ^^ operator */
+  implicit class SecOps(definitions: Map[String, List[String]]) {
+    def ^^(method: Method): PathBuilder[HNil] = ^^(new PathBuilder[HNil](method, PathEmpty))
+
+    def ^^(route: RhoRoute.Tpe): PathBuilder[HNil] = new PathBuilder(route.method, PathAST.MetaCons(route.path, RouteSecurityScope(definitions)))
+
+    def ^^[T<: HList](builder: PathBuilder[T]): PathBuilder[T] =
+      new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteSecurityScope(definitions)))
+
   }
 
   object Reflector {
