@@ -24,19 +24,19 @@ object HListToFunc {
     *
     * @tparam R type of result
     */
-  implicit def const0[F[_], R](implicit F: Monad[F], m: ResultMatcher[F, R], w: EntityEncoder[F, R]): HListToFunc[F, HNil, R] = new MatcherHListToFunc[F, HNil, R] {
+  implicit def const0[F[_], R](implicit F: Monad[F], m: ResultMatcher[F, R]): HListToFunc[F, HNil, R] = new MatcherHListToFunc[F, HNil, R] {
     override def matcher: ResultMatcher[F, R] = m
     override def conv(r: R): (Request[F], HNil) => F[Response[F]] = (req, _) => m.conv(req, r)
   }
 
   /** Converter for types `FunctionN` to an `HList` */
-  implicit def instance[F[_], T <: HList, TR <: HList, FU, R](implicit F: Monad[F], w: EntityEncoder[F, R], fp: FnToProduct.Aux[FU, TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[F, R]]): HListToFunc[F, T, FU] = new MatcherHListToFunc[F, T, FU] {
+  implicit def instance[F[_], T <: HList, TR <: HList, FU, R](implicit F: Monad[F], fp: FnToProduct.Aux[FU, TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[F, R]]): HListToFunc[F, T, FU] = new MatcherHListToFunc[F, T, FU] {
     override def matcher: ResultMatcher[F, R] = m.value
     override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) => { matcher.conv(req, f.toProduct(rev(h))) }
   }
 
   /** Converter for types `FunctionN` where the first element is a `Request` to an `HList` */
-  implicit def instance1[F[_], T <: HList, TR <: HList, FU, R](implicit F: Monad[F], w: EntityEncoder[F, R], fp: FnToProduct.Aux[FU, Request[F] :: TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[F, R]]): HListToFunc[F, T, FU] = new MatcherHListToFunc[F, T, FU] {
+  implicit def instance1[F[_], T <: HList, TR <: HList, FU, R](implicit F: Monad[F], fp: FnToProduct.Aux[FU, Request[F] :: TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[F, R]]): HListToFunc[F, T, FU] = new MatcherHListToFunc[F, T, FU] {
     override def matcher: ResultMatcher[F, R] = m.value
     override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) => { matcher.conv(req, f.toProduct(req :: rev(h))) }
   }
