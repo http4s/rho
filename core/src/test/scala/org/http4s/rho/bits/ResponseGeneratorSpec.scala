@@ -17,7 +17,7 @@ class ResponseGeneratorSpec extends Specification {
       val str = new String(resp.body.runLog.run.reduce(_ ++ _).toArray)
       str must_== "Foo"
 
-      resp.headers.get(`Content-Length`) must_== Some(`Content-Length`("Foo".getBytes.length))
+      resp.headers.get(`Content-Length`) must_== Some(`Content-Length`.unsafeFromLong("Foo".getBytes.length))
       resp.headers.filterNot(_.is(`Content-Length`)).toList must_== EntityEncoder.stringEncoder.headers.toList
     }
 

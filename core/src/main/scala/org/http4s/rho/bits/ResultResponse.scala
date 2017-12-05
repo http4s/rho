@@ -1,6 +1,6 @@
 package org.http4s.rho.bits
 
-import org.http4s.{HttpService, Response}
+import org.http4s.{HttpService, MaybeResponse, Pass, Response}
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.FailureResponse._
 import org.http4s.rho.bits.ResponseGeneratorInstances.{BadRequest, InternalServerError}
@@ -19,9 +19,9 @@ sealed trait RouteResult[+T] {
     case _       => false
   }
 
-  final def toResponse(implicit ev: T <:< Task[Response]): Task[Response] = this match {
+  final def toResponse(implicit ev: T <:< Task[MaybeResponse]): Task[MaybeResponse] = this match {
       case SuccessResponse(t) => ev(t)
-      case NoMatch            => Response.fallthrough
+      case NoMatch            => Pass.now
       case FailureResponse(r) => r.toResponse
     }
 }

@@ -3,10 +3,10 @@ package com.http4s.rho.swagger.demo
 import java.util.concurrent.atomic.AtomicInteger
 import java.time.Instant
 
-import org.http4s.Uri
+import org.http4s.{HttpDate, Uri}
 import org.http4s.rho.RhoService
-
 import JsonEncoder.AutoSerializable
+
 import scalaz.Scalaz._
 import scalaz.concurrent.Task
 import scalaz.stream.Process
@@ -77,7 +77,7 @@ object MyService extends RhoService {
       val hs = req.headers.get(headers.Cookie) match {
         case None => Headers.empty
         case Some(cookie) =>
-          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(Instant.ofEpochMilli(0)), maxAge = Some(0)))})
+          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
       }
 
       Ok("Deleted cookies!").replaceAllHeaders(hs)

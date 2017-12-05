@@ -11,7 +11,7 @@ class HListToFuncSpec extends Specification {
     new String(b.runLog.run.foldLeft(ByteVector.empty)(_ ++ _).toArray)
   }
 
-  def checkOk(r: Request): String = getBody(service(r).run.body)
+  def checkOk(r: Request): String = getBody(service(r).run.orNotFound.body)
 
   def Get(s: String, h: Header*): Request =
     Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
