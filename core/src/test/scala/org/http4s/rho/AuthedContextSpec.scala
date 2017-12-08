@@ -28,9 +28,9 @@ object MyService extends RhoService {
 
   GET +? param("foo", "bar") >>> auth |>> { (req: Request[IO], foo: String, user: User) =>
     if (user.name == "Test User") {
-      Ok(s"just root with parameter 'foo=$foo'")
+      Ok[IO](s"just root with parameter 'foo=$foo'")
     } else {
-      BadRequest("This should not have happened.")
+      BadRequest[IO]("This should not have happened.")
     }
   }
 }
