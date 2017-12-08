@@ -7,7 +7,6 @@ import org.http4s.{AttributeKey, HttpDate}
 import org.http4s.headers._
 import org.specs2.mutable.Specification
 
-
 class ResultSpec extends Specification with ResultSyntaxInstances {
   import bits.ResponseGeneratorInstances._
 
