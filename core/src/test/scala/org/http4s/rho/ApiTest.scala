@@ -36,7 +36,7 @@ class ApiTest extends Specification {
   }
 
   def checkETag[F[_]](p: OptionT[F, Response[F]], s: String): MatchResult[Any] =
-    fetchETag(p.map(_.orNotFound)) must_== ETag(ETag.EntityTag(s))
+    fetchETag(p.map(_.getOrElse(Response.notFound))) must_== ETag(ETag.EntityTag(s))
 
   "RhoDsl bits" should {
     "Combine validators" in {
@@ -104,7 +104,7 @@ class ApiTest extends Specification {
       val expectedFoo = Foo(10, HttpDate.now)
       val route = runWith(path) { (f: Foo) => Ok[IO](s"stuff $f") }
 
-      val result = route(req).unsafeRun.orNotFound
+      val result = route(req).unsafeRun.getOrElse(Response.notFound)
       result.status should_== Status.Ok
       RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
     }
@@ -142,7 +142,7 @@ class ApiTest extends Specification {
         .withBody("cool")
         .unsafeRun
 
-      val resp = route(req).unsafeRun.orNotFound
+      val resp = route(req).unsafeRun.getOrElse(Response.notFound)
       resp.headers.get(ETag) must beSome(etag)
 
     }
@@ -167,8 +167,8 @@ class ApiTest extends Specification {
         .withBody("cool")
         .unsafeRun
 
-      route1(req).unsafeRun.orNotFound.status should_== Status.Ok
-      route2(req).unsafeRun.orNotFound.status should_== Status.Ok
+      route1(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.Ok
+      route2(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.Ok
 
     }
 
@@ -210,7 +210,7 @@ class ApiTest extends Specification {
       val route = runWith(GET / "foo") { () => SwitchingProtocols() }
       val req = Request(GET, uri = Uri.fromString("/foo").right.getOrElse(sys.error("Fail")))
 
-      val result = route(req).unsafeRun.orNotFound
+      val result = route(req).unsafeRun.getOrElse(Response.notFound)
       result.headers.size must_== 0
       result.status must_== Status.SwitchingProtocols
     }
@@ -244,7 +244,7 @@ class ApiTest extends Specification {
       val req = Request(uri = uri("/hello/world"))
 
       val f = runWith(stuff) { () => Ok[IO]("Shouldn't get here.") }
-      val r = f(req).unsafeRun.orNotFound
+      val r = f(req).unsafeRun.getOrElse(Response.notFound)
       r.status should_== Status.NotFound
     }
 
@@ -301,13 +301,13 @@ class ApiTest extends Specification {
         Ok[IO]("")
       }
 
-      route1(req).unsafeRun.orNotFound.status should_== Status.Ok
+      route1(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.Ok
 
       val route2 = runWith(path +? (param[IO, String]("foo") and param[IO, Int]("baz"))) { (_: String, _: Int) =>
         Ok[IO]("")
       }
 
-      route2(req).unsafeRun.orNotFound.status should_== Status.Ok
+      route2(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.Ok
     }
 
     "map simple query rules into a complex type" in {
@@ -319,7 +319,7 @@ class ApiTest extends Specification {
 
       val route = runWith(path) { (f: Foo) => Ok[IO](s"stuff $f") }
 
-      val result = route(req).unsafeRun.orNotFound
+      val result = route(req).unsafeRun.getOrElse(Response.notFound)
       result.status should_== Status.Ok
       RequestRunner.getBody(result.body) should_== "stuff Foo(32,3.2,Asdf)"
     }
@@ -332,20 +332,20 @@ class ApiTest extends Specification {
       val path = POST / "hello" >>> reqHeader
 
 
-      val req1 = Request(POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
+      val req1 = Request[IO](POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
                     .withBody("foo")
-                    .unsafeRun
+                    .unsafeRunSync()
 
-      val req2 = Request(POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
+      val req2 = Request[IO](POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
         .withBody("0123456789") // length 10
-        .unsafeRun
+        .unsafeRunSync()
 
       val route = runWith(path.decoding(EntityDecoder.text)) { str: String =>
         Ok[IO]("stuff").putHeaders(ETag(ETag.EntityTag(str)))
       }
 
       checkETag(route(req1), "foo")
-      route(req2).unsafeRun.orNotFound.status should_== Status.BadRequest
+      route(req2).unsafeRun.getOrElse(Response.notFound).status should_== Status.BadRequest
     }
 
     "Allow the infix operator syntax" in {
@@ -373,61 +373,63 @@ class ApiTest extends Specification {
         Ok[IO]("shouldn't get here.")
       }
 
-      route1(req).unsafeRun.orNotFound.status should_== Status.BadRequest
+      route1(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.BadRequest
 
       val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
       val route2 = runWith(path.validate(reqHeaderR)) { () =>
         Ok[IO]("shouldn't get here.")
       }
 
-      route2(req).unsafeRun.orNotFound.status should_== Status.Unauthorized
+      route2(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.Unauthorized
     }
 
     "Fail on a query" in {
-      val path = GET / "hello"
+      val path: PathBuilder[IO, HList] = GET / "hello"
 
-      val req = Request(uri = uri("/hello?foo=bar"))
+      val req = Request[IO](uri = uri("/hello?foo=bar"))
                   .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
 
       val route1 = runWith(path +? param[IO, Int]("foo")) { i: Int =>
         Ok[IO]("shouldn't get here.")
       }
 
-      route1(req).unsafeRun.orNotFound.status should_== Status.BadRequest
+      route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.BadRequest
 
-      val route2 = runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) { str: String =>
+      val route2 = runWith(path +? paramR[IO, String]("foo", (_: String) => Some(Unauthorized[IO]("foo")))) { _: String =>
         Ok[IO]("shouldn't get here.")
       }
 
-      route2(req).unsafeRun.orNotFound.status should_== Status.Unauthorized
+      route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Unauthorized
     }
   }
 
   "Path prepending" should {
-
-    val req = Request(uri=uri("/foo/bar"))
+    val req = Request[IO](uri=uri("/foo/bar"))
     val respMsg = "Result"
 
     "Work for a PathBuilder" in {
-      val tail = GET / "bar"
+      val tail: PathBuilder[IO, _ <: HList] = GET / "bar"
       val all = "foo" /: tail
-      runWith(all)(respMsg).apply(req).unsafeRun.orNotFound.as[String].unsafeRun === respMsg
+
+      runWith(all)(respMsg).apply(req).value.unsafeRunSync().getOrElse(Response.notFound).as[String].unsafeRunSync() === respMsg
     }
 
     "Work for a QueryBuilder" in {
       val tail = GET / "bar" +? param[IO, String]("str")
       val all = "foo" /: tail
+
       runWith(all){ q: String => respMsg + q}
         .apply(req.copy(uri=uri("/foo/bar?str=answer")))
-        .unsafeRun.orNotFound.as[String].unsafeRun === respMsg + "answer"
+        .unsafeRun.getOrElse(Response.notFound).as[String].unsafeRun === respMsg + "answer"
     }
 
     "Work for a Router" in {
       val tail = GET / "bar" >>> RequireETag
       val all = "foo" /: tail
+
       runWith(all)(respMsg)
         .apply(req.copy(uri=uri("/foo/bar")).putHeaders(etag))
-        .unsafeRun.orNotFound.as[String].unsafeRun === respMsg
+        .unsafeRun.getOrElse(Response.notFound).as[String].unsafeRun === respMsg
     }
   }
 }

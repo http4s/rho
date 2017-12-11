@@ -9,7 +9,7 @@ import scodec.bits.ByteVector
 class ParamDefaultValueSpec extends Specification {
 
   def body(service: HttpService[IO], r: Request[IO]): String =
-    new String(service(r).value.unsafeRunSync.orNotFound.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+    new String(service(r).value.unsafeRunSync().getOrElse(Response.notFound).body.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
 
   def requestGet(s: String, h: Header*): Request[IO] =
     Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))

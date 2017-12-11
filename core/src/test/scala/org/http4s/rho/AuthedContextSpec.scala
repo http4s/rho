@@ -43,7 +43,7 @@ class AuthedContextSpec extends Specification {
 
     "Be able to have access to authInfo" in {
       val request = Request(Method.GET, Uri(path = "/"))
-      val resp = service.run(request).unsafeRun().orNotFound
+      val resp = service.run(request).unsafeRun().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
         val body = new String(resp.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
         body should_== "just root with parameter 'foo=bar'"

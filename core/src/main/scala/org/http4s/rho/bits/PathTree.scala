@@ -292,7 +292,7 @@ private[rho] object PathTree {
 
   final case class CaptureNode[F[_]](parser:   StringParser[F, String],
                                      matches:  Map[String, MatchNode[F]] = Map.empty[String, MatchNode[F]],
-                                     captures: List[CaptureNode[F]] = Nil,
+                                     captures: List[CaptureNode[F]] = List.empty[CaptureNode[F]],
                                      variadic: Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]],
                                      end:      Map[Method, Leaf[F]] = Map.empty[Method, Leaf[F]]) extends Node[F, CaptureNode[F]] {
 

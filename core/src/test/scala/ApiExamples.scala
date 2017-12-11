@@ -1,18 +1,18 @@
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import cats.Monad
 import cats.effect.IO
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho._
-import org.http4s.rho.bits.TypedQuery
+import org.http4s.rho.bits.{HListToFunc, StringParser, TypedQuery}
 import org.http4s.server.websocket._
 import org.http4s.websocket.WebsocketBits.WebSocketFrame
-import org.http4s.{Request, UrlForm}
+import org.http4s.{EntityEncoder, Request, UrlForm}
 import org.specs2.mutable.Specification
 import fs2.Stream
 
 class ApiExamples extends Specification {
-
   "mock api" should {
     "Make it easy to compose routes" in {
 
@@ -133,13 +133,12 @@ class ApiExamples extends Specification {
         private def getCount(): String = counter.incrementAndGet().toString
         // Don't want status codes? Anything with an `EntityEncoder` will work.
         GET / "nostatus" |>> { () => "No status!" }
-        GET / "taskNoStatus" |>> { () => tTask.delay(getCount())
-        }
+        GET / "taskNoStatus" |>> { () =>  IO.pure(getCount()) }
 
         /* Results need not be functions: they can be anything that has
            an `EntityEncoder` instance in scope */
         GET / "nostatus2" |>> "This is a constant result!"
-        GET / "taskNoStatus2" |>> tTask.delay(getCount())
+        GET / "taskNoStatus2" |>> IO.pure(getCount())
 
         /* We can use a standard http4s.Response, but we don't get any metadata
            with it. Useful for things like Websocket support. */

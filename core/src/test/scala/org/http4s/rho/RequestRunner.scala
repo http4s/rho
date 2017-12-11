@@ -15,7 +15,7 @@ trait RequestRunner {
   def checkError(r: Request[IO]): String = checkStatus(r)(_ != Status.Ok)
 
   def checkStatus(r: Request[IO])(isSuccess: Status => Boolean) = {
-    val resp = service(r).value.unsafeRunSync.orNotFound
+    val resp = service(r).value.unsafeRunSync().getOrElse(Response.notFound)
     if (isSuccess(resp.status)) getBody(resp.body)
     else sys.error(s"Invalid response code: ${resp.status}")
   }
