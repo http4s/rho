@@ -120,7 +120,7 @@ class PathTreeSpec extends Specification {
     }
 
     "CapturesNodes" should {
-      val p = StringParser.booleanParser
+      val p = StringParser.booleanParser[IO]
       "Merge empty CaptureNodes" in {
         val n = CaptureNode(p)
         n merge n must_== n
@@ -159,7 +159,7 @@ class PathTreeSpec extends Specification {
       "Merge non-empty intermediate nodes with mixed matching paths" in {
         val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
         val bar = MatchNode("bar", end = endm)
-        val bizz = CaptureNode(StringParser.booleanParser, end = endm)
+        val bizz = CaptureNode(StringParser.booleanParser[IO], end = endm)
         val n1 = CaptureNode(p, matches = Map("bar" -> bar))
         val n2 = CaptureNode(p, captures = List(bizz))
 
@@ -168,8 +168,8 @@ class PathTreeSpec extends Specification {
 
       "Merging should preserve order" in {
         val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
-        val bar = CaptureNode(StringParser.intParser, end = endm)
-        val bizz = CaptureNode(StringParser.booleanParser, end = endm)
+        val bar = CaptureNode(StringParser.intParser[IO], end = endm)
+        val bizz = CaptureNode(StringParser.booleanParser[IO], end = endm)
         val n1 = CaptureNode(p, captures = List(bar))
         val n2 = CaptureNode(p, captures = List(bizz))
 
@@ -180,9 +180,9 @@ class PathTreeSpec extends Specification {
         val end1: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
         val end2: Map[Method, Leaf[IO]] = Map(Method.POST -> l)
 
-        val foo = CaptureNode(StringParser.shortParser, end = end1)
-        val bar = CaptureNode(StringParser.intParser, end = end1)
-        val bizz = CaptureNode(StringParser.booleanParser, end = end1)
+        val foo = CaptureNode(StringParser.shortParser[IO], end = end1)
+        val bar = CaptureNode(StringParser.intParser[IO], end = end1)
+        val bizz = CaptureNode(StringParser.booleanParser[IO], end = end1)
 
         val n1 = CaptureNode(p, captures = List(foo, bar))
         val n2 = CaptureNode(p, captures = List(bizz, foo.copy(end = end2)))

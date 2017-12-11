@@ -8,19 +8,17 @@ import org.specs2.mutable.Specification
 import scala.reflect.runtime.universe._
 import shapeless.HList
 import Status._
+import cats.effect.IO
 import fs2.Chunk
 
 class ResultMatcherSpec extends Specification {
 
-  class TRhoService
-    extends bits.MethodAliases
-    with bits.ResponseGeneratorInstances
-  {
+  class TRhoService[F[_]] extends bits.MethodAliases with bits.ResponseGeneratorInstances {
     var statuses: Set[(Status, Type)] = Set.empty
 
-    implicit final protected val compileSrvc: CompileService[RhoRoute.Tpe] = {
-      new CompileService[RhoRoute.Tpe] {
-        override def compile[T <: HList](route: RhoRoute[T]): RhoRoute.Tpe = {
+    implicit final protected def compileSrvc: CompileService[F, RhoRoute.Tpe[F]] = {
+      new CompileService[F, RhoRoute.Tpe[F]] {
+        override def compile[T <: HList](route: RhoRoute[F, T]): RhoRoute.Tpe[F] = {
           statuses = route.resultInfo.collect { case StatusAndType(s, t) => (s, t) }
           route
         }
@@ -29,10 +27,9 @@ class ResultMatcherSpec extends Specification {
   }
 
   "ResponseGenerator" should {
-
     "Match a single result type" in {
-      val srvc = new TRhoService {
-        PUT / "foo" |>> { () => Ok("updated").unsafeRun }
+      val srvc = new TRhoService[IO] {
+        PUT / "foo" |>> { () => Ok[IO]("updated").unsafeRunSync() }
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok)
@@ -114,8 +111,8 @@ class ResultMatcherSpec extends Specification {
       case class ModelA(name: String, color: Int)
       case class ModelB(name: String, id: Long)
 
-      implicit def w1: EntityEncoder[ModelA] = EntityEncoder.simple[ModelA]()(_ => Chunk.bytes("A".getBytes))
-      implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => Chunk.bytes("B".getBytes))
+      implicit def w1[F[_]]: EntityEncoder[F, ModelA] = EntityEncoder.simple[F, ModelA]()(_ => Chunk.bytes("A".getBytes))
+      implicit def w2[F[_]]: EntityEncoder[F, ModelB] = EntityEncoder.simple[F, ModelB]()(_ => Chunk.bytes("B".getBytes))
 
       val srvc = new TRhoService {
         GET / "foo" |>> { () =>
@@ -153,6 +150,6 @@ object Foo {
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1: EntityEncoder[FooA] = EntityEncoder.simple[FooA]()(_ => Chunk.bytes("A".getBytes))
-  implicit def w2: EntityEncoder[FooB] = EntityEncoder.simple[FooB]()(_ => Chunk.bytes("B".getBytes))
+  implicit def w1[F[_]]: EntityEncoder[F, FooA] = EntityEncoder.simple[F, FooA]()(_ => Chunk.bytes("A".getBytes))
+  implicit def w2[F[_]]: EntityEncoder[F, FooB] = EntityEncoder.simple[F, FooB]()(_ => Chunk.bytes("B".getBytes))
 }
