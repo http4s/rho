@@ -15,14 +15,6 @@ import scala.reflect.runtime.universe.TypeTag
 import scala.util.control.NonFatal
 
 package object rho extends Http4s with ResultSyntaxInstances {
-
-  // TODO: shouldn't this be provided by http4s ?
-  implicit def intEncoder[F[_]] = new EntityEncoder[F, Int] {
-    override def toEntity(a: Int) = ???
-    override def headers = ???
-  }
-
-
   private[this] val logger = getLogger
 
   object dsl extends bits.MethodAliases with bits.ResponseGeneratorInstances
