@@ -1,16 +1,14 @@
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import cats.Monad
 import cats.effect.IO
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho._
-import org.http4s.rho.bits.{HListToFunc, StringParser, TypedQuery}
+import org.http4s.rho.bits.TypedQuery
 import org.http4s.server.websocket._
-import org.http4s.websocket.WebsocketBits.WebSocketFrame
-import org.http4s.{EntityEncoder, Request, UrlForm}
+import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification
-import fs2.Stream
+import shapeless.HList
 
 class ApiExamples extends Specification {
   "mock api" should {
@@ -25,7 +23,7 @@ class ApiExamples extends Specification {
       /// src_inlined ReusePath
       new RhoService[IO] {
         // A path can be built up in multiple steps and the parts reused
-        val pathPart1 = GET / "hello"
+        val pathPart1: PathBuilder[IO, _ <: HList] = GET / "hello"
 
         pathPart1 / "world" |>> { () => Ok[IO]("Hello, world!") }
         pathPart1 / "you"   |>> { () => Ok[IO]("Hello, you!") }
