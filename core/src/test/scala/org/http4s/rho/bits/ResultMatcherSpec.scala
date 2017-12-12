@@ -2,14 +2,14 @@ package org.http4s
 package rho
 package bits
 
-import org.http4s.rho
-import org.specs2.mutable.Specification
-
-import scala.reflect.runtime.universe._
-import shapeless.HList
-import Status._
+import cats.Applicative
 import cats.effect.IO
 import fs2.Chunk
+import org.http4s.Status._
+import org.specs2.mutable.Specification
+import shapeless.HList
+
+import scala.reflect.runtime.universe._
 
 class ResultMatcherSpec extends Specification {
 
@@ -36,12 +36,12 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match two results with different status with different result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => NotFound(s"Not found")
-            case 1 => Ok("Hello world".getBytes())
+            case 0 => NotFound[IO](s"Not found")
+            case 1 => Ok[IO]("Hello world".getBytes())
           }
         }
       }
@@ -52,12 +52,12 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match two results with same stat different result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => Ok(s"Not found")
-            case 1 => Ok("Hello world".getBytes())
+            case 0 => Ok[IO](s"Not found")
+            case 1 => Ok[IO]("Hello world".getBytes())
           }
         }
       }
@@ -66,8 +66,8 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match an empty result type" in {
-      val srvc = new TRhoService {
-        PUT / "foo" |>> { () => NoContent() }
+      val srvc = new TRhoService[IO] {
+        PUT / "foo" |>> { () => NoContent[IO].apply }
       }
 
       srvc.statuses.map(_._1) should_== Set(NoContent)
@@ -75,13 +75,13 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match three results with different status but same result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => NotFound(s"Not found")
-            case 1 => Ok("updated")
-            case 2 => Accepted("it was accepted")
+            case 0 => NotFound[IO](s"Not found")
+            case 1 => Ok[IO]("updated")
+            case 2 => Accepted[IO]("it was accepted")
           }
         }
       }
@@ -90,14 +90,14 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match four results with different status but same result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => NotFound(s"Not found")
-            case 1 => Ok("updated")
-            case 2 => Accepted("it was accepted")
-            case 4 => Created("it was created")
+            case 0 => NotFound[IO](s"Not found")
+            case 1 => Ok[IO]("updated")
+            case 2 => Accepted[IO]("it was accepted")
+            case 4 => Created[IO]("it was created")
           }
         }
       }
@@ -106,18 +106,20 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match results with locally defined types" in {
-      import scodec.bits.ByteVector
 
       case class ModelA(name: String, color: Int)
       case class ModelB(name: String, id: Long)
 
-      implicit def w1[F[_]]: EntityEncoder[F, ModelA] = EntityEncoder.simple[F, ModelA]()(_ => Chunk.bytes("A".getBytes))
-      implicit def w2[F[_]]: EntityEncoder[F, ModelB] = EntityEncoder.simple[F, ModelB]()(_ => Chunk.bytes("B".getBytes))
+      implicit def w1[F[_]: Applicative]: EntityEncoder[F, ModelA] =
+        EntityEncoder.simple[F, ModelA]()(_ => Chunk.bytes("A".getBytes))
 
-      val srvc = new TRhoService {
+      implicit def w2[F[_]: Applicative]: EntityEncoder[F, ModelB] =
+        EntityEncoder.simple[F, ModelB]()(_ => Chunk.bytes("B".getBytes))
+
+      val srvc = new TRhoService[IO] {
         GET / "foo" |>> { () =>
-          if (true) Ok(ModelA("test ok", 1))
-          else NotFound(ModelB("test not found", 234))
+          if (true) Ok[IO](ModelA("test ok", 1))
+          else NotFound[IO](ModelB("test not found", 234))
         }
       }
 
@@ -131,17 +133,16 @@ class ResultMatcherSpec extends Specification {
     "Match complex models as well as simple ones" in {
       import Foo._
 
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         GET / "foo" |>> { () =>
-          if (true) Ok(FooA("test ok", 1))
-          else NotFound(FooB("test not found", 234))
+          if (true) Ok[IO](FooA("test ok", 1))
+          else NotFound[IO](FooB("test not found", 234))
         }
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
       srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[FooA] must_== true
       srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[FooB] must_== true
-
     }
   }
 }
@@ -150,6 +151,9 @@ object Foo {
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1[F[_]]: EntityEncoder[F, FooA] = EntityEncoder.simple[F, FooA]()(_ => Chunk.bytes("A".getBytes))
-  implicit def w2[F[_]]: EntityEncoder[F, FooB] = EntityEncoder.simple[F, FooB]()(_ => Chunk.bytes("B".getBytes))
+  implicit def w1[F[_]: Applicative]: EntityEncoder[F, FooA] =
+    EntityEncoder.simple[F, FooA]()(_ => Chunk.bytes("A".getBytes))
+
+  implicit def w2[F[_]: Applicative]: EntityEncoder[F, FooB] =
+    EntityEncoder.simple[F, FooB]()(_ => Chunk.bytes("B".getBytes))
 }

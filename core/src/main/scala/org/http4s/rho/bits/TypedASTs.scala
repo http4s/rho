@@ -8,7 +8,6 @@ import shapeless.{HList, HNil}
 import shapeless.ops.hlist.{Prepend, Reverse}
 
 
-
 /** Typed shell for the Header operations of the DSL */
 final case class TypedHeader[F[_], T <: HList](rule: RequestRule[F]) {
 
