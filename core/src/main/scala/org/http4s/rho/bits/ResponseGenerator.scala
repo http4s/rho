@@ -60,7 +60,7 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
   def apply[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[T[A]] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
-        case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))
+        case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
         case None    => (w.headers ++ headers)
       }
       Task.now(Result(Response(status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
@@ -75,7 +75,7 @@ abstract class EntityResponseGenerator(val status: Status) extends ResponseGener
   def pure[A](body: A, headers: Headers)(implicit w: EntityEncoder[A]): Task[Response] = {
     w.toEntity(body).flatMap { case Entity(proc, len) =>
       val hs = len match {
-        case Some(l) => (w.headers ++ headers).put(`Content-Length`(l))
+        case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
         case None    => (w.headers ++ headers)
       }
       Task.now(Response(status = status, headers = hs, body = proc))
