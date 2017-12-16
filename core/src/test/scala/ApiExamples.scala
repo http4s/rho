@@ -26,7 +26,7 @@ class ApiExamples extends Specification {
       /// src_inlined ReusePath
       new RhoService[IO] {
         // A path can be built up in multiple steps and the parts reused
-        val pathPart1: PathBuilder[IO, _ <: HList] = GET / "hello"
+        val pathPart1 = GET / "hello"
 
         pathPart1 / "world" |>> { () => Ok[IO]("Hello, world!") }
         pathPart1 / "you"   |>> { () => Ok[IO]("Hello, you!") }
@@ -144,7 +144,7 @@ class ApiExamples extends Specification {
         /* We can use a standard http4s.Response, but we don't get any metadata
            with it. Useful for things like Websocket support. */
         GET / "websockets" |>> { () =>
-          WS(???, ???)
+          WS[IO](???, ???)
         }
       }
       /// end_src_inlined

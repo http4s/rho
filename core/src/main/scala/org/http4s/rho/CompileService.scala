@@ -1,10 +1,7 @@
 package org.http4s
 package rho
 
-import cats.Applicative
-import cats.data.{Kleisli, OptionT}
 import org.http4s.rho.RhoRoute.Tpe
-import org.http4s.rho.bits.PathTree
 import shapeless.HList
 
 /** Transforms a [[RhoRoute]] into an `RouteType`.

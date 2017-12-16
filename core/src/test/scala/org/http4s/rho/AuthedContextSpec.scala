@@ -13,8 +13,8 @@ case class User(name: String, id: UUID)
 
 object Auth {
 
-  val authUser: Kleisli[IO, Request[IO], User] = Kleisli({ _ =>
-    IO.pure(User("Test User", UUID.randomUUID()))
+  val authUser: Kleisli[OptionT[IO, ?], Request[IO], User] = Kleisli({ _ =>
+    OptionT.some[IO](User("Test User", UUID.randomUUID()))
   })
 
   val authenticated = AuthMiddleware(authUser)
@@ -45,10 +45,10 @@ class AuthedContextSpec extends Specification {
   "AuthedContext execution" should {
 
     "Be able to have access to authInfo" in {
-      val request = Request(Method.GET, Uri(path = "/"))
-      val resp = service.run(request).unsafeRun().getOrElse(Response.notFound)
+      val request = Request[IO](Method.GET, Uri(path = "/"))
+      val resp = service.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
-        val body = new String(resp.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+        val body = new String(resp.body.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
         body should_== "just root with parameter 'foo=bar'"
       } else sys.error(s"Invalid response code: ${resp.status}")
     }
