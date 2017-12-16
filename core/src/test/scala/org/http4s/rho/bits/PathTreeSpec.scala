@@ -35,10 +35,11 @@ class PathTreeSpec extends Specification {
   }
 
   "Honor UriTranslations" in {
-    val svc = URITranslation.translateRoot("/bar")(new RhoService[IO] {
+    val svc = URITranslation.translateRoot[IO]("/bar")(new RhoService[IO] {
       GET / "foo" |>> "foo"
     }.toService())
-    val req = Request(Method.GET, uri = Uri(path = "/bar/foo"))
+
+    val req = Request[IO](Method.GET, uri = Uri(path = "/bar/foo"))
     val resp = svc(req).value.unsafeRunSync().getOrElse(Response.notFound)
 
     resp.status must_== Status.Ok

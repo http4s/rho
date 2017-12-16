@@ -29,7 +29,7 @@ class RhoService[F[_]](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
     with RoutePrependable[F, RhoService[F]]
     with EntityEncoderInstances
 {
-  final private val serviceBuilder = ServiceBuilder(routes)
+  final private val serviceBuilder = ServiceBuilder[F](routes)
 
   final protected val logger = getLogger
 
