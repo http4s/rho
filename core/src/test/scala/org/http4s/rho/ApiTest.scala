@@ -113,7 +113,7 @@ class ApiTest extends Specification {
       val expectedFoo = Foo(10, HttpDate.now)
       val route = runWith(path) { (f: Foo) => Ok[IO](s"stuff $f") }
 
-      val result = route(req).unsafeRun.getOrElse(Response.notFound)
+      val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
       result.status should_== Status.Ok
       RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
     }
@@ -140,18 +140,18 @@ class ApiTest extends Specification {
       val path = POST / "hello" / 'world +? param[IO, Int]("fav")
       val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
-      val route = runWith((path >>> validations >>> capture(ETag)).decoding(EntityDecoder.text)) {
+      val route = runWith((path >>> validations >>> capture(ETag)).decoding(EntityDecoder.text[IO])) {
         (world: String, fav: Int, tag: ETag, body: String) =>
           Ok[IO](s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-            .putHeaders(tag)
+            .map(_.putHeaders(tag))
         }
 
       val req = Request[IO](POST, uri = Uri.fromString("/hello/neptune?fav=23").right.getOrElse(sys.error("Fail")))
         .putHeaders(etag)
         .withBody("cool")
-        .unsafeRun
+        .unsafeRunSync()
 
-      val resp = route(req).unsafeRun.getOrElse(Response.notFound)
+      val resp = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
       resp.headers.get(ETag) must beSome(etag)
 
     }

@@ -21,7 +21,7 @@ object ResultMatcher extends ResultMatcher1 {
     def encodings: Set[MediaType]
   }
 
-  object MaybeWritable {
+  object MaybeWritable extends MaybeWritable1 {
 
     // This will represent a "missing" result meaning this status wasn't used
     implicit val maybeWritableAny: MaybeWritable[Any] = new MaybeWritable[Any] {
@@ -29,7 +29,10 @@ object ResultMatcher extends ResultMatcher1 {
       override def encodings: Set[MediaType] = Set.empty
       override def resultInfo: Option[Type] = None
     }
+  }
 
+  // TODO: better name?
+  trait MaybeWritable1 {
     /* Allowing the `Writable` to be `null` only matches real results but allows for
        situations where you return the same status with two types */
     implicit def maybeIsWritable[F[_], T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable[T] = new MaybeWritable[T] {
