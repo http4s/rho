@@ -1,12 +1,15 @@
 package org.http4s.rho
 
 import cats.effect.IO
-import org.http4s.{Method, Request, Uri}
+import org.http4s.{Method, Request, RhoDsl, Uri, rho}
 import org.specs2.mutable.Specification
 
 import scala.language.existentials
 
 class CompileServiceSpec extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
+
   import CompileService.Implicit.compiler
   import dsl._
 

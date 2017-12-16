@@ -7,6 +7,8 @@ import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
 class HListToFuncSpec extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
 
   def getBody(b: EntityBody[IO]): String = {
     new String(b.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)

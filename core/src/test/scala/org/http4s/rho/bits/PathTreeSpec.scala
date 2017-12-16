@@ -11,6 +11,9 @@ import org.http4s.server.middleware.URITranslation
 import scodec.bits.ByteVector
 
 class PathTreeSpec extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
+
   import PathTree._
 
   "splitPath" should {

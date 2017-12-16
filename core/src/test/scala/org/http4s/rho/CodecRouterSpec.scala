@@ -7,6 +7,8 @@ import scodec.bits.ByteVector
 import fs2.Stream
 
 class CodecRouterSpec extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
     val rbody = new String(resp.body.runLog.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
@@ -25,7 +27,7 @@ class CodecRouterSpec extends Specification {
       val b = Stream.emits("hello".getBytes)
       val h = Headers(headers.`Content-Type`(MediaType.`text/plain`))
       val req = Request[IO](Method.POST, Uri(path = "/foo"), headers = h, body = b)
-      val result = service(req).value.unsafeRunSync()
+      val result = service(req).value.unsafeRunSync().getOrElse(Response.notFound)
       val (bb, s) = bodyAndStatus(result)
 
       s must_== Status.Ok

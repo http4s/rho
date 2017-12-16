@@ -12,6 +12,8 @@ import shapeless.HList
 import scala.reflect.runtime.universe._
 
 class ResultMatcherSpec extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
 
   class TRhoService[F[_]] extends bits.MethodAliases with bits.ResponseGeneratorInstances {
     var statuses: Set[(Status, Type)] = Set.empty

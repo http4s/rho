@@ -1,7 +1,6 @@
 package org.http4s
 package rho
 
-import cats.Id
 import cats.data.OptionT
 import cats.effect.IO
 import org.http4s.headers.{ETag, `Content-Length`}
@@ -17,10 +16,12 @@ import org.specs2.matcher.MatchResult
 
 // TODO: these tests are a bit of a mess
 class ApiTest extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
 
-  def runWith[T <: HList, FU](exec: RouteExecutable[IO, T])(f: FU)(implicit hltf: HListToFunc[IO, T, FU]): Request[IO] => OptionT[IO, Response[IO]] = {
-    val srvc = new RhoService[IO] { exec |>> f }.toService()
-    srvc.apply(_: Request[IO])
+  def runWith[F[_], T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
+    val srvc = new RhoService[F] { exec |>> f }.toService()
+    srvc.apply(_: Request[F])
   }
 
   val lenheader: `Content-Length` =
@@ -29,13 +30,13 @@ class ApiTest extends Specification {
   val etag: ETag =
     ETag(ETag.EntityTag("foo"))
 
-  val RequireETag: TypedHeader[IO, _ <: HList] =
+  val RequireETag =
     exists(ETag)
 
-  val RequireNonZeroLen: TypedHeader[IO, _ <: HList] =
+  val RequireNonZeroLen =
     existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
-  val RequireThrowException: TypedHeader[IO, _ <: HList] =
+  val RequireThrowException =
     existsAnd(headers.`Content-Length`){ h => throw new RuntimeException("this could happen") }
 
   def fetchETag(p: IO[Response[IO]]): ETag = {
@@ -137,7 +138,7 @@ class ApiTest extends Specification {
     }
 
     "Append headers to a Route" in {
-      val path = POST / "hello" / 'world +? param[IO, Int]("fav")
+      val path = POST / "hello" / 'world +? param[Int]("fav")
       val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
       val route = runWith((path >>> validations >>> capture(ETag)).decoding(EntityDecoder.text[IO])) {
@@ -157,8 +158,8 @@ class ApiTest extends Specification {
     }
 
     "accept compound or sequential header rules" in {
-      val path: PathBuilder[IO, _ <: HList] = POST / "hello" / 'world
-      val lplus1: TypedHeader[IO, _ <: HList] = captureMap(headers.`Content-Length`)(_.length + 1)
+      val path = POST / "hello" / 'world
+      val lplus1 = captureMap(headers.`Content-Length`)(_.length + 1)
 
       val route1 = runWith((path >>> lplus1 >>> capture(ETag)).decoding(EntityDecoder.text)) {
         (world: String, lplus1: Long, tag: ETag, body: String) =>
@@ -181,8 +182,8 @@ class ApiTest extends Specification {
     }
 
     "Run || routes" in {
-      val p1: PathAST.TypedPath[IO, _ <: HList] = "one" / 'two
-      val p2: PathAST.TypedPath[IO, _ <: HList] = "three" / 'four
+      val p1 = "one" / 'two
+      val p2 = "three" / 'four
 
       val f = runWith(GET / (p1 || p2)) { (s: String) => Ok[IO]("").map(_.putHeaders(ETag(ETag.EntityTag(s)))) }
 
@@ -195,7 +196,7 @@ class ApiTest extends Specification {
 
     "Execute a complicated route" in {
 
-      val path = POST / "hello" / 'world +? param[IO, Int]("fav")
+      val path = POST / "hello" / 'world +? param[Int]("fav")
       val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 } &&
         capture(ETag)
 
@@ -227,13 +228,13 @@ class ApiTest extends Specification {
   "RequestLineBuilder" should {
     "be made from TypedPath and TypedQuery" in {
       val path = pathMatch("foo")
-      val q = param[IO, Int]("bar")
+      val q = param[Int]("bar")
       path +? q should_== RequestLineBuilder(path.rule, q.rule)
     }
 
     "append to a TypedPath" in {
-      val requestLine = pathMatch("foo") +? param[IO, Int]("bar")
-      (pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[_]] should_== true
+      val requestLine = pathMatch("foo") +? param[Int]("bar")
+      (pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[IO, _]] should_== true
     }
   }
 
@@ -292,7 +293,7 @@ class ApiTest extends Specification {
 
   "Query validators" should {
     "get a query string" in {
-      val path = GET / "hello" +? param[IO, Int]("jimbo")
+      val path = GET / "hello" +? param[Int]("jimbo")
       val req = Request[IO](uri = Uri.fromString("/hello?jimbo=32").right.getOrElse(sys.error("Failed.")))
 
       val route = runWith(path) { i: Int => Ok[IO]("stuff").map(_.putHeaders(ETag(ETag.EntityTag((i + 1).toString)))) }
@@ -305,13 +306,13 @@ class ApiTest extends Specification {
 
       val req = Request[IO](uri = uri("/hello?foo=bar&baz=1"))
 
-      val route1 = runWith(path +? param[IO, String]("foo") & param[IO, Int]("baz")) { (_: String, _: Int) =>
+      val route1 = runWith(path +? param[String]("foo") & param[Int]("baz")) { (_: String, _: Int) =>
         Ok[IO]("")
       }
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
 
-      val route2 = runWith(path +? (param[IO, String]("foo") and param[IO, Int]("baz"))) { (_: String, _: Int) =>
+      val route2 = runWith(path +? (param[String]("foo") and param[Int]("baz"))) { (_: String, _: Int) =>
         Ok[IO]("")
       }
 
@@ -320,7 +321,7 @@ class ApiTest extends Specification {
 
     "map simple query rules into a complex type" in {
       case class Foo(i: Int, f: Double, s: String)
-      val paramFoo = param[IO, Int]("i") & param[IO, Double]("f") & param[IO, String]("s") map Foo.apply _
+      val paramFoo = param[Int]("i") & param[Double]("f") & param[String]("s") map Foo.apply _
 
       val path = GET / "hello" +? paramFoo
       val req = Request[IO](uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")))
@@ -381,29 +382,29 @@ class ApiTest extends Specification {
         Ok[IO]("shouldn't get here.")
       }
 
-      route1(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.BadRequest
+      route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.BadRequest
 
-      val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
+      val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized[IO]("Foo."))}
       val route2 = runWith(path.validate(reqHeaderR)) { () =>
         Ok[IO]("shouldn't get here.")
       }
 
-      route2(req).unsafeRun.getOrElse(Response.notFound).status should_== Status.Unauthorized
+      route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Unauthorized
     }
 
     "Fail on a query" in {
-      val path: PathBuilder[IO, HList] = GET / "hello"
+      val path = GET / "hello"
 
       val req = Request[IO](uri = uri("/hello?foo=bar"))
                   .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
 
-      val route1 = runWith(path +? param[IO, Int]("foo")) { i: Int =>
+      val route1 = runWith(path +? param[Int]("foo")) { i: Int =>
         Ok[IO]("shouldn't get here.")
       }
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.BadRequest
 
-      val route2 = runWith(path +? paramR[IO, String]("foo", (_: String) => Some(Unauthorized[IO]("foo")))) { _: String =>
+      val route2 = runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized[IO]("foo")))) { _: String =>
         Ok[IO]("shouldn't get here.")
       }
 
@@ -423,7 +424,7 @@ class ApiTest extends Specification {
     }
 
     "Work for a QueryBuilder" in {
-      val tail = GET / "bar" +? param[IO, String]("str")
+      val tail = GET / "bar" +? param[String]("str")
       val all: QueryBuilder[IO, _ <: HList] = "foo" /: tail
 
       runWith(all){ q: String => respMsg + q}
@@ -438,8 +439,8 @@ class ApiTest extends Specification {
       val all = "foo" /: tail
 
       runWith(all)(respMsg)
-        .apply(req.copy(uri=uri("/foo/bar")).putHeaders(etag))
-        .unsafeRun.getOrElse(Response.notFound).as[String].unsafeRun === respMsg
+        .apply(req.withUri(uri("/foo/bar")).putHeaders(etag))
+        .value.unsafeRunSync().getOrElse(Response.notFound).as[String].unsafeRunSync() === respMsg
     }
   }
 }

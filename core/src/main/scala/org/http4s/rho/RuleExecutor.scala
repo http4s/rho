@@ -6,8 +6,9 @@ import org.http4s.rho.bits.{ ResultResponse, SuccessResponse }
 
 import shapeless.{ HNil, HList }
 
+object RuleExecutor extends RuleExecutor
 
-object RuleExecutor {
+sealed trait RuleExecutor {
   //////////////////////// Stuff for executing the route //////////////////////////////////////
 
   /** Execute the rule tree */

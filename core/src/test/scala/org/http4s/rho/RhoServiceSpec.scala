@@ -11,6 +11,8 @@ import fs2.Stream
 import org.http4s.rho.bits.ResponseGeneratorInstances.NotFound
 
 class RhoServiceSpec extends Specification with RequestRunner {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
 
   def construct(method: Method, s: String, h: Header*): Request[IO] =
     Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
@@ -31,25 +33,25 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     GET / "hello/world2" |>> Ok[IO]("/hello/world2")
 
-    GET / "hello" / "headers" +? param[IO, Int]("foo") |>> { foo: Int => Ok[IO]("route" + foo) }
+    GET / "hello" / "headers" +? param[Int]("foo") |>> { foo: Int => Ok[IO]("route" + foo) }
 
-    GET / "hello" / "default" / "parameter" +? param[IO, Int]("some", 23) |>> { s: Int => Ok[IO]("some:" + s) }
+    GET / "hello" / "default" / "parameter" +? param[Int]("some", 23) |>> { s: Int => Ok[IO]("some:" + s) }
 
     // Routes that will have different headers/query string requirements should work together
-    GET / "hello" / "compete" +? param[IO, Int]("foo") |>> { foo: Int => Ok[IO]("route" + foo) }
+    GET / "hello" / "compete" +? param[Int]("foo") |>> { foo: Int => Ok[IO]("route" + foo) }
 
-    GET / "hello" / "compete" +? param[IO, String]("foo") |>> { foo: String => Ok[IO]("route6_" + foo) }
+    GET / "hello" / "compete" +? param[String]("foo") |>> { foo: String => Ok[IO]("route6_" + foo) }
 
     GET / "hello" / "compete" |>> Ok[IO]("route7")
 
-    GET / "hello" / "decoded" / pathVar[IO, String]("v") |>> { foo: String => Ok[IO]("route7.5| "+foo)}
+    GET / "hello" / "decoded" / pathVar[String]("v") |>> { foo: String => Ok[IO]("route7.5| "+foo)}
 
     // Testing query params
-    GET / "query" / "twoparams" +? (param[IO, Int]("foo") and param[IO, String]("bar")) |>> { (foo: Int, bar: String) =>
+    GET / "query" / "twoparams" +? (param[Int]("foo") and param[String]("bar")) |>> { (foo: Int, bar: String) =>
       Ok[IO]("twoparams" + foo + bar)
     }
 
-    GET / "query" / "twoparams2" +? param[IO, Int]("foo") & param[IO, Option[String]]("bar") |>> { (foo: Int, bar: Option[String]) =>
+    GET / "query" / "twoparams2" +? param[Int]("foo") & param[Option[String]]("bar") |>> { (foo: Int, bar: Option[String]) =>
       Ok[IO]("twoparams2_" + foo + bar.getOrElse("cat"))
     }
 
@@ -58,15 +60,15 @@ class RhoServiceSpec extends Specification with RequestRunner {
     val or = "or1" || "or2"
     GET / or |>> { () => Ok[IO]("route9") }
 
-    GET / "orders" / pathVar[IO, Int]("id") |>> { id: Int => Ok[IO](id.toString) }
+    GET / "orders" / pathVar[Int]("id") |>> { id: Int => Ok[IO](id.toString) }
 
-    GET / "options" +? param[IO, Option[String]]("foo") |>> { os: Option[String] => Ok[IO](os.getOrElse("None")) }
+    GET / "options" +? param[Option[String]]("foo") |>> { os: Option[String] => Ok[IO](os.getOrElse("None")) }
 
-    GET / "seq" +? param[IO, Seq[String]]("foo") |>> { os: Seq[String] => Ok[IO](os.mkString(" ")) }
+    GET / "seq" +? param[Seq[String]]("foo") |>> { os: Seq[String] => Ok[IO](os.mkString(" ")) }
 
-    GET / "seq" +? param[IO, Seq[Int]]("foo") |>> { os: Seq[Int] => Ok[IO](os.mkString(" ")) }
+    GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => Ok[IO](os.mkString(" ")) }
 
-    GET / "withreq" +? param[IO, String]("foo") |>> { (req: Request[IO], foo: String) => Ok[IO](s"req $foo") }
+    GET / "withreq" +? param[String]("foo") |>> { (req: Request[IO], foo: String) => Ok[IO](s"req $foo") }
 
     val rootSome = root / "some"
     GET / rootSome |>> Ok[IO]("root to some")
@@ -259,37 +261,37 @@ class RhoServiceSpec extends Specification with RequestRunner {
     ///// Order of execution tests /////////////////////
     "Attempt to evaluate params in order" in {
       val service = new RhoService[IO] {
-        GET / "foo" +? param[IO, Int]("bar") |>> { i: Int => Ok[IO](s"Int: $i") }
-        GET / "foo" +? param[IO, String]("bar") |>> { i: String => Ok[IO](s"String: $i") }
+        GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok[IO](s"Int: $i") }
+        GET / "foo" +? param[String]("bar") |>> { i: String => Ok[IO](s"String: $i") }
         GET / "foo" |>> Ok[IO]("none")
       }.toService()
 
       val req1 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "0"))
-      getBody(service(req1).unsafeRun.getOrElse(Response.notFound).body) must_== "Int: 0"
+      getBody(service(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "Int: 0"
 
       val req2 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "s"))
-      getBody(service(req2).unsafeRun.getOrElse(Response.notFound).body) must_== "String: s"
+      getBody(service(req2).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "String: s"
 
       val req3 = Request[IO](Method.GET, Uri(path = "/foo"))
-      getBody(service(req3).unsafeRun.getOrElse(Response.notFound).body) must_== "none"
+      getBody(service(req3).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "none"
     }
 
     "Fail to match more specific routes defined after a less specific route" in {
       val service = new RhoService[IO] {
-        GET / "foo" +? param[IO, String]("bar") |>> { i: String => Ok[IO](s"String: $i") }
-        GET / "foo" +? param[IO, Int]("bar") |>> { i: Int => Ok[IO](s"Int: $i") }
+        GET / "foo" +? param[String]("bar") |>> { i: String => Ok[IO](s"String: $i") }
+        GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok[IO](s"Int: $i") }
       }.toService()
 
       val req1 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "0"))
-      getBody(service(req1).unsafeRun.getOrElse(Response.notFound).body) must_== "String: 0"
+      getBody(service(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "String: 0"
 
       val req2 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "s"))
-      getBody(service(req2).unsafeRun.getOrElse(Response.notFound).body) must_== "String: s"
+      getBody(service(req2).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "String: s"
     }
 
     "Match an empty Option over a bare route" in {
       val service = new RhoService[IO] {
-        GET / "foo" +? param[IO, Option[String]]("bar") |>> { o: Option[String] =>
+        GET / "foo" +? param[Option[String]]("bar") |>> { o: Option[String] =>
           o.map(s => s"String: $s").getOrElse("none")
         }
 
@@ -307,7 +309,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length <= 3 }
 
       val srvc = new RhoService[IO] {
-        POST / "foo" / pathVar[IO, Int] +? param[IO, String]("param") >>> reqHeader ^ EntityDecoder.text[IO] |>> {
+        POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text[IO] |>> {
           (p1: Int, param: String, body: String) => Ok[IO]("success")
         }
       }

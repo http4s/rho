@@ -6,11 +6,14 @@ import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho._
 import org.http4s.rho.bits.TypedQuery
 import org.http4s.server.websocket._
-import org.http4s.{Request, UrlForm}
+import org.http4s.{Request, RhoDsl, UrlForm, rho}
 import org.specs2.mutable.Specification
 import shapeless.HList
 
 class ApiExamples extends Specification {
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
+
   "mock api" should {
     "Make it easy to compose routes" in {
 
@@ -33,7 +36,7 @@ class ApiExamples extends Specification {
       /// src_inlined PathCapture
       new RhoService[IO] {
         // Use combinators to parse and capture path parameters
-        GET / "helloworldnumber" / pathVar[IO, Int] / "foo" |>> { i: Int =>
+        GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
           Ok[IO]("Received $i")
         }
         // the symbol 'world just says 'capture a String' with variable name "world"
@@ -55,7 +58,7 @@ class ApiExamples extends Specification {
       /// src_inlined QueryCapture
       new RhoService[IO] {
         // Query parameters can be captured in a similar manner as path fragments
-        GET / "hello" +? param[IO, Int]("fav") |>> { i: Int =>
+        GET / "hello" +? param[Int]("fav") |>> { i: Int =>
           Ok[IO](s"Query 'fav' had Int value $i")
         }
       }
@@ -64,7 +67,7 @@ class ApiExamples extends Specification {
       /// src_inlined MultiCapture
       new RhoService[IO] {
         // A Path can be made all at once
-        POST / pathVar[IO, Int] +? param[IO, Int]("fav") |>> { (i1: Int, i2: Int) =>
+        POST / pathVar[Int] +? param[Int]("fav") |>> { (i1: Int, i2: Int) =>
           Ok[IO](s"Sum of the number is ${i1 + i2}")
         }
       }
@@ -99,13 +102,13 @@ class ApiExamples extends Specification {
          * you can perform 'or' logic with your routes.
          */
 
-        val path1 = "one" / pathVar[IO, Int]
-        val path2 = "two" / pathVar[IO, Int]
+        val path1 = "one" / pathVar[Int]
+        val path2 = "two" / pathVar[Int]
 
         val getLength = captureMap(`Content-Length`)(_.length)
         val getTag = captureMap(ETag)(_ => -1l)
 
-        GET / (path1 || path2) +? param[IO, String]("foo") >>> (getLength || getTag) |>> {
+        GET / (path1 || path2) +? param[String]("foo") >>> (getLength || getTag) |>> {
           (i: Int, foo: String, v: Long) => Ok[IO](s"Received $i, $foo, $v")
         }
       }
@@ -170,7 +173,7 @@ class ApiExamples extends Specification {
         import shapeless.{::, HNil}
         case class Foo(i: Int, v: String, a: Double)
 
-        val rawFoo = param[IO, Int]("i") & param[IO, String]("v") & param[IO, Double]("a")
+        val rawFoo = param[Int]("i") & param[String]("v") & param[Double]("a")
 
         val paramFoobar: TypedQuery[IO, Foo :: HNil] = rawFoo.map {
           (i: Int, v: String, a: Double) => Foo(i,v,a)
