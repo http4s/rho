@@ -3,16 +3,16 @@ package rho
 
 import cats.data.OptionT
 import cats.effect.IO
+import fs2.Stream
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
 import org.http4s.rho.bits.ResponseGeneratorInstances._
 import org.http4s.rho.bits._
+import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
 import scodec.bits.ByteVector
-import shapeless.{::, HList, HNil}
-import fs2.Stream
-import org.specs2.matcher.MatchResult
+import shapeless.{HList, HNil}
 
 // TODO: these tests are a bit of a mess
 class ApiTest extends Specification {
@@ -417,7 +417,7 @@ class ApiTest extends Specification {
     val respMsg = "Result"
 
     "Work for a PathBuilder" in {
-      val tail: PathBuilder[IO, _ <: HList] = GET / "bar"
+      val tail = GET / "bar"
       val all = "foo" /: tail
 
       runWith(all)(respMsg).apply(req).value.unsafeRunSync().getOrElse(Response.notFound).as[String].unsafeRunSync() === respMsg
@@ -425,7 +425,7 @@ class ApiTest extends Specification {
 
     "Work for a QueryBuilder" in {
       val tail = GET / "bar" +? param[String]("str")
-      val all: QueryBuilder[IO, _ <: HList] = "foo" /: tail
+      val all = "foo" /: tail
 
       runWith(all){ q: String => respMsg + q}
         .apply(req.copy(uri=uri("/foo/bar?str=answer")))
