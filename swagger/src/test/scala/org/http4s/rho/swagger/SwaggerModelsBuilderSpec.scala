@@ -1,6 +1,9 @@
 package org.http4s.rho
 package swagger
 
+import cats.{Applicative, Monad}
+import cats.effect.IO
+
 import scala.language.existentials
 import org.http4s._
 import org.http4s.Method._
@@ -11,9 +14,12 @@ import scodec.bits.ByteVector
 
 import scala.reflect._
 import scala.reflect.runtime.universe._
-import fs2.{Chunk, Stream, Task}
+import fs2.{Chunk, Stream}
 import cats.syntax.all._
-import org.http4s.rho.bits.PathAST.{PathCapture, PathAnd}
+import org.http4s.rho.bits.PathAST.{PathAnd, PathCapture}
+import shapeless.HNil
+
+import scala.reflect.runtime.universe
 
 object SwaggerModelsBuilderSpec {
   case class Foo(a: String, b: Int)
@@ -23,14 +29,16 @@ object SwaggerModelsBuilderSpec {
   import org.json4s._
   import org.json4s.jackson.JsonMethods
 
-  private implicit val format = DefaultFormats
+  private implicit val format: DefaultFormats =
+    DefaultFormats
 
-  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[A] = new StringParser[A] {
-    override val typeTag = implicitly[TypeTag[A]].some
-    override def parse(s: String): ResultResponse[A] = {
+  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[IO, A] = new StringParser[IO, A] {
+    override val typeTag: Option[TypeTag[A]] =
+      implicitly[TypeTag[A]].some
 
+    override def parse(s: String)(implicit F: Monad[IO]): ResultResponse[IO, A] = {
       Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
-        case Left(t) => FailureResponse.badRequest(t.getMessage)
+        case Left(t) => FailureResponse.badRequest[IO, String](t.getMessage)
         case Right(t) => SuccessResponse(t)
       }
     }
@@ -39,11 +47,15 @@ object SwaggerModelsBuilderSpec {
 
 class SwaggerModelsBuilderSpec extends Specification {
   import models._
-  import org.http4s.rho.bits.ResponseGeneratorInstances._
-
   import SwaggerModelsBuilderSpec._
 
-  implicit def defaultCompiler: CompileService[RhoRoute.Tpe] = CompileService.identityCompiler
+  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
+  import rhoDsl._
+
+  import swagger.ioSyntax._
+
+  implicit def defaultCompiler: CompileService[IO, RhoRoute.Tpe[IO]] =
+    CompileService.identityCompiler
 
   sealed abstract class Renderable
   case class ModelA(name: String, color: Int) extends Renderable
@@ -59,48 +71,48 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "handle head request" in {
       val ra = HEAD / "foobar" |>> { "" }
-      sb.collectPaths(ra)(Swagger()).get("/foobar").flatMap(_.head) must beSome[Operation]
+      sb.collectPaths[IO](ra)(Swagger()).get("/foobar").flatMap(_.head) must beSome[Operation]
     }
 
     "handle an action with one query parameter" in {
       val ra = fooPath +? param[Int]("id") |>> { (i: Int) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, required = true))
     }
 
     "handle an action with one query parameter with description" in {
       val ra = fooPath +? paramD[Int]("id", "int id") |>> { (i: Int) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
         List(QueryParameter(`type` = "integer".some, name = "id".some, required = true, description = "int id".some))
     }
 
     "handle an action with one optional query parameter" in {
       val ra = fooPath +? param[Option[String]]("name") |>> { (s: Option[String]) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "string".some, name = "name".some, required = false))
     }
 
     "handle an action with one query parameter with default value" in {
       val ra = fooPath +? param[Int]("id", 6) |>> { (i: Int) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false))
     }
 
     "handle an action with one query parameter with default value and description" in {
       val ra = fooPath +? paramD[Int]("id", 6, "id with default") |>> { (i: Int) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
         List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false, description = "id with default".some))
     }
 
     "handle an action with two query parameters" in {
       val ra = fooPath +? param[Int]("id") & param[String]("str", "hello") |>> { (i: Int, s: String) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
       List(
         QueryParameter(`type` = "integer".some, name = "id".some,  required = true),
         QueryParameter(`type` = "string".some,  name = "str".some, defaultValue = "hello".some, required = false))
@@ -111,7 +123,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> { (i: Int) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
       List(
         QueryParameter(`type` = "integer".some, name = "id".some,  description = orStr("id2"), required = true),
         QueryParameter(`type` = "integer".some, name = "id2".some, description = orStr("id"),  required = true))
@@ -120,28 +132,28 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with one query parameter of complex data type" in {
        val ra = fooPath +? param[Foo]("foo") |>> { (_: Foo) => "" }
 
-       sb.collectQueryParams(ra) must_==
+       sb.collectQueryParams[IO](ra) must_==
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
     }
 
     "handle an action with one optional query parameter of complex data type" in {
        val ra = fooPath +? param[Option[Foo]]("foo") |>> { (_: Option[Foo]) => "" }
 
-       sb.collectQueryParams(ra) must_==
+       sb.collectQueryParams[IO](ra) must_==
        List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = false))
     }
 
     "handle an action with one optional query parameter of complex (but AnyVal) data type" in {
        val ra = fooPath +? param[Option[FooVal]]("foo") |>> { (_: Option[FooVal]) => "" }
 
-       sb.collectQueryParams(ra) must_==
+       sb.collectQueryParams[IO](ra) must_==
        List(QueryParameter(`type` = "string".some, name = "foo".some, required = false))
     }
 
     "handle and action with two query parameters of complex data type" in {
       val ra = fooPath +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (_: Foo, _: Seq[Bar]) => "" }
 
-      sb.collectQueryParams(ra) must_==
+      sb.collectQueryParams[IO](ra) must_==
       List(
         QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true),
         QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty($ref = "Bar".some)), defaultValue = "".some, isArray = true)
@@ -154,14 +166,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with single header rule" in {
       val ra = fooPath >>> exists(`Content-Length`) |>> { () => "" }
 
-      sb.collectHeaderParams(ra) must_==
+      sb.collectHeaderParams[IO](ra) must_==
       List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = true))
     }
 
     "handle an action with two header rules" in {
       val ra = fooPath >>> (exists(`Content-Length`) && exists(`Content-MD5`)) |>> { () => "" }
 
-      sb.collectHeaderParams(ra) must_==
+      sb.collectHeaderParams[IO](ra) must_==
       List(
         HeaderParameter(`type` = "string", name = "Content-Length".some, required = true),
         HeaderParameter(`type` = "string", name = "Content-MD5".some,    required = true))
@@ -172,16 +184,16 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> { () => "" }
 
-      sb.collectHeaderParams(ra) must_==
+      sb.collectHeaderParams[IO](ra) must_==
       List(
         HeaderParameter(`type` = "string", name = "Content-Length".some, description = orStr("Content-MD5"), required = true),
         HeaderParameter(`type` = "string", name = "Content-MD5".some,    description = orStr("Content-Length"), required = true))
     }
 
     "set required = false if there is a default value for the header" in {
-      val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(Right(_)) |>> { (_: `Content-Length`) => "" }
+      val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok[IO]("5")))(Right(_)) |>> { (_: `Content-Length`) => "" }
 
-      sb.collectHeaderParams(ra) must_==
+      sb.collectHeaderParams[IO](ra) must_==
         List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
     }
 
@@ -228,42 +240,42 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "find a simple path - GET" in {
       val ra = GET / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)(Swagger())
+      val paths = sb.collectPaths[IO](ra)(Swagger())
 
       paths must havePair("/foo" -> Path(get = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PUT" in {
       val ra = PUT / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)(Swagger())
+      val paths = sb.collectPaths[IO](ra)(Swagger())
 
       paths must havePair("/foo" -> Path(put = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - POST" in {
       val ra = POST / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)(Swagger())
+      val paths = sb.collectPaths[IO](ra)(Swagger())
 
       paths must havePair("/foo" -> Path(post = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - PATCH" in {
       val ra = PATCH / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)(Swagger())
+      val paths = sb.collectPaths[IO](ra)(Swagger())
 
       paths must havePair("/foo" -> Path(patch = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple path - OPTIONS" in {
       val ra = OPTIONS / "foo" |>> { () => "" }
-      val paths = sb.collectPaths(ra)(Swagger())
+      val paths = sb.collectPaths[IO](ra)(Swagger())
 
       paths must havePair("/foo" -> Path(options = sb.mkOperation("/foo", ra).some))
     }
 
     "find a simple and-path" in {
       val ra = GET / "foo" / "bar" |>> { () => "" }
-      val paths = sb.collectPaths(ra)(Swagger())
+      val paths = sb.collectPaths[IO](ra)(Swagger())
 
       paths must havePair("/foo/bar" -> Path(get = sb.mkOperation("/foo/bar", ra).some))
     }
@@ -271,7 +283,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a simple or-path" in {
       val ra = GET / ("foo" || "bar") |>> { () => "" }
 
-      sb.collectPaths(ra)(Swagger()) must havePairs(
+      sb.collectPaths[IO](ra)(Swagger()) must havePairs(
         "/foo" -> Path(get = sb.mkOperation("/foo", ra).some),
         "/bar" -> Path(get = sb.mkOperation("/bar", ra).some))
     }
@@ -279,7 +291,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a capture or-path" in {
       val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> { (i: Int) => "" }
 
-      sb.collectPaths(ra)(Swagger()) must havePairs(
+      sb.collectPaths[IO](ra)(Swagger()) must havePairs(
         "/{foo}" -> Path(get = sb.mkOperation("{foo}", ra).some),
         "/{bar}" -> Path(get = sb.mkOperation("{bar}", ra).some))
     }
@@ -287,20 +299,20 @@ class SwaggerModelsBuilderSpec extends Specification {
     "find a simple path with a capture" in {
       val ra = GET / "foo" / pathVar[Int]("number") |>> { (i: Int) => "" }
 
-      sb.collectPaths(ra)(Swagger()) must havePair(
+      sb.collectPaths[IO](ra)(Swagger()) must havePair(
         "/foo/{number}" -> Path(get = sb.mkOperation("foo/{number}", ra).some))
     }
 
     "find a simple path with a capture with description" in {
       val ra = GET / pathVar[Int]("number", "int pathVar") |>> { (i: Int) => "" }
 
-      sb.collectPaths(ra)(Swagger()) must havePair(
+      sb.collectPaths[IO](ra)(Swagger()) must havePair(
       "/{number}" -> Path(get = sb.mkOperation("/{number}", ra).some))
 
       ra.path match {
         case PathAnd(_, p) =>
-          p.isInstanceOf[PathCapture] must_== true
-          p.asInstanceOf[PathCapture].description must_== "int pathVar".some
+          p.isInstanceOf[PathCapture[IO]] must_== true
+          p.asInstanceOf[PathCapture[IO]].description must_== "int pathVar".some
 
         case _ => false must_== true
       }
@@ -319,13 +331,13 @@ class SwaggerModelsBuilderSpec extends Specification {
       val ra = "testing models" ** GET / "models" |>> { () =>
         val a = 0
         a match {
-          case 0 => Ok(ModelA("modela", 1))
-          case 1 => NotFound(ModelB("modelb", 2))
-          case 2 => PreconditionFailed(ModelC("modelc", "round"))
+          case 0 => Ok[IO](ModelA("modela", 1))
+          case 1 => NotFound[IO](ModelB("modelb", 2))
+          case 2 => PreconditionFailed[IO](ModelC("modelc", "round"))
         }
       }
 
-      sb.collectDefinitions(ra)(Swagger()) must havePairs(
+      sb.collectDefinitions[IO](ra)(Swagger()) must havePairs(
 
         "ModelA" ->
           ModelImpl(
@@ -362,10 +374,10 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle models with parameters" in {
 
       val ra = "testing models" ** GET / "models" |>> { () =>
-        Ok((1, ModelA("modela", 1)))
+        Ok[IO]((1, ModelA("modela", 1)))
       }
 
-      sb.collectDefinitions(ra)(Swagger()) must havePairs(
+      sb.collectDefinitions[IO](ra)(Swagger()) must havePairs(
 
         "Tuple2«Int,ModelA»" ->
           ModelImpl(
@@ -379,15 +391,15 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of case class containing a map of primitive types" in {
-      val ra = GET / "test" |>> { () => Ok(ModelMap("asdf", Map("foo"->1))) }
+      val ra = GET / "test" |>> { () => Ok[IO](ModelMap("asdf", Map("foo"->1))) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = RefProperty("ModelMap",false,None,None,None).some
         )
       )
-      sb.collectDefinitions(ra)(Swagger()) must havePair(
+      sb.collectDefinitions[IO](ra)(Swagger()) must havePair(
         "ModelMap" ->
           ModelImpl(
             id          = prefix + "ModelMap",
@@ -409,115 +421,115 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectResponses" should {
 
     "collect an empty response" in {
-      val ra = GET / "test" |>> { () => NoContent() }
+      val ra = GET / "test" |>> { () => NoContent[IO].apply }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "204" -> Response(description = "No Content", schema = None))
     }
 
     "collect response of primitive types" in {
-      val ra = GET / "test" |>> { () => Ok("") }
+      val ra = GET / "test" |>> { () => Ok[IO]("") }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response with file type" in {
-      val ra = GET / "test" |>> { () => Ok(SwaggerFileResponse(CsvFile())) }
+      val ra = GET / "test" |>> { () => Ok[IO](SwaggerFileResponse(CsvFile())) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "file").some))
     }
 
     "collect response of user-defined types" in {
-      val ra = GET / "test" |>> { () => Ok(ModelA("", 0)) }
+      val ra = GET / "test" |>> { () => Ok[IO](ModelA("", 0)) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(description = "OK", schema = RefProperty(ref = "ModelA").some))
     }
 
     "collect response of collection of primitive types" in {
-      val ra = GET / "test" |>> { () => Ok(List("")) }
+      val ra = GET / "test" |>> { () => Ok[IO](List("")) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = AbstractProperty(`type` = "string")).some))
     }
 
     "collect response of map of primitive types" in {
-      val ra = GET / "test" |>> { () => Ok(Map("foo"->"bar")) }
+      val ra = GET / "test" |>> { () => Ok[IO](Map("foo"->"bar")) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = MapProperty(additionalProperties = AbstractProperty(`type` = "string")).some))
     }
 
     "collect response of collection of user-defined types" in {
-      val ra = GET / "test" |>> { () => Ok(List(ModelA("", 0))) }
+      val ra = GET / "test" |>> { () => Ok[IO](List(ModelA("", 0))) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "ModelA")).some))
     }
 
     "collect response of tuples" in {
-      val ra = GET / "test" |>> { () => Ok((0, ModelA("", 0))) }
+      val ra = GET / "test" |>> { () => Ok[IO]((0, ModelA("", 0))) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = RefProperty(ref = "Tuple2«Int,ModelA»").some))
     }
 
     "collect response of a collection of tuples" in {
-      val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
+      val ra = GET / "test" |>> { () => Ok[IO](List((0, ModelA("", 0)))) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
     }
 
     "collect response of a Stream of primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(Task.delay(""))) }
-      val ra2 = GET / "test" |>> { () => Ok(Stream.emit("")) }
+      val ra1 = GET / "test" |>> { () => Ok[IO](Stream.eval(IO.pure(""))) }
+      val ra2 = GET / "test" |>> { () => Ok[IO](Stream.emit("").covary[IO]) }
 
-      sb.collectResponses(ra1) must havePair(
+      sb.collectResponses[IO](ra1) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
 
-      sb.collectResponses(ra2) must havePair(
+      sb.collectResponses[IO](ra2) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of a Stream of non-primitives" in {
-      val ra1 = GET / "test" |>> { () => Ok(Stream.eval(Task.delay(List((0, ModelA("", 0)))))) }
-      val ra2 = GET / "test" |>> { () => Ok(Stream.emit(List((0, ModelA("", 0))))) }
+      val ra1 = GET / "test" |>> { () => Ok[IO](Stream.eval(IO.pure(List((0, ModelA("", 0)))))) }
+      val ra2 = GET / "test" |>> { () => Ok[IO](Stream.emit(List((0, ModelA("", 0)))).covary[IO]) }
 
-      sb.collectResponses(ra1) must havePair(
+      sb.collectResponses[IO](ra1) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
 
-      sb.collectResponses(ra2) must havePair(
+      sb.collectResponses[IO](ra2) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
     }
 
     "collect response of a Task of a primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task.delay("")) }
+      val ra = GET / "test" |>> { () => Ok[IO](IO.pure("")) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of a Task of a non-primitive" in {
-      val ra = GET / "test" |>> { () => Ok(Task.delay(List((0, ModelA("", 0))))) }
+      val ra = GET / "test" |>> { () => Ok[IO](IO.pure(List((0, ModelA("", 0))))) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
@@ -527,12 +539,12 @@ class SwaggerModelsBuilderSpec extends Specification {
       val ra = GET / "test" / pathVar[Int] |>> { (i: Int) =>
 
         i match {
-          case 0 => Ok(List((0, ModelA("A", 0))))
-          case _ => Unauthorized("Unauthorized")
+          case 0 => Ok[IO](List((0, ModelA("A", 0))))
+          case _ => Unauthorized[IO]("Unauthorized")
         }
       }
 
-      sb.collectResponses(ra) must havePairs(
+      sb.collectResponses[IO](ra) must havePairs(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some),
@@ -542,32 +554,33 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
   }
 
-  implicit def renderableEncoder[T <: Renderable]: EntityEncoder[T] =
+  implicit def renderableEncoder[F[_], T <: Renderable](implicit F: Applicative[F]): EntityEncoder[F, T] =
     EntityEncoder
-      .stringEncoder(Charset.`UTF-8`)
+      .stringEncoder[F](F, Charset.`UTF-8`)
       .contramap { r: T => "" }
       .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
-  implicit def tuple2Encoder[T <: Renderable]: EntityEncoder[(Int, T)] =
+  implicit def tuple2Encoder[F[_], T <: Renderable](implicit F: Applicative[F]): EntityEncoder[F, (Int, T)] =
     EntityEncoder
-      .stringEncoder(Charset.`UTF-8`)
+      .stringEncoder[F](F, Charset.`UTF-8`)
       .contramap { r: (Int, T) => "" }
       .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
 
-  implicit def listEntityEncoder[A]: EntityEncoder[List[A]] =
-    EntityEncoder.simple[List[A]]()(_ => Chunk.bytes("A".getBytes))
+  implicit def listEntityEncoder[F[_]: Applicative, A]: EntityEncoder[F, List[A]] =
+    EntityEncoder.simple[F, List[A]]()(_ => Chunk.bytes("A".getBytes))
 
-  implicit def mapEntityEncoder[A,B]: EntityEncoder[Map[A,B]] =
-    EntityEncoder.simple[Map[A,B]]()(_ => Chunk.bytes("A".getBytes))
+  implicit def mapEntityEncoder[F[_]: Applicative, A, B]: EntityEncoder[F, Map[A,B]] =
+    EntityEncoder.simple[F, Map[A,B]]()(_ => Chunk.bytes("A".getBytes))
 
   case class CsvFile()
 
   object CsvFile {
-    implicit def EntityEncoderCsvFile: EntityEncoder[CsvFile] =
-      EntityEncoder.encodeBy[CsvFile](`Content-Type`(MediaType.`text/csv`, Some(Charset.`UTF-8`))) { file: CsvFile =>
-        ByteVector.encodeUtf8("file content").fold(Task.fail, bv =>
-          Task.now(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length))))
+    implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =
+      EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.`text/csv`, Some(Charset.`UTF-8`))) { file: CsvFile =>
+        // TODO: fix impl
+//        ByteVector.encodeUtf8("file content").fold(Task.fail, bv =>
+//          Task.now(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length))))
+        ???
       }
   }
-
 }

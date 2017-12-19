@@ -13,7 +13,6 @@ import org.specs2.mutable._
 import scodec.bits.ByteVector
 import shapeless.{HList, HNil}
 
-// TODO: these tests are a bit of a mess
 class ApiTest extends Specification {
   val rhoDsl: RhoDsl[IO] = rho.apply[IO]
   import rhoDsl._

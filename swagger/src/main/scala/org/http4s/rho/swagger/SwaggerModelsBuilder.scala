@@ -283,7 +283,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         mkCollectionProperty(tpe)
       else if (tpe.isStream)
         typeToProp(tpe.dealias.typeArgs(1))
-      else if (tpe.isTask)
+      else if (tpe.isEffect)
         typeToProp(tpe.dealias.typeArgs(0))
       else if (tpe.isSwaggerFile)
         AbstractProperty(`type` = "file").some

@@ -1,118 +1,123 @@
 package com.http4s.rho.swagger.demo
 
 import java.util.concurrent.atomic.AtomicInteger
-import java.time.Instant
 
-import org.http4s.Uri
-import org.http4s.rho.RhoService
-import org.http4s.HttpDate
-import JsonEncoder.AutoSerializable
+import cats.Monad
+import cats.effect.Effect
 import cats.syntax.all._
-import fs2.{Stream, Task}
+import com.http4s.rho.swagger.demo.JsonEncoder.AutoSerializable
+import fs2.Stream
+import org.http4s.rho.RhoService
+import org.http4s.rho.bits.TypedHeader
+import org.http4s.rho.swagger.SwaggerSyntax
+import org.http4s.{HttpDate, RhoDsl, Uri}
+import shapeless.HNil
 
-object MyService extends RhoService {
+abstract class MyService[F[_]: Effect : Monad](dsl: RhoDsl[F], swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F]) extends RhoService[F] {
+  import dsl._
   import org.http4s.rho._
   import org.http4s.rho.swagger._
-  import org.http4s.EntityDecoder
-
-  import org.http4s.headers
-  import org.http4s.{Request, Headers}
+  import org.http4s.{EntityDecoder, Headers, Request, headers}
+  import swaggerSyntax._
 
   case class JsonResult(name: String, number: Int) extends AutoSerializable
 
-  val requireCookie = existsAndR(headers.Cookie){ cookie =>
+  val requireCookie: TypedHeader[F, HNil] = existsAndR(headers.Cookie){ cookie =>
     cookie.values.toList.find(c => c.name == "Foo" && c.content == "bar") match {
-      case Some(_) => None   // Cookie found, good to go.
+      case Some(_) =>
+        None       // Cookie found, good to go.
       case None => // Didn't find cookie
-        Some(TemporaryRedirect(uri("/addcookie")))
+        Some(TemporaryRedirect[F](uri("/addcookie")))
     }
   }
 
   "We don't want to have a real 'root' route anyway... " **
-    GET |>> TemporaryRedirect(Uri(path="/swagger-ui"))
+    GET |>> TemporaryRedirect[F](Uri(path="/swagger-ui"))
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = GET / "hello"
 
   "Simple hello world route" **
-    hello |>> Ok("Hello world!")
+    hello |>> Ok[F]("Hello world!")
 
   "A variant of the hello route that takes an Int param" **
-    hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
+    hello / pathVar[Int] |>> { i: Int => Ok[F](s"You returned $i") }
 
   "This route allows you to send head request" **
-    HEAD / "hello" |>> { Ok("Hello head!") }
+    HEAD / "hello" |>> { Ok[F]("Hello head!") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok[F](JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
-      if (i >= 0) Ok(JsonResult("Good result", i))
-      else BadRequest(s"Negative number: $i")
+      if (i >= 0) Ok[F](JsonResult("Good result", i))
+      else BadRequest[F](s"Negative number: $i")
     }
 
   "This gets a simple counter for the number of times this route has been requested" **
     GET / "counter" |>> {
       val i = new AtomicInteger(0)
-      Task.delay(s"The number is ${i.getAndIncrement()}")
+      F.pure(s"The number is ${i.getAndIncrement()}")
     }
 
   "Adds the cookie Foo=bar to the client" **
     GET / "addcookie" |>> {
-      Ok("You now have a good cookie!").addCookie("Foo", "bar")
+      Ok[F]("You now have a good cookie!").map(_.addCookie("Foo", "bar"))
     }
 
   "Sets the cookie Foo=barr to the client" **
     GET / "addbadcookie" |>> {
-      Ok("You now have an evil cookie!").addCookie("Foo", "barr")
+      Ok[F]("You now have an evil cookie!").map(_.addCookie("Foo", "barr"))
     }
 
   "Checks the Foo cookie to make sure its 'bar'" **
-    GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
+    GET / "checkcookie" >>> requireCookie |>> Ok[F]("Good job, you have the cookie!")
 
   "Clears the cookies" **
-    GET / "clearcookies" |>> { req: Request =>
+    GET / "clearcookies" |>> { req: Request[F] =>
       val hs = req.headers.get(headers.Cookie) match {
         case None => Headers.empty
         case Some(cookie) =>
           Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
       }
 
-      Ok("Deleted cookies!").replaceAllHeaders(hs)
+      Ok[F]("Deleted cookies!").map(_.replaceAllHeaders(hs))
     }
 
   "This route allows your to post stuff" **
-    POST / "post" ^ EntityDecoder.text |>> { body: String =>
+    POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
       "You posted: " + body
     }
 
   "This demonstrates using a process of entities" **
     GET / "stream" |>> {
       val s = 0 until 100 map (i => s"Hello $i\n")
-      val p: Stream[Task, String] = Stream.emits(s)
-      Ok(p)
+      val p: Stream[F, String] = Stream.emits(s).covary[F]
+
+      Ok[F](p)
     }
 
   "Get a file" **
-    GET / "file" |>> Ok(SwaggerFileResponse("HELLO"))
+    GET / "file" |>> Ok[F](SwaggerFileResponse("HELLO"))
+
+  import org.http4s.rho.bits._
+  import org.json4s._
+  import org.json4s.jackson.JsonMethods
 
   import scala.reflect._
   import scala.reflect.runtime.universe._
 
-  import org.json4s._
-  import org.json4s.jackson.JsonMethods
-
-  import org.http4s.rho.bits._
-
   private implicit val format = DefaultFormats
 
-  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[A] = new StringParser[A] {
-    override val typeTag = implicitly[TypeTag[A]].some
-    override def parse(s: String): ResultResponse[A] = {
+  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[F, A] = new StringParser[F, A] {
+    override val typeTag: Option[TypeTag[A]] =
+      implicitly[TypeTag[A]].some
+
+    override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, A] = {
 
       Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
-        case Left(t) => FailureResponse.badRequest(t.getMessage)
+        case Left(t) => FailureResponse.badRequest[F, String](t.getMessage)
         case Right(t) => SuccessResponse(t)
       }
     }
@@ -123,6 +128,6 @@ object MyService extends RhoService {
 
   "This route demonstrates how to use a complex data type as parameters in route" **
   GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
-    Ok(s"Received foo: $foo, bars: $bars")
+    Ok[F](s"Received foo: $foo, bars: $bars")
   }
 }

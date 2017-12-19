@@ -3,10 +3,10 @@ package org.http4s
 import cats.syntax.functor._
 import cats.{FlatMap, Functor, Monad}
 import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.{PathBuilder, ResultSyntaxInstances}
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST.CaptureRule
 import org.http4s.rho.bits._
+import org.http4s.rho.{PathBuilder, PathEmpty, ResultSyntaxInstances}
 import org.log4s.getLogger
 import shapeless.{::, HList, HNil}
 
@@ -18,9 +18,15 @@ package object rho extends Http4s {
   type RhoMiddleware[F[_]] = Seq[RhoRoute[F, _ <: HList]] => Seq[RhoRoute[F, _ <: HList]]
 
   def apply[F[_]]: RhoDsl[F] = new RhoDsl[F] { }
+
+  val PathEmpty: PathRule = PathMatch("")
 }
 
-trait RhoDsl[F[_]] extends ResultSyntaxInstances[F] with ResponseGeneratorInstances {
+trait RhoDsl[F[_]]
+  extends ResultSyntaxInstances[F]
+    with QueryParsers[F]
+    with ResponseGeneratorInstances {
+
   private[this] val logger = getLogger
 
   private val stringTag = implicitly[TypeTag[String]]
@@ -31,8 +37,6 @@ trait RhoDsl[F[_]] extends ResultSyntaxInstances[F] with ResponseGeneratorInstan
 
   implicit def pathMatch(s: Symbol): TypedPath[F, String :: HNil] =
     TypedPath(PathCapture(s.name, None, StringParser.strParser, stringTag))
-
-  val PathEmpty: PathRule = PathMatch("")
 
   /**
    * Defines a parameter in query string that should be bound to a route definition.

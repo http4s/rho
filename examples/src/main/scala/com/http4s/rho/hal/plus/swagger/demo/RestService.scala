@@ -1,17 +1,14 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import scala.collection.mutable.ListBuffer
-import scala.reflect.runtime.universe
-
-import org.http4s.Request
-import org.http4s.Uri
+import cats.Monad
 import org.http4s.rho.RhoService
-import org.http4s.rho.hal._
-import org.http4s.rho.hal.{ ResourceObjectBuilder => ResObjBuilder }
-import org.http4s.rho._
-import org.http4s.rho.swagger._
+import org.http4s.rho.hal.{ResourceObjectBuilder => ResObjBuilder, _}
+import org.http4s.{Request, RhoDsl, Uri}
 
-class RestService(val businessLayer: BusinessLayer) extends RhoService {
+import scala.collection.mutable.ListBuffer
+
+class RestService[F[_]: Monad](val businessLayer: BusinessLayer, dsl: RhoDsl[F]) extends RhoService[F] {
+  import dsl._
 
   // # Query Parameters
 
@@ -30,138 +27,150 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
   // # HTTP Routes
 
   val browsers = "browsers"
-  GET / browsers +? firstResult & maxResults |>> { (request: Request, first: Int, max: Int) =>
+  GET / browsers +? firstResult & maxResults |>> { (request: Request[F], first: Int, max: Int) =>
     val configurations = businessLayer.findBrowsers(first, max)
     val total = businessLayer.countBrowsers
     val hal = browsersAsResource(request, first, max, configurations, total)
-    Ok(hal.build)
+
+    Ok[F](hal.build)
   }
 
   val browserById = browsers / id
-  GET / browserById |>> { (request: Request, id: Int) =>
+  GET / browserById |>> { (request: Request[F], id: Int) =>
     val found = for { browser <- businessLayer.findBrowser(id) } yield {
       val b = browserAsResourceObject(browser, request)
       if (businessLayer.hasOperatingSystemsByBrowserId(browser.id))
         for (tpl <- operatingSystemsByBrowser.asUriTemplate(request))
           b.link("operating-systems", tpl.expandPath("id", browser.id).toUriIfPossible.get)
 
-      Ok(b.build)
+      Ok[F](b.build)
     }
-    found getOrElse NotFound(warning(s"Browser $id not found"))
+    found getOrElse NotFound[F](warning(s"Browser $id not found"))
   }
 
   val browserPatternsById = browsers / id / "patterns"
-  GET / browserPatternsById |>> { (request: Request, id: Int) =>
+  GET / browserPatternsById |>> { (request: Request[F], id: Int) =>
     val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
-      yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build)
-    found getOrElse NotFound(warning(s"Browser $id not found"))
+      yield Ok[F](browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build)
+
+    found getOrElse NotFound[F](warning(s"Browser $id not found"))
   }
 
   val browserPatterns = "browser-patterns"
-  GET / browserPatterns +? firstResult & maxResults |>> { (request: Request, first: Int, max: Int) =>
+  GET / browserPatterns +? firstResult & maxResults |>> { (request: Request[F], first: Int, max: Int) =>
     val patterns = businessLayer.findBrowserPatterns(first, max)
     val total = businessLayer.countBrowsers
     val hal = browserPatternsAsResource(request, first, max, patterns, total)
-    Ok(hal.build)
+
+    Ok[F](hal.build)
   }
 
   val browserPatternById = browserPatterns / id
-  GET / browserPatternById |>> { (request: Request, id: Int) =>
+  GET / browserPatternById |>> { (request: Request[F], id: Int) =>
     val found = for { pattern <- businessLayer.findBrowserPattern(id) } yield {
       val b = browserPatternAsResourceObject(pattern, request)
       for {
         tpl <- browserById.asUriTemplate(request)
         browserId <- businessLayer.findBrowserIdByPatternId(pattern.id)
       } b.link("browser", tpl.expandPath("id", browserId).toUriIfPossible.get)
-      Ok(b.build)
+
+      Ok[F](b.build)
     }
-    found getOrElse NotFound(warning(s"Browser $id not found"))
+
+    found getOrElse NotFound[F](warning(s"Browser $id not found"))
   }
 
   val browserTypes = "browser-types"
-  GET / browserTypes |>> { (request: Request) =>
+  GET / browserTypes |>> { (request: Request[F]) =>
     val types = businessLayer.findBrowserTypes
     val hal = browserTypesAsResource(request, types)
-    Ok(hal.build)
+
+    Ok[F](hal.build)
   }
 
   val browserTypeById = browserTypes / id
-  GET / browserTypeById |>> { (request: Request, id: Int) =>
+  GET / browserTypeById |>> { (request: Request[F], id: Int) =>
     val found = for { browserType <- businessLayer.findBrowserType(id) } yield {
       val b = browserTypeAsResourceObject(browserType, request)
       for {
         tpl <- browsersByBrowserTypeId.asUriTemplate(request)
       } b.link("browsers", tpl.expandPath("id", browserType.id).toUriIfPossible.get)
-      Ok(b.build)
+
+      Ok[F](b.build)
     }
-    found getOrElse NotFound(warning(s"Browser type $id not found"))
+    found getOrElse NotFound[F](warning(s"Browser type $id not found"))
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
-  GET / browsersByBrowserTypeId +? firstResult & maxResults |>> { (request: Request, id: Int, first: Int, max: Int) =>
+  GET / browsersByBrowserTypeId +? firstResult & maxResults |>> { (request: Request[F], id: Int, first: Int, max: Int) =>
     val browsers = businessLayer.findBrowsersByBrowserTypeId(id, first, max)
     val total = businessLayer.countBrowsersByBrowserTypeId(id)
     if (browsers.nonEmpty)
-      Ok(browsersAsResource(request, first, max, browsers, total).build)
+      Ok[F](browsersAsResource(request, first, max, browsers, total).build)
     else
-      NotFound(warning(s"No browsers for type $id found"))
+      NotFound[F](warning(s"No browsers for type $id found"))
   }
 
   val operatingSystems = "operating-systems"
-  GET / operatingSystems +? firstResult & maxResults |>> { (request: Request, first: Int, max: Int) =>
+  GET / operatingSystems +? firstResult & maxResults |>> { (request: Request[F], first: Int, max: Int) =>
     val configurations = businessLayer.findOperatingSystems(first, max)
     val total = businessLayer.countOperatingSystems
     val hal = operatingSystemsAsResource(request, first, max, configurations, total)
-    Ok(hal.build)
+
+    Ok[F](hal.build)
   }
 
   val operatingSystemById = operatingSystems / id
-  GET / operatingSystemById |>> { (request: Request, id: Int) =>
+  GET / operatingSystemById |>> { (request: Request[F], id: Int) =>
     val found = for { operatingSystem <- businessLayer.findOperatingSystem(id) } yield {
       val b = operatingSystemAsResourceObject(operatingSystem, request)
       if (businessLayer.hasBrowsersByOperatingSystemId(operatingSystem.id))
         for (tpl <- browsersByOperatingSystem.asUriTemplate(request))
           b.link("browsers", tpl.expandPath("id", operatingSystem.id).toUriIfPossible.get)
-      Ok(b.build)
+
+      Ok[F](b.build)
     }
-    found getOrElse NotFound(warning(s"OperatingSystem $id not found"))
+    found getOrElse NotFound[F](warning(s"OperatingSystem $id not found"))
   }
 
   val browsersByOperatingSystem = operatingSystemById / "browsers"
-  GET / browsersByOperatingSystem |>> { (request: Request, id: Int) =>
+  GET / browsersByOperatingSystem |>> { (request: Request[F], id: Int) =>
     val browsers = businessLayer.findBrowsersByOperatingSystemId(id)
     if (browsers.nonEmpty)
-      Ok(browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build)
+      Ok[F](browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build)
     else
-      NotFound(warning(s"No Browsers for operating system $id found"))
+      NotFound[F](warning(s"No Browsers for operating system $id found"))
   }
 
   val operatingSystemsByBrowser = browserById / "operating-systems"
-  GET / operatingSystemsByBrowser |>> { (request: Request, id: Int) =>
+  GET / operatingSystemsByBrowser |>> { (request: Request[F], id: Int) =>
     val operatingSystems = businessLayer.findOperatingSystemsByBrowserId(id)
+
     if (operatingSystems.nonEmpty)
-      Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build)
+      Ok[F](operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build)
     else
-      NotFound(warning(s"No operating systems for browser $id found"))
+      NotFound[F](warning(s"No operating systems for browser $id found"))
   }
 
-  GET / "" |>> { request: Request =>
+  GET / "" |>> { request: Request[F] =>
     val b = new ResObjBuilder[Nothing, Nothing]()
     b.link("self", request.uri)
     for (uri <- browsers.asUri(request)) b.link(browsers, uri.toString, "Lists browsers")
     for (uri <- browserPatterns.asUri(request)) b.link(browserPatterns, uri.toString, "Lists browser patterns")
     for (uri <- browserTypes.asUri(request)) b.link(browserTypes, uri.toString, "Lists browser types")
     for (uri <- operatingSystems.asUri(request)) b.link(operatingSystems, uri.toString, "Lists operating systems")
-    Ok(b.build)
+
+    Ok[F](b.build)
   }
 
   // # JSON HAL helpers
 
-  def browsersAsResource(request: Request, first: Int, max: Int, browsers: Seq[Browser], total: Int): ResObjBuilder[(String, Long), Browser] = {
+  def browsersAsResource(request: Request[F], first: Int, max: Int, browsers: Seq[Browser], total: Int): ResObjBuilder[(String, Long), Browser] = {
     val self = request.uri
     val hal = new ResObjBuilder[(String, Long), Browser]()
     hal.link("self", selfWithFirstAndMax(self, first, max))
     hal.content("total", total)
+
     if (first + max < total) {
       hal.link("next", self +? (firstResult, first + max) +? (maxResults, max))
     }
@@ -175,7 +184,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
     hal.resources("browsers", res.toList)
   }
 
-  def browserAsResourceObject(browser: Browser, request: Request): ResObjBuilder[Browser, Nothing] = {
+  def browserAsResourceObject(browser: Browser, request: Request[F]): ResObjBuilder[Browser, Nothing] = {
     val b = new ResObjBuilder[Browser, Nothing]()
     for (tpl <- browserById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", browser.id).toUriIfPossible.get)
@@ -183,10 +192,11 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
       b.link("patterns", tpl.expandPath("id", browser.id).toUriIfPossible.get)
     for (tpl <- browserTypeById.asUriTemplate(request))
       b.link("type", tpl.expandPath("id", browser.typeId).toUriIfPossible.get)
+
     b.content(browser)
   }
 
-  def browserPatternsAsResource(request: Request, first: Int, max: Int, browserPatterns: Seq[BrowserPattern], total: Int): ResObjBuilder[(String, Long), BrowserPattern] = {
+  def browserPatternsAsResource(request: Request[F], first: Int, max: Int, browserPatterns: Seq[BrowserPattern], total: Int): ResObjBuilder[(String, Long), BrowserPattern] = {
     val self = request.uri
     val hal = new ResObjBuilder[(String, Long), BrowserPattern]()
     hal.link("self", selfWithFirstAndMax(self, first, max))
@@ -204,21 +214,21 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
     hal.resources("browserPatterns", res.toList)
   }
 
-  def browserPatternAsResourceObject(browserPattern: BrowserPattern, request: Request): ResObjBuilder[BrowserPattern, Nothing] = {
+  def browserPatternAsResourceObject(browserPattern: BrowserPattern, request: Request[F]): ResObjBuilder[BrowserPattern, Nothing] = {
     val b = new ResObjBuilder[BrowserPattern, Nothing]()
     for (tpl <- browserPatternById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", browserPattern.id).toUriIfPossible.get)
     b.content(browserPattern)
   }
 
-  def browserTypeAsResourceObject(browserType: BrowserType, request: Request): ResObjBuilder[BrowserType, Nothing] = {
+  def browserTypeAsResourceObject(browserType: BrowserType, request: Request[F]): ResObjBuilder[BrowserType, Nothing] = {
     val b = new ResObjBuilder[BrowserType, Nothing]()
     for (tpl <- browserTypeById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", browserType.id).toUriIfPossible.get)
     b.content(browserType)
   }
 
-  def browserTypesAsResource(request: Request, browserTypes: Seq[BrowserType]): ResObjBuilder[Nothing, BrowserType] = {
+  def browserTypesAsResource(request: Request[F], browserTypes: Seq[BrowserType]): ResObjBuilder[Nothing, BrowserType] = {
     val self = request.uri
     val hal = new ResObjBuilder[Nothing, BrowserType]()
     hal.link("self", self)
@@ -229,7 +239,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
     hal.resources("browserTypes", res.toList)
   }
 
-  def operatingSystemsAsResource(request: Request, first: Int, max: Int, operatingSystems: Seq[OperatingSystem], total: Int): ResObjBuilder[(String, Long), OperatingSystem] = {
+  def operatingSystemsAsResource(request: Request[F], first: Int, max: Int, operatingSystems: Seq[OperatingSystem], total: Int): ResObjBuilder[(String, Long), OperatingSystem] = {
     val self = request.uri
     val hal = new ResObjBuilder[(String, Long), OperatingSystem]()
     hal.link("self", selfWithFirstAndMax(self, first, max))
@@ -247,7 +257,7 @@ class RestService(val businessLayer: BusinessLayer) extends RhoService {
     hal.resources("operatingSystems", res.toList)
   }
 
-  def operatingSystemAsResourceObject(operatingSystem: OperatingSystem, request: Request): ResObjBuilder[OperatingSystem, Nothing] = {
+  def operatingSystemAsResourceObject(operatingSystem: OperatingSystem, request: Request[F]): ResObjBuilder[OperatingSystem, Nothing] = {
     val b = new ResObjBuilder[OperatingSystem, Nothing]()
     for (tpl <- operatingSystemById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", operatingSystem.id).toUriIfPossible.get)

@@ -2,25 +2,29 @@ package org.http4s
 package rho.bits
 
 import cats.Monad
+import org.http4s.rho.bits.QueryParser.Params
 
-import scala.language.higherKinds
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
+import scala.language.higherKinds
 
 /** Extract a value from the `Request` `Query`
   *
   * @tparam A Type of value produced by the parser.
   */
 trait QueryParser[F[_], A] {
-  import QueryParser.Params
+
   def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A]
 }
 
 object QueryParser {
   type Params = Map[String, Seq[String]]
+}
+
+trait QueryParsers[F[_]] {
 
   /** Optionally extract the value from the `Query` */
-  implicit def optionParse[F[_], A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, Option[A]] {
+  implicit def optionParse[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, Option[A]] {
     override def collect(name: String, params: Params, default: Option[Option[A]]): ResultResponse[F, Option[A]] = {
       params.get(name) match {
         case Some(Seq(value, _*)) =>
@@ -37,7 +41,7 @@ object QueryParser {
     *
     * The elements must have the same name and each be a valid representation of the requisite type.
     */
-  implicit def multipleParse[F[_], A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
+  implicit def multipleParse[A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
     override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[F, B[A]] = {
       val b = cbf()
       params.get(name) match {
@@ -63,7 +67,7 @@ object QueryParser {
   }
 
   /** Extract an element from the `Query` using a [[StringParser]] */
-  implicit def standardCollector[F[_], A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, A] {
+  implicit def standardCollector[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, A] {
     override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] = {
       params.get(name) match {
         case Some(Seq(value, _*)) => p.parse(value)
