@@ -73,6 +73,7 @@ lazy val `rho-examples` = project
 
 lazy val compileFlags = Seq(
   "-feature",
+  "-deprecation",
   "-Ypartial-unification",
   "-language:higherKinds",
   "-language:existentials",

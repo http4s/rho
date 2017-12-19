@@ -5,7 +5,7 @@ package bits
 import cats.Applicative
 import cats.effect.IO
 import fs2.Chunk
-import org.http4s.Status._
+import org.http4s.{Status => HStatus}
 import org.specs2.mutable.Specification
 import shapeless.HList
 
@@ -15,7 +15,7 @@ class ResultMatcherSpec extends Specification {
   val rhoDsl: RhoDsl[IO] = rho.apply[IO]
   import rhoDsl._
 
-  class TRhoService[F[_]] extends bits.MethodAliases with bits.ResponseGeneratorInstances {
+  class TRhoService[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty
 
     implicit final protected def compileSrvc: CompileService[F, RhoRoute.Tpe[F]] = {
@@ -49,8 +49,8 @@ class ResultMatcherSpec extends Specification {
       }
 
       srvc.statuses.map(_._1) should_== Set(NotFound, Ok)
-      srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[String] must_== true
-      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[Array[Byte]] must_== true
+      srvc.statuses.collect{ case (HStatus.NotFound, t) => t }.head =:= weakTypeOf[String] must_== true
+      srvc.statuses.collect{ case (HStatus.Ok, t) => t }.head =:= weakTypeOf[Array[Byte]] must_== true
     }
 
     "Match two results with same stat different result type" in {
@@ -128,8 +128,8 @@ class ResultMatcherSpec extends Specification {
       srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
 
       // the type equality for locally defined types is a bit "murkey" so we use the String name
-      srvc.statuses.collect{ case (Ok, t) => t }.head.toString must_== "ModelA"
-      srvc.statuses.collect{ case (NotFound, t) => t }.head.toString must_== "ModelB"
+      srvc.statuses.collect{ case (HStatus.Ok, t) => t }.head.toString must_== "ModelA"
+      srvc.statuses.collect{ case (HStatus.NotFound, t) => t }.head.toString must_== "ModelB"
     }
 
     "Match complex models as well as simple ones" in {
@@ -143,8 +143,8 @@ class ResultMatcherSpec extends Specification {
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
-      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[FooA] must_== true
-      srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[FooB] must_== true
+      srvc.statuses.collect{ case (HStatus.Ok, t) => t }.head =:= weakTypeOf[FooA] must_== true
+      srvc.statuses.collect{ case (HStatus.NotFound, t) => t }.head =:= weakTypeOf[FooB] must_== true
     }
   }
 }

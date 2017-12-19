@@ -3,6 +3,7 @@ package org.http4s.rho
 import cats.effect.IO
 import org.http4s.{Method, Request, RhoDsl, Uri, rho}
 import org.specs2.mutable.Specification
+import rho.bits.MethodAliases._
 
 import scala.language.existentials
 
@@ -11,7 +12,6 @@ class CompileServiceSpec extends Specification {
   import rhoDsl._
 
   import CompileService.Implicit.compiler
-  import dsl._
 
   def getFoo[F[_]](implicit c: CompileService[F, _]): Unit = {
     GET / "hello" |>> "GetFoo"

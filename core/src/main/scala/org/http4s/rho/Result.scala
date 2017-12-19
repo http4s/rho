@@ -84,9 +84,8 @@ object Result {
 
 import Result._
 
-trait ResultSyntaxInstances {
-
-  implicit class ResultSyntax[F[_], T >: Result.TopResult[F] <: BaseResult[F]](r: T) extends ResponseOps[F] {
+trait ResultSyntaxInstances[F[_]] {
+  implicit class ResultSyntax[T >: Result.TopResult[F] <: BaseResult[F]](r: T) extends ResponseOps[F] {
     override type Self = T
 
     override def withStatus(status: Status)(implicit F: Functor[F]): Self =
@@ -105,32 +104,5 @@ trait ResultSyntaxInstances {
 
     def withBody[U](b: U)(implicit F: Monad[F], w: EntityEncoder[F, U]): F[Self] =
       F.map(r.resp.withBody(b))(Result(_))
-  }
-
-  implicit class FResultSyntax[F[_], T >: Result.TopResult[F] <: BaseResult[F]](r: F[T]) extends ResponseOps[F] {
-    override type Self = F[T]
-
-    override def withStatus(status: Status)(implicit F: Functor[F]): Self = F.map(r){ result =>
-      Result(result.resp.copy(status = status))
-    }
-
-    override def attemptAs[U](implicit F: FlatMap[F], decoder: EntityDecoder[F, U]): DecodeResult[F, U] = {
-      val t: F[Either[DecodeFailure, U]] = F.flatMap(r) { t =>
-        t.resp.attemptAs(F, decoder).value
-      }
-      EitherT[F, DecodeFailure, U](t)
-    }
-
-    override def withAttribute[A](key: AttributeKey[A], value: A)(implicit F: Functor[F]): Self =
-      F.map(r)(r => Result(r.resp.withAttribute(key, value)(F)))
-
-    override def transformHeaders(f: (Headers) => Headers)(implicit F: Functor[F]): F[T] = F.map(r) { result =>
-      Result(result.resp.transformHeaders(f))
-    }
-
-    def withBody[U](b: U)(implicit F: Monad[F], w: EntityEncoder[F, U]): Self = {
-      val resp = F.flatMap(r)(_.resp.withBody(b))
-      F.map(resp)(Result(_))
-    }
   }
 }

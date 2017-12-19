@@ -7,7 +7,6 @@ import fs2.Stream
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
-import org.http4s.rho.bits.ResponseGeneratorInstances._
 import org.http4s.rho.bits._
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
@@ -269,7 +268,9 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
 
-      val f = runWith(stuff) { () => Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo")))) }
+      val f = runWith(stuff) { () =>
+        Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
+      }
 
       checkETag(f(req), "foo")
     }
@@ -277,7 +278,9 @@ class ApiTest extends Specification {
     "capture end with nothing" in {
       val stuff = GET / "hello" / *
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
-      val f = runWith(stuff) { path: List[String] => Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo")))) }
+      val f = runWith(stuff) { path: List[String] =>
+        Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))))
+      }
 
       checkETag(f(req), "go")
     }
@@ -428,7 +431,7 @@ class ApiTest extends Specification {
       val all = "foo" /: tail
 
       runWith(all){ q: String => respMsg + q}
-        .apply(req.copy(uri=uri("/foo/bar?str=answer")))
+        .apply(req.withUri(uri("/foo/bar?str=answer")))
         .value
         .unsafeRunSync()
         .getOrElse(Response.notFound).as[String].unsafeRunSync() === respMsg + "answer"

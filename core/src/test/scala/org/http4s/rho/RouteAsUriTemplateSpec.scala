@@ -1,14 +1,11 @@
 package org.http4s
 package rho
 
-import org.specs2.mutable.Specification
-import UriTemplate.ParamExp
-import UriTemplate.PathElm
-import UriTemplate.PathExp
-import bits.MethodAliases.GET
 import cats.effect.IO
-import org.http4s.rho.bits.PathAST
-import shapeless.{HList, HNil}
+import org.http4s.UriTemplate.{ParamExp, PathElm, PathExp}
+import org.http4s.rho.bits.MethodAliases.GET
+import org.specs2.mutable.Specification
+import shapeless.HList
 
 class RouteAsUriTemplateSpec extends Specification {
   val rhoDsl: RhoDsl[IO] = rho.apply[IO]
