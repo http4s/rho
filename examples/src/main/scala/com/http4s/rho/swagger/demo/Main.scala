@@ -13,14 +13,15 @@ import org.log4s.getLogger
 object Main extends StreamApp[IO] {
   private val logger = getLogger
 
-  val port = Option(System.getenv("HTTP_PORT"))
+  val port: Int = Option(System.getenv("HTTP_PORT"))
     .map(_.toInt)
     .getOrElse(8080)
 
   logger.info(s"Starting Swagger example on '$port'")
 
-  def stream(args: List[String]): Stream[IO, ExitCode] = {
+  def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] = {
     val middleware = createRhoMiddleware()
+
     val myService: HttpService[IO] =
       new MyService[IO](org.http4s.rho.apply[IO], ioSyntax) {}.toService(middleware)
 
