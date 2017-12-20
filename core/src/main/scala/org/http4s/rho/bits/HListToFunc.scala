@@ -8,10 +8,10 @@ import shapeless.HList
 /** Converter of an value of type F to the HList of type T
   *
  * @tparam T HList type of the incoming values
- * @tparam FU type of element onto which T will be mapped
+ * @tparam U type of element onto which T will be mapped
  */
-trait HListToFunc[F[_], T <: HList, -FU] {
-  def toAction(f: FU): Action[F, T]
+trait HListToFunc[F[_], T <: HList, -U] {
+  def toAction(f: U): Action[F, T]
 }
 
 trait MatchersHListToFunc[F[_]] {

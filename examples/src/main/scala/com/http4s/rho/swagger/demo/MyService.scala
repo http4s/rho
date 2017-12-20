@@ -10,6 +10,7 @@ import cats.syntax.option._
 import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
 import com.http4s.rho.swagger.demo.MyService._
 import fs2.Stream
+import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.RhoService
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
@@ -58,8 +59,12 @@ abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSy
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
-      if (i >= 0) Ok[F](JsonResult("Good result", i))
-      else BadRequest[F](s"Negative number: $i")
+      val res: F[BaseResult[F]] = if (i >= 0)
+        Ok[F](JsonResult("Good result", i)).widen
+      else
+        BadRequest[F](s"Negative number: $i").widen
+
+      res
     }
 
   "This gets a simple counter for the number of times this route has been requested" **
