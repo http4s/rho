@@ -4,16 +4,12 @@ package rho
 import java.util.concurrent.atomic.AtomicInteger
 
 import cats.effect.IO
-import org.http4s.headers.{`Content-Length`, `Content-Type`}
-import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
 import fs2.Stream
-import org.http4s.rho.bits.ResponseGeneratorInstances.NotFound
+import org.http4s.headers.{`Content-Length`, `Content-Type`}
+import org.http4s.rho.io._
+import org.specs2.mutable.Specification
 
 class RhoServiceSpec extends Specification with RequestRunner {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   def construct(method: Method, s: String, h: Header*): Request[IO] =
     Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 

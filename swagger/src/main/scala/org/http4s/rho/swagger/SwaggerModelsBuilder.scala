@@ -2,16 +2,14 @@ package org.http4s
 package rho
 package swagger
 
+import cats.syntax.option._
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST._
 import org.http4s.rho.bits._
-
 import org.log4s.getLogger
 
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
-
-import cats.syntax.all._
 
 private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   import models._

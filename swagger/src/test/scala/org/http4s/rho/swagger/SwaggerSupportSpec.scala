@@ -2,20 +2,17 @@ package org.http4s
 package rho
 package swagger
 
-import cats.syntax.semigroupk._
 import cats.data.NonEmptyList
 import cats.effect.IO
+import cats.syntax.semigroupk._
 import org.http4s.rho.bits.MethodAliases.GET
+import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
 import org.specs2.mutable.Specification
 
 class SwaggerSupportSpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   import org.json4s.JsonAST._
   import org.json4s.jackson._
-
   import swagger.ioSyntax._
 
   val baseService = new RhoService[IO] {

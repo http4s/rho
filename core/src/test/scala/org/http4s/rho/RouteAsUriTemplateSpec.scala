@@ -4,13 +4,11 @@ package rho
 import cats.effect.IO
 import org.http4s.UriTemplate.{ParamExp, PathElm, PathExp}
 import org.http4s.rho.bits.MethodAliases.GET
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import shapeless.HList
 
 class RouteAsUriTemplateSpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   val request = Request[IO]()
 
   "PathBuilder.asUriTemplate" should {

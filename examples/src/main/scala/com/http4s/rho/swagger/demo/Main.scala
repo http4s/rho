@@ -23,7 +23,7 @@ object Main extends StreamApp[IO] {
     val middleware = createRhoMiddleware()
 
     val myService: HttpService[IO] =
-      new MyService[IO](org.http4s.rho.apply[IO], ioSyntax) {}.toService(middleware)
+      new MyService[IO](org.http4s.rho.io, ioSyntax) {}.toService(middleware)
 
     BlazeBuilder[IO]
       .mountService(StaticContentService.routes combineK myService)

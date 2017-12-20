@@ -3,12 +3,10 @@ package rho
 
 import cats.effect.IO
 import org.http4s.UriTemplate.ParamExp
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 
 class TypedQuerySpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   val request: Request[IO] = Request[IO]()
 
   "TypedQuery.asUriTemplate" should {

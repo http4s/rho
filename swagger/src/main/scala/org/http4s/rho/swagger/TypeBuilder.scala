@@ -105,7 +105,7 @@ object TypeBuilder {
 
   private def addDiscriminator(sym: Symbol)(model: ModelImpl): ModelImpl = {
     val typeVar = sym.annotations
-      .withFilter(_.tpe <:< typeOf[DiscriminatorField])
+      .withFilter(_.tree.tpe <:< typeOf[DiscriminatorField])
       .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field } )
       .headOption.getOrElse("type")
     val subclasses = sym.asClass.knownDirectSubclasses.map(_.asType.toType.simpleName)

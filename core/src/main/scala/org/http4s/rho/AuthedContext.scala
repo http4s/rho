@@ -59,7 +59,7 @@ class AuthedContext[U] {
     req.attributes.get[U](authKey).get
   }
 
-  def auth[F[_]: Monad](): TypedHeader[F, U :: HNil] = rho.apply[F].genericRequestHeaderCapture[U] { req =>
+  def auth[F[_]: Monad](): TypedHeader[F, U :: HNil] = RhoDsl[F].genericRequestHeaderCapture[U] { req =>
     req.attributes.get(authKey) match {
       case Some(authInfo) => SuccessResponse(authInfo)
       case None => FailureResponse.error[F, String]("Invalid auth configuration")

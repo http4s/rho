@@ -5,6 +5,7 @@ import java.util.UUID
 
 import cats.data._
 import cats.effect.IO
+import org.http4s.rho.io._
 import org.http4s.server.AuthMiddleware
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
@@ -24,9 +25,6 @@ object Auth {
 object MyAuth extends AuthedContext[User]
 
 object MyService extends RhoService[IO] {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   import MyAuth._
 
   GET +? param("foo", "bar") >>> auth[IO] |>> { (req: Request[IO], foo: String, user: User) =>

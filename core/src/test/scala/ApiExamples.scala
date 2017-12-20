@@ -5,15 +5,12 @@ import cats.effect.IO
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho._
 import org.http4s.rho.bits.TypedQuery
+import org.http4s.rho.io._
 import org.http4s.server.websocket._
-import org.http4s.{Request, RhoDsl, UrlForm, rho}
+import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification
-import shapeless.HList
 
 class ApiExamples extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   "mock api" should {
     "Make it easy to compose routes" in {
 

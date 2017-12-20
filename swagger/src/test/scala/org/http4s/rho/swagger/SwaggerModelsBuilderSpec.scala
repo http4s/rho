@@ -1,25 +1,22 @@
 package org.http4s.rho
 package swagger
 
-import cats.{Applicative, Monad}
 import cats.effect.IO
-
-import scala.language.existentials
-import org.http4s._
+import cats.syntax.all._
+import cats.{Applicative, Monad}
+import fs2.{Chunk, Stream}
 import org.http4s.Method._
+import org.http4s._
 import org.http4s.headers._
+import org.http4s.rho.bits.PathAST.{PathAnd, PathCapture}
 import org.http4s.rho.bits.{FailureResponse, ResultResponse, StringParser, SuccessResponse}
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
+import scala.language.existentials
 import scala.reflect._
 import scala.reflect.runtime.universe._
-import fs2.{Chunk, Stream}
-import cats.syntax.all._
-import org.http4s.rho.bits.PathAST.{PathAnd, PathCapture}
-import shapeless.HNil
-
-import scala.reflect.runtime.universe
 
 object SwaggerModelsBuilderSpec {
   case class Foo(a: String, b: Int)
@@ -46,12 +43,8 @@ object SwaggerModelsBuilderSpec {
 }
 
 class SwaggerModelsBuilderSpec extends Specification {
-  import models._
   import SwaggerModelsBuilderSpec._
-
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
+  import models._
   import swagger.ioSyntax._
 
   implicit def defaultCompiler: CompileService[IO, RhoRoute.Tpe[IO]] =

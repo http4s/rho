@@ -9,15 +9,13 @@ import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
 import org.http4s.rho.bits._
+import org.http4s.rho.io._
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
 import scodec.bits.ByteVector
 import shapeless.{HList, HNil}
 
 class ApiTest extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
     val srvc = new RhoService[F] { exec |>> f }.toService()
     srvc.apply(_: Request[F])

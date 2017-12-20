@@ -2,13 +2,11 @@ package org.http4s.rho
 
 import cats.effect.IO
 import org.http4s.headers._
-import org.http4s.{AttributeKey, HttpDate, RhoDsl, rho}
+import org.http4s.rho.io._
+import org.http4s.{AttributeKey, HttpDate}
 import org.specs2.mutable.Specification
 
 class ResultSpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
-
   "ResultSyntax" should {
     "Add headers" in {
       val date = Date(HttpDate.Epoch)

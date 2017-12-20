@@ -2,13 +2,12 @@ package org.http4s
 package rho
 
 import cats.effect._
+import fs2.Stream
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
-import fs2.Stream
 
 class CodecRouterSpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
     val rbody = new String(resp.body.runLog.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)

@@ -17,8 +17,6 @@ import scala.util.control.NonFatal
 package object rho extends Http4s {
   type RhoMiddleware[F[_]] = Seq[RhoRoute[F, _ <: HList]] => Seq[RhoRoute[F, _ <: HList]]
 
-  def apply[F[_]]: RhoDsl[F] = new RhoDsl[F] { }
-
   val PathEmpty: PathRule = PathMatch("")
 }
 
@@ -266,4 +264,8 @@ trait RhoDsl[F[_]]
         }
       }
     }.withMetadata(HeaderMetaData(key, default.isDefined))
+}
+
+object RhoDsl {
+  def apply[F[_]]: RhoDsl[F] = new RhoDsl[F] {}
 }

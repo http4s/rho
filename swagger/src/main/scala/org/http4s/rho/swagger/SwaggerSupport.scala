@@ -2,8 +2,8 @@ package org.http4s
 package rho
 package swagger
 
+import _root_.io.swagger.util.Json
 import cats.Monad
-import io.swagger.util.Json
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.TypedPath
 import org.http4s.rho.swagger.models._

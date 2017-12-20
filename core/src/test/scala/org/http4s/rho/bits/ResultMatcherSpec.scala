@@ -5,6 +5,7 @@ package bits
 import cats.Applicative
 import cats.effect.IO
 import fs2.Chunk
+import org.http4s.rho.io._
 import org.http4s.{Status => HStatus}
 import org.specs2.mutable.Specification
 import shapeless.HList
@@ -12,8 +13,6 @@ import shapeless.HList
 import scala.reflect.runtime.universe._
 
 class ResultMatcherSpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
 
   class TRhoService[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty

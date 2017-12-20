@@ -2,13 +2,11 @@ package org.http4s
 package rho
 
 import cats.effect.IO
-import org.http4s.HttpService
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
 class ParamDefaultValueSpec extends Specification {
-  val rhoDsl: RhoDsl[IO] = rho.apply[IO]
-  import rhoDsl._
 
   def body(service: HttpService[IO], r: Request[IO]): String =
     new String(service(r).value.unsafeRunSync().getOrElse(Response.notFound).body.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
