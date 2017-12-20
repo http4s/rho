@@ -25,6 +25,7 @@ package object rho extends Http4s {
 trait RhoDsl[F[_]]
   extends ResultSyntaxInstances[F]
     with QueryParsers[F]
+    with MatchersHListToFunc[F]
     with ResponseGeneratorInstances {
 
   private[this] val logger = getLogger

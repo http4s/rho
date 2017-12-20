@@ -267,6 +267,7 @@ trait ResponseGeneratorInstances {
   }
 
   // UseProxy has been deprecated in RFC7231 so it is omitted.
+
   object TemporaryRedirect {
     def apply[F[_]] = new LocationResponseGenerator[F](Status.TemporaryRedirect) {
       type T = TEMPORARYREDIRECT[F]

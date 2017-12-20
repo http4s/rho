@@ -4,30 +4,37 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import cats.Monad
 import cats.effect.Effect
-import cats.syntax.all._
-import com.http4s.rho.swagger.demo.JsonEncoder.AutoSerializable
+import cats.syntax.either._
+import cats.syntax.functor._
+import cats.syntax.option._
+import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
+import com.http4s.rho.swagger.demo.MyService._
 import fs2.Stream
 import org.http4s.rho.RhoService
-import org.http4s.rho.bits.TypedHeader
-import org.http4s.rho.swagger.SwaggerSyntax
+import org.http4s.rho.bits._
+import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
 import org.http4s.{HttpDate, RhoDsl, Uri}
+import org.json4s.DefaultFormats
+import org.json4s.jackson.JsonMethods
 import shapeless.HNil
 
-abstract class MyService[F[_]: Effect : Monad](dsl: RhoDsl[F], swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F]) extends RhoService[F] {
+import scala.reflect.ClassTag
+
+abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
+  extends RhoService[F] {
+
   import dsl._
   import org.http4s.rho._
-  import org.http4s.rho.swagger._
   import org.http4s.{EntityDecoder, Headers, Request, headers}
   import swaggerSyntax._
 
-  case class JsonResult(name: String, number: Int) extends AutoSerializable
 
   val requireCookie: TypedHeader[F, HNil] = existsAndR(headers.Cookie){ cookie =>
     cookie.values.toList.find(c => c.name == "Foo" && c.content == "bar") match {
-      case Some(_) =>
-        None       // Cookie found, good to go.
-      case None => // Didn't find cookie
-        Some(TemporaryRedirect[F](uri("/addcookie")))
+      case Some(_) => // Cookie found, good to go
+        None
+      case None =>    // Didn't find cookie
+        Some(TemporaryRedirect[F](uri("/addcookie")).widen)
     }
   }
 
@@ -101,16 +108,24 @@ abstract class MyService[F[_]: Effect : Monad](dsl: RhoDsl[F], swaggerSyntax: Sw
   "Get a file" **
     GET / "file" |>> Ok[F](SwaggerFileResponse("HELLO"))
 
-  import org.http4s.rho.bits._
-  import org.json4s._
-  import org.json4s.jackson.JsonMethods
+  "This route demonstrates how to use a complex data type as parameters in route" **
+  GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
+    Ok[F](s"Received foo: $foo, bars: $bars")
+  }
+}
 
-  import scala.reflect._
-  import scala.reflect.runtime.universe._
+object MyService {
+  import scala.reflect.runtime.universe.TypeTag
 
-  private implicit val format = DefaultFormats
+  case class Foo(k: String, v: Int)
+  case class Bar(id: Long, foo: Foo)
 
-  implicit def jsonParser[A : TypeTag : ClassTag]: StringParser[F, A] = new StringParser[F, A] {
+  case class JsonResult(name: String, number: Int) extends AutoSerializable
+
+  private implicit val format: DefaultFormats =
+    DefaultFormats
+
+  implicit def jsonParser[F[_], A : TypeTag : ClassTag]: StringParser[F, A] = new StringParser[F, A] {
     override val typeTag: Option[TypeTag[A]] =
       implicitly[TypeTag[A]].some
 
@@ -121,13 +136,5 @@ abstract class MyService[F[_]: Effect : Monad](dsl: RhoDsl[F], swaggerSyntax: Sw
         case Right(t) => SuccessResponse(t)
       }
     }
-  }
-
-  case class Foo(k: String, v: Int)
-  case class Bar(id: Long, foo: Foo)
-
-  "This route demonstrates how to use a complex data type as parameters in route" **
-  GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
-    Ok[F](s"Received foo: $foo, bars: $bars")
   }
 }
