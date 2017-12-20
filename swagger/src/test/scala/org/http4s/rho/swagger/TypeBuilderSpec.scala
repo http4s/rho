@@ -3,13 +3,14 @@ package org.http4s.rho.swagger
 import java.sql.Timestamp
 import java.util.Date
 
+import cats.effect.IO
+import cats.syntax.all._
+import fs2.Stream
 import org.http4s.rho.swagger.models.AbstractProperty
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 
-import fs2.Stream
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
-import cats.syntax.all._
 
 package object model {
   case class Foo(a: Int, b: String)
@@ -76,12 +77,11 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Identify types" in {
-// TODO: how to deal with this?
-//      typeOf[Task[String]].isTask must_== true
-//      typeOf[String].isTask must_== false
-//
-//      typeOf[Stream[Task,String]].isStream must_== true
-//      typeOf[String].isStream must_== false
+      typeOf[IO[String]].isEffect must_== true
+      typeOf[String].isEffect must_== false
+
+      typeOf[Stream[IO, String]].isStream must_== true
+      typeOf[String].isStream must_== false
 
       typeOf[Array[String]].isArray must_== true
       typeOf[String].isArray must_== false
@@ -230,16 +230,13 @@ class TypeBuilderSpec extends Specification {
       modelOf[Map[String, Foo]] must_== modelOf[Foo]
     }
 
-    // TODO: how to deal with this?
-//    "Get types from a fs2.Stream" in {
-//      import fs2.{Task, Stream}
-//      modelOf[Stream[Task, Foo]] must_== modelOf[Foo]
-//    }
-//
-//    "Get types from a fs2.Task" in {
-//      import fs2.Task
-//      modelOf[Task[Foo]] must_== modelOf[Foo]
-//    }
+    "Get types from a fs2.Stream" in {
+      modelOf[Stream[IO, Foo]] must_== modelOf[Foo]
+    }
+
+    "Get types from an IO Effect" in {
+      modelOf[IO[Foo]] must_== modelOf[Foo]
+    }
 
     "Get types from a SwaggerFileResponse" in {
       modelOf[SwaggerFileResponse[Foo]] must_== Set.empty

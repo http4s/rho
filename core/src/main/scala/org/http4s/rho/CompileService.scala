@@ -1,7 +1,10 @@
 package org.http4s
 package rho
 
+import cats.Monad
+import cats.data.{Kleisli, OptionT}
 import org.http4s.rho.RhoRoute.Tpe
+import org.http4s.rho.bits.PathTree
 import shapeless.HList
 
 /** Transforms a [[RhoRoute]] into an `RouteType`.
@@ -39,10 +42,12 @@ object CompileService {
     * @param filter [[RhoMiddleware]] to apply to the routes.
     * @return An `HttpService`
     */
-  def foldServices[F[_]](routes: Seq[RhoRoute.Tpe[F]], filter: RhoMiddleware[F]): HttpService[F] = {
-    ??? // TODO: fix impl
+  def foldServices[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]], filter: RhoMiddleware[F]): HttpService[F] = {
+    val tree = filter(routes).foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
 
-//    val tree = filter(routes).foldLeft(PathTree()){ (t, r) => t.appendRoute(r) }
-//    Service.lift { req => tree.getResult(req).toResponse }
+    // TODO:
+    // Service.lift { req => tree.getResult(req).toResponse }
+
+    ???
   }
 }

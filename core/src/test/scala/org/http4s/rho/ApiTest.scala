@@ -1,6 +1,7 @@
 package org.http4s
 package rho
 
+import cats.Monad
 import cats.data.OptionT
 import cats.effect.IO
 import fs2.Stream
@@ -17,7 +18,7 @@ class ApiTest extends Specification {
   val rhoDsl: RhoDsl[IO] = rho.apply[IO]
   import rhoDsl._
 
-  def runWith[F[_], T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
+  def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
     val srvc = new RhoService[F] { exec |>> f }.toService()
     srvc.apply(_: Request[F])
   }

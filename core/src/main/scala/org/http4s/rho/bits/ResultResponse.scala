@@ -1,7 +1,7 @@
 package org.http4s.rho.bits
 
 import cats.data.OptionT
-import cats.{Applicative, FlatMap, Functor, Monad}
+import cats.{Applicative, Functor, Monad}
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.FailureResponse._

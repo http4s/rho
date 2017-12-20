@@ -1,10 +1,10 @@
 package org.http4s
 package rho
 
+import cats.Monad
 import org.http4s.rho.bits.PathAST.TypedPath
-
 import org.log4s.getLogger
-import shapeless.{HNil, HList}
+import shapeless.{HList, HNil}
 
 /** Constructor class for defining routes
   *
@@ -23,7 +23,7 @@ import shapeless.{HNil, HList}
   *
   * @param routes Routes to prepend before elements in the constructor.
   */
-class RhoService[F[_]](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
+class RhoService[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances
     with RoutePrependable[F, RhoService[F]]
