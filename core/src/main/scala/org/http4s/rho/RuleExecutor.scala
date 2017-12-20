@@ -15,7 +15,6 @@ sealed trait RuleExecutor {
   def runRequestRules[F[_]](v: RequestRule[F], req: Request[F]): ResultResponse[F, HList] =
     runRequestRules(req, v, HNil)
 
-
   /** Executes the [[RequestRule]] tree pushing the results to `stack` */
   def runRequestRules[F[_]](req: Request[F], v: RequestRule[F], stack: HList): ResultResponse[F, HList] = v match {
     case AndRule(a, b) => runRequestRules(req, a, stack).flatMap(runRequestRules(req, b, _))

@@ -77,11 +77,12 @@ private[rho] object PathTree {
   /** Generates a list of tokens that represent the path */
   private def keyToPath[F[_]](key: Request[F]): List[String] = splitPath(key.pathInfo)
 
-  private def leafFromRouter[F[_]](rules: RequestRule[F]): Leaf[F] =
+  private def leafFromRouter[F[_], T <: HList](rules: RequestRule[F], route: RhoRoute[F, T]): Leaf[F] =
     Leaf[F] { (req, pathstack) =>
       RuleExecutor.runRequestRules(req, rules, pathstack).map { i =>
-        ??? // TODO: impl
-        //            route.action.act(req, i.asInstanceOf[T])
+        route.action.act(req, i.asInstanceOf[T])
+
+        ??? // TODO: fix
       }
     }
 
@@ -100,7 +101,7 @@ private[rho] object PathTree {
 
   private def makeLeaf[F[_], T <: HList](route: RhoRoute[F, T]): Leaf[F] =
     route.router match {
-      case Router(method, _, rules) => leafFromRouter(rules)
+      case Router(method, _, rules) => leafFromRouter(rules, route)
       case c: CodecRouter[_, _, _] => leafFromCodecRouter(c.rules)
     }
 

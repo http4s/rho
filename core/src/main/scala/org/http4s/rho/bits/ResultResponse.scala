@@ -32,18 +32,18 @@ case class NoMatch[F[_]]() extends RouteResult[F, Nothing]
 /** Node in the ADT that represents a result, either success or failure */
 sealed trait ResultResponse[F[_], +T] extends RouteResult[F, T] {
   def map[T2](f: T => T2): ResultResponse[F, T2] = this match {
-    case SuccessResponse(v)        => SuccessResponse(f(v))
-    case e@ FailureResponse(_)     => e
+    case SuccessResponse(v)     => SuccessResponse(f(v))
+    case e @ FailureResponse(_) => e
   }
 
   def flatMap[T2](f: T => ResultResponse[F, T2]): ResultResponse[F, T2] = this match {
-    case SuccessResponse(v)        => f(v)
-    case e@ FailureResponse(_)     => e
+    case SuccessResponse(v)     => f(v)
+    case e @ FailureResponse(_) => e
   }
 
   def orElse[T2 >: T](other: => ResultResponse[F, T2]): ResultResponse[F, T2] = this match {
     case s @ SuccessResponse(_) => s
-    case _                    => other
+    case _                      => other
   }
 }
 

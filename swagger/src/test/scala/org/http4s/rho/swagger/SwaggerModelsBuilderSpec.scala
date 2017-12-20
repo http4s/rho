@@ -577,10 +577,10 @@ class SwaggerModelsBuilderSpec extends Specification {
   object CsvFile {
     implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =
       EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.`text/csv`, Some(Charset.`UTF-8`))) { file: CsvFile =>
-        // TODO: fix impl
-//        ByteVector.encodeUtf8("file content").fold(Task.fail, bv =>
-//          Task.now(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length))))
-        ???
+        ByteVector.encodeUtf8("file content").fold(
+          IO.raiseError,
+          bv => IO.pure(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length)))
+        )
       }
   }
 }
