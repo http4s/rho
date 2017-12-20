@@ -35,10 +35,10 @@ class SwaggerSupportSpec extends Specification {
     GET / "bar" |>> { () => Ok[IO]("hello world") }
   }
 
-  val metaDataService = new RhoService {
-    "Hello" ** GET / "hello" |>> { () => Ok("hello world") }
-    Map("hello"->List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok("bye world") }
-    Map("bye"->List("hello")) ^^ GET / "goodbye" |>> { () => Ok("goodbye world") }
+  val metaDataService = new RhoService[IO] {
+    "Hello" ** GET / "hello" |>> { () => Ok[IO]("hello world") }
+    Map("hello"->List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok[IO]("bye world") }
+    Map("bye"->List("hello")) ^^ GET / "goodbye" |>> { () => Ok[IO]("goodbye world") }
   }
 
   "SwaggerSupport" should {
@@ -116,9 +116,9 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Check metadata in API listing" in {
-      val service = metaDataService.toService(SwaggerSupport(swaggerRoutesInSwagger = true))
+      val service = metaDataService.toService(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val json = parseJson(RRunner(service).checkOk(r))
 
@@ -133,7 +133,7 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Swagger support for complex meta data" in {
-      val service = baseService.toService(SwaggerSupport(
+      val service = baseService.toService(createRhoMiddleware(
         apiPath = "swagger-test.json",
         apiInfo =  Info(
           title = "Complex Meta Data API",
@@ -168,7 +168,7 @@ class SwaggerSupportSpec extends Specification {
         )
       ))
 
-      val r = Request(GET, Uri(path = "/swagger-test.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger-test.json"))
       val json = parseJson(RRunner(service).checkOk(r))
 
       val JString(icn) = json \ "info" \ "contact" \ "name"
@@ -188,9 +188,9 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Check metadata in API listing" in {
-      val service = metaDataService.toService(SwaggerSupport(swaggerRoutesInSwagger = true))
+      val service = metaDataService.toService(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request(GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val json = parseJson(RRunner(service).checkOk(r))
 

@@ -155,7 +155,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).flatMap(go(_, None)).headOption
   }
 
-  def collectSecurityScopes(rr: RhoRoute[_]): List[Map[String, List[String]]] = {
+  def collectSecurityScopes[F[_]](rr: RhoRoute[F, _]): List[Map[String, List[String]]] = {
 
     def go(stack: List[PathOperation]): Option[Map[String, List[String]]] =
 
