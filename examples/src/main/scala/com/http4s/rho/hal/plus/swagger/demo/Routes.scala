@@ -3,7 +3,7 @@ package com.http4s.rho.hal.plus.swagger.demo
 import cats.effect.IO
 import org.http4s.HttpService
 import org.http4s.rho.RhoMiddleware
-import org.http4s.rho.swagger.ioSyntax._
+import org.http4s.rho.swagger.syntax.io._
 
 class Routes(businessLayer: BusinessLayer) {
 

@@ -11,6 +11,7 @@ import org.http4s.headers._
 import org.http4s.rho.bits.PathAST.{PathAnd, PathCapture}
 import org.http4s.rho.bits.{FailureResponse, ResultResponse, StringParser, SuccessResponse}
 import org.http4s.rho.io._
+import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
@@ -45,7 +46,6 @@ object SwaggerModelsBuilderSpec {
 class SwaggerModelsBuilderSpec extends Specification {
   import SwaggerModelsBuilderSpec._
   import models._
-  import swagger.ioSyntax._
 
   implicit def defaultCompiler: CompileService[IO, RhoRoute.Tpe[IO]] =
     CompileService.identityCompiler

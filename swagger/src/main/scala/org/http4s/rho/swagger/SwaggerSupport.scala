@@ -11,12 +11,11 @@ import shapeless._
 
 object SwaggerSupport {
   def apply[F[_]: Monad](dsl: RhoDsl[F], syntax: SwaggerSyntax[F]): SwaggerSupport[F] =
-    new SwaggerSupport[F](dsl, syntax) {}
+    new SwaggerSupport[F](dsl) {}
 }
 
-abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F], syntax: SwaggerSyntax[F])(implicit F: Monad[F]) {
+abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F])(implicit F: Monad[F]) extends SwaggerSyntax[F] {
   import dsl._
-  import syntax._
 
   /**
     * Create a RhoMiddleware adding a route to get the Swagger json file

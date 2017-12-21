@@ -1,8 +1,8 @@
 package org.http4s.rho.bits
 
-import cats.{Applicative, FlatMap, Monad}
-import org.http4s.{EntityEncoder, MediaType, Request, Response, Status}
+import cats.Monad
 import org.http4s.rho.Result
+import org.http4s.{EntityEncoder, MediaType, Request, Response, Status}
 
 import scala.reflect.runtime.universe.{Type, WeakTypeTag}
 
@@ -13,7 +13,7 @@ trait ResultMatcher[F[_], -R] {
   def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]]
 }
 
-object ResultMatcher extends ResultMatcher1 {
+object ResultMatcher extends ResultMatcherOps {
 
   sealed trait MaybeWritable[T] {
     def contentType: Set[MediaType]
@@ -21,7 +21,7 @@ object ResultMatcher extends ResultMatcher1 {
     def encodings: Set[MediaType]
   }
 
-  object MaybeWritable extends MaybeWritable1 {
+  object MaybeWritable extends MaybeWritableOps {
 
     // This will represent a "missing" result meaning this status wasn't used
     implicit val maybeWritableAny: MaybeWritable[Any] = new MaybeWritable[Any] {
@@ -31,8 +31,7 @@ object ResultMatcher extends ResultMatcher1 {
     }
   }
 
-  // TODO: better name?
-  trait MaybeWritable1 {
+  trait MaybeWritableOps {
     /* Allowing the `Writable` to be `null` only matches real results but allows for
        situations where you return the same status with two types */
     implicit def maybeIsWritable[F[_], T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable[T] = new MaybeWritable[T] {
@@ -450,8 +449,7 @@ object ResultMatcher extends ResultMatcher1 {
   }
 }
 
-// TODO: better name?
-trait ResultMatcher1 {
+trait ResultMatcherOps {
   implicit def fMatcher[F[_], R](implicit r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo

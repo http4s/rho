@@ -8,12 +8,12 @@ import cats.syntax.semigroupk._
 import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
+import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
 
 class SwaggerSupportSpec extends Specification {
   import org.json4s.JsonAST._
   import org.json4s.jackson._
-  import swagger.ioSyntax._
 
   val baseService = new RhoService[IO] {
     GET / "hello" |>> { () => Ok[IO]("hello world") }

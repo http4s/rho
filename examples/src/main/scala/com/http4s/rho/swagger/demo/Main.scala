@@ -4,8 +4,8 @@ import cats.effect.IO
 import cats.syntax.semigroupk._
 import fs2.Stream
 import org.http4s.HttpService
-import org.http4s.rho.swagger.ioSyntax
-import org.http4s.rho.swagger.ioSyntax._
+import org.http4s.rho.swagger.syntax.{io => ioSwagger}
+import org.http4s.rho.swagger.syntax.io._
 import org.http4s.server.blaze.BlazeBuilder
 import org.http4s.util.{ExitCode, StreamApp}
 import org.log4s.getLogger
@@ -23,7 +23,7 @@ object Main extends StreamApp[IO] {
     val middleware = createRhoMiddleware()
 
     val myService: HttpService[IO] =
-      new MyService[IO](org.http4s.rho.io, ioSyntax) {}.toService(middleware)
+      new MyService[IO](org.http4s.rho.io, ioSwagger) {}.toService(middleware)
 
     BlazeBuilder[IO]
       .mountService(StaticContentService.routes combineK myService)
