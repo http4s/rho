@@ -19,8 +19,8 @@ sealed trait RouteResult[F[_], +T] {
     case _        => false
   }
 
-  final def toResponse(implicit F: Applicative[F], ev: T <:< OptionT[F, Response[F]]): OptionT[F, Response[F]] = this match {
-      case SuccessResponse(t) => ev(t)
+  final def toResponse(implicit F: Applicative[F], ev: T <:< Response[F]): OptionT[F, Response[F]] = this match {
+      case SuccessResponse(t) => OptionT.pure(t)
       case NoMatch()          => OptionT.none[F, Response[F]]
       case FailureResponse(r) => OptionT.liftF(r.toResponse)
     }
