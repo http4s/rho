@@ -77,7 +77,7 @@ lazy val compileFlags = Seq(
   "-Ypartial-unification",
   "-language:higherKinds",
   "-language:existentials",
-  "-language:implicitConversions") //, "-Xlog-implicits")
+  "-language:implicitConversions")
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
