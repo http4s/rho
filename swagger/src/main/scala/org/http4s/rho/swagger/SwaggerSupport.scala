@@ -85,8 +85,8 @@ abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F])(implicit F: Monad[F]) extend
     apiPath: TypedPath[F, HNil] = "swagger.json"
   ): RhoService[F] = new RhoService[F] {
 
-    lazy val response: F[OK[F, String]] = {
-      val fOk = Ok[F].apply(
+    lazy val response: F[OK[String]] = {
+      val fOk = Ok.apply(
         Json.mapper()
           .writerWithDefaultPrettyPrinter()
           .writeValueAsString(swagger.toJModel)

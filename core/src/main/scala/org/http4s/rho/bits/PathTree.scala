@@ -5,7 +5,6 @@ package bits
 import cats.Monad
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST.RequestRule
-import org.http4s.rho.bits.ResponseGeneratorInstances._
 import org.http4s.util.UrlCodingUtils
 import org.log4s.getLogger
 import shapeless.{HList, HNil}
@@ -149,7 +148,7 @@ private[rho] object PathTree {
     }
   }
 
-  sealed trait Node[F[_], Self <: Node[F, Self]] {
+  sealed trait Node[F[_], Self <: Node[F, Self]] extends ResponseGeneratorInstances[F] {
 
     def matches: Map[String, MatchNode[F]]
 
@@ -254,12 +253,12 @@ private[rho] object PathTree {
             val result = tryVariadic(NoMatch())
 
             if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
-            else FailureResponse.pure {
+            else FailureResponse.pure[F] {
               val ms = end.keys
               val allowedMethods = ms.mkString(", ")
               val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
 
-              F.map(MethodNotAllowed[F].pure(msg))(
+              F.map(MethodNotAllowed.pure(msg))(
                 _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
             }
         }

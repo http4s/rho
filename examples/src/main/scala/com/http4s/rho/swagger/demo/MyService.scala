@@ -35,34 +35,34 @@ abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSy
       case Some(_) => // Cookie found, good to go
         None
       case None =>    // Didn't find cookie
-        Some(TemporaryRedirect[F](uri("/addcookie")).widen)
+        Some(TemporaryRedirect(uri("/addcookie")).widen)
     }
   }
 
   "We don't want to have a real 'root' route anyway... " **
-    GET |>> TemporaryRedirect[F](Uri(path="/swagger-ui"))
+    GET |>> TemporaryRedirect(Uri(path="/swagger-ui"))
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = GET / "hello"
 
   "Simple hello world route" **
-    hello |>> Ok[F]("Hello world!")
+    hello |>> Ok("Hello world!")
 
   "A variant of the hello route that takes an Int param" **
-    hello / pathVar[Int] |>> { i: Int => Ok[F](s"You returned $i") }
+    hello / pathVar[Int] |>> { i: Int => Ok(s"You returned $i") }
 
   "This route allows you to send head request" **
-    HEAD / "hello" |>> { Ok[F]("Hello head!") }
+    HEAD / "hello" |>> { Ok("Hello head!") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok[F](JsonResult(name, id)) }
+    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
       val res: F[BaseResult[F]] = if (i >= 0)
-        Ok[F](JsonResult("Good result", i)).widen
+        Ok(JsonResult("Good result", i)).widen
       else
-        BadRequest[F](s"Negative number: $i").widen
+        BadRequest(s"Negative number: $i").widen
 
       res
     }
@@ -75,16 +75,16 @@ abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSy
 
   "Adds the cookie Foo=bar to the client" **
     GET / "addcookie" |>> {
-      Ok[F]("You now have a good cookie!").map(_.addCookie("Foo", "bar"))
+      Ok("You now have a good cookie!").map(_.addCookie("Foo", "bar"))
     }
 
   "Sets the cookie Foo=barr to the client" **
     GET / "addbadcookie" |>> {
-      Ok[F]("You now have an evil cookie!").map(_.addCookie("Foo", "barr"))
+      Ok("You now have an evil cookie!").map(_.addCookie("Foo", "barr"))
     }
 
   "Checks the Foo cookie to make sure its 'bar'" **
-    GET / "checkcookie" >>> requireCookie |>> Ok[F]("Good job, you have the cookie!")
+    GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
 
   "Clears the cookies" **
     GET / "clearcookies" |>> { req: Request[F] =>
@@ -94,7 +94,7 @@ abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSy
           Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
       }
 
-      Ok[F]("Deleted cookies!").map(_.replaceAllHeaders(hs))
+      Ok("Deleted cookies!").map(_.replaceAllHeaders(hs))
     }
 
   "This route allows your to post stuff" **
@@ -107,15 +107,15 @@ abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSy
       val s = 0 until 100 map (i => s"Hello $i\n")
       val p: Stream[F, String] = Stream.emits(s).covary[F]
 
-      Ok[F](p)
+      Ok(p)
     }
 
   "Get a file" **
-    GET / "file" |>> Ok[F](SwaggerFileResponse("HELLO"))
+    GET / "file" |>> Ok(SwaggerFileResponse("HELLO"))
 
   "This route demonstrates how to use a complex data type as parameters in route" **
   GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
-    Ok[F](s"Received foo: $foo, bars: $bars")
+    Ok(s"Received foo: $foo, bars: $bars")
   }
 }
 
@@ -130,14 +130,14 @@ object MyService {
   private implicit val format: DefaultFormats =
     DefaultFormats
 
-  implicit def jsonParser[F[_], A : TypeTag : ClassTag]: StringParser[F, A] = new StringParser[F, A] {
+  implicit def jsonParser[F[_], A : TypeTag : ClassTag]: StringParser[F, A] = new StringParser[F, A] with FailureResponseOps[F] {
     override val typeTag: Option[TypeTag[A]] =
       implicitly[TypeTag[A]].some
 
     override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, A] = {
 
       Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
-        case Left(t) => FailureResponse.badRequest[F, String](t.getMessage)
+        case Left(t) => badRequest[String](t.getMessage)
         case Right(t) => SuccessResponse(t)
       }
     }

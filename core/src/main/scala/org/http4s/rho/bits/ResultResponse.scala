@@ -4,8 +4,6 @@ import cats.data.OptionT
 import cats.{Applicative, Functor, Monad}
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
-import org.http4s.rho.bits.FailureResponse._
-import org.http4s.rho.bits.ResponseGeneratorInstances.{BadRequest, InternalServerError}
 
 /** Types that represent the result of executing a step of the route */
 sealed trait RouteResult[F[_], +T] {
@@ -59,29 +57,31 @@ final case class FailureResponse[F[_]](reason: ResponseReason[F]) extends Result
 }
 
 object FailureResponse {
-
-  /** Construct a `400 BadRequest` FailureResponse
-    *
-    * @param reason Description of the failure
-    */
-  def badRequest[F[_], T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
-    FailureResponse[F](new ResponseReason[F](BadRequest[F].pure(reason)))
-
-  /** Construct a `500 InternalServerError` FailureResponse
-    *
-    * @param reason Description of the failure
-    */
-  def error[F[_], T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
-    FailureResponse[F](new ResponseReason[F](InternalServerError[F].pure(reason)))
-
   /** Construct a [[FailureResponse]] using the provided thunk. */
   def pure[F[_]](response: => F[Response[F]]): FailureResponse[F] = FailureResponse(new ResponseReason(response))
 
   /** Construct a [[FailureResponse]] using the provided thunk. */
   def result[F[_]](result: => F[BaseResult[F]])(implicit F: Functor[F]): FailureResponse[F] = pure(F.map(result)(_.resp))
+}
 
-  /** Concrete representation of the `FailureResponse` */
-  final class ResponseReason[F[_]](response: => F[Response[F]]) {
-    def toResponse: F[Response[F]] = response
-  }
+trait FailureResponseOps[F[_]] extends ResponseGeneratorInstances[F] {
+
+  /** Construct a `400 BadRequest` FailureResponse
+    *
+    * @param reason Description of the failure
+    */
+  def badRequest[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
+    FailureResponse[F](new ResponseReason(BadRequest.pure(reason)))
+
+  /** Construct a `500 InternalServerError` FailureResponse
+    *
+    * @param reason Description of the failure
+    */
+  def error[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
+    FailureResponse[F](new ResponseReason(InternalServerError.pure(reason)))
+}
+
+/** Concrete representation of the `FailureResponse` */
+final class ResponseReason[F[_]](response: => F[Response[F]]) {
+  def toResponse: F[Response[F]] = response
 }

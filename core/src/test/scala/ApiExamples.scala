@@ -16,7 +16,7 @@ class ApiExamples extends Specification {
 
       /// src_inlined SimplePath
       new RhoService[IO] {
-        GET / "hello" |>> { () => Ok[IO]("Hello, world!") }
+        GET / "hello" |>> { () => Ok("Hello, world!") }
       }
       /// end_src_inlined
 
@@ -25,8 +25,8 @@ class ApiExamples extends Specification {
         // A path can be built up in multiple steps and the parts reused
         val pathPart1 = GET / "hello"
 
-        pathPart1 / "world" |>> { () => Ok[IO]("Hello, world!") }
-        pathPart1 / "you"   |>> { () => Ok[IO]("Hello, you!") }
+        pathPart1 / "world" |>> { () => Ok("Hello, world!") }
+        pathPart1 / "you"   |>> { () => Ok("Hello, you!") }
       }
       /// end_src_inlined
 
@@ -34,11 +34,11 @@ class ApiExamples extends Specification {
       new RhoService[IO] {
         // Use combinators to parse and capture path parameters
         GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
-          Ok[IO]("Received $i")
+          Ok("Received $i")
         }
         // the symbol 'world just says 'capture a String' with variable name "world"
         GET / "helloworldstring" / 'world / "foo" |>> { i: String =>
-          Ok[IO]("Received $i")
+          Ok("Received $i")
         }
       }
       /// end_src_inlined
@@ -47,7 +47,7 @@ class ApiExamples extends Specification {
       new RhoService[IO] {
         // You can capture the entire rest of the tail using *
         GET / "hello" / * |>> { r: List[String] =>
-          Ok[IO](s"Got the rest: ${r.mkString}")
+          Ok(s"Got the rest: ${r.mkString}")
         }
       }
       /// end_src_inlined
@@ -56,7 +56,7 @@ class ApiExamples extends Specification {
       new RhoService[IO] {
         // Query parameters can be captured in a similar manner as path fragments
         GET / "hello" +? param[Int]("fav") |>> { i: Int =>
-          Ok[IO](s"Query 'fav' had Int value $i")
+          Ok(s"Query 'fav' had Int value $i")
         }
       }
       /// end_src_inlined
@@ -65,7 +65,7 @@ class ApiExamples extends Specification {
       new RhoService[IO] {
         // A Path can be made all at once
         POST / pathVar[Int] +? param[Int]("fav") |>> { (i1: Int, i2: Int) =>
-          Ok[IO](s"Sum of the number is ${i1 + i2}")
+          Ok(s"Sum of the number is ${i1 + i2}")
         }
       }
       /// end_src_inlined
@@ -73,7 +73,7 @@ class ApiExamples extends Specification {
       /// src_inlined HeaderCapture
       new RhoService[IO] {
         GET / "hello" >>> capture(ETag) |>> { tag: ETag =>
-          Ok[IO](s"Thanks for the tag: $tag")
+          Ok(s"Thanks for the tag: $tag")
         }
       }
       /// end_src_inlined
@@ -85,7 +85,7 @@ class ApiExamples extends Specification {
         val getTag = capture(ETag)
 
         POST / "sequential" >>> getTag >>> ensureLength |>> { tag: ETag =>
-          Ok[IO](s"Thanks for the $tag and the non-empty body!")
+          Ok(s"Thanks for the $tag and the non-empty body!")
         }
       }
       /// end_src_inlined
@@ -106,7 +106,7 @@ class ApiExamples extends Specification {
         val getTag = captureMap(ETag)(_ => -1l)
 
         GET / (path1 || path2) +? param[String]("foo") >>> (getLength || getTag) |>> {
-          (i: Int, foo: String, v: Long) => Ok[IO](s"Received $i, $foo, $v")
+          (i: Int, foo: String, v: Long) => Ok(s"Received $i, $foo, $v")
         }
       }
       /// end_src_inlined
@@ -117,10 +117,10 @@ class ApiExamples extends Specification {
            handler function.
          */
         GET / "request" |>> { req: Request[IO] =>
-          Ok[IO]("I don't actually need a request...")
+          Ok("I don't actually need a request...")
         }
         GET / "request" / 'foo |>> { (req: Request[IO], foo: String) =>
-          Ok[IO]("I wanted a request")
+          Ok("I wanted a request")
         }
       }
       /// end_src_inlined
@@ -149,8 +149,8 @@ class ApiExamples extends Specification {
       /// src_inlined StatusCodes
       new RhoService[IO] {
         GET / "twoResults" |>> { () =>
-          if (true) Ok[IO]("bytes result".getBytes())
-          else NotFound[IO]("Boo... Not found...")
+          if (true) Ok("bytes result".getBytes())
+          else NotFound("Boo... Not found...")
         }
       }
       /// end_src_inlined
@@ -159,7 +159,7 @@ class ApiExamples extends Specification {
       new RhoService[IO] {
         // Using decoders you can parse the body as well
         POST / "postSomething" ^ UrlForm.entityDecoder[IO] |>> { m: UrlForm =>
-          Ok[IO](s"You posted these things: $m")
+          Ok(s"You posted these things: $m")
         }
       }
       /// end_src_inlined
@@ -177,7 +177,7 @@ class ApiExamples extends Specification {
         }
 
         GET / "foo2-test" +? paramFoobar |>> { (f: Foo) =>
-          Ok[IO](s"You queried for foo: $f")
+          Ok(s"You queried for foo: $f")
         }
       }
 

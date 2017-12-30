@@ -25,7 +25,7 @@ import shapeless.{HList, HNil}
   */
 class RhoService[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
     extends bits.MethodAliases
-    with bits.ResponseGeneratorInstances
+    with bits.ResponseGeneratorInstances[F]
     with RoutePrependable[F, RhoService[F]]
     with EntityEncoderInstances
 {

@@ -1,12 +1,11 @@
 package org.http4s.rho
 package bits
 
-
 import cats.effect.IO
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 
-
-class ResultResponseSpec extends Specification {
+class ResultResponseSpec extends Specification  {
 
   "ResultResponse" should {
 
@@ -15,7 +14,7 @@ class ResultResponseSpec extends Specification {
     }
 
     "map a FailureResponse" in {
-      val result: ResultResponse[IO, Int] = FailureResponse.badRequest("foo")
+      val result: ResultResponse[IO, Int] = badRequest("foo")
       result.map(_.toString) should_== result
     }
 
@@ -24,7 +23,7 @@ class ResultResponseSpec extends Specification {
     }
 
     "flatMap a FailureResponse" in {
-      val result: ResultResponse[IO, Int] = FailureResponse.badRequest("foo")
+      val result: ResultResponse[IO, Int] = badRequest("foo")
       result.flatMap(i => SuccessResponse(i.toString)) should_== result
     }
 
@@ -41,7 +40,7 @@ class ResultResponseSpec extends Specification {
     }
 
     "work in a failing for comprehensions" in {
-      val a: ResultResponse[IO, String] = FailureResponse.badRequest("boo")
+      val a: ResultResponse[IO, String] = badRequest("boo")
       val b: ResultResponse[IO, String] = SuccessResponse("bar")
 
       val result1 = for {
@@ -57,5 +56,4 @@ class ResultResponseSpec extends Specification {
       (result1 should_== a) and (result2 should_== a)
     }
   }
-
 }

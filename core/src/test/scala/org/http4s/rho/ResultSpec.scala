@@ -1,23 +1,23 @@
 package org.http4s.rho
 
-import cats.effect.IO
 import org.http4s.headers._
 import org.http4s.rho.io._
 import org.http4s.{AttributeKey, HttpDate}
 import org.specs2.mutable.Specification
 
 class ResultSpec extends Specification {
+
   "ResultSyntax" should {
     "Add headers" in {
       val date = Date(HttpDate.Epoch)
-      val resp = Ok[IO]("Foo")
+      val resp = Ok("Foo")
         .map(_.putHeaders(date))
         .unsafeRunSync()
         .resp
 
       resp.headers.get(Date) must beSome(date)
 
-      val respNow = Ok[IO]("Foo")
+      val respNow = Ok("Foo")
         .map(_.putHeaders(date))
         .unsafeRunSync()
         .resp
@@ -27,14 +27,14 @@ class ResultSpec extends Specification {
 
     "Add atributes" in {
       val attrKey = AttributeKey[String]
-      val resp = Ok[IO]("Foo")
+      val resp = Ok("Foo")
         .map(_.withAttribute(attrKey, "foo"))
         .unsafeRunSync()
         .resp
 
       resp.attributes.get(attrKey) must beSome("foo")
 
-      val resp2 = Ok[IO]("Foo")
+      val resp2 = Ok("Foo")
         .map(_.withAttribute(attrKey, "foo"))
         .unsafeRunSync()
         .resp
@@ -44,7 +44,7 @@ class ResultSpec extends Specification {
 
     "Add a body" in {
       val newbody = "foobar"
-      val resp = Ok[IO]("foo")
+      val resp = Ok("foo")
         .flatMap(_.withBody(newbody))
         .unsafeRunSync()
         .resp
@@ -52,7 +52,7 @@ class ResultSpec extends Specification {
       new String(resp.body.runLog.unsafeRunSync().toArray) must_== newbody
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
 
-      val resp2 = Ok[IO]("foo")
+      val resp2 = Ok("foo")
         .flatMap(_.withBody(newbody))
         .unsafeRunSync()
         .resp

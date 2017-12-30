@@ -21,7 +21,7 @@ object QueryParser {
   type Params = Map[String, Seq[String]]
 }
 
-trait QueryParsers[F[_]] {
+trait QueryParsers[F[_]] extends FailureResponseOps[F] {
 
   /** Optionally extract the value from the `Query` */
   implicit def optionParse[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, Option[A]] {
@@ -74,11 +74,11 @@ trait QueryParsers[F[_]] {
 
         case Some(Seq()) => default match {
           case Some(defaultValue) => SuccessResponse(defaultValue)
-          case None => FailureResponse.badRequest(s"Value of query parameter '$name' missing")
+          case None => badRequest(s"Value of query parameter '$name' missing")
         }
         case None => default match {
           case Some(defaultValue) => SuccessResponse(defaultValue)
-          case None => FailureResponse.badRequest(s"Missing query param: $name")
+          case None => badRequest(s"Missing query param: $name")
         }
       }
     }

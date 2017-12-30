@@ -16,29 +16,29 @@ class SwaggerSupportSpec extends Specification {
   import org.json4s.jackson._
 
   val baseService = new RhoService[IO] {
-    GET / "hello" |>> { () => Ok[IO]("hello world") }
-    GET / "hello"/ pathVar[String] |>> { world: String => Ok[IO]("hello " + world) }
+    GET / "hello" |>> { () => Ok("hello world") }
+    GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
   }
 
   val moarRoutes = new RhoService[IO] {
-    GET / "goodbye" |>> { () => Ok[IO]("goodbye world") }
-    GET / "goodbye"/ pathVar[String] |>> { world: String => Ok[IO]("goodbye " + world) }
+    GET / "goodbye" |>> { () => Ok("goodbye world") }
+    GET / "goodbye"/ pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
   val trailingSlashService = new RhoService[IO] {
-    GET / "foo" / "" |>> { () => Ok[IO]("hello world") }
+    GET / "foo" / "" |>> { () => Ok("hello world") }
   }
 
   val mixedTrailingSlashesService = new RhoService[IO] {
-    GET / "foo" / "" |>> { () => Ok[IO]("hello world") }
-    GET / "foo" |>> { () => Ok[IO]("hello world") }
-    GET / "bar" |>> { () => Ok[IO]("hello world") }
+    GET / "foo" / "" |>> { () => Ok("hello world") }
+    GET / "foo" |>> { () => Ok("hello world") }
+    GET / "bar" |>> { () => Ok("hello world") }
   }
 
   val metaDataService = new RhoService[IO] {
-    "Hello" ** GET / "hello" |>> { () => Ok[IO]("hello world") }
-    Map("hello"->List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok[IO]("bye world") }
-    Map("bye"->List("hello")) ^^ GET / "goodbye" |>> { () => Ok[IO]("goodbye world") }
+    "Hello" ** GET / "hello" |>> { () => Ok("hello world") }
+    Map("hello"->List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok("bye world") }
+    Map("bye"->List("hello")) ^^ GET / "goodbye" |>> { () => Ok("goodbye world") }
   }
 
   "SwaggerSupport" should {

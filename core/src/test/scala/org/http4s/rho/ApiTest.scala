@@ -109,7 +109,7 @@ class ApiTest extends Specification {
       )
 
       val expectedFoo = Foo(10, HttpDate.now)
-      val route = runWith(path) { (f: Foo) => Ok[IO](s"stuff $f") }
+      val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
 
       val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
       result.status should_== Status.Ok
@@ -122,7 +122,7 @@ class ApiTest extends Specification {
       val c1 = captureMapR(headers.`Content-Length`)(r => Right(r.length))
       RuleExecutor.runRequestRules[IO](c1.rule, req) should_== SuccessResponse(4::HNil)
 
-      val r2 = Gone[IO]("Foo")
+      val r2 = Gone("Foo")
       val c2 = captureMapR(headers.`Content-Length`)(_ => Left(r2))
       val v1 = RuleExecutor.runRequestRules[IO](c2.rule, req)
       v1 must beAnInstanceOf[FailureResponse[IO]]
@@ -140,7 +140,7 @@ class ApiTest extends Specification {
 
       val route = runWith((path >>> validations >>> capture(ETag)).decoding(EntityDecoder.text[IO])) {
         (world: String, fav: Int, tag: ETag, body: String) =>
-          Ok[IO](s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+          Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
             .map(_.putHeaders(tag))
         }
 
@@ -160,12 +160,12 @@ class ApiTest extends Specification {
 
       val route1 = runWith((path >>> lplus1 >>> capture(ETag)).decoding(EntityDecoder.text)) {
         (world: String, lplus1: Long, tag: ETag, body: String) =>
-          Ok[IO]("")
+          Ok("")
       }
 
       val route2 = runWith((path >>> (lplus1 && capture(ETag))).decoding(EntityDecoder.text)) {
         (world: String, _: Long, tag: ETag, body: String) =>
-          Ok[IO]("")
+          Ok("")
       }
 
       val body = Stream.emit(ByteVector("cool".getBytes))
@@ -182,7 +182,7 @@ class ApiTest extends Specification {
       val p1 = "one" / 'two
       val p2 = "three" / 'four
 
-      val f = runWith(GET / (p1 || p2)) { (s: String) => Ok[IO]("").map(_.putHeaders(ETag(ETag.EntityTag(s)))) }
+      val f = runWith(GET / (p1 || p2)) { (s: String) => Ok("").map(_.putHeaders(ETag(ETag.EntityTag(s)))) }
 
       val req1 = Request[IO](uri = Uri.fromString("/one/two").right.getOrElse(sys.error("Failed.")))
       checkETag(f(req1), "two")
@@ -200,7 +200,7 @@ class ApiTest extends Specification {
       val route =
         runWith((path >>> validations).decoding(EntityDecoder.text)) {(world: String, fav: Int, tag: ETag, body: String) =>
 
-          Ok[IO](s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+          Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
             .map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
         }
 
@@ -213,7 +213,7 @@ class ApiTest extends Specification {
     }
 
     "Deal with 'no entity' responses" in {
-      val route = runWith(GET / "foo") { () => SwitchingProtocols[IO].apply }
+      val route = runWith(GET / "foo") { () => SwitchingProtocols.apply }
       val req = Request[IO](GET, uri = Uri.fromString("/foo").right.getOrElse(sys.error("Fail")))
 
       val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
@@ -241,7 +241,7 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
 
-      val f = runWith(stuff) { () => Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo")))) }
+      val f = runWith(stuff) { () => Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo")))) }
       checkETag(f(req), "foo")
     }
 
@@ -249,7 +249,7 @@ class ApiTest extends Specification {
       val stuff = GET / "hello"
       val req = Request[IO](uri = uri("/hello/world"))
 
-      val f = runWith(stuff) { () => Ok[IO]("Shouldn't get here.") }
+      val f = runWith(stuff) { () => Ok("Shouldn't get here.") }
       val r = f(req).value.unsafeRunSync().getOrElse(Response.notFound)
       r.status should_== Status.NotFound
     }
@@ -258,7 +258,7 @@ class ApiTest extends Specification {
       val stuff = GET / 'hello
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
 
-      val f = runWith(stuff) { str: String => Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(str)))) }
+      val f = runWith(stuff) { str: String => Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(str)))) }
       checkETag(f(req), "hello")
     }
 
@@ -267,7 +267,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
 
       val f = runWith(stuff) { () =>
-        Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
+        Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
       }
 
       checkETag(f(req), "foo")
@@ -277,7 +277,7 @@ class ApiTest extends Specification {
       val stuff = GET / "hello" / *
       val req = Request[IO](uri = Uri.fromString("/hello").right.getOrElse(sys.error("Failed.")))
       val f = runWith(stuff) { path: List[String] =>
-        Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))))
+        Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))))
       }
 
       checkETag(f(req), "go")
@@ -286,7 +286,7 @@ class ApiTest extends Specification {
     "capture remaining" in {
       val stuff = GET / "hello" / *
       val req = Request[IO](uri = Uri.fromString("/hello/world/foo").right.getOrElse(sys.error("Failed.")))
-      val f = runWith(stuff) { path: List[String] => Ok[IO]("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(path.mkString)))) }
+      val f = runWith(stuff) { path: List[String] => Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(path.mkString)))) }
 
       checkETag(f(req), "worldfoo")
     }
@@ -297,7 +297,7 @@ class ApiTest extends Specification {
       val path = GET / "hello" +? param[Int]("jimbo")
       val req = Request[IO](uri = Uri.fromString("/hello?jimbo=32").right.getOrElse(sys.error("Failed.")))
 
-      val route = runWith(path) { i: Int => Ok[IO]("stuff").map(_.putHeaders(ETag(ETag.EntityTag((i + 1).toString)))) }
+      val route = runWith(path) { i: Int => Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag((i + 1).toString)))) }
 
       checkETag(route(req), "33")
     }
@@ -308,13 +308,13 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = uri("/hello?foo=bar&baz=1"))
 
       val route1 = runWith(path +? param[String]("foo") & param[Int]("baz")) { (_: String, _: Int) =>
-        Ok[IO]("")
+        Ok("")
       }
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
 
       val route2 = runWith(path +? (param[String]("foo") and param[Int]("baz"))) { (_: String, _: Int) =>
-        Ok[IO]("")
+        Ok("")
       }
 
       route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
@@ -327,7 +327,7 @@ class ApiTest extends Specification {
       val path = GET / "hello" +? paramFoo
       val req = Request[IO](uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")))
 
-      val route = runWith(path) { (f: Foo) => Ok[IO](s"stuff $f") }
+      val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
 
       val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
       result.status should_== Status.Ok
@@ -351,7 +351,7 @@ class ApiTest extends Specification {
         .unsafeRunSync()
 
       val route = runWith(path.decoding(EntityDecoder.text)) { str: String =>
-        Ok[IO]("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
+        Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
       }
 
       checkETag(route(req1), "foo")
@@ -366,7 +366,7 @@ class ApiTest extends Specification {
         .unsafeRunSync()
 
       val route = runWith(path ^ EntityDecoder.text) { str: String =>
-        Ok[IO]("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
+        Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
       }
 
       checkETag(route(req), "foo")
@@ -380,14 +380,14 @@ class ApiTest extends Specification {
 
       val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length < 2}
       val route1 = runWith(path.validate(reqHeader)) { () =>
-        Ok[IO]("shouldn't get here.")
+        Ok("shouldn't get here.")
       }
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.BadRequest
 
-      val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized[IO]("Foo."))}
+      val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
       val route2 = runWith(path.validate(reqHeaderR)) { () =>
-        Ok[IO]("shouldn't get here.")
+        Ok("shouldn't get here.")
       }
 
       route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Unauthorized
@@ -400,13 +400,13 @@ class ApiTest extends Specification {
                   .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
 
       val route1 = runWith(path +? param[Int]("foo")) { i: Int =>
-        Ok[IO]("shouldn't get here.")
+        Ok("shouldn't get here.")
       }
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.BadRequest
 
-      val route2 = runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized[IO]("foo")))) { _: String =>
-        Ok[IO]("shouldn't get here.")
+      val route2 = runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) { _: String =>
+        Ok("shouldn't get here.")
       }
 
       route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Unauthorized

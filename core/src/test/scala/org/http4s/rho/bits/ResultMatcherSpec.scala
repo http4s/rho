@@ -30,7 +30,7 @@ class ResultMatcherSpec extends Specification {
   "ResponseGenerator" should {
     "Match a single result type" in {
       val srvc = new TRhoService[IO] {
-        PUT / "foo" |>> { () => Ok[IO]("updated").unsafeRunSync() }
+        PUT / "foo" |>> { () => Ok("updated").unsafeRunSync() }
       }
 
       srvc.statuses.map(_._1) should_== Set(Ok)
@@ -41,8 +41,8 @@ class ResultMatcherSpec extends Specification {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => NotFound[IO](s"Not found")
-            case 1 => Ok[IO]("Hello world".getBytes())
+            case 0 => NotFound(s"Not found")
+            case 1 => Ok("Hello world".getBytes())
           }
         }
       }
@@ -57,8 +57,8 @@ class ResultMatcherSpec extends Specification {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => Ok[IO](s"Not found")
-            case 1 => Ok[IO]("Hello world".getBytes())
+            case 0 => Ok(s"Not found")
+            case 1 => Ok("Hello world".getBytes())
           }
         }
       }
@@ -68,7 +68,7 @@ class ResultMatcherSpec extends Specification {
 
     "Match an empty result type" in {
       val srvc = new TRhoService[IO] {
-        PUT / "foo" |>> { () => NoContent[IO].apply }
+        PUT / "foo" |>> { () => NoContent.apply }
       }
 
       srvc.statuses.map(_._1) should_== Set(NoContent)
@@ -80,9 +80,9 @@ class ResultMatcherSpec extends Specification {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => NotFound[IO](s"Not found")
-            case 1 => Ok[IO]("updated")
-            case 2 => Accepted[IO]("it was accepted")
+            case 0 => NotFound(s"Not found")
+            case 1 => Ok("updated")
+            case 2 => Accepted("it was accepted")
           }
         }
       }
@@ -95,10 +95,10 @@ class ResultMatcherSpec extends Specification {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
-            case 0 => NotFound[IO](s"Not found")
-            case 1 => Ok[IO]("updated")
-            case 2 => Accepted[IO]("it was accepted")
-            case 4 => Created[IO]("it was created")
+            case 0 => NotFound(s"Not found")
+            case 1 => Ok("updated")
+            case 2 => Accepted("it was accepted")
+            case 4 => Created("it was created")
           }
         }
       }
@@ -119,8 +119,8 @@ class ResultMatcherSpec extends Specification {
 
       val srvc = new TRhoService[IO] {
         GET / "foo" |>> { () =>
-          if (true) Ok[IO](ModelA("test ok", 1))
-          else NotFound[IO](ModelB("test not found", 234))
+          if (true) Ok(ModelA("test ok", 1))
+          else NotFound(ModelB("test not found", 234))
         }
       }
 
@@ -136,8 +136,8 @@ class ResultMatcherSpec extends Specification {
 
       val srvc = new TRhoService[IO] {
         GET / "foo" |>> { () =>
-          if (true) Ok[IO](FooA("test ok", 1))
-          else NotFound[IO](FooB("test not found", 234))
+          if (true) Ok(FooA("test ok", 1))
+          else NotFound(FooB("test not found", 234))
         }
       }
 

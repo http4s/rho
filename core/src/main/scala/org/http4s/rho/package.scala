@@ -24,7 +24,8 @@ trait RhoDsl[F[_]]
   extends ResultSyntaxInstances[F]
     with QueryParsers[F]
     with MatchersHListToFunc[F]
-    with ResponseGeneratorInstances {
+    with ResponseGeneratorInstances[F]
+    with FailureResponseOps[F] {
 
   private[this] val logger = getLogger
 
@@ -67,7 +68,7 @@ trait RhoDsl[F[_]]
                     (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, {t =>
       if (validate(t)) None
-      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Define a query parameter with description that will be validated with the predicate
@@ -77,7 +78,7 @@ trait RhoDsl[F[_]]
                      (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramRDescr(name, description, { t: T =>
       if (validate(t)) None
-      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Define a query parameter that will be validated with the predicate
@@ -87,7 +88,7 @@ trait RhoDsl[F[_]]
                     (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, default, { t: T =>
       if (validate(t)) None
-      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Define a query parameter with description that will be validated with the predicate
@@ -97,7 +98,7 @@ trait RhoDsl[F[_]]
                      (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, description, default, { t =>
       if (validate(t)) None
-      else Some(BadRequest[F](s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
     })
 
   /** Defines a parameter in query string that should be bound to a route definition. */
@@ -179,7 +180,7 @@ trait RhoDsl[F[_]]
   def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean)(implicit F: Monad[F]): TypedHeader[F, HNil] =
     existsAndR[H](header){ h =>
       if (f(h)) None
-      else Some(BadRequest[F](s"Invalid header: ${h.name} = ${h.value}").widen)
+      else Some(BadRequest(s"Invalid header: ${h.name} = ${h.value}").widen)
     }
 
   /** Check that the header exists and satisfies the condition
@@ -255,12 +256,12 @@ trait RhoDsl[F[_]]
           } catch {
             case NonFatal(e) =>
               logger.error(e)(s"""Failure during header capture: "${key.name}" = "${h.value}"""")
-              FailureResponse.error("Error processing request.")
+              error("Error processing request.")
           }
 
         case None => default match {
           case Some(r) => FailureResponse.result(r)
-          case None    => FailureResponse.badRequest(s"Missing header: ${key.name}")
+          case None    => badRequest(s"Missing header: ${key.name}")
         }
       }
     }.withMetadata(HeaderMetaData(key, default.isDefined))

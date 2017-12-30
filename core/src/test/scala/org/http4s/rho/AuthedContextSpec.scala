@@ -23,16 +23,16 @@ object Auth {
 }
 
 
-object MyAuth extends AuthedContext[User]
+object MyAuth extends AuthedContext[IO, User]
 
 object MyService extends RhoService[IO] {
   import MyAuth._
 
-  GET +? param("foo", "bar") >>> auth[IO] |>> { (req: Request[IO], foo: String, user: User) =>
+  GET +? param("foo", "bar") >>> auth |>> { (req: Request[IO], foo: String, user: User) =>
     if (user.name == "Test User") {
-      Ok[IO](s"just root with parameter 'foo=$foo'")
+      Ok(s"just root with parameter 'foo=$foo'")
     } else {
-      BadRequest[IO]("This should not have happened.")
+      BadRequest("This should not have happened.")
     }
   }
 }
