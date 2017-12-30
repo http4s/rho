@@ -104,8 +104,7 @@ lazy val buildSettings = publishing ++
       logbackClassic % "test"
     ),
     libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value,
-    addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.4" cross CrossVersion.binary)
+    libraryDependencies += `scala-reflect` % scalaVersion.value
   )
 
 lazy val publishing = Seq(

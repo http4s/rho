@@ -49,10 +49,13 @@ class AuthedContext[U] {
     * @param service [[HttpService]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService[F[_]: Functor](service: HttpService[F]): AuthedService[U, F] =
-    Kleisli[OptionT[F, ?], AuthedRequest[F, U], Response[F]] { (a: AuthedRequest[F, U]) =>
+  def toService[F[_]: Functor](service: HttpService[F]): AuthedService[U, F] = {
+    type O[A] = OptionT[F, A]
+
+    Kleisli[O, AuthedRequest[F, U], Response[F]] { (a: AuthedRequest[F, U]) =>
       service(a.req.withAttribute[U](authKey, a.authInfo))
     }
+  }
 
   /* Get the authInfo object from request. */
   def getAuth[F[_]](req: Request[F]): U = {

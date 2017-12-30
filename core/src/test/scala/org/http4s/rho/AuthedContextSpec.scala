@@ -13,8 +13,9 @@ import scodec.bits.ByteVector
 case class User(name: String, id: UUID)
 
 object Auth {
+  type O[A] = OptionT[IO, A]
 
-  val authUser: Kleisli[OptionT[IO, ?], Request[IO], User] = Kleisli({ _ =>
+  val authUser: Kleisli[O, Request[IO], User] = Kleisli({ _ =>
     OptionT.some[IO](User("Test User", UUID.randomUUID()))
   })
 
