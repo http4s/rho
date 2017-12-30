@@ -2,12 +2,12 @@ package com.http4s.rho.swagger.demo
 
 import cats.effect.IO
 import cats.syntax.semigroupk._
-import fs2.Stream
+import fs2.StreamApp.ExitCode
+import fs2.{Stream, StreamApp}
 import org.http4s.HttpService
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
 import org.http4s.rho.swagger.syntax.io._
 import org.http4s.server.blaze.BlazeBuilder
-import org.http4s.util.{ExitCode, StreamApp}
 import org.log4s.getLogger
 
 object Main extends StreamApp[IO] {

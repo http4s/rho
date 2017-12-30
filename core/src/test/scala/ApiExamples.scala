@@ -141,7 +141,7 @@ class ApiExamples extends Specification {
         /* We can use a standard http4s.Response, but we don't get any metadata
            with it. Useful for things like Websocket support. */
         GET / "websockets" |>> { () =>
-          WS[IO](???, ???)
+          WebSocketBuilder[IO].build(???, ???)
         }
       }
       /// end_src_inlined
