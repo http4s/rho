@@ -73,10 +73,8 @@ package object swagger {
     def isStream: Boolean =
       t <:< typeOf[Stream[_]]
 
-    // TODO:
     def isEffect: Boolean =
-      ???
-//      t =:= typeOf[Effect[F]]
+      t <:< weakTypeOf[Effect[F]]
 
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]
