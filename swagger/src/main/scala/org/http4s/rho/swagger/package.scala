@@ -5,7 +5,6 @@ import java.util.Date
 
 import org.http4s.Method
 import org.http4s.rho.bits.{PathAST, SecurityScopesMetaData, TextMetaData}
-import org.http4s.rho.bits.ResponseGenerator.EmptyRe
 import org.http4s.rho.swagger.models.Model
 import shapeless.{HList, HNil}
 
@@ -53,7 +52,7 @@ package object swagger {
     }
 
     private[swagger] val excludes = {
-      Set[Type](typeOf[scala.xml.Elem], typeOf[EmptyRe])
+      Set[Type](typeOf[scala.xml.Elem])
     }
 
     def isPrimitive(t: Type, extra: Set[Type] = Set.empty) = (primitives ++ extra).exists(t =:= _)

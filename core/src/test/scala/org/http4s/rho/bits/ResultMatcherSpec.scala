@@ -2,7 +2,6 @@ package org.http4s
 package rho
 package bits
 
-import org.http4s.rho
 import org.specs2.mutable.Specification
 
 import scala.reflect.runtime.universe._
@@ -74,7 +73,7 @@ class ResultMatcherSpec extends Specification {
       }
 
       srvc.statuses.map(_._1) should_== Set(NoContent)
-      srvc.statuses.head._2 =:= weakTypeOf[org.http4s.rho.bits.ResponseGenerator.EmptyRe]
+      srvc.statuses.head._2 =:= typeOf[Unit]
     }
 
     "Match three results with different status but same result type" in {
