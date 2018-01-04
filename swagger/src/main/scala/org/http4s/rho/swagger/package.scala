@@ -111,6 +111,9 @@ package object swagger {
     def isTask: Boolean =
       t <:< typeOf[Task[_]]
 
+    def isUnitOrVoid: Boolean =
+      t =:= typeOf[Unit] || t =:= typeOf[java.lang.Void]
+
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]
   }

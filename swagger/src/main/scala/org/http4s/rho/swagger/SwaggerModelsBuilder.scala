@@ -275,6 +275,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     def typeToProp(tpe: Type): Option[Property] =
       if (Reflector.isExcluded(tpe))
         None
+      else if (tpe.isUnitOrVoid)
+        None
       else if (tpe.isPrimitive)
         mkPrimitiveProperty(tpe).some
       else if (tpe.isMap)
