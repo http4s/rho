@@ -16,6 +16,9 @@ import scodec.bits.ByteVector
 import shapeless.{HList, HNil}
 
 class ApiTest extends Specification {
+
+  object ruleExecutor extends RuleExecutor[IO]
+
   def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
     val srvc = new RhoService[F] { exec |>> f }.toService()
     srvc.apply(_: Request[F])
@@ -51,7 +54,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request" in {
       val badreq = Request[IO]().putHeaders(lenheader)
-      val res = RuleExecutor.runRequestRules[IO]((RequireETag && RequireNonZeroLen).rule, badreq)
+      val res = ruleExecutor.runRequestRules((RequireETag && RequireNonZeroLen).rule, badreq)
 
       res must beAnInstanceOf[FailureResponse[IO]]
       res.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== Status.BadRequest
@@ -59,7 +62,7 @@ class ApiTest extends Specification {
 
     "Fail on a bad request 2" in {
       val req = Request[IO]().putHeaders(lenheader)
-      val res = RuleExecutor.runRequestRules[IO](RequireThrowException.rule, req)
+      val res = ruleExecutor.runRequestRules(RequireThrowException.rule, req)
 
       res must beAnInstanceOf[FailureResponse[IO]]
       res.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== Status.InternalServerError
@@ -69,17 +72,17 @@ class ApiTest extends Specification {
       val c = RequireETag && RequireNonZeroLen
 
       val req = Request[IO]().putHeaders(etag, lenheader)
-      RuleExecutor.runRequestRules[IO](c.rule, req) should_== SuccessResponse(HNil)
+      ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(HNil)
     }
 
     "Capture params" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
       Seq({
         val c2 = RequireETag && capture(headers.`Content-Length`)
-        RuleExecutor.runRequestRules[IO](c2.rule, req) should_== SuccessResponse(lenheader :: HNil)
+        ruleExecutor.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader :: HNil)
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(ETag)
-        RuleExecutor.runRequestRules[IO](c3.rule, req) should_== SuccessResponse(etag :: lenheader :: HNil)
+        ruleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(etag :: lenheader :: HNil)
       }).reduce(_ and _)
     }
 
@@ -87,14 +90,14 @@ class ApiTest extends Specification {
       val req = Request[IO]().putHeaders(etag, lenheader)
       val c = captureMap(headers.`Content-Length`)(_.length)
 
-      RuleExecutor.runRequestRules[IO](c.rule, req) should_== SuccessResponse(4 :: HNil)
+      ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(4 :: HNil)
     }
 
     "Map header params with exception" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
       val c = captureMap(headers.`Content-Length`)(_.length / 0)
 
-      RuleExecutor.runRequestRules[IO](c.rule, req) must beAnInstanceOf[FailureResponse[IO]]
+      ruleExecutor.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse[IO]]
     }
 
     "map simple header params into a complex type" in {
@@ -120,16 +123,16 @@ class ApiTest extends Specification {
       val req = Request[IO]().putHeaders(etag, lenheader)
 
       val c1 = captureMapR(headers.`Content-Length`)(r => Right(r.length))
-      RuleExecutor.runRequestRules[IO](c1.rule, req) should_== SuccessResponse(4::HNil)
+      ruleExecutor.runRequestRules(c1.rule, req) should_== SuccessResponse(4::HNil)
 
       val r2 = Gone("Foo")
       val c2 = captureMapR(headers.`Content-Length`)(_ => Left(r2))
-      val v1 = RuleExecutor.runRequestRules[IO](c2.rule, req)
+      val v1 = ruleExecutor.runRequestRules(c2.rule, req)
       v1 must beAnInstanceOf[FailureResponse[IO]]
       v1.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2.unsafeRunSync().resp.status
 
       val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
-      val v2 = RuleExecutor.runRequestRules[IO](c3.rule, req)
+      val v2 = ruleExecutor.runRequestRules(c3.rule, req)
       v2 must beAnInstanceOf[FailureResponse[IO]]
       v2.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2.unsafeRunSync().resp.status
     }
