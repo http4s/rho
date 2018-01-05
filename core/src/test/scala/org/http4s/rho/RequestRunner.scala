@@ -28,4 +28,4 @@ object RequestRunner {
   }
 }
 
-case class RRunner(val service: HttpService[IO]) extends RequestRunner
+case class RRunner(service: HttpService[IO]) extends RequestRunner
