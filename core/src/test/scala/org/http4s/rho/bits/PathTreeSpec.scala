@@ -12,6 +12,8 @@ import scodec.bits.ByteVector
 
 class PathTreeSpec extends Specification {
   import PathTree._
+  object pathTree extends PathTreeOps[IO]
+  import pathTree._
 
   "splitPath" should {
     "handle an empty string" in {
@@ -71,7 +73,7 @@ class PathTreeSpec extends Specification {
   }
 
   "PathTree mergers" >> {
-    val l = Leaf[IO]((r, b) => null)
+    val l = Leaf((r, b) => null)
 
     "MatchNodes" should {
       "Merge empty nodes" in {
@@ -100,7 +102,7 @@ class PathTreeSpec extends Specification {
       }
 
       "Merge non-empty intermediate nodes with non matching paths" in {
-        val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
+        val endm: Map[Method, Leaf] = Map(Method.GET -> l)
         val bar = MatchNode("bar", end = endm)
         val bizz = MatchNode("bizz", end = endm)
         val n1 = MatchNode("foo", matches = Map("bar" -> bar))
@@ -110,9 +112,9 @@ class PathTreeSpec extends Specification {
       }
 
       "Merge non-empty intermediate nodes with mixed matching paths" in {
-        val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
+        val endm: Map[Method, Leaf] = Map(Method.GET -> l)
         val bar = MatchNode("bar", end = endm)
-        val bizz = CaptureNode[IO](StringParser.booleanParser[IO], end = endm)
+        val bizz = CaptureNode(StringParser.booleanParser[IO], end = endm)
         val n1 = MatchNode("foo", matches = Map("bar" -> bar))
         val n2 = MatchNode("foo", captures = List(bizz))
 
@@ -148,7 +150,7 @@ class PathTreeSpec extends Specification {
       }
 
       "Merge non-empty intermediate nodes with non matching paths" in {
-        val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
+        val endm: Map[Method, Leaf] = Map(Method.GET -> l)
         val bar = MatchNode("bar", end = endm)
         val bizz = MatchNode("bizz", end = endm)
         val n1 = CaptureNode(p, matches = Map("bar" -> bar))
@@ -158,7 +160,7 @@ class PathTreeSpec extends Specification {
       }
 
       "Merge non-empty intermediate nodes with mixed matching paths" in {
-        val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
+        val endm: Map[Method, Leaf] = Map(Method.GET -> l)
         val bar = MatchNode("bar", end = endm)
         val bizz = CaptureNode(StringParser.booleanParser[IO], end = endm)
         val n1 = CaptureNode(p, matches = Map("bar" -> bar))
@@ -168,7 +170,7 @@ class PathTreeSpec extends Specification {
       }
 
       "Merging should preserve order" in {
-        val endm: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
+        val endm: Map[Method, Leaf] = Map(Method.GET -> l)
         val bar = CaptureNode(StringParser.intParser[IO], end = endm)
         val bizz = CaptureNode(StringParser.booleanParser[IO], end = endm)
         val n1 = CaptureNode(p, captures = List(bar))
@@ -178,8 +180,8 @@ class PathTreeSpec extends Specification {
       }
 
       "Merging should promote order of the same nodes" in {
-        val end1: Map[Method, Leaf[IO]] = Map(Method.GET -> l)
-        val end2: Map[Method, Leaf[IO]] = Map(Method.POST -> l)
+        val end1: Map[Method, Leaf] = Map(Method.GET -> l)
+        val end2: Map[Method, Leaf] = Map(Method.POST -> l)
 
         val foo = CaptureNode(StringParser.shortParser[IO], end = end1)
         val bar = CaptureNode(StringParser.intParser[IO], end = end1)

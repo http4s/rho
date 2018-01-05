@@ -2,6 +2,7 @@ package org.http4s.rho.bits
 
 import cats.data.OptionT
 import cats.{Applicative, Functor, Monad}
+import cats.syntax.functor._
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
 
@@ -17,10 +18,11 @@ sealed trait RouteResult[F[_], +T] {
     case _        => false
   }
 
-  final def toResponse(implicit F: Applicative[F], ev: T <:< Response[F]): OptionT[F, Response[F]] = this match {
-      case SuccessResponse(t) => OptionT.pure(t)
+  final def toResponse(implicit F: Monad[F], ev: T <:< F[Response[F]]): OptionT[F, Response[F]] =
+    this match {
+      case SuccessResponse(t) => OptionT(ev(t).map(Option.apply))
       case NoMatch()          => OptionT.none[F, Response[F]]
-      case FailureResponse(r) => OptionT.liftF(r.toResponse)
+      case FailureResponse(r) => OptionT(r.toResponse.map(Option.apply))
     }
 }
 
