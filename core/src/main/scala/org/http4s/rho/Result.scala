@@ -91,10 +91,8 @@ trait ResultSyntaxInstances[F[_]] {
     override def withStatus(status: Status)(implicit F: Functor[F]): Self =
       Result(r.resp.copy(status = status))
 
-    override def attemptAs[U](implicit F: FlatMap[F], decoder: EntityDecoder[F, U]): DecodeResult[F, U] = {
-      val t: F[Either[DecodeFailure, U]] = r.resp.attemptAs(F, decoder).value
-      EitherT[F, DecodeFailure, U](t)
-    }
+    override def attemptAs[U](implicit F: FlatMap[F], decoder: EntityDecoder[F, U]): DecodeResult[F, U] =
+      r.resp.attemptAs(F, decoder)
 
     override def transformHeaders(f: (Headers) => Headers)(implicit F: Functor[F]): T =
       Result(r.resp.transformHeaders(f))

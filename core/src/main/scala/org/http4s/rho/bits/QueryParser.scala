@@ -6,7 +6,6 @@ import org.http4s.rho.bits.QueryParser.Params
 
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
-import scala.language.higherKinds
 
 /** Extract a value from the `Request` `Query`
   *
