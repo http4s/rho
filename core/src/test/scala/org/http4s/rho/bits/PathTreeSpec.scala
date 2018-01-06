@@ -45,7 +45,7 @@ class PathTreeSpec extends Specification {
     val resp = svc(req).value.unsafeRunSync().getOrElse(Response.notFound)
 
     resp.status must_== Status.Ok
-    val b = new String(resp.body.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray, StandardCharsets.UTF_8)
+    val b = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray, StandardCharsets.UTF_8)
     b must_== "foo"
   }
 

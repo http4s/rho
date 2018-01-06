@@ -10,7 +10,7 @@ import scodec.bits.ByteVector
 class CodecRouterSpec extends Specification {
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
-    val rbody = new String(resp.body.runLog.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+    val rbody = new String(resp.body.compile.toVector.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
     (rbody, resp.status)
   }
 

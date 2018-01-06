@@ -13,7 +13,7 @@ class ResponseGeneratorSpec extends Specification {
       val result = Ok("Foo").unsafeRunSync()
       val resp = result.resp
 
-      val str = new String(resp.body.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
+      val str = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
       str must_== "Foo"
 
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong("Foo".getBytes.length))
@@ -24,7 +24,7 @@ class ResponseGeneratorSpec extends Specification {
       val result = SwitchingProtocols.apply.unsafeRunSync()
       val resp = result.resp
 
-      resp.body.runLog.unsafeRunSync().length must_== 0
+      resp.body.compile.toVector.unsafeRunSync().length must_== 0
       resp.status must_== Status.SwitchingProtocols
       resp.headers.get(`Content-Length`) must beNone
       resp.headers.get(`Transfer-Encoding`) must beNone
@@ -35,7 +35,7 @@ class ResponseGeneratorSpec extends Specification {
       val result = MovedPermanently(location).unsafeRunSync()
       val resp = result.resp
 
-      resp.body.runLog.unsafeRunSync().length must_== 0
+      resp.body.compile.toVector.unsafeRunSync().length must_== 0
       resp.status must_== Status.MovedPermanently
       resp.headers.get(`Content-Length`) must beNone
       resp.headers.get(`Transfer-Encoding`) must beNone

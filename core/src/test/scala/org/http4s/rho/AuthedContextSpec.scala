@@ -47,7 +47,7 @@ class AuthedContextSpec extends Specification {
       val request = Request[IO](Method.GET, Uri(path = "/"))
       val resp = service.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
-        val body = new String(resp.body.runLog.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
+        val body = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
         body should_== "just root with parameter 'foo=bar'"
       } else sys.error(s"Invalid response code: ${resp.status}")
     }

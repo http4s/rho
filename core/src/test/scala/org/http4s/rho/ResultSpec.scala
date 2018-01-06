@@ -49,7 +49,7 @@ class ResultSpec extends Specification {
         .unsafeRunSync()
         .resp
 
-      new String(resp.body.runLog.unsafeRunSync().toArray) must_== newbody
+      new String(resp.body.compile.toVector.unsafeRunSync().toArray) must_== newbody
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
 
       val resp2 = Ok("foo")
@@ -57,7 +57,7 @@ class ResultSpec extends Specification {
         .unsafeRunSync()
         .resp
 
-      new String(resp2.body.runLog.unsafeRunSync().toArray) must_== newbody
+      new String(resp2.body.compile.toVector.unsafeRunSync().toArray) must_== newbody
       resp2.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
     }
   }

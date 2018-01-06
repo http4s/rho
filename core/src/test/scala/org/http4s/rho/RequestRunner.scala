@@ -24,7 +24,7 @@ trait RequestRunner {
 }
 object RequestRunner {
   def getBody(b: EntityBody[IO]): String = {
-    new String(b.runLog.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+    new String(b.compile.toVector.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
   }
 }
 
