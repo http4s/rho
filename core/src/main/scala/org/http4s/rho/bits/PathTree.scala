@@ -323,7 +323,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   private def mergeMatches(m1: Map[String, MatchNode], m2: Map[String, MatchNode]): Map[String, MatchNode] =
     mergeMaps(m1, m2)(_ merge _)
 
-  private def mergeLeaves(l1: Map[Method, Leaf], l2: Map[Method, Leaf]): Map[Method, Leaf ] =
+  private def mergeLeaves(l1: Map[Method, Leaf], l2: Map[Method, Leaf]): Map[Method, Leaf] =
     mergeMaps(l1, l2)(_ ++ _)
 
   private def mergeMaps[K,V](m1: Map[K,V], m2: Map[K,V])(merge: (V,V) => V): Map[K,V] = {

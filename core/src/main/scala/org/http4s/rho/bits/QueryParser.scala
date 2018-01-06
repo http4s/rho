@@ -29,10 +29,10 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
       params.get(name) match {
         case Some(Seq(value, _*)) =>
           p.parse(value) match {
-            case SuccessResponse(successValue) => SuccessResponse[F, Option[A]](Option[A](successValue))
+            case SuccessResponse(successValue) => SuccessResponse(Some(successValue))
             case other => other.asInstanceOf[ResultResponse[F, Option[A]]]
           }
-        case _ => SuccessResponse(default.getOrElse(None))
+        case _ => SuccessResponse(default.flatten)
       }
     }
   }
