@@ -10,8 +10,7 @@ import org.http4s.rho.swagger.models._
 import shapeless._
 
 object SwaggerSupport {
-  def apply[F[_]: Monad](syntax: SwaggerSyntax[F]): SwaggerSupport[F] =
-    new SwaggerSupport[F] {}
+  def apply[F[_]: Monad]: SwaggerSupport[F] = new SwaggerSupport[F] {}
 }
 
 abstract class SwaggerSupport[F[_]](implicit F: Monad[F]) extends SwaggerSyntax[F] {
