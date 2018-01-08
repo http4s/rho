@@ -512,14 +512,14 @@ class SwaggerModelsBuilderSpec extends Specification {
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
     }
 
-    "collect response of a Task of a primitive" in {
+    "collect response of an IO of a primitive" in {
       val ra = GET / "test" |>> { () => Ok(IO.pure("")) }
 
       sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
-    "collect response of a Task of a non-primitive" in {
+    "collect response of an IO of a non-primitive" in {
       val ra = GET / "test" |>> { () => Ok(IO.pure(List((0, ModelA("", 0))))) }
 
       sb.collectResponses[IO](ra) must havePair(
