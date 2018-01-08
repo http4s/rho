@@ -44,11 +44,11 @@ package object swagger {
     private[swagger] val primitives = {
       Set[Type](typeOf[String], typeOf[Int], typeOf[Long], typeOf[Double],
         typeOf[Float], typeOf[Byte], typeOf[BigInt], typeOf[Boolean],
-        typeOf[Short], typeOf[java.lang.Integer], typeOf[java.lang.Long],
+        typeOf[Short], typeOf[Char], typeOf[java.lang.Integer], typeOf[java.lang.Long],
         typeOf[java.lang.Double], typeOf[java.lang.Float], typeOf[BigDecimal],
-        typeOf[java.lang.Byte], typeOf[java.lang.Boolean], typeOf[Number],
+        typeOf[java.lang.Byte], typeOf[java.lang.Boolean], typeOf[java.lang.Number],
         typeOf[java.lang.Short], typeOf[Date], typeOf[Timestamp], typeOf[scala.Symbol],
-        typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger])
+        typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger], typeOf[java.lang.Character])
     }
 
     private[swagger] val excludes = {
@@ -101,8 +101,7 @@ package object swagger {
       t <:< typeOf[Option[_]]
 
     def isPrimitive: Boolean =
-      Reflector.primitives.exists(_ =:= t) ||
-        Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
+      Reflector.primitives.exists(_ =:= t)
 
     def isStream: Boolean =
       t <:< typeOf[Stream[Task, _]]
@@ -122,12 +121,8 @@ package object swagger {
       case ExistentialType(_, _) => Set.empty
     }
 
-    val ignoreNothingOrNull: PartialFunction[Type, Set[Model]] = {
-      case tpe if tpe.isNothingOrNull => Set.empty
-    }
-
     SwaggerFormats(
-      ignoreNothingOrNull orElse ignoreExistentialType,
+      ignoreExistentialType,
       SwaggerFormats.emptyFieldSerializers
     )
   }

@@ -99,6 +99,10 @@ class TypeBuilderSpec extends Specification {
       typeOf[Null].isNothingOrNull must_== true
       typeOf[String].isNothingOrNull must_== false
 
+      typeOf[Unit].isUnitOrVoid must_== true
+      typeOf[Void].isUnitOrVoid must_== true
+      typeOf[String].isUnitOrVoid must_== false
+
       typeOf[Option[String]].isOption must_== true
       typeOf[String].isOption must_== false
 
@@ -144,22 +148,46 @@ class TypeBuilderSpec extends Specification {
 
     "Build a model with a generic of type Nothing" in {
       val ms = modelOf[FooGeneric[Nothing]]
-      ms.size must_== 1
-      val m = ms.head
-      m.description must_== "FooGeneric«Nothing»".some
+      ms.size must_== 2
+      ms.find(_.id2 == "FooGeneric«Nothing»") must beSome.which { m =>
+        m.properties.size must_== 1
+        m.properties("a").`type` must_== "Nothing"
+      }
 
-      m.properties.size must_== 1
-      m.properties.get("a").get.`type` must_== "void"
+      ms.find(_.id2 == "Nothing") must beSome
     }
 
     "Build a model with a generic of type Null" in {
       val ms = modelOf[FooGeneric[Null]]
-      ms.size must_== 1
-      val m = ms.head
-      m.description must_== "FooGeneric«Null»".some
+      ms.size must_== 2
+      ms.find(_.id2 == "FooGeneric«Null»") must beSome.which { m =>
+        m.properties.size must_== 1
+        m.properties("a").`type` must_== "Null"
+      }
 
-      m.properties.size must_== 1
-      m.properties.get("a").get.`type` must_== "void"
+      ms.find(_.id2 == "Null") must beSome
+    }
+
+    "Build a model with a generic of type Unit" in {
+      val ms = modelOf[FooGeneric[Unit]]
+      ms.size must_== 2
+      ms.find(_.id2 == "FooGeneric«Unit»") must beSome.which { m =>
+        m.properties.size must_== 1
+        m.properties("a").`type` must_== "Unit"
+      }
+
+      ms.find(_.id2 == "Unit") must beSome
+    }
+
+    "Build a model with a generic of type Void" in {
+      val ms = modelOf[FooGeneric[Void]]
+      ms.size must_== 2
+      ms.find(_.id2 == "FooGeneric«Void»") must beSome.which { m =>
+        m.properties.size must_== 1
+        m.properties("a").`type` must_== "Void"
+      }
+
+      ms.find(_.id2 == "Void") must beSome
     }
 
     "Build a composite model" in {

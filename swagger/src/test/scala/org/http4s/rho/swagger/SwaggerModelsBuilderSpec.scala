@@ -452,6 +452,15 @@ class SwaggerModelsBuilderSpec extends Specification {
           schema      = ArrayProperty(items = AbstractProperty(`type` = "string")).some))
     }
 
+    "collect response of collection of unit" in {
+      val ra = GET / "test" |>> { () => Ok(List(())) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = ArrayProperty(items = RefProperty(ref = "Unit")).some))
+    }
+
     "collect response of map of primitive types" in {
       val ra = GET / "test" |>> { () => Ok(Map("foo"->"bar")) }
 
@@ -459,6 +468,15 @@ class SwaggerModelsBuilderSpec extends Specification {
         "200" -> Response(
           description = "OK",
           schema      = MapProperty(additionalProperties = AbstractProperty(`type` = "string")).some))
+    }
+
+    "collect response of map of unit" in {
+      val ra = GET / "test" |>> { () => Ok(Map("foo"->())) }
+
+      sb.collectResponses(ra) must havePair(
+        "200" -> Response(
+          description = "OK",
+          schema      = MapProperty(additionalProperties = RefProperty(ref = "Unit")).some))
     }
 
     "collect response of collection of user-defined types" in {

@@ -29,6 +29,9 @@ object TypeBuilder {
         case tpe if sfs.customSerializers.isDefinedAt(tpe) =>
           sfs.customSerializers(tpe)
 
+        case tpe if tpe.isNothingOrNull || tpe.isUnitOrVoid =>
+          alreadyKnown ++ modelToSwagger(tpe, sfs)
+
         case tpe if tpe.isEither || tpe.isMap =>
           go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
             go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
@@ -219,7 +222,6 @@ object TypeBuilder {
     case class ComplexDataType(name: String, qualifiedName: Option[String] = None) extends DataType
     case class EnumDataType(enums: Set[String]) extends DataType { val name = "string" }
 
-    val Void = DataType("void")
     val String = DataType("string")
     val Byte = DataType("string", Some("byte"))
     val Int = DataType("integer", Some("int32"))
@@ -259,7 +261,7 @@ object TypeBuilder {
     private[swagger] def fromType(t: Type): DataType = {
       val klass = if (t.isOption && t.typeArgs.nonEmpty) t.typeArgs.head else t
 
-      if (klass <:< typeOf[Unit] || klass <:< typeOf[Void]) this.Void
+      if (klass.isNothingOrNull || klass.isUnitOrVoid) ComplexDataType(klass.simpleName, qualifiedName = Option(klass.fullName))
       else if (isString(klass)) this.String
       else if (klass <:< typeOf[Byte] || klass <:< typeOf[java.lang.Byte]) this.Byte
       else if (klass <:< typeOf[Long] || klass <:< typeOf[java.lang.Long]) this.Long

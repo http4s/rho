@@ -131,10 +131,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def collectResponses(rr: RhoRoute[_]): Map[String, Response] =
     rr.resultInfo.collect {
-      case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some).some
-      case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some).some
-      case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none).some
-    }.flatten.toMap
+      case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some)
+      case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some)
+      case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none)
+    }.toMap
 
   def collectSummary(rr: RhoRoute[_]): Option[String] = {
 
