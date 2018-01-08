@@ -3,7 +3,7 @@ package org.http4s.rho
 import cats.effect.IO
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.io._
-import org.http4s.{Method, Request, Uri, rho}
+import org.http4s.{Method, Request, Uri}
 import org.specs2.mutable.Specification
 
 class CompileServiceSpec extends Specification {

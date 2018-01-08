@@ -5,7 +5,6 @@ import cats.effect.IO
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho._
 import org.http4s.rho.bits.TypedQuery
-import org.http4s.rho.io._
 import org.http4s.server.websocket._
 import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification

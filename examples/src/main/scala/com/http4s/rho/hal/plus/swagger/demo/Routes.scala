@@ -11,7 +11,7 @@ class Routes(businessLayer: BusinessLayer) {
     createRhoMiddleware()
 
   val dynamicContent: HttpService[IO] =
-    new RestService[IO](businessLayer, org.http4s.rho.io).toService(middleware)
+    new RestService[IO](businessLayer).toService(middleware)
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,

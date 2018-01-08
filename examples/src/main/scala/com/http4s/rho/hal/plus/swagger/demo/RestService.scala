@@ -9,8 +9,7 @@ import org.http4s.{Request, RhoDsl, Uri}
 
 import scala.collection.mutable.ListBuffer
 
-class RestService[F[_]: Monad](val businessLayer: BusinessLayer, dsl: RhoDsl[F]) extends RhoService[F] {
-  import dsl._
+class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoService[F] {
 
   // # Query Parameters
 

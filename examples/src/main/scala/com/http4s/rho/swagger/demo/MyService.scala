@@ -21,10 +21,9 @@ import shapeless.HNil
 
 import scala.reflect.ClassTag
 
-abstract class MyService[F[_] : Effect](dsl: RhoDsl[F], swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
+abstract class MyService[F[_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
   extends RhoService[F] {
 
-  import dsl._
   import org.http4s.rho._
   import org.http4s.{EntityDecoder, Headers, Request, headers}
   import swaggerSyntax._

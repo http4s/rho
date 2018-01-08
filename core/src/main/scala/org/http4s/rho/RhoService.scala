@@ -28,6 +28,7 @@ class RhoService[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empt
     with bits.ResponseGeneratorInstances[F]
     with RoutePrependable[F, RhoService[F]]
     with EntityEncoderInstances
+    with RhoDsl[F]
 {
   final private val serviceBuilder = ServiceBuilder[F](routes)
 
