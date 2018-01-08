@@ -5,17 +5,16 @@ package swagger
 import _root_.io.swagger.util.Json
 import cats.Monad
 import org.http4s.headers.`Content-Type`
-import org.http4s.rho.bits.PathAST.TypedPath
+import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
 import shapeless._
 
 object SwaggerSupport {
-  def apply[F[_]: Monad](dsl: RhoDsl[F], syntax: SwaggerSyntax[F]): SwaggerSupport[F] =
-    new SwaggerSupport[F](dsl) {}
+  def apply[F[_]: Monad](syntax: SwaggerSyntax[F]): SwaggerSupport[F] =
+    new SwaggerSupport[F] {}
 }
 
-abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F])(implicit F: Monad[F]) extends SwaggerSyntax[F] {
-  import dsl._
+abstract class SwaggerSupport[F[_]](implicit F: Monad[F]) extends SwaggerSyntax[F] {
 
   /**
     * Create a RhoMiddleware adding a route to get the Swagger json file
@@ -23,7 +22,7 @@ abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F])(implicit F: Monad[F]) extend
     */
   def createRhoMiddleware(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      apiPath: TypedPath[F, HNil] = "swagger.json",
+      apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
       apiInfo: Info = Info(title = "My API", version = "1.0.0"),
       swaggerRoutesInSwagger: Boolean = false,
       host: Option[String] = None,
@@ -51,7 +50,7 @@ abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F])(implicit F: Monad[F]) extend
     */
   def createSwagger(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      apiPath: TypedPath[F, HNil] = "swagger.json",
+      apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
       apiInfo: Info = Info(title = "My API", version = "1.0.0"),
       host: Option[String] = None,
       basePath: Option[String] = None,
@@ -82,7 +81,7 @@ abstract class SwaggerSupport[F[_]](dsl: RhoDsl[F])(implicit F: Monad[F]) extend
    */
   def createSwaggerRoute(
     swagger: => Swagger,
-    apiPath: TypedPath[F, HNil] = "swagger.json"
+    apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json"))
   ): RhoService[F] = new RhoService[F] {
 
     lazy val response: F[OK[String]] = {
