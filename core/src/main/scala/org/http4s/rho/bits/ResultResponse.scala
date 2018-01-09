@@ -82,6 +82,9 @@ trait FailureResponseOps[F[_]] extends ResponseGeneratorInstances[F] {
   def error[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
     FailureResponse[F](new ResponseReason(InternalServerError.pure(reason)))
 }
+object FailureResponseOps {
+  def apply[F[_]]: FailureResponseOps[F] = new FailureResponseOps[F] {}
+}
 
 /** Concrete representation of the `FailureResponse` */
 final class ResponseReason[F[_]](response: => F[Response[F]]) {
