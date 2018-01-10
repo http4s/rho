@@ -16,13 +16,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   private[this] val logger = getLogger
 
-  def mkSwagger[F[_]](info: Info, rr: RhoRoute[F, _])(s: Swagger): Swagger =
+  def mkSwagger[F[_]](info: Info, rr: RhoRoute[F, _])(s: Swagger)(implicit etag: TypeTag[F[_]]): Swagger =
     Swagger(
       info        = info.some,
       paths       = collectPaths(rr)(s),
       definitions = collectDefinitions(rr)(s))
 
-  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger): Map[String, Path] = {
+  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: TypeTag[F[_]]): Map[String, Path] = {
     val pairs = mkPathStrs(rr).map { ps =>
       val o = mkOperation(ps, rr)
       val p0 = s.paths.get(ps).getOrElse(Path())
@@ -43,10 +43,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.updated(s, p) }
   }
 
-  def collectDefinitions[F[_]](rr: RhoRoute[F, _])(s: Swagger): Map[String, Model] = {
+  def collectDefinitions[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: TypeTag[F[_]]): Map[String, Model] = {
     val initial: Set[Model] = s.definitions.values.toSet
     (collectResultTypes(rr) ++ collectCodecTypes(rr) ++ collectQueryTypes(rr))
-      .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats))
+      .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats, etag.tpe))
       .map(m => m.id2 -> m)
       .toMap
   }
@@ -127,11 +127,11 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case _                       => none
     }
 
-  def collectResponses[F[_]](rr: RhoRoute[F, _]): Map[String, Response] =
+  def collectResponses[F[_]](rr: RhoRoute[F, _])(implicit etag: TypeTag[F[_]]): Map[String, Response] =
     rr.resultInfo.collect {
-      case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some).some
-      case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some).some
-      case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none).some
+      case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some, etag.tpe).some
+      case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some, etag.tpe).some
+      case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none, etag.tpe).some
     }.flatten.toMap
 
   def collectSummary[F[_]](rr: RhoRoute[F, _]): Option[String] = {
@@ -224,7 +224,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _]): Operation = {
+  def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _])(implicit etag: TypeTag[F[_]]): Operation = {
     val parameters = collectOperationParams(rr)
 
     Operation(
@@ -268,7 +268,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     PathParameter(`type` = tpe, name = name.some, description = description, required = true)
   }
 
-  def mkResponse(code: String, descr: String, otpe: Option[Type]): (String, Response) = {
+  def mkResponse(code: String, descr: String, otpe: Option[Type], fType: Type): (String, Response) = {
 
     def typeToProp(tpe: Type): Option[Property] =
       if (Reflector.isExcluded(tpe))
@@ -281,7 +281,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         mkCollectionProperty(tpe)
       else if (tpe.isStream)
         typeToProp(tpe.dealias.typeArgs(1))
-      else if (tpe.isEffect)
+      else if (tpe.isEffect(fType))
         typeToProp(tpe.dealias.typeArgs(0))
       else if (tpe.isSwaggerFile)
         AbstractProperty(`type` = "file").some
