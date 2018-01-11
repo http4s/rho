@@ -11,10 +11,10 @@ import shapeless._
 import scala.reflect.runtime.universe._
 
 object SwaggerSupport {
-  def apply[F[_]: Monad](implicit etag: TypeTag[F[_]]): SwaggerSupport[F] = new SwaggerSupport[F] {}
+  def apply[F[_]: Monad](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] = new SwaggerSupport[F] {}
 }
 
-abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: TypeTag[F[_]]) extends SwaggerSyntax[F] {
+abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
 
   /**
     * Create a RhoMiddleware adding a route to get the Swagger json file

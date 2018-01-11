@@ -16,13 +16,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   private[this] val logger = getLogger
 
-  def mkSwagger[F[_]](info: Info, rr: RhoRoute[F, _])(s: Swagger)(implicit etag: TypeTag[F[_]]): Swagger =
+  def mkSwagger[F[_]](info: Info, rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): Swagger =
     Swagger(
       info        = info.some,
       paths       = collectPaths(rr)(s),
       definitions = collectDefinitions(rr)(s))
 
-  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: TypeTag[F[_]]): Map[String, Path] = {
+  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): Map[String, Path] = {
     val pairs = mkPathStrs(rr).map { ps =>
       val o = mkOperation(ps, rr)
       val p0 = s.paths.get(ps).getOrElse(Path())
@@ -43,7 +43,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     pairs.foldLeft(s.paths) { case (paths, (s, p)) => paths.updated(s, p) }
   }
 
-  def collectDefinitions[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: TypeTag[F[_]]): Map[String, Model] = {
+  def collectDefinitions[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): Map[String, Model] = {
     val initial: Set[Model] = s.definitions.values.toSet
     (collectResultTypes(rr) ++ collectCodecTypes(rr) ++ collectQueryTypes(rr))
       .foldLeft(initial)((s, tpe) => s ++ TypeBuilder.collectModels(tpe, s, formats, etag.tpe))
@@ -127,7 +127,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case _                       => none
     }
 
-  def collectResponses[F[_]](rr: RhoRoute[F, _])(implicit etag: TypeTag[F[_]]): Map[String, Response] =
+  def collectResponses[F[_]](rr: RhoRoute[F, _])(implicit etag: WeakTypeTag[F[_]]): Map[String, Response] =
     rr.resultInfo.collect {
       case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some, etag.tpe).some
       case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some, etag.tpe).some
@@ -224,7 +224,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _])(implicit etag: TypeTag[F[_]]): Operation = {
+  def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _])(implicit etag: WeakTypeTag[F[_]]): Operation = {
     val parameters = collectOperationParams(rr)
 
     Operation(
