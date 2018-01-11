@@ -1,6 +1,6 @@
 package org.http4s.rho
 
-import cats.effect.Effect
+import fs2.Stream
 import org.http4s.Method
 import org.http4s.rho.bits.{PathAST, SecurityScopesMetaData, TextMetaData}
 import org.http4s.rho.swagger.models.Model
@@ -71,7 +71,7 @@ package object swagger {
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isStream: Boolean =
-      t <:< typeOf[Stream[_]]
+      t <:< weakTypeOf[Stream[F, _]]
 
     def isEffect(et: Type): Boolean =
       t <:< et
