@@ -19,11 +19,11 @@ object TypeBuilder {
 
   private[this] val logger = getLogger
 
-  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats): Set[Model] =
-    try collectModels(t.dealias, alreadyKnown, Set.empty, sfs)
+  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type): Set[Model] =
+    try collectModels(t.dealias, alreadyKnown, Set.empty, sfs, et)
     catch { case NonFatal(e) => Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], sfs: SwaggerFormats): Set[Model] = {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], sfs: SwaggerFormats, et: Type): Set[Model] = {
 
     def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] =
       t.dealias match {
@@ -48,7 +48,7 @@ object TypeBuilder {
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty
 
-        case tpe if tpe.isEffect =>
+        case tpe if tpe.isEffect(et) =>
           val ntpe = tpe.typeArgs.head
           if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
           else Set.empty

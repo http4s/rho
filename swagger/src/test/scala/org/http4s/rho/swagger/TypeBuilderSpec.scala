@@ -48,7 +48,7 @@ class TypeBuilderSpec extends Specification {
     modelOfWithFormats(DefaultSwaggerFormats)
 
   def modelOfWithFormats[T](formats: SwaggerFormats)(implicit t: TypeTag[T]): Set[Model] =
-    TypeBuilder.collectModels(t.tpe, Set.empty, formats)
+    TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 
   "TypeBuilder" should {
 
@@ -70,15 +70,15 @@ class TypeBuilderSpec extends Specification {
       )
 
       val ms = primitives.foldLeft(Set.empty[Model]) { (s, t) =>
-        TypeBuilder.collectModels(t.tpe, s, DefaultSwaggerFormats)
+        TypeBuilder.collectModels(t.tpe, s, DefaultSwaggerFormats, typeOf[IO[_]])
       }
 
       ms.isEmpty must_== true
     }
 
     "Identify types" in {
-      typeOf[IO[String]].isEffect must_== true
-      typeOf[String].isEffect must_== false
+      typeOf[IO[String]].isEffect(typeOf[IO[_]]) must_== true
+      typeOf[String].isEffect(typeOf[IO[_]]) must_== false
 
       typeOf[Stream[IO, String]].isStream must_== true
       typeOf[String].isStream must_== false
