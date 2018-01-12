@@ -71,7 +71,7 @@ package object swagger {
         Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
 
     def isStream: Boolean =
-      t <:< weakTypeOf[Stream[F, _]]
+      t.typeSymbol == symbolOf[Stream[F, _]]
 
     def isEffect(et: Type): Boolean =
       t <:< et
