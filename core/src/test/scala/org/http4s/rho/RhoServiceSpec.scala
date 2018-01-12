@@ -71,7 +71,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     GET / "directTask" |>> {
       val i = new AtomicInteger(0)
-      IO.pure(s"${i.getAndIncrement}")
+      IO(s"${i.getAndIncrement}")
     }
 
     GET / "terminal" / "" |>> "terminal/"
