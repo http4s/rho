@@ -7,13 +7,12 @@ import org.http4s.{Method, Request, Uri}
 import org.specs2.mutable.Specification
 
 class CompileServiceSpec extends Specification {
-  import CompileService.Implicit.compiler
 
-  def getFoo[F[_]](implicit c: CompileService[F, _]): Unit = {
+  def getFoo(implicit c: CompileService[IO, _]): Unit = {
     GET / "hello" |>> "GetFoo"
   }
 
-  def putFoo[F[_]](implicit c: CompileService[F, _]): Unit = {
+  def putFoo(implicit c: CompileService[IO, _]): Unit = {
     PUT / "hello" |>> "PutFoo"
   }
 
@@ -22,7 +21,7 @@ class CompileServiceSpec extends Specification {
       val c = ServiceBuilder[IO]()
       getFoo(c)
 
-      "GetFoo" === new RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
     }
 
     "Build multiple routes" in {
@@ -30,18 +29,19 @@ class CompileServiceSpec extends Specification {
       getFoo(c)
       putFoo(c)
 
-      "GetFoo" === new RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
-      "PutFoo" === new RRunner(c.toService()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
+      "PutFoo" === RRunner(c.toService()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
 
     "Make routes from a collection of RhoRoutes" in {
+      import CompileService.Implicit.compiler
       val routes =
         (GET / "hello" |>> "GetFoo") ::
         (PUT / "hello" |>> "PutFoo") :: Nil
 
       val srvc = CompileService.foldServices[IO](routes, identity)
-      "GetFoo" === new RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
-      "PutFoo" === new RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
+      "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
 
     "Concatenate correctly" in {
@@ -49,8 +49,8 @@ class CompileServiceSpec extends Specification {
       val c2 = ServiceBuilder[IO](); putFoo(c2)
 
       val srvc = c1.append(c2.routes()).toService()
-      "GetFoo" === new RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
-      "PutFoo" === new RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
+      "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
   }
 
