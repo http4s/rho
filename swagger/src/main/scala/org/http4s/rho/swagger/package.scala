@@ -67,14 +67,16 @@ package object swagger {
       t <:< typeOf[Option[_]]
 
     def isPrimitive: Boolean =
-      Reflector.primitives.exists(_ =:= t) ||
-        Reflector.isPrimitive(t, Set(typeOf[Char], typeOf[Unit]))
+      Reflector.primitives.exists(_ =:= t)
 
     def isStream: Boolean =
       t <:< typeOf[Stream[G forSome { type G[_] }, _]]
 
     def isEffect(et: Type): Boolean =
       t <:< et
+
+    def isUnitOrVoid: Boolean =
+      t =:= typeOf[Unit] || t =:= typeOf[java.lang.Void]
 
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]
@@ -85,12 +87,8 @@ package object swagger {
       case ExistentialType(_, _) => Set.empty
     }
 
-    val ignoreNothingOrNull: PartialFunction[Type, Set[Model]] = {
-      case tpe if tpe.isNothingOrNull => Set.empty
-    }
-
     SwaggerFormats(
-      ignoreNothingOrNull orElse ignoreExistentialType,
+      ignoreExistentialType,
       SwaggerFormats.emptyFieldSerializers
     )
   }

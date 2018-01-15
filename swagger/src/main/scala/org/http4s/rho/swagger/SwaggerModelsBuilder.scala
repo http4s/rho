@@ -129,10 +129,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   def collectResponses[F[_]](rr: RhoRoute[F, _])(implicit etag: WeakTypeTag[F[_]]): Map[String, Response] =
     rr.resultInfo.collect {
-      case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some, etag.tpe).some
-      case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some, etag.tpe).some
-      case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none, etag.tpe).some
-    }.flatten.toMap
+      case TypeOnly(tpe)         => mkResponse("200", "OK", tpe.some, etag.tpe)
+      case StatusAndType(s, tpe) => mkResponse(s.code.toString, s.reason, tpe.some, etag.tpe)
+      case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none, etag.tpe)
+    }.toMap
 
   def collectSummary[F[_]](rr: RhoRoute[F, _]): Option[String] = {
 
@@ -272,6 +272,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def typeToProp(tpe: Type): Option[Property] =
       if (Reflector.isExcluded(tpe))
+        None
+      else if (tpe.isUnitOrVoid)
         None
       else if (tpe.isPrimitive)
         mkPrimitiveProperty(tpe).some
