@@ -46,6 +46,8 @@ object PathTree {
 }
 
 private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
+  /* To avoid alocating new NoMatch()s all the time. */
+  private val noMatch: RouteResult[F, Nothing] = NoMatch[F]()
 
   /** Data structure for route execution
     *
@@ -225,7 +227,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
       def walkHeadTail(h: String, t: List[String]): RouteResult[F, F[Response[F]]] = {
         val exact: RouteResult[F, F[Response[F]]] = matches.get(h) match {
           case Some(n) => n.walk(method, req, t, stack)
-          case None    => NoMatch()
+          case None    => noMatch
         }
 
         @tailrec
@@ -252,7 +254,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
         end.get(method) match {
           case Some(l) => l.attempt(req, stack)
           case None =>
-            val result = tryVariadic(NoMatch())
+            val result = tryVariadic(noMatch)
 
             if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
             else FailureResponse.pure[F] {
