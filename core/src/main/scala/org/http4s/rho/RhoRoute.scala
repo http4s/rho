@@ -7,11 +7,9 @@ import org.http4s.rho.bits.ResultInfo
 
 import shapeless.{HNil, HList}
 
-import fs2.Task
-
 /** A type to bundle everything needed to define a route */
-final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T])
-      extends RoutePrependable[RhoRoute[T]]
+final case class RhoRoute[F[_], T <: HList](router: RoutingEntity[F, T], action: Action[F, T])
+      extends RoutePrependable[F, RhoRoute[F, T]]
 {
 
   /** Execute the [[RhoRoute]]
@@ -20,29 +18,29 @@ final case class RhoRoute[T <: HList](router: RoutingEntity[T], action: Action[T
     * @param hlist Parameters obtained by executing the rules.
     * @return A `Response` to the `Request`.
     */
-  def apply(req: Request, hlist: T): Task[Response] = action.act(req, hlist)
+  def apply(req: Request[F], hlist: T): F[Response[F]] = action.act(req, hlist)
 
   /** Prefix the [[RhoRoute]] with non-capturing path rules
     *
     * @param prefix non-capturing prefix to prepend
     * @return builder with the prefix prepended to the path rules
     */
-  override def /:(prefix: TypedPath[HNil]): RhoRoute[T] = {
+  override def /:(prefix: TypedPath[F, HNil]): RhoRoute[F, T] = {
     copy(router = prefix /: router)
   }
 
   def method: Method = router.method
   def path: PathRule = router.path
-  def rules: RequestRule = router.rules
+  def rules: RequestRule[F] = router.rules
   def responseEncodings: Set[MediaType] = action.responseEncodings
   def resultInfo: Set[ResultInfo] = action.resultInfo
   def validMedia: Set[MediaRange] = router match {
-    case r: CodecRouter[_,_] => r.decoder.consumes
+    case r: CodecRouter[F,_,_] => r.decoder.consumes
     case _ => Set.empty
   }
 }
 
 object RhoRoute {
   /** Existentially typed [[RhoRoute]] useful when the parameters are not needed */
-  type Tpe = RhoRoute[_ <: HList]
+  type Tpe[F[_]] = RhoRoute[F, _ <: HList]
 }

@@ -29,15 +29,15 @@ object UriConverter {
     Success(go(List(rule), Nil).reverse)
   }
 
-  def createQuery(rule: RequestRule): Try[Query] = {
+  def createQuery[F[_]](rule: RequestRule[F]): Try[Query] = {
     import org.http4s.UriTemplate.ParamExp
     @scala.annotation.tailrec
-    def go(rule: List[RequestRule], acc: Query): Try[Query] = rule match {
+    def go(rule: List[RequestRule[F]], acc: Query): Try[Query] = rule match {
       case Nil                                             => Success(acc.reverse)
       case MetaRule(r, QueryMetaData(n, _, _, _, _)) :: rs => go(r :: rs, ParamExp(n) :: acc)
       case MetaRule(r, _) :: rs                            => go(r :: rs, acc)
       case AndRule(a, b) :: rs                             => go(a :: b :: rs, acc)
-      case (EmptyRule | CaptureRule(_)) :: rs              => go(rs, acc)
+      case (EmptyRule() | CaptureRule(_)) :: rs            => go(rs, acc)
       case MapRule(a,_) :: rs                              => go(a :: rs, acc)
       case IgnoreRule(r) :: rs                             => go(r :: rs, acc)
       case OrRule(a, _) :: rs                              => Failure(new Exception("Cannot create a query from 'or'ed paths"))

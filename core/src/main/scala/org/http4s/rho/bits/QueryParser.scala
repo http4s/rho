@@ -1,7 +1,8 @@
 package org.http4s
 package rho.bits
 
-import scala.language.higherKinds
+import cats.Monad
+import org.http4s.rho.bits.QueryParser.Params
 
 import scala.annotation.tailrec
 import scala.collection.generic.CanBuildFrom
@@ -10,25 +11,27 @@ import scala.collection.generic.CanBuildFrom
   *
   * @tparam A Type of value produced by the parser.
   */
-trait QueryParser[A] {
-  import QueryParser.Params
-  def collect(name: String, params: Params, default: Option[A]): ResultResponse[A]
+trait QueryParser[F[_], A] {
+
+  def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A]
 }
 
 object QueryParser {
   type Params = Map[String, Seq[String]]
+}
+
+trait QueryParsers[F[_]] extends FailureResponseOps[F] {
 
   /** Optionally extract the value from the `Query` */
-  implicit def optionParse[A](implicit p: StringParser[A]) = new QueryParser[Option[A]] {
-    override def collect(name: String, params: Params, default: Option[Option[A]]): ResultResponse[Option[A]] = {
-      val defaultValue = default.getOrElse(None)
+  implicit def optionParse[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, Option[A]] {
+    override def collect(name: String, params: Params, default: Option[Option[A]]): ResultResponse[F, Option[A]] = {
       params.get(name) match {
         case Some(Seq(value, _*)) =>
           p.parse(value) match {
-            case SuccessResponse(value) => SuccessResponse(Some(value))
-            case other => other.asInstanceOf[ResultResponse[Option[A]]]
+            case SuccessResponse(successValue) => SuccessResponse(Some(successValue))
+            case other => other.asInstanceOf[ResultResponse[F, Option[A]]]
           }
-        case _ => SuccessResponse(default.getOrElse(None))
+        case _ => SuccessResponse(default.flatten)
       }
     }
   }
@@ -37,8 +40,8 @@ object QueryParser {
     *
     * The elements must have the same name and each be a valid representation of the requisite type.
     */
-  implicit def multipleParse[A, B[_]](implicit p: StringParser[A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[B[A]] {
-    override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[B[A]] = {
+  implicit def multipleParse[A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
+    override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[F, B[A]] = {
       val b = cbf()
       params.get(name) match {
         case None => SuccessResponse(default.getOrElse(b.result))
@@ -46,14 +49,14 @@ object QueryParser {
         case Some(values) =>
           val it = values.iterator
           @tailrec
-          def go(): ResultResponse[B[A]] = {
+          def go(): ResultResponse[F, B[A]] = {
             if (it.hasNext) {
               p.parse(it.next()) match {
                 case SuccessResponse(value) =>
                   b += value
                   go()
 
-                case other => other.asInstanceOf[ResultResponse[B[A]]]
+                case other => other.asInstanceOf[ResultResponse[F, B[A]]]
               }
             }
             else SuccessResponse(b.result())
@@ -63,21 +66,20 @@ object QueryParser {
   }
 
   /** Extract an element from the `Query` using a [[StringParser]] */
-  implicit def standardCollector[A](implicit p: StringParser[A]) = new QueryParser[A] {
-    override def collect(name: String, params: Params, default: Option[A]): ResultResponse[A] = {
+  implicit def standardCollector[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, A] {
+    override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] = {
       params.get(name) match {
         case Some(Seq(value, _*)) => p.parse(value)
 
         case Some(Seq()) => default match {
           case Some(defaultValue) => SuccessResponse(defaultValue)
-          case None => FailureResponse.badRequest(s"Value of query parameter '$name' missing")
+          case None => badRequest(s"Value of query parameter '$name' missing")
         }
         case None => default match {
           case Some(defaultValue) => SuccessResponse(defaultValue)
-          case None => FailureResponse.badRequest(s"Missing query param: $name")
+          case None => badRequest(s"Missing query param: $name")
         }
       }
     }
   }
 }
-

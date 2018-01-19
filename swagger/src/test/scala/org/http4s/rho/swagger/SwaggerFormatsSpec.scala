@@ -1,7 +1,8 @@
 package org.http4s.rho.swagger
 
-import scala.reflect.runtime.universe._
+import cats.effect.IO
 
+import scala.reflect.runtime.universe._
 import org.specs2.mutable.Specification
 import cats.syntax.all._
 
@@ -23,9 +24,10 @@ class SwaggerFormatsSpec extends Specification {
     "withSerializers" in {
       val m = ModelImpl(id = "fruit-box", id2 = "fruit-box", description = "model.FruitBox".some)
       val sfs = DefaultSwaggerFormats.withSerializers(typeOf[FruitBox], Set(m))
+      val itag = implicitly[TypeTag[IO[_]]]
 
       def modelOf[T](t: TypeTag[T]): Set[Model] =
-        TypeBuilder.collectModels(t.tpe, Set.empty, sfs)
+        TypeBuilder.collectModels(t.tpe, Set.empty, sfs, itag.tpe)
 
       modelOf(typeTag[FruitBox]).nonEmpty must_== true
       modelOf(typeTag[FruitBox]).head.id must_== "fruit-box"
@@ -36,9 +38,10 @@ class SwaggerFormatsSpec extends Specification {
     "withFieldSerializers" in {
       val arrProp = ArrayProperty(items = RefProperty("Fruit"), required = true, uniqueItems = false)
       val sfs = DefaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], arrProp)
+      val itag = implicitly[TypeTag[IO[_]]]
 
       def modelOf[T](t: TypeTag[T]): Set[Model] =
-        TypeBuilder.collectModels(t.tpe, Set.empty, sfs)
+        TypeBuilder.collectModels(t.tpe, Set.empty, sfs, itag.tpe)
 
       modelOf(typeTag[FruitBox]).nonEmpty must_== true
       modelOf(typeTag[FruitBox]).head.properties.head._1 must_== "fruits"

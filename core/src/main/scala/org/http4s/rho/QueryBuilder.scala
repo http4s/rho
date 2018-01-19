@@ -1,12 +1,11 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.{TypedQuery, TypedHeader, HeaderAppendable}
-import bits.PathAST._
+import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
-
+import org.http4s.rho.bits.{HeaderAppendable, TypedHeader, TypedQuery}
 import shapeless.ops.hlist.Prepend
-import shapeless.{HNil, ::, HList}
+import shapeless.{HList, HNil}
 
 /** Typed builder of query rules
   *
@@ -19,13 +18,13 @@ import shapeless.{HNil, ::, HList}
   * @tparam T The HList representation of the types the route expects to extract
   *           from a `Request`.
   */
-case class QueryBuilder[T <: HList](method: Method,
-                                      path: PathRule,
-                                     rules: RequestRule)
-  extends RouteExecutable[T]
-  with HeaderAppendable[T]
-  with UriConvertible
-  with RoutePrependable[QueryBuilder[T]]
+case class QueryBuilder[F[_], T <: HList](method: Method,
+                                          path: PathRule,
+                                          rules: RequestRule[F])
+  extends RouteExecutable[F, T]
+  with HeaderAppendable[F, T]
+  with UriConvertible[F]
+  with RoutePrependable[F, QueryBuilder[F, T]]
 {
   /** Capture a query rule
     *
@@ -33,16 +32,16 @@ case class QueryBuilder[T <: HList](method: Method,
     * @tparam T1 types of elements captured by query.
     * @return a [[QueryBuilder]] with which to continue building the route.
     */
-  def &[T1 <: HList](query: TypedQuery[T1])(implicit prep: Prepend[T1, T]): QueryBuilder[prep.Out] =
+  def &[T1 <: HList](query: TypedQuery[F, T1])(implicit prep: Prepend[T1, T]): QueryBuilder[F, prep.Out] =
     QueryBuilder(method, path, AndRule(rules, query.rule))
 
-  override def /:(prefix: TypedPath[HNil]): QueryBuilder[T] =
-    new QueryBuilder[T](method, PathAnd(prefix.rule, path), rules)
+  override def /:(prefix: TypedPath[F, HNil]): QueryBuilder[F, T] =
+    new QueryBuilder[F, T](method, PathAnd(prefix.rule, path), rules)
   
-  override type HeaderAppendResult[T <: HList] = Router[T]
+  override type HeaderAppendResult[T <: HList] = Router[F, T]
 
-  override def makeRoute(action: Action[T]): RhoRoute[T] = RhoRoute(Router(method, path, rules), action)
+  override def makeRoute(action: Action[F, T]): RhoRoute[F, T] = RhoRoute(Router(method, path, rules), action)
 
-  override def >>>[T1 <: HList](rule: TypedHeader[T1])(implicit prep1: Prepend[T1, T]): Router[prep1.Out] =
+  override def >>>[T1 <: HList](rule: TypedHeader[F, T1])(implicit prep1: Prepend[T1, T]): Router[F, prep1.Out] =
     Router(method, path, AndRule(rules, rule.rule))
 }

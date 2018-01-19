@@ -2,24 +2,24 @@ package org.http4s
 package rho
 package bits
 
+import cats.Applicative
+import cats.effect.IO
+import fs2.Chunk
+import org.http4s.rho.io._
+import org.http4s.{Status => HStatus}
 import org.specs2.mutable.Specification
+import shapeless.HList
 
 import scala.reflect.runtime.universe._
-import shapeless.HList
-import Status._
-import fs2.Chunk
 
 class ResultMatcherSpec extends Specification {
 
-  class TRhoService
-    extends bits.MethodAliases
-    with bits.ResponseGeneratorInstances
-  {
+  class TRhoService[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty
 
-    implicit final protected val compileSrvc: CompileService[RhoRoute.Tpe] = {
-      new CompileService[RhoRoute.Tpe] {
-        override def compile[T <: HList](route: RhoRoute[T]): RhoRoute.Tpe = {
+    implicit final protected def compileSrvc: CompileService[F, RhoRoute.Tpe[F]] = {
+      new CompileService[F, RhoRoute.Tpe[F]] {
+        override def compile[T <: HList](route: RhoRoute[F, T]): RhoRoute.Tpe[F] = {
           statuses = route.resultInfo.collect { case StatusAndType(s, t) => (s, t) }
           route
         }
@@ -28,17 +28,16 @@ class ResultMatcherSpec extends Specification {
   }
 
   "ResponseGenerator" should {
-
     "Match a single result type" in {
-      val srvc = new TRhoService {
-        PUT / "foo" |>> { () => Ok("updated").unsafeRun }
+      val srvc = new TRhoService[IO] {
+        PUT / "foo" |>> { () => Ok("updated").unsafeRunSync() }
       }
 
-      srvc.statuses.map(_._1) should_== Set(Ok)
+      srvc.statuses.map(_._1) should_== Set(Ok.status)
     }
 
     "Match two results with different status with different result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -48,13 +47,13 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses.map(_._1) should_== Set(NotFound, Ok)
-      srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[String] must_== true
-      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[Array[Byte]] must_== true
+      srvc.statuses.map(_._1) should_== Set(NotFound.status, Ok.status)
+      srvc.statuses.collect{ case (HStatus.NotFound, t) => t }.head =:= weakTypeOf[String] must_== true
+      srvc.statuses.collect{ case (HStatus.Ok, t) => t }.head =:= weakTypeOf[Array[Byte]] must_== true
     }
 
     "Match two results with same stat different result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -64,20 +63,20 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses.map(_._1) should_== Set(Ok)
+      srvc.statuses.map(_._1) should_== Set(Ok.status)
     }
 
     "Match an empty result type" in {
-      val srvc = new TRhoService {
-        PUT / "foo" |>> { () => NoContent() }
+      val srvc = new TRhoService[IO] {
+        PUT / "foo" |>> { () => NoContent.apply }
       }
 
-      srvc.statuses.map(_._1) should_== Set(NoContent)
+      srvc.statuses.map(_._1) should_== Set(NoContent.status)
       srvc.statuses.head._2 =:= typeOf[Unit]
     }
 
     "Match three results with different status but same result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -88,11 +87,11 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted)
+      srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted).map(_.status)
     }
 
     "Match four results with different status but same result type" in {
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -104,46 +103,47 @@ class ResultMatcherSpec extends Specification {
         }
       }
 
-      srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted, Created)
+      srvc.statuses.map(_._1) should_== Set(NotFound, Ok, Accepted, Created).map(_.status)
     }
 
     "Match results with locally defined types" in {
-      import scodec.bits.ByteVector
 
       case class ModelA(name: String, color: Int)
       case class ModelB(name: String, id: Long)
 
-      implicit def w1: EntityEncoder[ModelA] = EntityEncoder.simple[ModelA]()(_ => Chunk.bytes("A".getBytes))
-      implicit def w2: EntityEncoder[ModelB] = EntityEncoder.simple[ModelB]()(_ => Chunk.bytes("B".getBytes))
+      implicit def w1[F[_]: Applicative]: EntityEncoder[F, ModelA] =
+        EntityEncoder.simple[F, ModelA]()(_ => Chunk.bytes("A".getBytes))
 
-      val srvc = new TRhoService {
+      implicit def w2[F[_]: Applicative]: EntityEncoder[F, ModelB] =
+        EntityEncoder.simple[F, ModelB]()(_ => Chunk.bytes("B".getBytes))
+
+      val srvc = new TRhoService[IO] {
         GET / "foo" |>> { () =>
           if (true) Ok(ModelA("test ok", 1))
           else NotFound(ModelB("test not found", 234))
         }
       }
 
-      srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
+      srvc.statuses.map(_._1) should_== Set(Ok.status, NotFound.status)
 
       // the type equality for locally defined types is a bit "murkey" so we use the String name
-      srvc.statuses.collect{ case (Ok, t) => t }.head.toString must_== "ModelA"
-      srvc.statuses.collect{ case (NotFound, t) => t }.head.toString must_== "ModelB"
+      srvc.statuses.collect{ case (HStatus.Ok, t) => t }.head.toString must_== "ModelA"
+      srvc.statuses.collect{ case (HStatus.NotFound, t) => t }.head.toString must_== "ModelB"
     }
 
     "Match complex models as well as simple ones" in {
       import Foo._
 
-      val srvc = new TRhoService {
+      val srvc = new TRhoService[IO] {
         GET / "foo" |>> { () =>
           if (true) Ok(FooA("test ok", 1))
           else NotFound(FooB("test not found", 234))
         }
       }
 
-      srvc.statuses.map(_._1) should_== Set(Ok, NotFound)
-      srvc.statuses.collect{ case (Ok, t) => t }.head =:= weakTypeOf[FooA] must_== true
-      srvc.statuses.collect{ case (NotFound, t) => t }.head =:= weakTypeOf[FooB] must_== true
-
+      srvc.statuses.map(_._1) should_== Set(Ok.status, NotFound.status)
+      srvc.statuses.collect{ case (HStatus.Ok, t) => t }.head =:= weakTypeOf[FooA] must_== true
+      srvc.statuses.collect{ case (HStatus.NotFound, t) => t }.head =:= weakTypeOf[FooB] must_== true
     }
   }
 }
@@ -152,6 +152,9 @@ object Foo {
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1: EntityEncoder[FooA] = EntityEncoder.simple[FooA]()(_ => Chunk.bytes("A".getBytes))
-  implicit def w2: EntityEncoder[FooB] = EntityEncoder.simple[FooB]()(_ => Chunk.bytes("B".getBytes))
+  implicit def w1[F[_]: Applicative]: EntityEncoder[F, FooA] =
+    EntityEncoder.simple[F, FooA]()(_ => Chunk.bytes("A".getBytes))
+
+  implicit def w2[F[_]: Applicative]: EntityEncoder[F, FooB] =
+    EntityEncoder.simple[F, FooB]()(_ => Chunk.bytes("B".getBytes))
 }

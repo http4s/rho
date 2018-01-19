@@ -1,48 +1,47 @@
 package org.http4s
 package rho
 
+import cats.effect.IO
+import org.http4s.UriTemplate.{ParamExp, PathElm, PathExp}
+import org.http4s.rho.bits.MethodAliases.GET
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
-
-import UriTemplate.ParamExp
-import UriTemplate.PathElm
-import UriTemplate.PathExp
-
-import bits.MethodAliases.GET
+import shapeless.HList
 
 class RouteAsUriTemplateSpec extends Specification {
-
-  val request = Request()
+  val request = Request[IO]()
 
   "PathBuilder.asUriTemplate" should {
     "convert to /hello" in {
-      val route = GET / "hello"
+      val route: PathBuilder[IO, _ <: HList] = GET / "hello"
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"))))
     }
     "convert to /hello/world" in {
-      val route = GET / "hello" / "world"
+      val route: PathBuilder[IO, _ <: HList] = GET / "hello" / "world"
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"))))
     }
     "convert to /hello{/world}" in {
-      val route = GET / "hello" / 'world
+      val route: PathBuilder[IO, _ <: HList] = GET / "hello" / 'world
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathExp("world"))))
     }
     "convert to /hello/world/next/time" in {
       val route1 = "hello" / "world"
       val route2 = "next" / "time"
       val route = GET / route1 / route2
+
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"), PathElm("next"), PathElm("time"))))
     }
     "convert to {/id}" in {
-      val route = GET / pathVar[Int]("id")
+      val route: PathBuilder[IO, _ <: HList] = GET / pathVar[Int]("id")
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathExp("id"))))
     }
     "convert pathVar[Int] to {/int}" in {
-      val route = GET / pathVar[Int]
+      val route: PathBuilder[IO, _ <: HList] = GET / pathVar[Int]
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathExp("int"))))
       true
     }
     "convert to /orders{/id}/items" in {
-      val route = GET / "orders" / pathVar[Int]("id") / "items"
+      val route: PathBuilder[IO, _ <: HList] = GET / "orders" / pathVar[Int]("id") / "items"
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("orders"), PathExp("id"), PathElm("items"))))
     }
   }
@@ -110,6 +109,7 @@ class RouteAsUriTemplateSpec extends Specification {
       val route1 = "hello" / "world"
       val route2 = "next" / "time"
       val route = route1 && route2
+
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"), PathElm("next"), PathElm("time"))))
     }
     "convert to {/id}" in {

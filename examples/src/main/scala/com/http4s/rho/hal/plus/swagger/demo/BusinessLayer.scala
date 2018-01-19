@@ -2,8 +2,7 @@ package com.http4s.rho.hal.plus.swagger.demo
 
 import java.util.SortedSet
 import scala.annotation.migration
-import scala.collection.JavaConversions.asScalaSet
-import scala.collection.JavaConversions.mapAsScalaMap
+import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import net.sf.uadetector.datastore.DataStore
 import net.sf.uadetector.internal.data.Data
@@ -64,25 +63,25 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
     dataStore.getData
 
   private def browsers: List[Browser] =
-    data.getBrowsers.foldLeft(List[Browser]()) { (acc, b) =>
+    data.getBrowsers.asScala.foldLeft(List[Browser]()) { (acc, b) =>
       toBrowser(b) :: acc
     }
 
   private def browserPatterns: List[BrowserPattern] =
-    data.getBrowserPatterns.foldLeft(List[BrowserPattern]()) { (acc, e) =>
-      val ps = e._2.map {
+    data.getBrowserPatterns.asScala.foldLeft(List[BrowserPattern]()) { (acc, e) =>
+      val ps = e._2.asScala.map {
         p => toBrowserPattern(p)
       }.toList
       ps ::: acc
     }
 
   private def browserTypes =
-    data.getBrowserTypes.map { t =>
+    data.getBrowserTypes.asScala.map { t =>
       toBrowserType(t._2)
     }.toSeq
 
   private def operatingSystems: List[OperatingSystem] =
-    data.getOperatingSystems.foldLeft(List[OperatingSystem]()) { (acc, o) =>
+    data.getOperatingSystems.asScala.foldLeft(List[OperatingSystem]()) { (acc, o) =>
       toOperatingSystem(o) :: acc
     }
 
@@ -97,14 +96,14 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
   def countOperatingSystems = data.getOperatingSystems.size
 
   def hasBrowsersByOperatingSystemId(id: Int) = {
-    val found = data.getBrowserToOperatingSystemMappings.collectFirst {
+    val found = data.getBrowserToOperatingSystemMappings.asScala.collectFirst {
       case m: BrowserOperatingSystemMapping if m.getOperatingSystemId == id => m
     }
     found.isDefined
   }
 
   def hasOperatingSystemsByBrowserId(id: Int) = {
-    val found = data.getBrowserToOperatingSystemMappings.collectFirst {
+    val found = data.getBrowserToOperatingSystemMappings.asScala.collectFirst {
       case m: BrowserOperatingSystemMapping if m.getBrowserId == id => m
     }
     found.isDefined
@@ -116,7 +115,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
     }
 
   def findBrowserIdByPatternId(id: Int) =
-    data.getPatternToBrowserMap.entrySet.collectFirst {
+    data.getPatternToBrowserMap.entrySet.asScala.collectFirst {
       case e: java.util.Map.Entry[UBrowserPattern, UBrowser] if e.getKey.getId == id =>
         e.getValue.getId
     }
@@ -128,7 +127,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
 
   def findBrowserPatternsByBrowserId(id: Int) =
     data.getBrowserPatterns.get(id) match {
-      case ps: SortedSet[UBrowserPattern] => Some(ps.map(p => toBrowserPattern(p)).toSeq)
+      case ps: SortedSet[UBrowserPattern] => Some(ps.asScala.map(p => toBrowserPattern(p)).toSeq)
       case _ => None
     }
 
@@ -156,7 +155,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
 
   def findBrowsersByOperatingSystemId(id: Int) = {
     val matchingBrowsers = for {
-      mapping <- data.getBrowserToOperatingSystemMappings
+      mapping <- data.getBrowserToOperatingSystemMappings.asScala
       if mapping.getOperatingSystemId == id
       browser <- browsers
       if browser.id == mapping.getBrowserId
@@ -174,7 +173,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
 
   def findOperatingSystemsByBrowserId(id: Int) = {
     val matchingOperatingSystems = for {
-      mapping <- data.getBrowserToOperatingSystemMappings
+      mapping <- data.getBrowserToOperatingSystemMappings.asScala
       if mapping.getBrowserId == id
       os <- operatingSystems
       if os.id == mapping.getOperatingSystemId

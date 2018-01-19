@@ -10,26 +10,26 @@ import shapeless.HList
 object RequestAST {
 
   /** Base trait of the AST */
-  sealed trait RequestRule
+  sealed trait RequestRule[F[_]]
 
   /** Captures data from the `Request` */
-  case class CaptureRule[T](reader: Request => ResultResponse[T]) extends RequestRule
+  case class CaptureRule[F[_], T](reader: Request[F] => ResultResponse[F, T]) extends RequestRule[F]
 
   /** Transform data from the `Request` */
-  case class MapRule[T <: HList, R <: HList](rule: RequestRule, f: T => R) extends RequestRule
+  case class MapRule[F[_], T <: HList, R <: HList](rule: RequestRule[F], f: T => R) extends RequestRule[F]
 
   /** Ignore any results obtained form the enclosed rules */
-  case class IgnoreRule(rule: RequestRule) extends RequestRule
+  case class IgnoreRule[F[_]](rule: RequestRule[F]) extends RequestRule[F]
 
   /** Append the result as `b:::a:::HNil` */
-  case class AndRule(fst: RequestRule, snd: RequestRule) extends RequestRule
+  case class AndRule[F[_]](fst: RequestRule[F], snd: RequestRule[F]) extends RequestRule[F]
 
   /** Attempt rule `fst` and attempt rule `alt` if `fst` fails */
-  case class OrRule(fst: RequestRule, alt: RequestRule) extends RequestRule
+  case class OrRule[F[_]](fst: RequestRule[F], alt: RequestRule[F]) extends RequestRule[F]
 
   /** Append meta data to the tree */
-  case class MetaRule(rule: RequestRule, meta: Metadata) extends RequestRule
+  case class MetaRule[F[_]](rule: RequestRule[F], meta: Metadata) extends RequestRule[F]
 
   /** Empty rule */
-  case object EmptyRule extends RequestRule
+  case class EmptyRule[F[_]]() extends RequestRule[F]
 }

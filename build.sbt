@@ -71,7 +71,13 @@ lazy val `rho-examples` = project
       ): _*)
   .dependsOn(`rho-swagger`, `rho-hal`)
 
-lazy val compileFlags = Seq("-feature") //, "-Xlog-implicits")
+lazy val compileFlags = Seq(
+  "-feature",
+  "-deprecation",
+  "-Ypartial-unification",
+  "-language:higherKinds",
+  "-language:existentials",
+  "-language:implicitConversions")
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty

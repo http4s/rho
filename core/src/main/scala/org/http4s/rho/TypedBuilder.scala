@@ -11,12 +11,12 @@ import shapeless.HList
 /** A typed shell which represents the requirements of the route
  * @tparam T The `HList` representation of the values to be extracted from the `Request`.
  */
-trait TypedBuilder[T <: HList] extends UriConvertible {
+trait TypedBuilder[F[_], T <: HList] extends UriConvertible[F] {
   /** Untyped AST representation of the path to operate on */
   val path: PathRule
 
   /** Untyped AST describing the extraction of headers and the query from the `Request` */
-  val rules: RequestRule
+  val rules: RequestRule[F]
 
   private def uriTemplate =
     for {
@@ -24,6 +24,6 @@ trait TypedBuilder[T <: HList] extends UriConvertible {
       q <- UriConverter.createQuery(rules)
     } yield UriTemplate(path = p, query = q)
 
-  final override def asUriTemplate(request: Request) =
+  final override def asUriTemplate(request: Request[F]) =
     UriConvertible.respectPathInfo(uriTemplate, request)
 }

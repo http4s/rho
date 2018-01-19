@@ -1,6 +1,9 @@
 package org.http4s
 package rho
 
+import cats.Monad
+import cats.data.{Kleisli, OptionT}
+import org.http4s.rho.RhoRoute.Tpe
 import org.http4s.rho.bits.PathTree
 import shapeless.HList
 
@@ -9,7 +12,7 @@ import shapeless.HList
   * This can be a stateful operation, storing the action for later execution
   * or any other type of compilation phase.
   */
-trait CompileService[RouteType] {
+trait CompileService[F[_], RouteType] {
 
   /** Transform the [[RhoRoute]] into a `RouteType` possibly mutating this compilers state.
     *
@@ -17,19 +20,19 @@ trait CompileService[RouteType] {
     * @tparam T `HList` representation of the result of the route
     * @return The result of the compilation process.
     */
-  def compile[T <: HList](route: RhoRoute[T]): RouteType
+  def compile[T <: HList](route: RhoRoute[F, T]): RouteType
 }
 
 object CompileService {
 
   /** [[CompileService]] that simply returns its argument */
-  val identityCompiler = new CompileService[RhoRoute.Tpe] {
-    def compile[T <: HList](route: RhoRoute[T]) = route
+  def identityCompiler[F[_]]: CompileService[F, Tpe[F]] = new CompileService[F, RhoRoute.Tpe[F]] {
+    def compile[T <: HList](route: RhoRoute[F, T]): RhoRoute[F, T] = route
   }
 
   /** Importable implicit identity compiler */
   object Implicit {
-    implicit val compiler: CompileService[RhoRoute.Tpe] = identityCompiler
+    implicit def compiler[F[_]]: CompileService[F, RhoRoute.Tpe[F]] = identityCompiler[F]
   }
 
 
@@ -39,8 +42,8 @@ object CompileService {
     * @param filter [[RhoMiddleware]] to apply to the routes.
     * @return An `HttpService`
     */
-  def foldServices(routes: Seq[RhoRoute.Tpe], filter: RhoMiddleware = identity): HttpService = {
-    val tree = filter(routes).foldLeft(PathTree()){ (t, r) => t.appendRoute(r) }
-    Service.lift { req => tree.getResult(req).toResponse }
+  def foldServices[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]], filter: RhoMiddleware[F]): HttpService[F] = {
+    val tree = filter(routes).foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
+    Kleisli((req: Request[F]) => tree.getResult(req).toResponse)
   }
 }

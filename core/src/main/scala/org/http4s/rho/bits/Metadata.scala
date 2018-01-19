@@ -24,7 +24,7 @@ trait SecurityScopesMetaData extends Metadata {
 }
 
 /** Metadata about a query rule */
-case class QueryMetaData[T](name: String, description: Option[String], p: QueryParser[T], default: Option[T], m: TypeTag[T]) extends Metadata
+case class QueryMetaData[F[_], T](name: String, description: Option[String], p: QueryParser[F, T], default: Option[T], m: TypeTag[T]) extends Metadata
 
 /** Metadata about a header rule */
 case class HeaderMetaData[T <: HeaderKey.Extractable](key: T, default: Boolean) extends Metadata

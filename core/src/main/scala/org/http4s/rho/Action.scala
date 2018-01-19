@@ -1,10 +1,8 @@
 package org.http4s.rho
 
-import org.http4s.{Response, Request, MediaType}
 import org.http4s.rho.bits.ResultInfo
+import org.http4s.{MediaType, Request, Response}
 import shapeless.HList
-
-import fs2.Task
 
 /** Encapsulation of metadata and a result generator
   *
@@ -13,7 +11,6 @@ import fs2.Task
   * @param act Function of `Request` and the `HList` to a `Task[Response]`
   * @tparam T The type of `HList` required to execute the [[Action]].
   */
-case class Action[T <: HList](resultInfo: Set[ResultInfo],
-                              responseEncodings: Set[MediaType],
-                              act: (Request, T) => Task[Response])
-
+case class Action[F[_], T <: HList](resultInfo: Set[ResultInfo],
+                                    responseEncodings: Set[MediaType],
+                                    act: (Request[F], T) => F[Response[F]])

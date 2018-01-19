@@ -1,26 +1,32 @@
 package com.http4s.rho.swagger.demo
 
-import org.http4s.Service
-import org.http4s.rho.swagger.SwaggerSupport
+import cats.effect.IO
+import cats.syntax.semigroupk._
+import fs2.StreamApp.ExitCode
+import fs2.{Stream, StreamApp}
+import org.http4s.HttpService
+import org.http4s.rho.swagger.syntax.{io => ioSwagger}
+import org.http4s.rho.swagger.syntax.io._
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
-import org.http4s.util.StreamApp
-import fs2.{Task, Stream}
 
-object Main extends StreamApp {
+object Main extends StreamApp[IO] {
   private val logger = getLogger
 
-  val port = Option(System.getenv("HTTP_PORT"))
+  val port: Int = Option(System.getenv("HTTP_PORT"))
     .map(_.toInt)
     .getOrElse(8080)
 
   logger.info(s"Starting Swagger example on '$port'")
 
-  def stream(args: List[String]): Stream[Task, Nothing] = {
-    val middleware = SwaggerSupport()
+  def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] = {
+    val middleware = createRhoMiddleware()
 
-    BlazeBuilder
-      .mountService(Service.withFallback(StaticContentService.routes)(MyService.toService(middleware)))
+    val myService: HttpService[IO] =
+      new MyService[IO](ioSwagger) {}.toService(middleware)
+
+    BlazeBuilder[IO]
+      .mountService(StaticContentService.routes combineK myService)
       .bindLocal(port)
       .serve
   }

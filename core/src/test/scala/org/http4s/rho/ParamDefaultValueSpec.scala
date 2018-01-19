@@ -1,20 +1,21 @@
 package org.http4s
 package rho
 
-import org.http4s.HttpService
+import cats.effect.IO
+import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
 class ParamDefaultValueSpec extends Specification {
 
-  def body(service: HttpService, r: Request): String =
-    new String(service(r).unsafeRun.orNotFound.body.runLog.unsafeRun.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+  def body(service: HttpService[IO], r: Request[IO]): String =
+    new String(service(r).value.unsafeRunSync().getOrElse(Response.notFound).body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
 
-  def requestGet(s: String, h: Header*): Request =
+  def requestGet(s: String, h: Header*): Request[IO] =
     Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   "GET /test1" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test1" +? param[String]("param1") |>> { param1: String => Ok("test1:" + param1) }
     }.toService()
 
@@ -34,8 +35,8 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test2" should {
-    val service = new RhoService {
-      GET / "test2" +? param("param1", "default1") |>> { param1: String => Ok("test2:" + param1) }
+    val service = new RhoService[IO] {
+      GET / "test2" +? param[String]("param1", "default1") |>> { param1: String => Ok("test2:" + param1) }
     }.toService()
 
     val default = "test2:default1"
@@ -54,7 +55,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test3" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test3" +? param[Int]("param1", 1) |>> { param1: Int => Ok("test3:" + param1) }
     }.toService()
 
@@ -77,7 +78,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test4" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test4" +? param[Option[String]]("param1") |>> { os: Option[String] => Ok("test4:" + os.getOrElse("")) }
     }.toService()
 
@@ -97,7 +98,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test5" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test5" +? param[Option[Int]]("param1", Some(100)) |>> { os: Option[Int] => Ok("test5:" + os.getOrElse("")) }
     }.toService()
 
@@ -120,7 +121,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test6" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test6" +? param[Option[String]]("param1", Some("default1")) |>> { os: Option[String] => Ok("test6:" + os.getOrElse("")) }
     }.toService()
 
@@ -140,7 +141,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test7" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test7" +? param[Seq[String]]("param1", Seq("a", "b")) |>> { os: Seq[String] => Ok("test7:" + os.mkString(",")) }
     }.toService()
 
@@ -163,7 +164,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test8" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test8" +? param[Seq[Int]]("param1", Seq(3, 5, 8)) |>> { os: Seq[Int] => Ok("test8:" + os.mkString(",")) }
     }.toService()
 
@@ -192,7 +193,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test9" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test9" +? param("param1", "default1", (p: String) => !p.isEmpty && p != "fail") |>> { param1: String => Ok("test9:" + param1) }
     }.toService()
 
@@ -215,7 +216,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test10" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test10" +? param[Int]("param1", 1, (p: Int) => p >= 0) |>> { param1: Int => Ok("test10:" + param1) }
     }.toService()
 
@@ -241,7 +242,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test11" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test11" +? param[Option[Int]]("param1", Some(100), (p: Option[Int]) => p != Some(0)) |>> { os: Option[Int] => Ok("test11:" + os.getOrElse("")) }
     }.toService()
 
@@ -267,7 +268,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test12" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test12" +? param[Option[String]]("param1", Some("default1"), (p: Option[String]) => p != Some("fail") && p != Some("")) |>> { os: Option[String] => Ok("test12:" + os.getOrElse("")) }
     }.toService()
 
@@ -290,7 +291,7 @@ class ParamDefaultValueSpec extends Specification {
   }
 
   "GET /test13" should {
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test13" +? param[Seq[String]]("param1", Seq("a", "b"), (p: Seq[String]) => !p.contains("") && !p.contains("z")) |>> { os: Seq[String] => Ok("test13:" + os.mkString(",")) }
     }.toService()
 
@@ -317,7 +318,7 @@ class ParamDefaultValueSpec extends Specification {
 
   "GET /test14" should {
 
-    val service = new RhoService {
+    val service = new RhoService[IO] {
       GET / "test14" +? param[Seq[Int]]("param1", Seq(3, 5, 8), (p: Seq[Int]) => p != Seq(8, 5, 3)) |>> { os: Seq[Int] => Ok("test14:" + os.mkString(",")) }
     }.toService()
 
