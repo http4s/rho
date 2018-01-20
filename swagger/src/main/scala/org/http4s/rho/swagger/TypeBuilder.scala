@@ -19,7 +19,7 @@ object TypeBuilder {
 
   def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type): Set[Model] =
     try collectModels(t.dealias, alreadyKnown, Set.empty, sfs, et)
-    catch { case NonFatal(e) => Set.empty }
+    catch { case NonFatal(_) => Set.empty }
 
   private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], sfs: SwaggerFormats, et: Type): Set[Model] = {
 
@@ -80,10 +80,10 @@ object TypeBuilder {
 
           models ++ generics ++ children
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isObjectEnum(sym) =>
+        case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isSumType(sym) =>
+        case tpe@TypeRef(_, sym, _) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
           modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { (model: Model) =>
             val refmodel = RefModel(model.id, model.id2, model.id2)
@@ -94,8 +94,7 @@ object TypeBuilder {
             alreadyKnown ++ Set(model) ++ children
           }
 
-        case e =>
-          Set.empty
+        case _ => Set.empty
       }
 
     go(t, alreadyKnown, known)
@@ -127,9 +126,6 @@ object TypeBuilder {
     )
   }
 
-  private[this] val defaultExcluded =
-    Set(typeOf[Nothing], typeOf[Null])
-
   private[this] def isCaseClass(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
 
@@ -142,9 +138,6 @@ object TypeBuilder {
     sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
-
-  private[this] def isExcluded(t: Type, excludes: Seq[Type] = Nil) =
-    (defaultExcluded ++ excludes).exists(_ =:= t)
 
   private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[ModelImpl] =
     try {
@@ -203,7 +196,7 @@ object TypeBuilder {
             AbstractProperty(`type` = name, description = qName, format = format)
           case DataType.ComplexDataType(name, qName) =>
             AbstractProperty(`type` = name, description = qName)
-          case DataType.ContainerDataType(name, tpe, uniqueItems) =>
+          case DataType.ContainerDataType(name, _, _) =>
             AbstractProperty(`type` = name)
           case DataType.EnumDataType(enums) =>
             StringProperty(enums = enums)

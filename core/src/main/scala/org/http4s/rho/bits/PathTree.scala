@@ -11,7 +11,7 @@ import shapeless.{HList, HNil}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
-import scala.language.existentials
+import scala.util.control.NonFatal
 import scala.util.control.NonFatal
 
 object PathTree {
@@ -128,7 +128,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
-  final private case class SingleLeaf(f: (Request[F], HList) => Action)(implicit F: Applicative[F]) extends Leaf {
+  private case class SingleLeaf(f: (Request[F], HList) => Action)(implicit F: Applicative[F]) extends Leaf {
     override def attempt(req: Request[F], stack: HList): Action = {
       try f(req, stack)
       catch { case NonFatal(t) =>
@@ -139,7 +139,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   }
 
 
-  final private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
+  private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
     override def attempt(req: Request[F], stack: HList): Action = {
       def go(l: List[SingleLeaf], error: ResultResponse[F, Nothing]): Action = {
         if (l.nonEmpty) l.head.attempt(req, stack) match {
@@ -232,7 +232,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
         @tailrec
         def go(children: List[CaptureNode], error: RouteResult[F, F[Response[F]]]): RouteResult[F, F[Response[F]]] = children match {
-          case (c@CaptureNode(p,_,cs,_,_))::ns =>
+          case (c@CaptureNode(p,_,_,_,_))::ns =>
             p.parse(h) match {
               case SuccessResponse(r) =>
                 val n = c.walk(method, req, t, r::stack)
@@ -275,11 +275,11 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
-  final case class MatchNode(name:     String,
-                             matches:  Map[String, MatchNode] = Map.empty[String, MatchNode],
-                             captures: List[CaptureNode] = Nil,
-                             variadic: Map[Method, Leaf] = Map.empty[Method, Leaf],
-                             end:      Map[Method, Leaf] = Map.empty[Method, Leaf]) extends Node[MatchNode] {
+  case class MatchNode(name:     String,
+                       matches:  Map[String, MatchNode] = Map.empty[String, MatchNode],
+                       captures: List[CaptureNode] = Nil,
+                       variadic: Map[Method, Leaf] = Map.empty[Method, Leaf],
+                       end:      Map[Method, Leaf] = Map.empty[Method, Leaf]) extends Node[MatchNode] {
 
     override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): MatchNode =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)
@@ -294,11 +294,11 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
-  final case class CaptureNode(parser:   StringParser[F, _],
-                               matches:  Map[String, MatchNode] = Map.empty[String, MatchNode],
-                               captures: List[CaptureNode] = List.empty[CaptureNode],
-                               variadic: Map[Method, Leaf] = Map.empty[Method, Leaf],
-                               end:      Map[Method, Leaf] = Map.empty[Method, Leaf]) extends Node[CaptureNode] {
+  case class CaptureNode(parser:   StringParser[F, _],
+                         matches:  Map[String, MatchNode] = Map.empty[String, MatchNode],
+                         captures: List[CaptureNode] = List.empty[CaptureNode],
+                         variadic: Map[Method, Leaf] = Map.empty[Method, Leaf],
+                         end:      Map[Method, Leaf] = Map.empty[Method, Leaf]) extends Node[CaptureNode] {
 
     override def clone(matches: Map[String, MatchNode], captures: List[CaptureNode], variadic: Map[Method, Leaf], end: Map[Method, Leaf]): CaptureNode =
       copy(matches = matches, captures = captures, variadic = variadic, end = end)

@@ -5,7 +5,7 @@ import cats.syntax.functor._
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.RhoService
 import org.http4s.rho.hal.{ResourceObjectBuilder => ResObjBuilder, _}
-import org.http4s.{Request, RhoDsl, Uri}
+import org.http4s.{Request, Uri}
 
 import scala.collection.mutable.ListBuffer
 

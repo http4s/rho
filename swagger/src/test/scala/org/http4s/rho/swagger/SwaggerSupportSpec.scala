@@ -64,7 +64,7 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Provide a method to build the Swagger model for a list of routes" in {
-      val swaggerSpec = createSwagger(apiPath = "/api")(baseService.getRoutes)
+      val swaggerSpec = createSwagger()(baseService.getRoutes)
 
       swaggerSpec.paths must haveSize(2)
     }

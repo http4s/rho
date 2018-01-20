@@ -4,7 +4,6 @@ package rho
 import cats.Monad
 import cats.data.OptionT
 import cats.effect.IO
-import fs2.Stream
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
@@ -12,7 +11,6 @@ import org.http4s.rho.bits._
 import org.http4s.rho.io._
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
-import scodec.bits.ByteVector
 import shapeless.{HList, HNil}
 
 class ApiTest extends Specification {
@@ -104,7 +102,6 @@ class ApiTest extends Specification {
       case class Foo(age: Long, s: HttpDate)
       val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
 
-      val now = java.time.Instant.now()
       val path = GET / "hello" >>> paramFoo
       val req = Request[IO](
         uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")),
@@ -171,7 +168,6 @@ class ApiTest extends Specification {
           Ok("")
       }
 
-      val body = Stream.emit(ByteVector("cool".getBytes))
       val req = Request[IO](POST, uri = Uri.fromString("/hello/neptune?fav=23").right.getOrElse(sys.error("Fail")))
         .putHeaders(ETag(ETag.EntityTag("foo")))
         .withBody("cool")

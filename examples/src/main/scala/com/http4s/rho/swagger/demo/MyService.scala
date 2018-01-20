@@ -14,7 +14,7 @@ import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.RhoService
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
-import org.http4s.{HttpDate, RhoDsl, Uri}
+import org.http4s.{HttpDate, Uri}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods
 import shapeless.HNil

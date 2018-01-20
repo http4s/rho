@@ -2,7 +2,6 @@ package org.http4s
 package rho
 
 import cats.effect.IO
-import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
@@ -19,7 +18,6 @@ class ParamDefaultValueSpec extends Specification {
       GET / "test1" +? param[String]("param1") |>> { param1: String => Ok("test1:" + param1) }
     }.toService()
 
-    val default = "test1:default1"
     "map parameter with default value" in {
       body(service, requestGet("/test1")) must be equalTo "Missing query param: param1"
     }

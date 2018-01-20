@@ -37,7 +37,7 @@ class DoubleParser[F[_]] extends StringParser[F, Double] {
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Double] =
     try SuccessResponse(s.toDouble)
-    catch { case e: NumberFormatException => invalidNumberFormat[Double](s) }
+    catch { case _: NumberFormatException => invalidNumberFormat[Double](s) }
 }
 
 class FloatParser[F[_]] extends StringParser[F, Float] {
@@ -45,7 +45,7 @@ class FloatParser[F[_]] extends StringParser[F, Float] {
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Float] =
     try SuccessResponse(s.toFloat)
-    catch { case e: NumberFormatException => invalidNumberFormat[Float](s) }
+    catch { case _: NumberFormatException => invalidNumberFormat[Float](s) }
 }
 
 class IntParser[F[_]] extends StringParser[F, Int] {
@@ -53,7 +53,7 @@ class IntParser[F[_]] extends StringParser[F, Int] {
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Int] =
     try SuccessResponse(s.toInt)
-    catch { case e: NumberFormatException => invalidNumberFormat[Int](s) }
+    catch { case _: NumberFormatException => invalidNumberFormat[Int](s) }
 }
 
 class LongParser[F[_]] extends StringParser[F, Long] {
@@ -61,7 +61,7 @@ class LongParser[F[_]] extends StringParser[F, Long] {
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Long] =
     try SuccessResponse(s.toLong)
-    catch { case e: NumberFormatException => invalidNumberFormat[Long](s) }
+    catch { case _: NumberFormatException => invalidNumberFormat[Long](s) }
 }
 
 class ShortParser[F[_]] extends StringParser[F, Short] {
@@ -69,7 +69,7 @@ class ShortParser[F[_]] extends StringParser[F, Short] {
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Short] =
     try SuccessResponse(s.toShort)
-    catch { case e: NumberFormatException => invalidNumberFormat[Short](s) }
+    catch { case _: NumberFormatException => invalidNumberFormat[Short](s) }
 }
 
 object StringParser {

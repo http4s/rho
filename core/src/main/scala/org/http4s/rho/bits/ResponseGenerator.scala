@@ -5,8 +5,6 @@ import cats.{Applicative, Monad}
 import org.http4s._
 import org.http4s.headers.{Location, `Content-Length`}
 
-import fs2.Chunk
-
 /** Helpers to aid in the construction of a response function
   *
   * These helpers provide the foundation for the response generation in the rho DSL.

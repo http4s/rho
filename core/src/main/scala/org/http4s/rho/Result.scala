@@ -2,7 +2,6 @@ package org.http4s
 package rho
 
 import cats.{FlatMap, Functor, Monad}
-import cats.data.EitherT
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
@@ -82,7 +81,7 @@ object Result {
   type ExResult[F[_]]   = Result[F, _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_]
 }
 
-import Result._
+import org.http4s.rho.Result._
 
 trait ResultSyntaxInstances[F[_]] {
   implicit class ResultSyntax[T >: Result.TopResult[F] <: BaseResult[F]](r: T) extends ResponseOps[F] {

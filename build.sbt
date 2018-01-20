@@ -74,10 +74,14 @@ lazy val `rho-examples` = project
 lazy val compileFlags = Seq(
   "-feature",
   "-deprecation",
-  "-Ypartial-unification",
+  "-unchecked",
   "-language:higherKinds",
   "-language:existentials",
-  "-language:implicitConversions")
+  "-language:implicitConversions",
+  "-Ywarn-unused",
+  "-Ypartial-unification",
+  "-Xfatal-warnings"
+)
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -106,6 +110,9 @@ lazy val buildSettings = publishing ++
     libraryDependencies ++= specs2,
     libraryDependencies += `scala-reflect` % scalaVersion.value
   )
+
+// to keep REPL usable
+scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-warnings")
 
 lazy val publishing = Seq(
   extras,

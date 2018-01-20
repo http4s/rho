@@ -1,16 +1,12 @@
 package org.http4s.rho.swagger
 
-import models._
-import org.scalacheck._
-import Gen._
-import Arbitrary._
-import org.http4s.MediaType
-import MediaType._
-import cats.{Applicative, Functor, Monad}
+import cats.Applicative
 import cats.syntax.all._
-import cats.instances.all._
-
-import scala.annotation.tailrec
+import org.http4s.MediaType._
+import org.http4s.rho.swagger.models._
+import org.scalacheck.Arbitrary._
+import org.scalacheck.Gen._
+import org.scalacheck._
 
 /**
  * Arbitraries for the creation of Swagger models
@@ -82,7 +78,7 @@ object Arbitraries {
     mapOf(arbitrary[T])
 
   def mapOf[T](gen: Gen[T]): Gen[Map[String, T]] =
-    choose(1, 10).flatMap(n => listOfN(n, (identifier |@| gen).tupled).map(_.toMap))
+    choose(1, 10).flatMap(n => listOfN(n, (identifier, gen).tupled).map(_.toMap))
 
   def genPath(definitions: Map[String, Model]): Gen[Path] =
     for {

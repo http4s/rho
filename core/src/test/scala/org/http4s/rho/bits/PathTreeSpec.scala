@@ -5,7 +5,6 @@ package bits
 import java.nio.charset.StandardCharsets
 
 import cats.effect.IO
-import org.http4s.rho.io._
 import org.http4s.server.middleware.URITranslation
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
