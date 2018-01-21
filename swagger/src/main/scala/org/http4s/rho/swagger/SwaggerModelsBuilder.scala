@@ -88,19 +88,17 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def collectQueryParamTypes[F[_]](rr: RhoRoute[F, _]): Set[Type] = ???
-
   def mkPathStrs[F[_]](rr: RhoRoute[F, _]): List[String] = {
 
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
         case Nil                          => if(pathStr.isEmpty) "/" else pathStr
-        case PathMatch("")::Nil           => pathStr + "/"
-        case PathMatch("")::xs            => go(xs, pathStr)
-        case PathMatch(s)::xs             => go(xs, pathStr + "/" + s)
-        case MetaCons(_, _)::xs           => go(xs, pathStr)
-        case PathCapture(id, _, p, _)::xs => go(xs, s"$pathStr/{$id}")
-        case CaptureTail::xs              => pathStr + "/{tail...}"
+        case PathMatch("") :: Nil         => pathStr + "/"
+        case PathMatch("") :: xs          => go(xs, pathStr)
+        case PathMatch(s) :: xs           => go(xs, pathStr + "/" + s)
+        case MetaCons(_, _) :: xs         => go(xs, pathStr)
+        case PathCapture(id, _, _, _)::xs => go(xs, s"$pathStr/{$id}")
+        case CaptureTail :: _             => pathStr + "/{tail...}"
       }
 
     linearizeStack(rr.path::Nil).map(go(_, ""))
@@ -110,12 +108,12 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[PathOperation], pps: List[PathParameter]): List[PathParameter] =
       stack match {
-        case Nil                             => pps
-        case PathMatch("")::xs               => go(xs, pps)
-        case PathMatch(s)::xs                => go(xs, pps)
-        case MetaCons(_, _)::xs              => go(xs, pps)
-        case PathCapture(id, desc, p, _)::xs => go(xs, mkPathParam[F](id, desc, p.asInstanceOf[StringParser[F, String]])::pps)
-        case CaptureTail::xs                 => PathParameter(`type` = "string", name = "tail...".some) :: Nil
+        case Nil                               => pps
+        case PathMatch("") :: xs               => go(xs, pps)
+        case PathMatch(_) :: xs                => go(xs, pps)
+        case MetaCons(_, _) :: xs              => go(xs, pps)
+        case PathCapture(id, desc, p, _) :: xs => go(xs, mkPathParam[F](id, desc, p.asInstanceOf[StringParser[F, String]])::pps)
+        case CaptureTail :: _                  => PathParameter(`type` = "string", name = "tail...".some) :: Nil
       }
 
     linearizeStack(rr.path::Nil).flatMap(go(_, Nil)).reverse
@@ -138,10 +136,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[PathOperation], summary: Option[String]): Option[String] =
       stack match {
-        case PathMatch("")::Nil                => go(Nil, summary)
-        case PathMatch(s)::xs                  => go(xs, summary)
-        case PathCapture(id, _, parser, _)::xs => go(xs, summary)
-        case CaptureTail::xs                   => summary
+        case PathMatch("") :: Nil          => go(Nil, summary)
+        case PathMatch(_) :: xs            => go(xs, summary)
+        case PathCapture(_, _, _, _) :: xs => go(xs, summary)
+        case CaptureTail :: _              => summary
 
         case MetaCons(_, meta)::xs =>
           meta match {
@@ -292,12 +290,13 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def mkPrimitiveProperty(tpe: Type): Property = {
       import TypeBuilder._
+
       DataType.fromType(tpe) match {
         case DataType.ValueDataType(name, format, qName) =>
           AbstractProperty(`type` = name, description = qName, format = format)
         case DataType.ComplexDataType(name, qName) =>
           AbstractProperty(`type` = name, description = qName)
-        case DataType.ContainerDataType(name, tpe, uniqueItems) =>
+        case DataType.ContainerDataType(name, _, _) =>
           AbstractProperty(`type` = name)
         case DataType.EnumDataType(enums) =>
           StringProperty(enums = enums)
@@ -405,10 +404,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
     def go(stack: List[PathRule], acc: List[PathOperation]): List[List[PathOperation]] =
       stack match {
-        case PathOr(a, b)::xs           => go(a::xs, acc):::go(b::xs, acc)
+        case PathOr(a, b) :: xs         => go(a::xs, acc):::go(b::xs, acc)
         case PathAnd(a, b) :: xs        => go(a::b::xs, acc)
-        case (m@ MetaCons(a, meta))::xs => go(a::xs, m::acc)
-        case (op: PathOperation)::xs    => go(xs, op::acc)
+        case (m@ MetaCons(a, _)) :: xs  => go(a::xs, m::acc)
+        case (op: PathOperation) :: xs  => go(xs, op::acc)
         case Nil                        => acc::Nil
       }
 

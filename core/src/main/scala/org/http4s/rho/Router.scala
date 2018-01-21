@@ -10,8 +10,6 @@ import scala.reflect.runtime.universe.{Type, TypeTag}
 import shapeless.{::, HList, HNil}
 import shapeless.ops.hlist.Prepend
 
-import scala.reflect.runtime.universe
-
 sealed trait RoutingEntity[F[_], T <: HList] {
   type Self <: RoutingEntity[F, T]
 

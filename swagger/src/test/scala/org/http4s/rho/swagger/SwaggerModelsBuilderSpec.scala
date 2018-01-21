@@ -304,7 +304,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       ra.path match {
         case PathAnd(_, p) =>
-          p.isInstanceOf[PathCapture[IO]] must_== true
+          p must beAnInstanceOf[PathCapture[IO]]
           p.asInstanceOf[PathCapture[IO]].description must_== "int pathVar".some
 
         case _ => false must_== true

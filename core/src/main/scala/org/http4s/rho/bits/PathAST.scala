@@ -1,16 +1,11 @@
 package org.http4s
 package rho.bits
 
-import scala.language.existentials
-
-import rho.{ RequestLineBuilder, QueryBuilder }
-
+import org.http4s.rho.{RequestLineBuilder, UriConvertible}
 import shapeless.ops.hlist.Prepend
-import shapeless.{ ::, HList }
+import shapeless.{::, HList}
 
 import scala.reflect.runtime.universe.TypeTag
-
-import org.http4s.rho.UriConvertible
 
 /** Actual elements which build up the AST */
 object PathAST {

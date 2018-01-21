@@ -1,14 +1,13 @@
 package org.http4s
 package rho
 
-import bits.PathAST._
-import bits._
 import cats.Functor
+import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST.{EmptyRule, RequestRule}
-import shapeless.{::, HList, HNil}
+import org.http4s.rho.bits._
 import shapeless.ops.hlist.Prepend
+import shapeless.{::, HList, HNil}
 
-import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.TypeTag
 
 /**

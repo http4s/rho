@@ -3,7 +3,6 @@ package rho
 package bits
 
 import cats.effect.IO
-import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 

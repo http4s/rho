@@ -1,8 +1,6 @@
 package org.http4s
 package rho.bits
 
-import scala.language.existentials
-
 import scala.reflect.runtime.universe.TypeTag
 
 /** Base type for data that can be used to decorate the rules trees

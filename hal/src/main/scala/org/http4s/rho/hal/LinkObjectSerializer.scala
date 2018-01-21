@@ -1,8 +1,7 @@
 package org.http4s.rho.hal
 
 import org.json4s._
-import org.http4s.Uri
-import scala.PartialFunction
+
 import scala.collection.mutable.ArrayBuffer
 
 object LinkObjectSerializer {

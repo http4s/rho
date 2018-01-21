@@ -40,7 +40,7 @@ object UriConverter {
       case (EmptyRule() | CaptureRule(_)) :: rs            => go(rs, acc)
       case MapRule(a,_) :: rs                              => go(a :: rs, acc)
       case IgnoreRule(r) :: rs                             => go(r :: rs, acc)
-      case OrRule(a, _) :: rs                              => Failure(new Exception("Cannot create a query from 'or'ed paths"))
+      case OrRule(_, _) :: _                               => Failure(new Exception("Cannot create a query from 'or'ed paths"))
     }
     go(List(rule), Nil)
   }

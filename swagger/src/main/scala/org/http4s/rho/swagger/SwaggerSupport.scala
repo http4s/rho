@@ -35,7 +35,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
       vendorExtensions: Map[String, AnyRef] = Map.empty): RhoMiddleware[F] = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiPath, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, vendorExtensions)(
+      createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, vendorExtensions)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -46,11 +46,10 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
   }
 
   /**
-    * Create the swagger model for a set of routes
+    * Create the swagger model for a set of routes.
     */
   def createSwagger(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
       apiInfo: Info = Info(title = "My API", version = "1.0.0"),
       host: Option[String] = None,
       basePath: Option[String] = None,
@@ -76,8 +75,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
   }
 
   /**
-   * Create a RhoService with the route to the Swagger json
-   * for the given Swagger Specification
+   * Create a RhoService with the route to the Swagger json for the given Swagger Specification.
    */
   def createSwaggerRoute(
     swagger: => Swagger,

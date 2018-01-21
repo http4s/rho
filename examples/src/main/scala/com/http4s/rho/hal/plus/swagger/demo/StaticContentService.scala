@@ -4,8 +4,6 @@ import cats.effect.Sync
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpService, Request, Response, StaticFile}
 
-import scala.concurrent.ExecutionContext
-
 abstract class StaticContentService[F[_]: Sync](dsl: Http4sDsl[F]) {
   import dsl._
 
@@ -18,30 +16,20 @@ abstract class StaticContentService[F[_]: Sync](dsl: Http4sDsl[F]) {
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
-   * but its nice to keep it self contained
+   * but its nice to keep it self contained.
    */
-  def routes(implicit executionContext: ExecutionContext = ExecutionContext.global): HttpService[F] = HttpService[F] {
+  def routes: HttpService[F] = HttpService[F] {
 
     // JSON HAL User Interface
-    case req if req.uri.path.startsWith("/js/") =>
-      fetchResource(halUiDir + req.pathInfo, req)
-    case req if req.uri.path.startsWith("/vendor/") =>
-      fetchResource(halUiDir + req.pathInfo, req)
-    case req @ GET -> Root / "hal-ui" =>
-      fetchResource(halUiDir + "/browser.html", req)
+    case req if req.uri.path.startsWith("/js/") => fetchResource(halUiDir + req.pathInfo, req)
+    case req if req.uri.path.startsWith("/vendor/") => fetchResource(halUiDir + req.pathInfo, req)
+    case req @ GET -> Root / "hal-ui" => fetchResource(halUiDir + "/browser.html", req)
 
     // Swagger User Interface
-    case req @ GET -> Root / "css" / rest =>
-      fetchResource(swaggerUiDir + req.pathInfo, req)
-    case req @ GET -> Root / "images" / rest =>
-      fetchResource(swaggerUiDir + req.pathInfo, req)
-    case req @ GET -> Root / "lib" / rest =>
-      fetchResource(swaggerUiDir + req.pathInfo, req)
-    case req @ GET -> Root / "swagger-ui" =>
-      fetchResource(swaggerUiDir + "/index.html", req)
-    case req @ GET -> Root / "swagger-ui.js" =>
-      fetchResource(swaggerUiDir + "/swagger-ui.min.js", req)
-
+    case req @ GET -> Root / "css" / _       => fetchResource(swaggerUiDir + req.pathInfo, req)
+    case req @ GET -> Root / "images" / _    => fetchResource(swaggerUiDir + req.pathInfo, req)
+    case req @ GET -> Root / "lib" / _       => fetchResource(swaggerUiDir + req.pathInfo, req)
+    case req @ GET -> Root / "swagger-ui"    => fetchResource(swaggerUiDir + "/index.html", req)
+    case req @ GET -> Root / "swagger-ui.js" => fetchResource(swaggerUiDir + "/swagger-ui.min.js", req)
   }
-
 }

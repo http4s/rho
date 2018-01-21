@@ -1,16 +1,17 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import java.util.SortedSet
-import scala.annotation.migration
-import scala.collection.JavaConverters._
-import scala.language.implicitConversions
+
 import net.sf.uadetector.datastore.DataStore
 import net.sf.uadetector.internal.data.Data
-import net.sf.uadetector.internal.data.domain.{ Browser => UBrowser }
-import net.sf.uadetector.internal.data.domain.{ BrowserPattern => UBrowserPattern }
-import net.sf.uadetector.internal.data.domain.{ BrowserType => UBrowserType }
-import net.sf.uadetector.internal.data.domain.{ OperatingSystem => UOperatingSystem }
-import net.sf.uadetector.internal.data.domain.BrowserOperatingSystemMapping
+import net.sf.uadetector.internal.data.domain.{
+  BrowserOperatingSystemMapping,
+  Browser => UBrowser,
+  BrowserPattern => UBrowserPattern,
+  BrowserType => UBrowserType,
+  OperatingSystem => UOperatingSystem}
+
+import scala.collection.JavaConverters._
 
 // --
 // Do not take this implementation too serious. It is only there to have some 

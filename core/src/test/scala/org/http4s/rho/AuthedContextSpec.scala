@@ -3,9 +3,8 @@ package rho
 
 import java.util.UUID
 
-import cats.data._
+import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
-import org.http4s.rho.io._
 import org.http4s.server.AuthMiddleware
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector

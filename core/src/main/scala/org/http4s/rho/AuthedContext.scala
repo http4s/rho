@@ -1,10 +1,10 @@
 package org.http4s
 package rho
 
-import cats.{Functor, Monad}
+import cats.Monad
 import cats.data.{Kleisli, OptionT}
+import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 import shapeless.{::, HNil}
-import org.http4s.rho.bits.{FailureResponse, FailureResponseOps, SuccessResponse, TypedHeader}
 
 
 /** The [[AuthedContext]] provides a convenient way to define a RhoService

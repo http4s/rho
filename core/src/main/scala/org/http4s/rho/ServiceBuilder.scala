@@ -2,14 +2,12 @@ package org.http4s.rho
 
 import cats.Monad
 import org.http4s._
-import org.log4s._
 import shapeless.HList
 
 import scala.collection.immutable.VectorBuilder
 
 /** CompileService which accumulates routes and can build a `HttpService` */
 final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileService[F, RhoRoute.Tpe[F]] {
-  private val logger = getLogger
 
   /** Turn the accumulated routes into an `HttpService`
     *
