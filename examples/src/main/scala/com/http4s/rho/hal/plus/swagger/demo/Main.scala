@@ -7,6 +7,7 @@ import fs2.{Stream, StreamApp}
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends StreamApp[IO] {
   private val logger = getLogger

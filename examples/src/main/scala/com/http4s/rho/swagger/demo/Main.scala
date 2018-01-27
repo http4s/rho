@@ -9,6 +9,7 @@ import org.http4s.rho.swagger.syntax.{io => ioSwagger}
 import org.http4s.rho.swagger.syntax.io._
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends StreamApp[IO] {
   private val logger = getLogger
