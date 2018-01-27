@@ -63,9 +63,9 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
     new PathBuilder(method, PathAnd(path, capture))
   }
 
-  /** Append the path rules to the [[PathBuilder]]
+  /** Append the path rules to the PathBuilder
     *
-    * @param rules [[TypedPath]] rules to append to the path capture rules.
+    * @param rules TypedPath rules to append to the path capture rules.
     * @return a new [[PathBuilder]] that will execute the appended rules.
     */
   def /[T2 <: HList](rules: TypedPath[F, T2])(implicit prep: Prepend[T2, T]): PathBuilder[F, prep.Out] =

@@ -27,7 +27,7 @@ import shapeless.{::, HNil}
   *       GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
   *         val user = getAuth(req)
   *         if (user.name == "Test User") {
-  *           Ok(s"just root with parameter 'foo=$foo'")
+  *           Ok(s"just root with parameter 'foo=\$foo'")
   *         } else {
   *           BadRequest("This should not have happened.")
   *         }

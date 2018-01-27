@@ -14,7 +14,7 @@ import shapeless.{HList, HNil}
   *
   * @param method Request method to match.
   * @param path Path rules to execute.
-  * @param rules Accumulated [[RequestRule]]'s.
+  * @param rules Accumulated RequestRule's.
   * @tparam T The HList representation of the types the route expects to extract
   *           from a `Request`.
   */
