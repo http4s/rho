@@ -1,6 +1,5 @@
 package com.http4s.rho.hal.plus.swagger
 
-
 import cats.Applicative
 
 import scala.language.implicitConversions
