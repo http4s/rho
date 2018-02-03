@@ -14,7 +14,7 @@ import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.RhoService
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
-import org.http4s.{HttpDate, Uri}
+import org.http4s.{EntityDecoder, Headers, HttpDate, Request, Uri, headers}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods
 import shapeless.HNil
@@ -24,22 +24,19 @@ import scala.reflect.ClassTag
 abstract class MyService[F[_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
   extends RhoService[F] {
 
-  import org.http4s.rho._
-  import org.http4s.{EntityDecoder, Headers, Request, headers}
   import swaggerSyntax._
-
 
   val requireCookie: TypedHeader[F, HNil] = existsAndR(headers.Cookie){ cookie =>
     cookie.values.toList.find(c => c.name == "Foo" && c.content == "bar") match {
       case Some(_) => // Cookie found, good to go
         None
       case None =>    // Didn't find cookie
-        Some(TemporaryRedirect(uri("/addcookie")).widen)
+        Some(TemporaryRedirect(Uri(path = "/addcookie")).widen)
     }
   }
 
   "We don't want to have a real 'root' route anyway... " **
-    GET |>> TemporaryRedirect(Uri(path="/swagger-ui"))
+    GET |>> TemporaryRedirect(Uri(path = "/swagger-ui"))
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = GET / "hello"
