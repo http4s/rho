@@ -115,7 +115,7 @@ object StringParser {
   implicit def longParser[F[_]]: LongParser[F] = new LongParser[F]()
   implicit def shortParser[F[_]]: ShortParser[F] = new ShortParser[F]()
   implicit def datePArser[F[_]]: DateParser[F] = new DateParser[F]()
-  implicit def uuidPArser[F[_]]: UUIDParser[F] = new UUIDParser[F]()
+  implicit def uuidParser[F[_]]: UUIDParser[F] = new UUIDParser[F]()
 
   implicit def strParser[F[_]]: StringParser[F, String] = new StringParser[F, String] {
 
