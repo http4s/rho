@@ -41,7 +41,7 @@ class ApiExamples extends Specification {
         GET / "helloworldstring" / 'world / "foo" |>> { i: String =>
           Ok("Received $i")
         }
-        // caputre dates
+        // capture dates
         GET / "helloworlddate" / pathVar[Date] / "foo" |>> { d: Date =>
           Ok(s"Received ${d.toString}")
         }

@@ -60,9 +60,17 @@ class StringParserSpec extends Specification {
         new SimpleDateFormat("yyyy-MM-dd").parse("2018-02-09"))
     }
 
+    "parse non-date" in {
+      new DateParser[IO]().parse("2018-09") must haveClass[FailureResponse[IO]]
+    }
+
     "parse uuid" in {
       new UUIDParser[IO]().parse("459043db-c29e-4dd9-a36d-b3a11b5eeb17") === SuccessResponse[IO, UUID](
         UUID.fromString("459043db-c29e-4dd9-a36d-b3a11b5eeb17"))
+    }
+
+    "parse non-uuid" in {
+      new UUIDParser[IO]().parse("459043b-4dd9-a36d-b3a11b5eeb17") must haveClass[FailureResponse[IO]]
     }
   }
 }
