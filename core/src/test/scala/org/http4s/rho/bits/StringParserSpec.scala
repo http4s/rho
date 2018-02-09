@@ -1,5 +1,8 @@
 package org.http4s.rho.bits
 
+import java.text.SimpleDateFormat
+import java.util.{Date, UUID}
+
 import cats.effect.IO
 import org.specs2.mutable.Specification
 
@@ -50,6 +53,16 @@ class StringParserSpec extends Specification {
     }
     "parse non-short" in {
       new ShortParser[IO]().parse("12345678") must haveClass[FailureResponse[IO]]
+    }
+
+    "parse date" in {
+      new DateParser[IO]().parse("2018-02-09") === SuccessResponse[IO, Date](
+        new SimpleDateFormat("yyyy-MM-dd").parse("2018-02-09"))
+    }
+
+    "parse uuid" in {
+      new UUIDParser[IO]().parse("459043db-c29e-4dd9-a36d-b3a11b5eeb17") === SuccessResponse[IO, UUID](
+        UUID.fromString("459043db-c29e-4dd9-a36d-b3a11b5eeb17"))
     }
   }
 }

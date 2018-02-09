@@ -1,4 +1,6 @@
 
+import java.util.Date
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import cats.effect.IO
@@ -38,6 +40,14 @@ class ApiExamples extends Specification {
         // the symbol 'world just says 'capture a String' with variable name "world"
         GET / "helloworldstring" / 'world / "foo" |>> { i: String =>
           Ok("Received $i")
+        }
+        // caputre dates
+        GET / "helloworlddate" / pathVar[Date] / "foo" |>> { d: Date =>
+          Ok(s"Received ${d.toString}")
+        }
+        // capture uuids
+        GET / "helloworlduuid" / pathVar[UUID] / "foo" |>> { u: UUID =>
+          Ok(s"Received $u")
         }
       }
       /// end_src_inlined

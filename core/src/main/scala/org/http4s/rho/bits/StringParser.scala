@@ -1,9 +1,13 @@
 package org.http4s
 package rho.bits
 
+import java.text.SimpleDateFormat
+import java.util.{Date, UUID}
+
 import cats.Monad
 
 import scala.reflect.runtime.universe.TypeTag
+import scala.util.control.NonFatal
 
 /** Parse values from a `String`
   *
@@ -72,6 +76,34 @@ class ShortParser[F[_]] extends StringParser[F, Short] {
     catch { case _: NumberFormatException => invalidNumberFormat[Short](s) }
 }
 
+class DateParser[F[_]] extends StringParser[F, Date] {
+  override val typeTag = Some(implicitly[TypeTag[Date]])
+
+  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Date] =
+    try {
+      val df = new SimpleDateFormat("yyyy-MM-dd")
+      SuccessResponse(df.parse(s))
+    } catch {
+      case NonFatal(_) =>
+        FailureResponse.pure[F] {
+          BadRequest.pure(s"Invalid date format, should be 'yyyy-MM-dd': $s")
+        }
+    }
+}
+
+class UUIDParser[F[_]] extends StringParser[F, UUID] {
+  override val typeTag = Some(implicitly[TypeTag[UUID]])
+
+  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, UUID] =
+    try SuccessResponse(UUID.fromString(s))
+    catch {
+      case NonFatal(_) =>
+        FailureResponse.pure[F] {
+          BadRequest.pure(s"Invalid uuid format: $s")
+        }
+    }
+}
+
 object StringParser {
 
   ////////////////////// Default parsers //////////////////////////////
@@ -82,6 +114,8 @@ object StringParser {
   implicit def intParser[F[_]]: IntParser[F] = new IntParser[F]()
   implicit def longParser[F[_]]: LongParser[F] = new LongParser[F]()
   implicit def shortParser[F[_]]: ShortParser[F] = new ShortParser[F]()
+  implicit def datePArser[F[_]]: DateParser[F] = new DateParser[F]()
+  implicit def uuidPArser[F[_]]: UUIDParser[F] = new UUIDParser[F]()
 
   implicit def strParser[F[_]]: StringParser[F, String] = new StringParser[F, String] {
 
