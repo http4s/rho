@@ -1,6 +1,7 @@
 package org.http4s.rho.bits
 
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.{Date, UUID}
 
 import cats.effect.IO
@@ -62,6 +63,15 @@ class StringParserSpec extends Specification {
 
     "parse non-date" in {
       new DateParser[IO]().parse("2018-09") must haveClass[FailureResponse[IO]]
+    }
+
+    "parse instant" in {
+      new InstantParser[IO]().parse("2018-02-09T00:00:00Z") === SuccessResponse[IO, Instant](
+        Instant.parse("2018-02-09T00:00:00Z"))
+    }
+
+    "parse non-instant" in {
+      new InstantParser[IO]().parse("2018-02-09 00:00:00Z") must haveClass[FailureResponse[IO]]
     }
 
     "parse uuid" in {

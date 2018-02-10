@@ -1,6 +1,7 @@
 
 import java.util.Date
 import java.util.UUID
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 import cats.effect.IO
@@ -43,7 +44,11 @@ class ApiExamples extends Specification {
         }
         // capture dates
         GET / "helloworlddate" / pathVar[Date] / "foo" |>> { d: Date =>
-          Ok(s"Received ${d.toString}")
+          Ok(s"Received $d")
+        }
+        // capture instants
+        GET / "helloworldinstant" / pathVar[Instant] / "foo" |>> { i: Instant =>
+          Ok(s"Received $i")
         }
         // capture uuids
         GET / "helloworlduuid" / pathVar[UUID] / "foo" |>> { u: UUID =>

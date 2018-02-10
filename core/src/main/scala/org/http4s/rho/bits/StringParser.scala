@@ -2,6 +2,7 @@ package org.http4s
 package rho.bits
 
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.{Date, UUID}
 
 import cats.Monad
@@ -91,6 +92,20 @@ class DateParser[F[_]] extends StringParser[F, Date] {
     }
 }
 
+class InstantParser[F[_]] extends StringParser[F, Instant] {
+  override val typeTag = Some(implicitly[TypeTag[Instant]])
+
+  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Instant] =
+    try {
+      SuccessResponse(Instant.parse(s))
+    } catch {
+      case NonFatal(_) =>
+        FailureResponse.pure[F] {
+          BadRequest.pure(s"Invalid instant format, should be in 'yyyy-MM-ddThh:mm:ssZ' format: $s")
+        }
+    }
+}
+
 class UUIDParser[F[_]] extends StringParser[F, UUID] {
   override val typeTag = Some(implicitly[TypeTag[UUID]])
 
@@ -114,7 +129,8 @@ object StringParser {
   implicit def intParser[F[_]]: IntParser[F] = new IntParser[F]()
   implicit def longParser[F[_]]: LongParser[F] = new LongParser[F]()
   implicit def shortParser[F[_]]: ShortParser[F] = new ShortParser[F]()
-  implicit def datePArser[F[_]]: DateParser[F] = new DateParser[F]()
+  implicit def dateParser[F[_]]: DateParser[F] = new DateParser[F]()
+  implicit def instantParser[F[_]]: InstantParser[F] = new InstantParser[F]()
   implicit def uuidParser[F[_]]: UUIDParser[F] = new UUIDParser[F]()
 
   implicit def strParser[F[_]]: StringParser[F, String] = new StringParser[F, String] {
