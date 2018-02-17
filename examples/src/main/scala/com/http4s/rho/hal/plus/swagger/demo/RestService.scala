@@ -45,7 +45,7 @@ class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoSer
       Ok(b.build())
     }
 
-    found getOrElse NotFound(warning(s"Browser $id not found"))
+    found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatternsById = browsers / id / "patterns"
@@ -53,7 +53,7 @@ class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoSer
     val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
       yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build())
 
-    found getOrElse NotFound(warning(s"Browser $id not found"))
+    found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatterns = "browser-patterns"
@@ -77,7 +77,7 @@ class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoSer
       Ok(b.build())
     }
 
-    found getOrElse NotFound(warning(s"Browser $id not found"))
+    found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserTypes = "browser-types"
@@ -99,7 +99,7 @@ class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoSer
       Ok(b.build())
     }
 
-    found getOrElse NotFound(warning(s"Browser type $id not found"))
+    found.getOrElse(NotFound(warning(s"Browser type $id not found")))
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
@@ -133,7 +133,7 @@ class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoSer
       Ok(b.build())
     }
 
-    found getOrElse NotFound(warning(s"OperatingSystem $id not found"))
+    found.getOrElse(NotFound(warning(s"OperatingSystem $id not found")))
   }
 
   val browsersByOperatingSystem = operatingSystemById / "browsers"
