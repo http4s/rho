@@ -10,7 +10,6 @@ import cats.syntax.option._
 import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
 import com.http4s.rho.swagger.demo.MyService._
 import fs2.Stream
-import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.RhoService
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
@@ -21,7 +20,7 @@ import shapeless.HNil
 
 import scala.reflect.ClassTag
 
-abstract class MyService[F[_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
+abstract class MyService[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
   extends RhoService[F] {
 
   import swaggerSyntax._
@@ -55,12 +54,8 @@ abstract class MyService[F[_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
-      val res: F[BaseResult[F]] = if (i >= 0)
-        Ok(JsonResult("Good result", i)).widen
-      else
-        BadRequest(s"Negative number: $i").widen
-
-      res
+      if (i >= 0) Ok(JsonResult("Good result", i))
+      else BadRequest(s"Negative number: $i")
     }
 
   "This gets a simple counter for the number of times this route has been requested" **

@@ -1,15 +1,13 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import cats.Monad
-import cats.syntax.functor._
-import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.RhoService
 import org.http4s.rho.hal.{ResourceObjectBuilder => ResObjBuilder, _}
 import org.http4s.{Request, Uri}
 
 import scala.collection.mutable.ListBuffer
 
-class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoService[F] {
+class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoService[F] {
 
   // # Query Parameters
 
@@ -47,10 +45,7 @@ class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoServ
       Ok(b.build())
     }
 
-    val res: F[BaseResult[F]] =
-      (found getOrElse NotFound(warning(s"Browser $id not found"))).widen
-
-    res
+    found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatternsById = browsers / id / "patterns"
@@ -58,10 +53,7 @@ class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoServ
     val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
       yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build())
 
-    val res: F[BaseResult[F]] =
-      (found getOrElse NotFound(warning(s"Browser $id not found"))).widen
-
-    res
+    found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatterns = "browser-patterns"
@@ -85,10 +77,7 @@ class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoServ
       Ok(b.build())
     }
 
-    val res: F[BaseResult[F]] =
-      (found getOrElse NotFound(warning(s"Browser $id not found"))).widen
-
-    res
+    found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserTypes = "browser-types"
@@ -110,10 +99,7 @@ class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoServ
       Ok(b.build())
     }
 
-    val res: F[BaseResult[F]] =
-      (found getOrElse NotFound(warning(s"Browser type $id not found"))).widen
-
-    res
+    found.getOrElse(NotFound(warning(s"Browser type $id not found")))
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
@@ -121,12 +107,10 @@ class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoServ
     val browsers = businessLayer.findBrowsersByBrowserTypeId(id, first, max)
     val total = businessLayer.countBrowsersByBrowserTypeId(id)
 
-    val res: F[BaseResult[F]] = if (browsers.nonEmpty)
-      Ok(browsersAsResource(request, first, max, browsers, total).build()).widen
+    if (browsers.nonEmpty)
+      Ok(browsersAsResource(request, first, max, browsers, total).build())
     else
-      NotFound(warning(s"No browsers for type $id found")).widen
-
-    res
+      NotFound(warning(s"No browsers for type $id found"))
   }
 
   val operatingSystems = "operating-systems"
@@ -149,34 +133,27 @@ class RestService[F[_]: Monad](val businessLayer: BusinessLayer) extends RhoServ
       Ok(b.build())
     }
 
-    val res: F[BaseResult[F]] =
-      (found getOrElse NotFound(warning(s"OperatingSystem $id not found"))).widen
-
-    res
+    found.getOrElse(NotFound(warning(s"OperatingSystem $id not found")))
   }
 
   val browsersByOperatingSystem = operatingSystemById / "browsers"
   GET / browsersByOperatingSystem |>> { (request: Request[F], id: Int) =>
     val browsers = businessLayer.findBrowsersByOperatingSystemId(id)
 
-    val res: F[BaseResult[F]] = if (browsers.nonEmpty)
-      Ok(browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build()).widen
+    if (browsers.nonEmpty)
+      Ok(browsersAsResource(request, 0, Int.MaxValue, browsers, browsers.size).build())
     else
-      NotFound(warning(s"No Browsers for operating system $id found")).widen
-
-    res
+      NotFound(warning(s"No Browsers for operating system $id found"))
   }
 
   val operatingSystemsByBrowser = browserById / "operating-systems"
   GET / operatingSystemsByBrowser |>> { (request: Request[F], id: Int) =>
     val operatingSystems = businessLayer.findOperatingSystemsByBrowserId(id)
 
-    val res: F[BaseResult[F]] = if (operatingSystems.nonEmpty)
-      Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build()).widen
+    if (operatingSystems.nonEmpty)
+      Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build())
     else
-      NotFound(warning(s"No operating systems for browser $id found")).widen
-
-    res
+      NotFound(warning(s"No operating systems for browser $id found"))
   }
 
   GET / "" |>> { request: Request[F] =>
