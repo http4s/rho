@@ -126,14 +126,14 @@ class SwaggerModelsBuilderSpec extends Specification {
        val ra = fooPath +? param[Foo]("foo") |>> { (_: Foo) => "" }
 
        sb.collectQueryParams[IO](ra) must_==
-       List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true))
+       List(QueryParameter(`type` = "string".some, name = "foo".some, required = true))
     }
 
     "handle an action with one optional query parameter of complex data type" in {
        val ra = fooPath +? param[Option[Foo]]("foo") |>> { (_: Option[Foo]) => "" }
 
        sb.collectQueryParams[IO](ra) must_==
-       List(QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = false))
+       List(QueryParameter(`type` = "string".some, name = "foo".some, required = false))
     }
 
     "handle an action with one optional query parameter of complex (but AnyVal) data type" in {
@@ -148,8 +148,8 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectQueryParams[IO](ra) must_==
       List(
-        QueryParameter(`type` = None, $ref = "Foo".some, name = "foo".some, required = true),
-        QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty($ref = "Bar".some)), defaultValue = "".some, isArray = true)
+        QueryParameter(`type` = "string".some, name = "foo".some, required = true),
+        QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty(`type` = "string")), defaultValue = "".some, isArray = true)
       )
     }
   }

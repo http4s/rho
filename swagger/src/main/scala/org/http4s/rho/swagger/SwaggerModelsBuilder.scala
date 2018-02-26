@@ -345,7 +345,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     TypeBuilder.DataType(rule.m.tpe) match {
       case TypeBuilder.DataType.ComplexDataType(nm, _) =>
         QueryParameter(
-          $ref         = nm.some,
+          `type`       = nm.some,
           name         = rule.name.some,
           description  = rule.description,
           required     = required,
@@ -357,7 +357,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case TypeBuilder.DataType.ContainerDataType(_, dt, _) =>
         val itemTpe = dt match {
           case Some(TypeBuilder.DataType.ComplexDataType(nm, _)) =>
-            models.AbstractProperty($ref = nm.some).some
+            models.AbstractProperty(`type` = nm).some
           // XXX need to revisit to take care of recursive array type
           case Some(tpe: TypeBuilder.DataType) =>
             models.AbstractProperty(tpe.name).some

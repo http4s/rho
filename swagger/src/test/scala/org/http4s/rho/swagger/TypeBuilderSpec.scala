@@ -218,7 +218,7 @@ class TypeBuilderSpec extends Specification {
       val m1 = ms.head
       m1.description must_== "FooCompositeWithAlias".some
       m1.properties.size must_== 3
-      m1.properties.get("single").get.`type` must_== "Foo"
+      m1.properties.get("single").get.`type` must_== "string"
       m1.properties.get("many").get.`type` must_== "array"
       m1.properties.get("manyAlias").get.`type` must_== "array"
 

@@ -281,7 +281,7 @@ object TypeBuilder {
         EnumDataType(klass.typeSymbol.asClass.knownDirectSubclasses.map(_.name.toString))
       } else {
         val stt = if (t.isOption) t.typeArgs.head else t
-        ComplexDataType(stt.simpleName, qualifiedName = Option(stt.fullName))
+        ComplexDataType("string", qualifiedName = Option(stt.fullName))
       }
     }
 
