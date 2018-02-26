@@ -227,6 +227,27 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.mkOperation("/foo", ra).security must_== List(x)
     }
+
+    "Handle collection params in body" in {
+      val dec = new EntityDecoder[IO, List[String]] {
+        override def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
+        override def consumes: Set[MediaRange] = Set.empty
+      }
+
+      val ra = POST / "foo" ^ dec |>> { (l: List[String]) => "" }
+
+      sb.mkOperation("/foo", ra).parameters must_== List(
+        BodyParameter(
+          schema = ArrayModel(
+            id = "scala.collection.immutable.List«java.lang.String»",
+            id2 = "scala.collection.immutable.List«java.lang.String»",
+            `type` = "array".some,
+            items = RefProperty(ref = "String", title = "String".some).some).some,
+          name = "body".some,
+          description = "List«String»".some
+        )
+      )
+    }
   }
 
   "SwaggerModelsBuilder.collectPaths" should {
