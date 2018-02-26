@@ -254,6 +254,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     val model = if (tpe.isPrimitive) {
       val name = TypeBuilder.DataType(tpe).name
       ModelImpl(id = tpe.fullName, id2 = name, `type` = name.some, isSimple = true)
+    } else if (tpe.isCollection) {
+      val pType = tpe.dealias.typeArgs.head
+      ArrayModel(id = tpe.fullName, id2 = tpe.fullName, `type` = "array".some,
+        items = RefProperty(title = pType.simpleName.some, ref = pType.simpleName).some)
     } else RefModel(tpe.fullName, tpe.fullName, tpe.simpleName)
     BodyParameter(
       schema      = model.some,
