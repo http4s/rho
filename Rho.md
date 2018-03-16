@@ -1,6 +1,8 @@
 # Documenting Http4s web services with rho
 Rho is a library for documenting Http4s web apis.
 
+Note: To get the generated swagger.json, you need to visit: `{https|http}://host:port/{base path if any}/swagger.json`
+
 Sample:
 ```scala
 val api = new RhoService[IO] {
@@ -12,7 +14,7 @@ val api = new RhoService[IO] {
 }
 ```
 
-So we start by creating a new RhoService which will be converted to an HttpService later. This RhoService will contain our api endpoints. Every api endpoint starts with a description for that endpoint and then the implementation. We describe the HTTP method (GET/POST/DELETE etc) and then a description of the url.
+So we start by creating a new RhoService which will be converted to an HttpService later. This RhoService will contain our api endpoints. Every api endpoint starts (optionally) with a description for that endpoint and then the implementation. We describe the HTTP method (GET/POST/DELETE etc) and then an implementation for the url endpoint.
 
 You can specify and capture path or query parameters in your path. You specify a name and description (optional) for the variables. The available types that you can capture are:
 - all primitive types
@@ -102,7 +104,8 @@ val myClassModel: Set[Model] = Set(
 // register this model
 SwaggerSupport[IO].createRhoMiddleware(
               swaggerFormats = DefaultSwaggerFormats
-                .withSerializers(typeOf[MyClass], myClassModel),
+                .withSerializers(typeOf[MyClass], myClassModel)
+                .withSerializers(...),
                 apiInfo = Info(
                 title = "My API",
                 version = "1.0.0",
@@ -117,3 +120,5 @@ SwaggerSupport[IO].createRhoMiddleware(
 ```
 Tha example above also shows how to provide basic api info and base path and security specification.
 By declaring security here we get option to add api key/token in the swagger ui.
+
+To get the generated swagger.json for this example, you would visit: `https://host:port/v1/swagger.json`
