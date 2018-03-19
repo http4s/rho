@@ -14,7 +14,7 @@ val httpService = new RhoService {
 }
 ```
 
-See the [wiki](https://github.com/http4s/rho/wiki) and the [tests](https://github.com/http4s/rho/blob/master/core/src/test/scala/ApiExamples.scala) for more examples.
+See the [tutorial](https://github.com/http4s/rho/blob/master/Rho.md), [wiki](https://github.com/http4s/rho/wiki) and the [tests](https://github.com/http4s/rho/blob/master/core/src/test/scala/ApiExamples.scala) for more examples.
 
 ### Get more from your route definitions
 The primary goal of ρ is to provide an easy to use AST with which to build HTTP services which can be inspected to extract a variety of information including:
