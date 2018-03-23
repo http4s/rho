@@ -2,8 +2,8 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  lazy val http4sVersion = "0.18.0"
-  lazy val specs2Version = "4.0.2"
+  lazy val http4sVersion = "0.18.4"
+  lazy val specs2Version = "4.0.3"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
