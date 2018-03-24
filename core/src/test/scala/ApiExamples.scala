@@ -11,6 +11,7 @@ import org.http4s.rho.bits.TypedQuery
 import org.http4s.server.websocket._
 import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification
+import cats.implicits._
 
 class ApiExamples extends Specification {
   "mock api" should {
@@ -28,7 +29,7 @@ class ApiExamples extends Specification {
         val pathPart1 = GET / "hello"
 
         pathPart1 / "world" |>> { () => Ok("Hello, world!") }
-        pathPart1 / "you"   |>> { () => Ok("Hello, you!") }
+        pathPart1 / "you"   |>> { () => Ok("Hello, you!".pure[IO]) }
       }
       /// end_src_inlined
 
