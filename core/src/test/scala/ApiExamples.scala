@@ -29,7 +29,7 @@ class ApiExamples extends Specification {
         val pathPart1 = GET / "hello"
 
         pathPart1 / "world" |>> { () => Ok("Hello, world!") }
-        pathPart1 / "you"   |>> { () => Ok("Hello, you!".pure[IO]) }
+        pathPart1 / "you"   |>> { () => Ok("Hello, you!") }
       }
       /// end_src_inlined
 
@@ -146,7 +146,7 @@ class ApiExamples extends Specification {
         private def getCount(): String = counter.incrementAndGet().toString
         // Don't want status codes? Anything with an `EntityEncoder` will work.
         GET / "nostatus" |>> { () => "No status!" }
-        GET / "taskNoStatus" |>> { () =>  IO.pure(getCount()) }
+        GET / "taskNoStatus" |>> { () => getCount().pure[IO] }
 
         /* Results need not be functions: they can be anything that has
            an `EntityEncoder` instance in scope */
