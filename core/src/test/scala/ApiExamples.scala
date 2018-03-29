@@ -11,6 +11,7 @@ import org.http4s.rho.bits.TypedQuery
 import org.http4s.server.websocket._
 import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification
+import cats.implicits._
 
 class ApiExamples extends Specification {
   "mock api" should {
@@ -145,7 +146,7 @@ class ApiExamples extends Specification {
         private def getCount(): String = counter.incrementAndGet().toString
         // Don't want status codes? Anything with an `EntityEncoder` will work.
         GET / "nostatus" |>> { () => "No status!" }
-        GET / "taskNoStatus" |>> { () =>  IO.pure(getCount()) }
+        GET / "taskNoStatus" |>> { () => getCount().pure[IO] }
 
         /* Results need not be functions: they can be anything that has
            an `EntityEncoder` instance in scope */
