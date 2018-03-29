@@ -30,6 +30,7 @@ class HListToFuncSpec extends Specification {
     "Work with cats.implicits" in {
       import cats.implicits._
       new RhoService[IO] {
+        // `.pure[IO]` used to require the cats.implicits under test
         GET / "route1" |>> { () => Ok("foo".pure[IO]) }
       }
       success
