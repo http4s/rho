@@ -2,7 +2,7 @@
 -----------------------------------------------
 
 [![Build Status](https://travis-ci.org/http4s/rho.svg?branch=master)](https://travis-ci.org/http4s/rho)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.12)
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat-green.svg)](https://gitter.im/http4s/http4s?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
