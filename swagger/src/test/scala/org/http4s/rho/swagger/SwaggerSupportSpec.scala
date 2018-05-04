@@ -6,7 +6,6 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.syntax.semigroupk._
 import org.http4s.rho.bits.MethodAliases.GET
-import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
