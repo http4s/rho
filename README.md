@@ -7,7 +7,7 @@
 
 
 ```scala
-val httpService = new RhoService {
+val httpService = new RhoService[IO] {
    GET / "hello" / 'world +? param[Int]("fav") |>> { (world: String, fav: Int) => 
      Ok(s"Received $fav, $world") 
    }
