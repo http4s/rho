@@ -34,7 +34,7 @@ You can insert header captures and body decoders for your requests, an example:
 ```scala
 val api = new RhoService[IO] {
     "Description of api endpoint" **
-    GET / "somePath" / pathVar[Int]("someInt", "parameter description") >>> auth ^ jsonOf[T] |>> { (someInt: Int, au: AuthInfo, body: T) => {
+    POST / "somePath" / pathVar[Int]("someInt", "parameter description") >>> auth ^ jsonOf[T] |>> { (someInt: Int, au: AuthInfo, body: T) => {
             Ok("result")
         }
     }
