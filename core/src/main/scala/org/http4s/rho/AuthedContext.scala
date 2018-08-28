@@ -49,7 +49,7 @@ class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
     * @param service [[HttpService]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService(service: HttpService[F]): AuthedService[U, F] = {
+  def toService(service: HttpRoutes[F]): AuthedService[U, F] = {
     type O[A] = OptionT[F, A]
 
     Kleisli[O, AuthedRequest[F, U], Response[F]] { (a: AuthedRequest[F, U]) =>

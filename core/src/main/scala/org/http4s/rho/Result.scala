@@ -100,6 +100,6 @@ trait ResultSyntaxInstances[F[_]] {
       Result(r.resp.withAttribute(key, value))
 
     def withBody[U](b: U)(implicit F: Monad[F], w: EntityEncoder[F, U]): F[Self] =
-      F.map(r.resp.withBody(b))(Result(_))
+      F.pure(Result(r.resp.withEntity(b)))
   }
 }
