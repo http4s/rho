@@ -13,7 +13,7 @@ import fs2.Stream
 import org.http4s.rho.RhoService
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
-import org.http4s.{EntityDecoder, Headers, HttpDate, Request, Uri, headers}
+import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, Uri, headers}
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods
 import shapeless.HNil
@@ -82,7 +82,7 @@ abstract class MyService[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implic
       val hs = req.headers.get(headers.Cookie) match {
         case None => Headers.empty
         case Some(cookie) =>
-          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(c.copy(expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
+          Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(ResponseCookie(c.name, c.content, expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
       }
 
       Ok("Deleted cookies!").map(_.replaceAllHeaders(hs))
