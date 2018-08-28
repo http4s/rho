@@ -5,7 +5,6 @@ import org.http4s._
 import org.http4s.headers.{Location, `Content-Length`, `Content-Type`, `Transfer-Encoding`}
 import org.http4s.rho.io._
 import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
 
 class ResponseGeneratorSpec extends Specification {
   "ResponseGenerator" should {
@@ -13,7 +12,7 @@ class ResponseGeneratorSpec extends Specification {
       val result = Ok("Foo").unsafeRunSync()
       val resp = result.resp
 
-      val str = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
+      val str = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
       str must_== "Foo"
 
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong("Foo".getBytes.length))
@@ -44,10 +43,10 @@ class ResponseGeneratorSpec extends Specification {
 
     "Explicitly added headers have priority" in {
       implicit val w: EntityEncoder[IO, String] =
-        EntityEncoder.encodeBy[IO, String](`Content-Type`(MediaType.`text/html`))(EntityEncoder.stringEncoder[IO].toEntity(_))
+        EntityEncoder.encodeBy[IO, String](`Content-Type`(MediaType.text.html))(EntityEncoder.stringEncoder[IO].toEntity(_))
 
-      Ok("some content", Headers(`Content-Type`(MediaType.`application/json`)))
-        .unsafeRunSync().resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.`application/json`)
+      Ok("some content", Headers(`Content-Type`(MediaType.application.json)))
+        .unsafeRunSync().resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.application.json)
     }
   }
 }

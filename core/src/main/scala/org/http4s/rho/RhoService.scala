@@ -48,7 +48,7 @@ class RhoService[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empt
   final def getRoutes: Seq[RhoRoute[F, _ <: HList]] = serviceBuilder.routes()
 
   /** Convert the [[RhoRoute]]'s accumulated into a `HttpService` */
-  final def toService(filter: RhoMiddleware[F] = identity): HttpService[F] = serviceBuilder.toService(filter)
+  final def toRoutes(filter: RhoMiddleware[F] = identity): HttpRoutes[F] = serviceBuilder.toService(filter)
 
   final override def toString: String = s"RhoService(${serviceBuilder.routes().toString()})"
 
