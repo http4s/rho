@@ -90,7 +90,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
       )
 
       F.map(fOk) { ok =>
-        ok.copy(resp = ok.resp.putHeaders(`Content-Type`(MediaType.`application/json`)))
+        ok.copy(resp = ok.resp.putHeaders(`Content-Type`(MediaType.application.json)))
       }
     }
 

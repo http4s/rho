@@ -62,11 +62,11 @@ object Arbitraries {
 
   def genMediaType: Gen[String] =
     oneOf(
-      `application/json`,
-      `audio/midi`,
-      `image/gif`,
-      `text/html`
-    ).map(_.renderString)
+      application.json,
+      audio.midi,
+      image.gif,
+      text.html,
+    ).map(_.toString)
 
   def listOf[T : Arbitrary]: Gen[List[T]] =
     listOf(arbitrary[T])
