@@ -1,11 +1,11 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.effect.IO
-import org.http4s.{HttpRoutes}
+import cats.effect.{ContextShift, IO, Timer}
+import org.http4s.HttpRoutes
 import org.http4s.rho.RhoMiddleware
 import org.http4s.rho.swagger.syntax.io._
 
-class Routes(businessLayer: BusinessLayer) {
+class Routes(businessLayer: BusinessLayer)(implicit T: Timer[IO], cs: ContextShift[IO]) {
 
   val middleware: RhoMiddleware[IO] =
     createRhoMiddleware()

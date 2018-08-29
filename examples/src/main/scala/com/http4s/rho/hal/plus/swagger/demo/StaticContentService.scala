@@ -1,18 +1,20 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import cats.data.OptionT
-import cats.effect.Sync
+import cats.effect.{ContextShift, Sync, Timer}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 
-abstract class StaticContentService[F[_]: Sync](dsl: Http4sDsl[F]) {
+import scala.concurrent.ExecutionContext.global
+
+abstract class StaticContentService[F[_]: Sync : Timer : ContextShift](dsl: Http4sDsl[F]) {
   import dsl._
 
   private val halUiDir = "/hal-browser"
   private val swaggerUiDir = "/swagger-ui"
 
   def fetchResource(path: String, req: Request[F]): OptionT[F, Response[F]] = {
-    StaticFile.fromResource(path, Some(req))
+    StaticFile.fromResource(path, global, Some(req))
   }
 
   /**
