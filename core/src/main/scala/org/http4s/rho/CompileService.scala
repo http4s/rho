@@ -42,7 +42,7 @@ object CompileService {
     * @param filter [[RhoMiddleware]] to apply to the routes.
     * @return An `HttpService`
     */
-  def foldServices[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]], filter: RhoMiddleware[F]): HttpService[F] = {
+  def foldServices[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]], filter: RhoMiddleware[F]): HttpRoutes[F] = {
     val tree = filter(routes).foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
     Kleisli((req: Request[F]) => tree.getResult(req).toResponse)
   }

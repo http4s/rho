@@ -14,7 +14,7 @@ final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rh
     * @param filter [[RhoMiddleware]] to apply to the collection of routes.
     * @return An `HttpService` which can be mounted by http4s servers.
     */
-  def toService(filter: RhoMiddleware[F] = identity): HttpService[F] =
+  def toService(filter: RhoMiddleware[F] = identity): HttpRoutes[F] =
     CompileService.foldServices(internalRoutes.result(), filter)
 
   /** Get a snapshot of the currently acquired routes */

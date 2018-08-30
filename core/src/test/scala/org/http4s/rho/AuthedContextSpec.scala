@@ -7,7 +7,6 @@ import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import org.http4s.server.AuthMiddleware
 import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
 
 case class User(name: String, id: UUID)
 
@@ -38,7 +37,7 @@ object MyService extends RhoService[IO] {
 
 class AuthedContextSpec extends Specification {
 
-  val service = Auth.authenticated(MyAuth.toService(MyService.toService()))
+  val service = Auth.authenticated(MyAuth.toService(MyService.toRoutes()))
 
   "AuthedContext execution" should {
 
@@ -46,7 +45,7 @@ class AuthedContextSpec extends Specification {
       val request = Request[IO](Method.GET, Uri(path = "/"))
       val resp = service.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
-        val body = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
+        val body = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
         body should_== "just root with parameter 'foo=bar'"
       } else sys.error(s"Invalid response code: ${resp.status}")
     }

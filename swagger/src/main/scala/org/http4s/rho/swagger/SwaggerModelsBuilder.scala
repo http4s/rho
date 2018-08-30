@@ -228,8 +228,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     Operation(
       tags        = pathStr.split("/").filterNot(_ == "").headOption.getOrElse("/") :: Nil,
       summary     = collectSummary(rr),
-      consumes    = rr.validMedia.toList.map(_.renderString),
-      produces    = rr.responseEncodings.toList.map(_.renderString),
+      consumes    = rr.validMedia.toList.map(_.toString),
+      produces    = rr.responseEncodings.toList.map(_.toString),
       operationId = mkOperationId(pathStr, rr.method, parameters).some,
       parameters  = parameters,
       security    = collectSecurityScopes(rr),

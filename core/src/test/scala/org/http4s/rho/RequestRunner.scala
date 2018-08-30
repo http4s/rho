@@ -2,13 +2,12 @@ package org.http4s.rho
 
 import cats.effect.IO
 import org.http4s._
-import org.http4s.HttpService
-import scodec.bits.ByteVector
+import org.http4s.HttpRoutes
 
 /** Helper for collecting a the body from a `RhoService` */
 trait RequestRunner {
 
-  def service: HttpService[IO]
+  def service: HttpRoutes[IO]
 
   def checkOk(r: Request[IO]): String = checkStatus(r)(_ == Status.Ok)
 
@@ -24,8 +23,8 @@ trait RequestRunner {
 }
 object RequestRunner {
   def getBody(b: EntityBody[IO]): String = {
-    new String(b.compile.toVector.unsafeRunSync.foldLeft(ByteVector.empty)(_ :+ _).toArray)
+    new String(b.compile.toVector.unsafeRunSync.foldLeft(Array[Byte]())(_ :+ _))
   }
 }
 
-case class RRunner(service: HttpService[IO]) extends RequestRunner
+case class RRunner(service: HttpRoutes[IO]) extends RequestRunner

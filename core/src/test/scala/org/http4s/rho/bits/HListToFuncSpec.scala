@@ -4,11 +4,10 @@ package bits
 
 import cats.effect.IO
 import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
 
 class HListToFuncSpec extends Specification {
   def getBody(b: EntityBody[IO]): String = {
-    new String(b.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray)
+    new String(b.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
   }
 
   def checkOk(r: Request[IO]): String = getBody(service(r).value.unsafeRunSync().getOrElse(Response.notFound).body)
@@ -18,7 +17,7 @@ class HListToFuncSpec extends Specification {
 
   val service = new RhoService[IO] {
     GET / "route1" |>> { () => Ok("foo") }
-  }.toService()
+  }.toRoutes()
 
   "HListToFunc" should {
     "Work for methods of type _ => Task[Response]" in {
@@ -28,10 +27,9 @@ class HListToFuncSpec extends Specification {
 
     // Tests issue 218 https://github.com/http4s/rho/issues/218
     "Work with cats.implicits" in {
-      import cats.implicits._
       new RhoService[IO] {
         // `.pure[IO]` used to require the cats.implicits under test
-        GET / "route1" |>> { () => Ok("foo".pure[IO]) }
+        GET / "route1" |>> { () => Ok("foo") }
       }
       success
     }

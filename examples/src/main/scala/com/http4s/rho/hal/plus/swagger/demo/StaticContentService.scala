@@ -1,24 +1,27 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.effect.Sync
+import cats.data.OptionT
+import cats.effect.{ContextShift, Sync, Timer}
 import org.http4s.dsl.Http4sDsl
-import org.http4s.{HttpService, Request, Response, StaticFile}
+import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 
-abstract class StaticContentService[F[_]: Sync](dsl: Http4sDsl[F]) {
+import scala.concurrent.ExecutionContext.global
+
+abstract class StaticContentService[F[_]: Sync : Timer : ContextShift](dsl: Http4sDsl[F]) {
   import dsl._
 
   private val halUiDir = "/hal-browser"
   private val swaggerUiDir = "/swagger-ui"
 
-  def fetchResource(path: String, req: Request[F]): F[Response[F]] = {
-    StaticFile.fromResource(path, Some(req)).getOrElseF(NotFound())
+  def fetchResource(path: String, req: Request[F]): OptionT[F, Response[F]] = {
+    StaticFile.fromResource(path, global, Some(req))
   }
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
    * but its nice to keep it self contained.
    */
-  def routes: HttpService[F] = HttpService[F] {
+  def routes: HttpRoutes[F] = HttpRoutes[F] {
 
     // JSON HAL User Interface
     case req if req.uri.path.startsWith("/js/") => fetchResource(halUiDir + req.pathInfo, req)

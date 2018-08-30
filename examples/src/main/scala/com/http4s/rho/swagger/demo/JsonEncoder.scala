@@ -2,7 +2,6 @@ package com.http4s.rho.swagger.demo
 
 import java.nio.charset.StandardCharsets
 
-import cats.Applicative
 import org.http4s.headers.`Content-Type`
 import org.http4s.{Entity, EntityEncoder, MediaType}
 
@@ -17,8 +16,8 @@ object JsonEncoder {
   private implicit val formats: Formats =
     Serialization.formats(NoTypeHints)
 
-  implicit def autoSerializableEntityEncoder[F[_], A <: AutoSerializable](implicit F: Applicative[F]): EntityEncoder[F, A] =
-    EntityEncoder.encodeBy(`Content-Type`(MediaType.`application/json`))(a => F.pure {
+  implicit def autoSerializableEntityEncoder[F[_], A <: AutoSerializable]: EntityEncoder[F, A] =
+    EntityEncoder.encodeBy(`Content-Type`(MediaType.application.json))(a => {
       val bytes = write(a).getBytes(StandardCharsets.UTF_8)
       Entity(Stream.emits(bytes), Some(bytes.length))
     })
