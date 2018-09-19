@@ -42,6 +42,7 @@ lazy val docs = project
       version.value,
       apiVersion.value
     ),
+    scalacOptions in (ScalaUnidoc, unidoc) += "-Ypartial-unification",
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       `rho-core`,
       `rho-hal`,
