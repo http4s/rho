@@ -849,8 +849,8 @@ object models {
       sp.setDescription(fromOption(description))
       sp.setFormat(fromOption(format))
       sp.setEnum(fromList(enums.toList))
-      minLength.foreach(l => sp.setMinLength(new Integer(l)))
-      maxLength.foreach(l => sp.setMaxLength(new Integer(l)))
+      minLength.foreach(l => sp.setMinLength(Integer.valueOf(l)))
+      maxLength.foreach(l => sp.setMaxLength(Integer.valueOf(l)))
       sp.setPattern(fromOption(pattern))
       sp.setDefault(fromOption(default))
       sp

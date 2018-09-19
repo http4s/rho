@@ -5,7 +5,7 @@ package bits
 import java.nio.charset.StandardCharsets
 
 import cats.effect.IO
-import org.http4s.server.middleware.URITranslation
+import org.http4s.server.middleware.TranslateUri
 import org.specs2.mutable.Specification
 import scodec.bits.ByteVector
 
@@ -36,7 +36,7 @@ class PathTreeSpec extends Specification {
   }
 
   "Honor UriTranslations" in {
-    val svc = URITranslation.translateRoot[IO]("/bar")(new RhoService[IO] {
+    val svc = TranslateUri[IO]("/bar")(new RhoService[IO] {
       GET / "foo" |>> "foo"
     }.toService())
 
