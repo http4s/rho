@@ -100,24 +100,23 @@ class ApiTest extends Specification {
     }
 
 
-//    "map simple header params into a complex type" in {
-//      case class Foo(age: Long, s: HttpDate)
-//      val paramFoo = (captureMap(headers.`Content-Length`)(_.length) &&
-//        captureMap(headers.Date)(_.date)).map(Foo.apply(_))
-//
-//      val path = GET / "hello" >>> paramFoo
-//      val req = Request[IO](
-//        uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")),
-//        headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
-//      )
-//
-//      val expectedFoo = Foo(10, HttpDate.now)
-//      val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
-//
-//      val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-//      result.status should_== Status.Ok
-//      RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
-//    }
+    "map simple header params into a complex type" in {
+      case class Foo(age: Long, s: HttpDate)
+      val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
+
+      val path = GET / "hello" >>> paramFoo
+      val req = Request[IO](
+        uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")),
+        headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
+      )
+
+      val expectedFoo = Foo(10, HttpDate.now)
+      val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
+
+      val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
+      result.status should_== Status.Ok
+      RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
+    }
 
     "Map with possible default" in {
       val req = Request[IO]().putHeaders(etag, lenheader)

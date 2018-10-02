@@ -24,7 +24,7 @@ object Main extends IOApp {
       new MyService[IO](ioSwagger) {}.toRoutes(middleware)
 
     BlazeBuilder[IO]
-      .mountService((StaticContentService.routes <+> myService))
+      .mountService(StaticContentService.routes combineK myService, "")
       .bindLocal(port)
       .serve.compile.toList.map(_.head)
   }

@@ -65,7 +65,7 @@ object Arbitraries {
       application.json,
       audio.midi,
       image.gif,
-      text.html,
+      text.html
     ).map(_.toString)
 
   def listOf[T : Arbitrary]: Gen[List[T]] =

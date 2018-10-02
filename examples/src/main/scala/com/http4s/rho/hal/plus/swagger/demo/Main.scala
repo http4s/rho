@@ -16,8 +16,7 @@ object Main extends IOApp {
   logger.info(s"Starting Hal example on '$port'")
 
   def run(args: List[String]): IO[ExitCode] = {
-    val businessLayer =
-      new UADetectorDatabase(new ResourceModuleXmlDataStore())
+    val businessLayer = new UADetectorDatabase(new ResourceModuleXmlDataStore())
 
     val routes =
       new Routes(businessLayer)
