@@ -12,7 +12,6 @@ import org.http4s.rho.io._
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
 import shapeless.{HList, HNil}
-import shapeless._
 
 class ApiTest extends Specification {
 

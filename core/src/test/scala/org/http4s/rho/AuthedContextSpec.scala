@@ -37,13 +37,13 @@ object MyService extends RhoService[IO] {
 
 class AuthedContextSpec extends Specification {
 
-  val service = Auth.authenticated(MyAuth.toService(MyService.toRoutes()))
+  val routes = Auth.authenticated(MyAuth.toService(MyService.toRoutes()))
 
   "AuthedContext execution" should {
 
     "Be able to have access to authInfo" in {
       val request = Request[IO](Method.GET, Uri(path = "/"))
-      val resp = service.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
+      val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
         val body = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
         body should_== "just root with parameter 'foo=bar'"
