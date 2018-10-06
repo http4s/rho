@@ -4,13 +4,13 @@ import java.util.UUID
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
-import cats.effect.IO
 import org.http4s.headers.{ETag, `Content-Length`}
-import org.http4s.rho._
+import org.http4s.rho.RhoService
 import org.http4s.rho.bits.TypedQuery
-import org.http4s.server.websocket._
+import org.http4s.server.websocket.WebSocketBuilder
 import org.http4s.{Request, UrlForm}
 import org.specs2.mutable.Specification
+import cats.effect.IO
 import cats.implicits._
 
 class ApiExamples extends Specification {

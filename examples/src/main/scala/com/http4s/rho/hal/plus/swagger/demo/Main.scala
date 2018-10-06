@@ -1,7 +1,8 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.semigroupk._
+import cats.syntax.functor._
+import cats.effect.{ExitCode, IO, IOApp}
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
@@ -24,6 +25,6 @@ object Main extends IOApp {
     BlazeBuilder[IO]
       .mountService(routes.staticContent combineK routes.dynamicContent, "")
       .bindLocal(port)
-      .serve.compile.toList.map(_.head)
+      .serve.compile.drain.as(ExitCode.Success)
   }
 }

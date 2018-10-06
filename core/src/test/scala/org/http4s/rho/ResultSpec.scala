@@ -45,7 +45,7 @@ class ResultSpec extends Specification {
     "Add a body" in {
       val newbody = "foobar"
       val resp = Ok("foo")
-        .flatMap(_.withBody(newbody))
+        .map(_.withEntity(newbody))
         .unsafeRunSync()
         .resp
 
@@ -53,7 +53,7 @@ class ResultSpec extends Specification {
       resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
 
       val resp2 = Ok("foo")
-        .flatMap(_.withBody(newbody))
+        .map(_.withEntity(newbody))
         .unsafeRunSync()
         .resp
 

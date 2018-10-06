@@ -3,6 +3,7 @@ package rho
 package swagger
 
 import cats.syntax.option._
+import cats.syntax.show._
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST._
 import org.http4s.rho.bits._
@@ -228,8 +229,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     Operation(
       tags        = pathStr.split("/").filterNot(_ == "").headOption.getOrElse("/") :: Nil,
       summary     = collectSummary(rr),
-      consumes    = rr.validMedia.toList.map(_.toString),
-      produces    = rr.responseEncodings.toList.map(_.toString),
+      consumes    = rr.validMedia.toList.map(_.show),
+      produces    = rr.responseEncodings.toList.map(_.show),
       operationId = mkOperationId(pathStr, rr.method, parameters).some,
       parameters  = parameters,
       security    = collectSecurityScopes(rr),
