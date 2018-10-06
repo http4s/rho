@@ -1,6 +1,7 @@
 package org.http4s.rho.swagger
 
 import io.swagger.{models => jm}
+import io.swagger.models.utils.PropertyModelConverter
 
 import scala.collection.JavaConverters._
 import java.util.ArrayList
@@ -298,7 +299,7 @@ object models {
     def toJModel: jm.Response = {
       val r = new jm.Response
       r.setDescription(description)
-      r.setSchema(fromOption(schema.map(_.toJModel)))
+      r.setResponseSchema(fromOption(schema.map(_.toJModel).map(new PropertyModelConverter().propertyToModel)))
       r.setExamples(fromMap(examples))
       r.setHeaders(fromMap(headers.mapValues(_.toJModel)))
       r
