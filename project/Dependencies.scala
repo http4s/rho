@@ -29,11 +29,12 @@ object Dependencies {
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
-    json4s,
-    json4sJackson,
     scalaXml,
     swaggerCore,
-    swaggerModels
+    swaggerModels,
+
+    json4s % "test",
+    json4sJackson % "test"
   )
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
