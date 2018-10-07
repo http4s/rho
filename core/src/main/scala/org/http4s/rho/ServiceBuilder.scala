@@ -1,21 +1,20 @@
 package org.http4s.rho
 
-import cats.Monad
-import org.http4s._
-import shapeless.HList
-
 import scala.collection.immutable.VectorBuilder
+import cats.Monad
+import shapeless.HList
+import org.http4s._
 
-/** CompileService which accumulates routes and can build a `HttpService` */
+/** CompileService which accumulates routes and can build a `HttpRoutes` */
 final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
 
-  /** Turn the accumulated routes into an `HttpService`
+  /** Turn the accumulated routes into an `HttpRoutes`
     *
-    * @param filter [[RhoMiddleware]] to apply to the collection of routes.
-    * @return An `HttpService` which can be mounted by http4s servers.
+    * @param middleware [[RhoMiddleware]] to apply to the collection of routes.
+    * @return An `HttpRoutes` which can be mounted by http4s servers.
     */
-  def toService(filter: RhoMiddleware[F] = identity): HttpRoutes[F] =
-    CompileRoutes.foldRoutes(internalRoutes.result(), filter)
+  def toRoutes(middleware: RhoMiddleware[F] = identity): HttpRoutes[F] =
+    CompileRoutes.foldRoutes(middleware.apply(internalRoutes.result()))
 
   /** Get a snapshot of the currently acquired routes */
   def routes(): Seq[RhoRoute.Tpe[F]] = internalRoutes.result()

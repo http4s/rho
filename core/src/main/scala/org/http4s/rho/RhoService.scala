@@ -13,12 +13,11 @@ import shapeless.{HList, HNil}
   * [[CompileRoutes]] inside the constructor.
   *
   * {{{
-  *   val srvc = new RhoService {
+  *   val srvc = new RhoService[IO] {
   *     POST / "foo" / pathVar[Int] +? param[String]("param") |>> { (p1: Int, param: String) =>
   *       Ok("success")
   *     }
   *   }
-  *
   * }}}
   *
   * @param routes Routes to prepend before elements in the constructor.
@@ -47,8 +46,9 @@ class RhoService[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empt
   /** Get a snapshot of the collection of [[RhoRoute]]'s accumulated so far */
   final def getRoutes: Seq[RhoRoute[F, _ <: HList]] = serviceBuilder.routes()
 
-  /** Convert the [[RhoRoute]]'s accumulated into a `HttpService` */
-  final def toRoutes(filter: RhoMiddleware[F] = identity): HttpRoutes[F] = serviceBuilder.toService(filter)
+  /** Convert the [[RhoRoute]]'s accumulated into a `HttpRoutes` */
+  final def toRoutes(middleware: RhoMiddleware[F] = identity): HttpRoutes[F] =
+    serviceBuilder.toRoutes(middleware)
 
   final override def toString: String = s"RhoService(${serviceBuilder.routes().toString()})"
 

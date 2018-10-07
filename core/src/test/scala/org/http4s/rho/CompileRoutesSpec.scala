@@ -21,7 +21,7 @@ class CompileRoutesSpec extends Specification {
       val c = ServiceBuilder[IO]()
       getFoo(c)
 
-      "GetFoo" === RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(c.toRoutes()).checkOk(Request(uri=Uri(path="/hello")))
     }
 
     "Build multiple routes" in {
@@ -29,8 +29,8 @@ class CompileRoutesSpec extends Specification {
       getFoo(c)
       putFoo(c)
 
-      "GetFoo" === RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
-      "PutFoo" === RRunner(c.toService()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(c.toRoutes()).checkOk(Request(uri=Uri(path="/hello")))
+      "PutFoo" === RRunner(c.toRoutes()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
 
     "Make routes from a collection of RhoRoutes" in {
@@ -39,7 +39,7 @@ class CompileRoutesSpec extends Specification {
         (GET / "hello" |>> "GetFoo") ::
         (PUT / "hello" |>> "PutFoo") :: Nil
 
-      val srvc = CompileRoutes.foldRoutes[IO](routes, identity)
+      val srvc = CompileRoutes.foldRoutes[IO](routes)
       "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
@@ -48,7 +48,7 @@ class CompileRoutesSpec extends Specification {
       val c1 = ServiceBuilder[IO](); getFoo(c1)
       val c2 = ServiceBuilder[IO](); putFoo(c2)
 
-      val srvc = c1.append(c2.routes()).toService()
+      val srvc = c1.append(c2.routes()).toRoutes()
       "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }

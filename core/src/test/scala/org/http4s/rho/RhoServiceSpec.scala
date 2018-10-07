@@ -16,7 +16,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
   def Get(s: String, h: Header*): Request[IO] = construct(Method.GET, s, h:_*)
   def Put(s: String, h: Header*): Request[IO] = construct(Method.PUT, s, h:_*)
 
-  val service = new RhoService[IO] {
+  val httpRoutes = new RhoService[IO] {
     GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
 
     GET / "" +? param("foo", "bar") |>> { foo: String => Ok("this definition should be hidden by the previous definition") }
@@ -95,14 +95,14 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "Return a 405 when a path is defined but the method doesn't match" in {
       val request = Request[IO](Method.POST, uri("/hello"))
-      val resp = service(request).value.unsafeRunSync().getOrElse(Response.notFound)
+      val resp = httpRoutes(request).value.unsafeRunSync().getOrElse(Response.notFound)
 
       resp.status must_== Status.MethodNotAllowed
       resp.headers.get("Allow".ci) must beSome(Header.Raw("Allow".ci, "GET"))
     }
 
     "Yield `MethodNotAllowed` when invalid method used" in {
-      service(Put("/one/two/three")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.MethodNotAllowed
+      httpRoutes(Put("/one/two/three")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.MethodNotAllowed
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
@@ -148,7 +148,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "NotFound on empty route" in {
-      service(Get("/one/two")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.NotFound
+      httpRoutes(Get("/one/two")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.NotFound
     }
 
     "Fail a route with a missing query" in {

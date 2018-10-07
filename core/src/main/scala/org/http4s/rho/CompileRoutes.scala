@@ -36,15 +36,13 @@ object CompileRoutes {
     implicit def compiler[F[_]]: CompileRoutes[F, RhoRoute.Tpe[F]] = identityCompiler[F]
   }
 
-
-  /** Convert the `Seq` of [[RhoRoute]]'s into a `HttpService`
+  /** Convert the `Seq` of [[RhoRoute]]'s into a `HttpRoutes`
     *
     * @param routes `Seq` of routes to bundle into a service.
-    * @param filter [[RhoMiddleware]] to apply to the routes.
-    * @return An `HttpService`
+    * @return An `HttpRoutes`
     */
-  def foldRoutes[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]], filter: RhoMiddleware[F]): HttpRoutes[F] = {
-    val tree = filter(routes).foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
+  def foldRoutes[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
+    val tree = routes.foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
     Kleisli((req: Request[F]) => tree.getResult(req).toResponse)
   }
 }
