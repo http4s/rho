@@ -10,7 +10,7 @@ import shapeless.{HList, HNil}
   *
   * The [[RhoService]] provides a convenient way to define routes in a style
   * similar to scalatra etc by providing implicit conversions and an implicit
-  * [[CompileService]] inside the constructor.
+  * [[CompileRoutes]] inside the constructor.
   *
   * {{{
   *   val srvc = new RhoService {
@@ -34,7 +34,7 @@ class RhoService[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empt
 
   final protected val logger = getLogger
 
-  final implicit protected def compileService: CompileService[F, RhoRoute.Tpe[F]] = serviceBuilder
+  final implicit protected def compileService: CompileRoutes[F, RhoRoute.Tpe[F]] = serviceBuilder
 
   /** Create a new [[RhoService]] by appending the routes of the passed [[RhoService]]
     *

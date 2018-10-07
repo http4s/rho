@@ -6,13 +6,13 @@ import org.http4s.rho.io._
 import org.http4s.{Method, Request, Uri}
 import org.specs2.mutable.Specification
 
-class CompileServiceSpec extends Specification {
+class CompileRoutesSpec extends Specification {
 
-  def getFoo(implicit c: CompileService[IO, _]): Unit = {
+  def getFoo(implicit c: CompileRoutes[IO, _]): Unit = {
     GET / "hello" |>> "GetFoo"
   }
 
-  def putFoo(implicit c: CompileService[IO, _]): Unit = {
+  def putFoo(implicit c: CompileRoutes[IO, _]): Unit = {
     PUT / "hello" |>> "PutFoo"
   }
 
@@ -34,12 +34,12 @@ class CompileServiceSpec extends Specification {
     }
 
     "Make routes from a collection of RhoRoutes" in {
-      import CompileService.Implicit.compiler
+      import CompileRoutes.Implicit.compiler
       val routes =
         (GET / "hello" |>> "GetFoo") ::
         (PUT / "hello" |>> "PutFoo") :: Nil
 
-      val srvc = CompileService.foldServices[IO](routes, identity)
+      val srvc = CompileRoutes.foldRoutes[IO](routes, identity)
       "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }

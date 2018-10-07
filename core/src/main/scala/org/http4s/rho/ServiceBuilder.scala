@@ -7,7 +7,7 @@ import shapeless.HList
 import scala.collection.immutable.VectorBuilder
 
 /** CompileService which accumulates routes and can build a `HttpService` */
-final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileService[F, RhoRoute.Tpe[F]] {
+final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
 
   /** Turn the accumulated routes into an `HttpService`
     *
@@ -15,7 +15,7 @@ final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rh
     * @return An `HttpService` which can be mounted by http4s servers.
     */
   def toService(filter: RhoMiddleware[F] = identity): HttpRoutes[F] =
-    CompileService.foldServices(internalRoutes.result(), filter)
+    CompileRoutes.foldRoutes(internalRoutes.result(), filter)
 
   /** Get a snapshot of the currently acquired routes */
   def routes(): Seq[RhoRoute.Tpe[F]] = internalRoutes.result()

@@ -17,8 +17,8 @@ class ResultMatcherSpec extends Specification {
   class TRhoService[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty
 
-    implicit final protected def compileSrvc: CompileService[F, RhoRoute.Tpe[F]] = {
-      new CompileService[F, RhoRoute.Tpe[F]] {
+    implicit final protected def compileSrvc: CompileRoutes[F, RhoRoute.Tpe[F]] = {
+      new CompileRoutes[F, RhoRoute.Tpe[F]] {
         override def compile[T <: HList](route: RhoRoute[F, T]): RhoRoute.Tpe[F] = {
           statuses = route.resultInfo.collect { case StatusAndType(s, t) => (s, t) }
           route
