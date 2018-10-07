@@ -5,7 +5,6 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.12)
 [![Gitter](https://badges.gitter.im/http4s/rho.svg)](https://gitter.im/http4s/rho?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-
 ```scala
 val httpService = new RhoService[IO] {
    GET / "hello" / 'world +? param[Int]("fav") |>> { (world: String, fav: Int) => 
