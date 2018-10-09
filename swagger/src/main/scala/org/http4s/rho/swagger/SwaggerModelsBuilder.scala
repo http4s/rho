@@ -346,7 +346,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   def mkQueryParam[F[_]](rule: QueryMetaData[F, _]): Parameter = {
     val required = !(rule.m.tpe.isOption || rule.default.isDefined)
 
-    TypeBuilder.DataType(rule.m.tpe) match {
+    val tpe = if(rule.m.tpe.isOption) rule.m.tpe.typeArgs.head else rule.m.tpe
+    TypeBuilder.DataType(tpe) match {
       case TypeBuilder.DataType.ComplexDataType(nm, _) =>
         QueryParameter(
           `type`       = nm.some,

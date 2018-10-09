@@ -88,6 +88,17 @@ class SwaggerModelsBuilderSpec extends Specification {
       List(QueryParameter(`type` = "string".some, name = "name".some, required = false))
     }
 
+    "handle an action with one optional seq query parameter" in {
+      val ra = fooPath +? param[Option[Seq[String]]]("name") |>> { (s: Option[Seq[String]]) => "" }
+
+      sb.collectQueryParams[IO](ra) must_==
+        List(
+          QueryParameter(`type` = None, name = "name".some,
+            items = Some(AbstractProperty(`type` = "string")),
+            defaultValue = None, isArray = true, required = false)
+        )
+    }
+
     "handle an action with one query parameter with default value" in {
       val ra = fooPath +? param[Int]("id", 6) |>> { (i: Int) => "" }
 
