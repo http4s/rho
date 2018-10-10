@@ -78,7 +78,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
             case _ : TypeBuilder.DataType.ComplexDataType =>
               tpe :: go(x::xs)
             case TypeBuilder.DataType.ContainerDataType(_, Some(_: TypeBuilder.DataType.ComplexDataType), _) =>
-              q.m.tpe.typeArgs.head :: go(x::xs)
+              q.m.tpe.dealias.typeArgs.head :: go(x::xs)
             case _ => go(x::xs)
           }
 
@@ -346,7 +346,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
   def mkQueryParam[F[_]](rule: QueryMetaData[F, _]): Parameter = {
     val required = !(rule.m.tpe.isOption || rule.default.isDefined)
 
-    val tpe = if(rule.m.tpe.isOption) rule.m.tpe.typeArgs.head else rule.m.tpe
+    val tpe = if(rule.m.tpe.isOption) rule.m.tpe.dealias.typeArgs.head else rule.m.tpe
     TypeBuilder.DataType(tpe) match {
       case TypeBuilder.DataType.ComplexDataType(nm, _) =>
         QueryParameter(
