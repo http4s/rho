@@ -59,6 +59,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   val sb = new SwaggerModelsBuilder(DefaultSwaggerFormats)
   val fooPath = GET / "foo"
   val barPath = GET / "bar"
+  type OpSeq = Option[Seq[String]]
 
   "SwaggerModelsBuilder.collectQueryParams" should {
 
@@ -86,6 +87,28 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "string".some, name = "name".some, required = false))
+    }
+
+    "handle an action with one optional seq query parameter" in {
+      val ra = fooPath +? param[Option[Seq[String]]]("name") |>> { (s: Option[Seq[String]]) => "" }
+
+      sb.collectQueryParams[IO](ra) must_==
+        List(
+          QueryParameter(`type` = None, name = "name".some,
+            items = Some(AbstractProperty(`type` = "string")),
+            defaultValue = None, isArray = true, required = false)
+        )
+    }
+
+    "handle an action with one optional seq query parameter using a type alias" in {
+      val ra = fooPath +? param[OpSeq]("name") |>> { (s: OpSeq) => "" }
+
+      sb.collectQueryParams[IO](ra) must_==
+        List(
+          QueryParameter(`type` = None, name = "name".some,
+            items = Some(AbstractProperty(`type` = "string")),
+            defaultValue = None, isArray = true, required = false)
+        )
     }
 
     "handle an action with one query parameter with default value" in {
