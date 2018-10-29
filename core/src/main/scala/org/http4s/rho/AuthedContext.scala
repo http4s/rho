@@ -10,6 +10,8 @@ import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 
 /** The [[AuthedContext]] provides a convenient way to define a RhoRoutes
   * which works with http4s authentication middleware.
+  * Please note that `AuthMiddleware`-wrapping is mandatory, otherwise context
+  * doesn't take effect.
   * {{{
   *     case class User(name: String, id: UUID)
   *
@@ -48,7 +50,7 @@ class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
     }
   }
 
-  /** Get the authInfo object from request */
+  /** Get the authInfo object from request if `AuthMiddleware` provided one */
   def getAuth(req: Request[F]): Option[U] =
     req.attributes.get(authKey)
 
