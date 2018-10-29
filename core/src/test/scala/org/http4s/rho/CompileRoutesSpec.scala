@@ -18,14 +18,14 @@ class CompileRoutesSpec extends Specification {
 
   "CompileService" should {
     "Build a single route" in {
-      val c = ServiceBuilder[IO]()
+      val c = RoutesBuilder[IO]()
       getFoo(c)
 
       "GetFoo" === RRunner(c.toRoutes()).checkOk(Request(uri=Uri(path="/hello")))
     }
 
     "Build multiple routes" in {
-      val c = ServiceBuilder[IO]()
+      val c = RoutesBuilder[IO]()
       getFoo(c)
       putFoo(c)
 
@@ -45,8 +45,8 @@ class CompileRoutesSpec extends Specification {
     }
 
     "Concatenate correctly" in {
-      val c1 = ServiceBuilder[IO](); getFoo(c1)
-      val c2 = ServiceBuilder[IO](); putFoo(c2)
+      val c1 = RoutesBuilder[IO](); getFoo(c1)
+      val c2 = RoutesBuilder[IO](); putFoo(c2)
 
       val srvc = c1.append(c2.routes()).toRoutes()
       "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))

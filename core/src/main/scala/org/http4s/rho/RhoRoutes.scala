@@ -29,11 +29,11 @@ class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty
     with EntityEncoderInstances
     with RhoDsl[F]
 {
-  final private val serviceBuilder = ServiceBuilder[F](routes)
+  final private val routesBuilder = RoutesBuilder[F](routes)
 
   final protected val logger = getLogger
 
-  final implicit protected def compileService: CompileRoutes[F, RhoRoute.Tpe[F]] = serviceBuilder
+  final implicit protected def compileRoutes: CompileRoutes[F, RhoRoute.Tpe[F]] = routesBuilder
 
   /** Create a new [[RhoRoutes]] by appending the routes of the passed [[RhoRoutes]]
     *
@@ -44,15 +44,15 @@ class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty
   final def and(other: RhoRoutes[F]): RhoRoutes[F] = new RhoRoutes(this.getRoutes ++ other.getRoutes)
 
   /** Get a snapshot of the collection of [[RhoRoute]]'s accumulated so far */
-  final def getRoutes: Seq[RhoRoute[F, _ <: HList]] = serviceBuilder.routes()
+  final def getRoutes: Seq[RhoRoute[F, _ <: HList]] = routesBuilder.routes()
 
   /** Convert the [[RhoRoute]]'s accumulated into a `HttpRoutes` */
   final def toRoutes(middleware: RhoMiddleware[F] = identity): HttpRoutes[F] =
-    serviceBuilder.toRoutes(middleware)
+    routesBuilder.toRoutes(middleware)
 
-  final override def toString: String = s"RhoRoutes(${serviceBuilder.routes().toString()})"
+  final override def toString: String = s"RhoRoutes(${routesBuilder.routes().toString()})"
 
   final override def /:(prefix: TypedPath[F, HNil]): RhoRoutes[F] = {
-    new RhoRoutes(serviceBuilder.routes().map { prefix /: _ })
+    new RhoRoutes(routesBuilder.routes().map { prefix /: _ })
   }
 }

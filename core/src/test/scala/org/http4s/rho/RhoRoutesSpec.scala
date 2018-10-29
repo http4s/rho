@@ -348,15 +348,15 @@ class RhoRoutesSpec extends Specification with RequestRunner {
         GET / "foo2" |>> "Foo2"
       }
       val both: RhoRoutes[IO] = routes1 and routes2
-      val bothService = both.toRoutes()
+      val bothRoutes = both.toRoutes()
 
       both.getRoutes === routes1.getRoutes ++ routes2.getRoutes
 
       val req1 = Request[IO](uri = uri("foo1"))
-      getBody(bothService(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo1"
+      getBody(bothRoutes(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo1"
 
       val req2 = Request[IO](uri = uri("foo2"))
-      getBody(bothService(req2).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo2"
+      getBody(bothRoutes(req2).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo2"
     }
   }
 

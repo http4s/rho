@@ -19,13 +19,13 @@ import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
   *
   *     object Auth extends AuthedContext[IO, User]
   *
-  *     object BobService extends RhoRoutes[IO] {
+  *     object BobRoutes extends RhoRoutes[IO] {
   *       GET +? param("foo", "bar") >>> Auth.auth |>> { (foo: String, user: User) =>
   *         Ok(s"Bob with id ${user.id}, foo $foo")
   *       }
   *     }
   *
-  *     val service = middleware.apply(Auth.toService(BobService.toRoutes()))
+  *     val service = middleware.apply(Auth.toService(BobRoutes.toRoutes()))
   * }}}
   *
   * @tparam U authInfo type for this service.

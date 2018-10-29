@@ -5,8 +5,8 @@ import cats.Monad
 import shapeless.HList
 import org.http4s._
 
-/** CompileService which accumulates routes and can build a `HttpRoutes` */
-final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
+/** CompileRoutes which accumulates routes and can build a `HttpRoutes` */
+final class RoutesBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
 
   /** Turn the accumulated routes into an `HttpRoutes`
     *
@@ -19,7 +19,7 @@ final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rh
   /** Get a snapshot of the currently acquired routes */
   def routes(): Seq[RhoRoute.Tpe[F]] = internalRoutes.result()
 
-  /** Append the routes into this [[ServiceBuilder]]
+  /** Append the routes into this [[RoutesBuilder]]
     *
     * @param routes Routes to accumulate.
     * @return `this` instance with its internal state mutated.
@@ -29,7 +29,7 @@ final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rh
     this
   }
 
-  /** Accumulate the [[RhoRoute]] into this [[ServiceBuilder]]
+  /** Accumulate the [[RhoRoute]] into this [[RoutesBuilder]]
     *
     * This is the same as appending a the single route and returning the same route.
     *
@@ -43,15 +43,15 @@ final class ServiceBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rh
   }
 }
 
-object ServiceBuilder {
-  /** Constructor method for new `ServiceBuilder` instances */
-  def apply[F[_]: Monad](): ServiceBuilder[F] = apply(Seq.empty)
+object RoutesBuilder {
+  /** Constructor method for new `RoutesBuilder` instances */
+  def apply[F[_]: Monad](): RoutesBuilder[F] = apply(Seq.empty)
 
-  /** Constructor method for new `ServiceBuilder` instances with existing routes */
-  def apply[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): ServiceBuilder[F] = {
+  /** Constructor method for new `RoutesBuilder` instances with existing routes */
+  def apply[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): RoutesBuilder[F] = {
     val builder = new VectorBuilder[RhoRoute.Tpe[F]]
     builder ++= routes
 
-    new ServiceBuilder(builder)
+    new RoutesBuilder(builder)
   }
 }
