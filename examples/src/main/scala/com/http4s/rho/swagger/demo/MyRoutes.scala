@@ -8,9 +8,9 @@ import cats.syntax.either._
 import cats.syntax.functor._
 import cats.syntax.option._
 import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
-import com.http4s.rho.swagger.demo.MyService._
+import com.http4s.rho.swagger.demo.MyRoutes._
 import fs2.Stream
-import org.http4s.rho.RhoService
+import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
 import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, Uri, headers}
@@ -20,8 +20,8 @@ import shapeless.HNil
 
 import scala.reflect.ClassTag
 
-abstract class MyService[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
-  extends RhoService[F] {
+abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
+  extends RhoRoutes[F] {
 
   import swaggerSyntax._
 
@@ -110,7 +110,7 @@ abstract class MyService[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implic
   }
 }
 
-object MyService {
+object MyRoutes {
   import scala.reflect.runtime.universe.TypeTag
 
   case class Foo(k: String, v: Int)

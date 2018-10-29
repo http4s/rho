@@ -15,7 +15,7 @@ class HListToFuncSpec extends Specification {
   def Get(s: String, h: Header*): Request[IO] =
     Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h:_*))
 
-  val service = new RhoService[IO] {
+  val service = new RhoRoutes[IO] {
     GET / "route1" |>> { () => Ok("foo") }
   }.toRoutes()
 
@@ -28,7 +28,7 @@ class HListToFuncSpec extends Specification {
     // Tests issue 218 https://github.com/http4s/rho/issues/218
     "Work with cats.implicits" in {
       import cats.implicits._
-      new RhoService[IO] {
+      new RhoRoutes[IO] {
         // `.pure[IO]` used to require the cats.implicits under test
         GET / "route1" |>> { () => "foo".pure[IO].flatMap(Ok(_)) }
       }

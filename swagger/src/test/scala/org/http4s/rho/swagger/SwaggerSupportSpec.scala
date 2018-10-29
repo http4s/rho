@@ -15,27 +15,27 @@ class SwaggerSupportSpec extends Specification {
   import org.json4s.JsonAST._
   import org.json4s.jackson._
 
-  val baseService = new RhoService[IO] {
+  val baseService = new RhoRoutes[IO] {
     GET / "hello" |>> { () => Ok("hello world") }
     GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
   }
 
-  val moarRoutes = new RhoService[IO] {
+  val moarRoutes = new RhoRoutes[IO] {
     GET / "goodbye" |>> { () => Ok("goodbye world") }
     GET / "goodbye"/ pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
-  val trailingSlashService = new RhoService[IO] {
+  val trailingSlashService = new RhoRoutes[IO] {
     GET / "foo" / "" |>> { () => Ok("hello world") }
   }
 
-  val mixedTrailingSlashesService = new RhoService[IO] {
+  val mixedTrailingSlashesService = new RhoRoutes[IO] {
     GET / "foo" / "" |>> { () => Ok("hello world") }
     GET / "foo" |>> { () => Ok("hello world") }
     GET / "bar" |>> { () => Ok("hello world") }
   }
 
-  val metaDataService = new RhoService[IO] {
+  val metaDataService = new RhoRoutes[IO] {
     "Hello" ** GET / "hello" |>> { () => Ok("hello world") }
     Map("hello"->List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok("bye world") }
     Map("bye"->List("hello")) ^^ GET / "goodbye" |>> { () => Ok("goodbye world") }
@@ -69,7 +69,7 @@ class SwaggerSupportSpec extends Specification {
       swaggerSpec.paths must haveSize(2)
     }
 
-    "Provide a way to aggregate routes from multiple RhoServices" in {
+    "Provide a way to aggregate routes from multiple RhoRoutes" in {
       val aggregateSwagger = createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes)
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
       val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toRoutes())
@@ -100,7 +100,7 @@ class SwaggerSupportSpec extends Specification {
       Set(a, b, c) should_== Set("/foo/", "/foo", "/bar")
     }
 
-    "Provide a way to agregate routes from multiple RhoServices, with mixed trailing slashes and non-trailing slashes" in {
+    "Provide a way to agregate routes from multiple RhoRoutes, with mixed trailing slashes and non-trailing slashes" in {
       val aggregateSwagger = createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes  ++ mixedTrailingSlashesService.getRoutes)
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
       val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toRoutes())

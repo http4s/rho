@@ -4,7 +4,7 @@ import cats.effect.IO
 import org.http4s._
 import org.http4s.HttpRoutes
 
-/** Helper for collecting a the body from a `RhoService` */
+/** Helper for collecting a the body from a `RhoRoutes` */
 trait RequestRunner {
 
   def httpRoutes: HttpRoutes[IO]

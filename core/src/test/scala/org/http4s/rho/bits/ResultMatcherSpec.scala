@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
 
 class ResultMatcherSpec extends Specification {
 
-  class TRhoService[F[_]] extends bits.MethodAliases {
+  class TRhoRoutes[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty
 
     implicit final protected def compileSrvc: CompileRoutes[F, RhoRoute.Tpe[F]] = {
@@ -29,7 +29,7 @@ class ResultMatcherSpec extends Specification {
 
   "ResponseGenerator" should {
     "Match a single result type" in {
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         PUT / "foo" |>> { () => Ok("updated").unsafeRunSync() }
       }
 
@@ -37,7 +37,7 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match two results with different status with different result type" in {
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -53,7 +53,7 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match two results with same stat different result type" in {
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -67,7 +67,7 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match an empty result type" in {
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         PUT / "foo" |>> { () => NoContent.apply }
       }
 
@@ -76,7 +76,7 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match three results with different status but same result type" in {
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -91,7 +91,7 @@ class ResultMatcherSpec extends Specification {
     }
 
     "Match four results with different status but same result type" in {
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         PUT / "foo" |>> { () =>
           val a = 0
           a match {
@@ -117,7 +117,7 @@ class ResultMatcherSpec extends Specification {
       implicit def w2[F[_]: Applicative]: EntityEncoder[F, ModelB] =
         EntityEncoder.simple[F, ModelB]()(_ => Chunk.bytes("B".getBytes))
 
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         GET / "foo" |>> { () =>
           if (true) Ok(ModelA("test ok", 1))
           else NotFound(ModelB("test not found", 234))
@@ -134,7 +134,7 @@ class ResultMatcherSpec extends Specification {
     "Match complex models as well as simple ones" in {
       import Foo._
 
-      val srvc = new TRhoService[IO] {
+      val srvc = new TRhoRoutes[IO] {
         GET / "foo" |>> { () =>
           if (true) Ok(FooA("test ok", 1))
           else NotFound(FooB("test not found", 234))

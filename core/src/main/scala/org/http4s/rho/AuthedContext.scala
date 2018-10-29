@@ -8,7 +8,7 @@ import shapeless.{::, HNil}
 import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 
 
-/** The [[AuthedContext]] provides a convenient way to define a RhoService
+/** The [[AuthedContext]] provides a convenient way to define a RhoRoutes
   * which works with http4s authentication middleware.
   * {{{
   *     case class User(name: String, id: UUID)
@@ -19,7 +19,7 @@ import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
   *
   *     object Auth extends AuthedContext[IO, User]
   *
-  *     object BobService extends RhoService[IO] {
+  *     object BobService extends RhoRoutes[IO] {
   *       GET +? param("foo", "bar") >>> Auth.auth |>> { (foo: String, user: User) =>
   *         Ok(s"Bob with id ${user.id}, foo $foo")
   *       }

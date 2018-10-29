@@ -12,9 +12,9 @@ class CodecRouterSpec extends Specification {
     (rbody, resp.status)
   }
 
-  "A CodecRouter in a RhoService" should {
+  "A CodecRouter in a RhoRoutes" should {
 
-    val routes = new RhoService[IO] {
+    val routes = new RhoRoutes[IO] {
       (POST / "foo" decoding(EntityDecoder.text[IO])) |>> { s: String => Ok(s"Received: $s") }
       (POST / "form" decoding(UrlForm.entityDecoder[IO])) |>> { m: UrlForm => Ok("success") }
     }.toRoutes()

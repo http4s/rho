@@ -22,7 +22,7 @@ object Main extends IOApp {
     val middleware = createRhoMiddleware()
 
     val myService: HttpRoutes[IO] =
-      new MyService[IO](ioSwagger) {}.toRoutes(middleware)
+      new MyRoutes[IO](ioSwagger) {}.toRoutes(middleware)
 
     BlazeBuilder[IO]
       .mountService(StaticContentService.routes combineK myService, "")

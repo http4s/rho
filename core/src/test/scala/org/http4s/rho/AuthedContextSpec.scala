@@ -23,7 +23,7 @@ object Auth {
 
 object MyAuth extends AuthedContext[IO, User]
 
-object MyService extends RhoService[IO] {
+object MyRoutes extends RhoRoutes[IO] {
   import MyAuth._
 
   GET +? param("foo", "bar") >>> auth |>> { (_: Request[IO], foo: String, user: User) =>
@@ -46,7 +46,7 @@ object MyService extends RhoService[IO] {
 
 class AuthedContextSpec extends Specification {
 
-  val routes = Auth.authenticated(MyAuth.toService(MyService.toRoutes()))
+  val routes = Auth.authenticated(MyAuth.toService(MyRoutes.toRoutes()))
 
   "AuthedContext execution" should {
 

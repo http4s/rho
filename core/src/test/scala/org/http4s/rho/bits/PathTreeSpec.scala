@@ -36,7 +36,7 @@ class PathTreeSpec extends Specification {
   }
 
   "Honor UriTranslations" in {
-    val svc = TranslateUri("/bar")(Router.define[IO](("/", new RhoService[IO] {
+    val svc = TranslateUri("/bar")(Router.define[IO](("/", new RhoRoutes[IO] {
       GET / "foo" |>> "foo"
     }.toRoutes()))(HttpRoutes.empty[IO]))
 
@@ -49,7 +49,7 @@ class PathTreeSpec extends Specification {
   }
 
   "PathTree OPTIONS" should {
-    val svc = new RhoService[IO] {
+    val svc = new RhoRoutes[IO] {
       GET / "foo" |>> "foo"
 
       OPTIONS / "bar" |>> "foo"
