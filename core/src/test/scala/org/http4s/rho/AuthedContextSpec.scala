@@ -26,7 +26,7 @@ object MyAuth extends AuthedContext[IO, User]
 object MyRoutes extends RhoRoutes[IO] {
   import MyAuth._
 
-  GET +? param("foo", "bar") >>> auth |>> { (_: Request[IO], foo: String, user: User) =>
+  GET +? param("foo", "bar") >>> auth |>> { (foo: String, user: User) =>
     if (user.name == "Test User") {
       Ok(s"just root with parameter 'foo=$foo'")
     } else {
