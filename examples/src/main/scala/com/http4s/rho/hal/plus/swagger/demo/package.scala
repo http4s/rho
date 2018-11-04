@@ -1,7 +1,5 @@
 package com.http4s.rho.hal.plus.swagger
 
-import cats.Applicative
-
 import scala.language.implicitConversions
 import scala.util.Failure
 import scala.util.Success
@@ -33,17 +31,17 @@ package object demo {
       new LinkObjectSerializer +
       new ResourceObjectSerializer
 
-  implicit def resourceObjectAsJsonEncoder[F[_], A, B](implicit F: Applicative[F]): EntityEncoder[F, ResourceObject[A, B]] =
+  implicit def resourceObjectAsJsonEncoder[F[_], A, B]: EntityEncoder[F, ResourceObject[A, B]] =
     EntityEncoder
-      .stringEncoder[F](F, Charset.`UTF-8`)
+      .stringEncoder[F](Charset.`UTF-8`)
       .contramap { r: ResourceObject[A, B] => compact(render(json(r))) }
-      .withContentType(`Content-Type`(MediaType.`application/hal+json`, Charset.`UTF-8`))
+      .withContentType(`Content-Type`(MediaType.application.`vnd.hal+json`, Charset.`UTF-8`))
 
-  implicit def messageAsJsonEncoder[F[_]](implicit F: Applicative[F]): EntityEncoder[F, Message] =
+  implicit def messageAsJsonEncoder[F[_]]: EntityEncoder[F, Message] =
     EntityEncoder
-      .stringEncoder[F](F, Charset.`UTF-8`)
+      .stringEncoder[F](Charset.`UTF-8`)
       .contramap { r: Message => compact(render(json(r))) }
-      .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
+      .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   /** Extracts the name of the first query parameter as string */
   implicit def paramName[F[_]](q: TypedQuery[F, _]): String = q.names.head

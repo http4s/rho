@@ -15,27 +15,27 @@ class SwaggerSupportSpec extends Specification {
   import org.json4s.JsonAST._
   import org.json4s.jackson._
 
-  val baseService = new RhoService[IO] {
+  val baseRoutes = new RhoRoutes[IO] {
     GET / "hello" |>> { () => Ok("hello world") }
     GET / "hello"/ pathVar[String] |>> { world: String => Ok("hello " + world) }
   }
 
-  val moarRoutes = new RhoService[IO] {
+  val moarRoutes = new RhoRoutes[IO] {
     GET / "goodbye" |>> { () => Ok("goodbye world") }
     GET / "goodbye"/ pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
-  val trailingSlashService = new RhoService[IO] {
+  val trailingSlashRoutes = new RhoRoutes[IO] {
     GET / "foo" / "" |>> { () => Ok("hello world") }
   }
 
-  val mixedTrailingSlashesService = new RhoService[IO] {
+  val mixedTrailingSlashesRoutes = new RhoRoutes[IO] {
     GET / "foo" / "" |>> { () => Ok("hello world") }
     GET / "foo" |>> { () => Ok("hello world") }
     GET / "bar" |>> { () => Ok("hello world") }
   }
 
-  val metaDataService = new RhoService[IO] {
+  val metaDataRoutes = new RhoRoutes[IO] {
     "Hello" ** GET / "hello" |>> { () => Ok("hello world") }
     Map("hello"->List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok("bye world") }
     Map("bye"->List("hello")) ^^ GET / "goodbye" |>> { () => Ok("goodbye world") }
@@ -43,7 +43,7 @@ class SwaggerSupportSpec extends Specification {
 
   "SwaggerSupport" should {
     "Expose an API listing" in {
-      val service = baseService.toService(createRhoMiddleware(swaggerRoutesInSwagger = true))
+      val service = baseRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
@@ -54,7 +54,7 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Support prefixed routes" in {
-      val service = ("foo" /: baseService).toService(createRhoMiddleware(swaggerRoutesInSwagger = true))
+      val service = ("foo" /: baseRoutes).toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
@@ -64,28 +64,28 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Provide a method to build the Swagger model for a list of routes" in {
-      val swaggerSpec = createSwagger()(baseService.getRoutes)
+      val swaggerSpec = createSwagger()(baseRoutes.getRoutes)
 
       swaggerSpec.paths must haveSize(2)
     }
 
-    "Provide a way to aggregate routes from multiple RhoServices" in {
-      val aggregateSwagger = createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes)
+    "Provide a way to aggregate routes from multiple RhoRoutes" in {
+      val aggregateSwagger = createSwagger()(baseRoutes.getRoutes ++ moarRoutes.getRoutes)
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
-      val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())
+      val httpRoutess = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).map(_.toRoutes())
 
-      val allthogetherService = httpServices.reduceLeft(_ combineK _)
+      val allthogetherRoutes = httpRoutess.reduceLeft(_ combineK _)
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
-        parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"
+        parseJson(RRunner(allthogetherRoutes).checkOk(r)) \\ "paths"
 
       Set(a, b, c, d) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}")
     }
 
     "Support endpoints which end in a slash" in {
-      val service = trailingSlashService.toService(createRhoMiddleware())
+      val service = trailingSlashRoutes.toRoutes(createRhoMiddleware())
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
       val JObject(List((a, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
@@ -93,30 +93,30 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Support endpoints which end in a slash being mixed with normal endpoints"  in {
-      val service = mixedTrailingSlashesService.toService(createRhoMiddleware())
+      val service = mixedTrailingSlashesRoutes.toRoutes(createRhoMiddleware())
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
       Set(a, b, c) should_== Set("/foo/", "/foo", "/bar")
     }
 
-    "Provide a way to agregate routes from multiple RhoServices, with mixed trailing slashes and non-trailing slashes" in {
-      val aggregateSwagger = createSwagger()(baseService.getRoutes ++ moarRoutes.getRoutes  ++ mixedTrailingSlashesService.getRoutes)
+    "Provide a way to agregate routes from multiple RhoRoutes, with mixed trailing slashes and non-trailing slashes" in {
+      val aggregateSwagger = createSwagger()(baseRoutes.getRoutes ++ moarRoutes.getRoutes  ++ mixedTrailingSlashesRoutes.getRoutes)
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
-      val httpServices = NonEmptyList.of(baseService, moarRoutes, swaggerRoutes).map(_.toService())
+      val httpRoutess = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).map(_.toRoutes())
 
-      val allthogetherService = httpServices.reduceLeft(_ combineK  _)
+      val allthogetherRoutes = httpRoutess.reduceLeft(_ combineK  _)
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)), (e, JObject(_)), (f, JObject(_)), (g, JObject(_)))) =
-        parseJson(RRunner(allthogetherService).checkOk(r)) \\ "paths"
+        parseJson(RRunner(allthogetherRoutes).checkOk(r)) \\ "paths"
 
       Set(a, b, c, d, e, f, g) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}", "/foo/", "/foo", "/bar")
     }
 
     "Check metadata in API listing" in {
-      val service = metaDataService.toService(createRhoMiddleware(swaggerRoutesInSwagger = true))
+      val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
@@ -133,7 +133,7 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Swagger support for complex meta data" in {
-      val service = baseService.toService(createRhoMiddleware(
+      val service = baseRoutes.toRoutes(createRhoMiddleware(
         apiPath = "swagger-test.json",
         apiInfo =  Info(
           title = "Complex Meta Data API",
@@ -188,7 +188,7 @@ class SwaggerSupportSpec extends Specification {
     }
 
     "Check metadata in API listing" in {
-      val service = metaDataService.toService(createRhoMiddleware(swaggerRoutesInSwagger = true))
+      val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 

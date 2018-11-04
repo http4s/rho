@@ -1,18 +1,16 @@
 package com.http4s.rho.swagger.demo
 
-import cats.effect.IO
+import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.semigroupk._
-import fs2.StreamApp.ExitCode
-import fs2.{Stream, StreamApp}
-import org.http4s.HttpService
+import cats.syntax.functor._
+import org.http4s.HttpRoutes
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
-import org.http4s.rho.swagger.syntax.io._
 import org.http4s.server.blaze.BlazeBuilder
 import org.log4s.getLogger
-import scala.concurrent.ExecutionContext.Implicits.global
 
-object Main extends StreamApp[IO] {
+object Main extends IOApp {
   private val logger = getLogger
+  import ioSwagger._
 
   val port: Int = Option(System.getenv("HTTP_PORT"))
     .map(_.toInt)
@@ -20,15 +18,15 @@ object Main extends StreamApp[IO] {
 
   logger.info(s"Starting Swagger example on '$port'")
 
-  def stream(args: List[String], requestShutdown: IO[Unit]): Stream[IO, ExitCode] = {
+  def run(args: List[String]): IO[ExitCode] = {
     val middleware = createRhoMiddleware()
 
-    val myService: HttpService[IO] =
-      new MyService[IO](ioSwagger) {}.toService(middleware)
+    val myService: HttpRoutes[IO] =
+      new MyRoutes[IO](ioSwagger) {}.toRoutes(middleware)
 
     BlazeBuilder[IO]
-      .mountService(StaticContentService.routes combineK myService)
+      .mountService(StaticContentService.routes combineK myService, "")
       .bindLocal(port)
-      .serve
+      .serve.compile.drain.as(ExitCode.Success)
   }
 }

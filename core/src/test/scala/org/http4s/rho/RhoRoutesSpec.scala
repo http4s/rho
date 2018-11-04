@@ -9,14 +9,14 @@ import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 
-class RhoServiceSpec extends Specification with RequestRunner {
+class RhoRoutesSpec extends Specification with RequestRunner {
   def construct(method: Method, s: String, h: Header*): Request[IO] =
     Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
 
   def Get(s: String, h: Header*): Request[IO] = construct(Method.GET, s, h:_*)
   def Put(s: String, h: Header*): Request[IO] = construct(Method.PUT, s, h:_*)
 
-  val service = new RhoService[IO] {
+  val httpRoutes = new RhoRoutes[IO] {
     GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
 
     GET / "" +? param("foo", "bar") |>> { foo: String => Ok("this definition should be hidden by the previous definition") }
@@ -79,9 +79,9 @@ class RhoServiceSpec extends Specification with RequestRunner {
     GET / "terminal" |>> "terminal"
 
     GET / "one" / "two" / "three" |>> "one/two"
-  }.toService()
+  }.toRoutes()
 
-  "RhoService execution" should {
+  "RhoRoutes execution" should {
 
     "Handle definition without a path, which points to '/'" in {
       val request = Request[IO](Method.GET, Uri(path = "/"))
@@ -95,20 +95,20 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     "Return a 405 when a path is defined but the method doesn't match" in {
       val request = Request[IO](Method.POST, uri("/hello"))
-      val resp = service(request).value.unsafeRunSync().getOrElse(Response.notFound)
+      val resp = httpRoutes(request).value.unsafeRunSync().getOrElse(Response.notFound)
 
       resp.status must_== Status.MethodNotAllowed
       resp.headers.get("Allow".ci) must beSome(Header.Raw("Allow".ci, "GET"))
     }
 
     "Yield `MethodNotAllowed` when invalid method used" in {
-      service(Put("/one/two/three")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.MethodNotAllowed
+      httpRoutes(Put("/one/two/three")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.MethodNotAllowed
     }
 
     "Consider PathMatch(\"\") a NOOP" in {
-      val service = new RhoService[IO] {
+      val service = new RhoRoutes[IO] {
         GET / "" / "foo" |>> Ok("bar")
-      }.toService()
+      }.toRoutes()
 
       val req1 = Request[IO](Method.GET, Uri(path = "/foo"))
       getBody(service(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) should_== "bar"
@@ -148,7 +148,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "NotFound on empty route" in {
-      service(Get("/one/two")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.NotFound
+      httpRoutes(Get("/one/two")).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.NotFound
     }
 
     "Fail a route with a missing query" in {
@@ -256,11 +256,11 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
     ///// Order of execution tests /////////////////////
     "Attempt to evaluate params in order" in {
-      val service = new RhoService[IO] {
+      val service = new RhoRoutes[IO] {
         GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
         GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
         GET / "foo" |>> Ok("none")
-      }.toService()
+      }.toRoutes()
 
       val req1 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "0"))
       getBody(service(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "Int: 0"
@@ -273,10 +273,10 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "Fail to match more specific routes defined after a less specific route" in {
-      val service = new RhoService[IO] {
+      val service = new RhoRoutes[IO] {
         GET / "foo" +? param[String]("bar") |>> { i: String => Ok(s"String: $i") }
         GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
-      }.toService()
+      }.toRoutes()
 
       val req1 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "0"))
       getBody(service(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "String: 0"
@@ -286,13 +286,13 @@ class RhoServiceSpec extends Specification with RequestRunner {
     }
 
     "Match an empty Option over a bare route" in {
-      val service = new RhoService[IO] {
+      val service = new RhoRoutes[IO] {
         GET / "foo" +? param[Option[String]]("bar") |>> { o: Option[String] =>
           o.map(s => s"String: $s").getOrElse("none")
         }
 
         GET / "foo" |>> Ok(s"failure")
-      }.toService()
+      }.toRoutes()
 
       val req1 = Request[IO](Method.GET, Uri(path = "/foo").+?("bar", "s"))
       getBody(service(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "String: s"
@@ -304,7 +304,7 @@ class RhoServiceSpec extends Specification with RequestRunner {
     "work with all syntax elements" in {
       val reqHeader = existsAnd(headers.`Content-Length`){ h => h.length <= 3 }
 
-      val srvc = new RhoService[IO] {
+      val srvc = new RhoRoutes[IO] {
         POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text[IO] |>> {
           (p1: Int, param: String, body: String) => Ok("success")
         }
@@ -313,10 +313,10 @@ class RhoServiceSpec extends Specification with RequestRunner {
       val body = Stream.emits("foo".getBytes())
       val uri = Uri.fromString("/foo/1?param=myparam").right.getOrElse(sys.error("Failed."))
       val req = Request[IO](method = Method.POST, uri = uri, body = body)
-                    .putHeaders(`Content-Type`(MediaType.`text/plain`),
+                    .putHeaders(`Content-Type`(MediaType.text.plain),
                                 `Content-Length`.unsafeFromLong("foo".length))
 
-      val r = srvc.toService()(req)
+      val r = srvc.toRoutes()(req)
       getBody(r.value.unsafeRunSync().getOrElse(Response.notFound).body) must_== "success"
 
     }
@@ -324,52 +324,52 @@ class RhoServiceSpec extends Specification with RequestRunner {
 
   ////////////////////////////////////////////////////
     "Handle errors in the route actions" in {
-      val service = new RhoService[IO] {
+      val service = new RhoRoutes[IO] {
         GET / "error" |>> { () => throw new Error("an error"); Ok("Wont get here...") }
-      }.toService()
+      }.toRoutes()
       val req = Request[IO](Method.GET, Uri(path = "/error"))
 
       service(req).value.unsafeRunSync().getOrElse(Response.notFound).status must equalTo(Status.InternalServerError)
     }
 
     "give a None for missing route" in {
-      val service = new RhoService[IO]{}.toService()
+      val service = new RhoRoutes[IO]{}.toRoutes()
       val req = Request[IO](Method.GET, Uri(path = "/missing"))
       service(req).value.unsafeRunSync().getOrElse(Response.notFound).status must_== Status.NotFound
     }
   }
 
-  "RhoService and method" should {
+  "RhoRoutes and method" should {
     "concatenate service" in {
-      val srvc1 = new RhoService[IO] {
+      val routes1 = new RhoRoutes[IO] {
         GET / "foo1" |>> "Foo1"
       }
-      val srvc2 = new RhoService[IO] {
+      val routes2 = new RhoRoutes[IO] {
         GET / "foo2" |>> "Foo2"
       }
-      val both: RhoService[IO] = srvc1 and srvc2
-      val bothService = both.toService()
+      val both: RhoRoutes[IO] = routes1 and routes2
+      val bothRoutes = both.toRoutes()
 
-      both.getRoutes === srvc1.getRoutes ++ srvc2.getRoutes
+      both.getRoutes === routes1.getRoutes ++ routes2.getRoutes
 
       val req1 = Request[IO](uri = uri("foo1"))
-      getBody(bothService(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo1"
+      getBody(bothRoutes(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo1"
 
       val req2 = Request[IO](uri = uri("foo2"))
-      getBody(bothService(req2).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo2"
+      getBody(bothRoutes(req2).value.unsafeRunSync().getOrElse(Response.notFound).body) === "Foo2"
     }
   }
 
-  "RhoService prefix operator" should {
-    "prefix a RhoService" in {
-      val srvc1 = new RhoService[IO] {
+  "RhoRoutes prefix operator" should {
+    "prefix a RhoRoutes" in {
+      val routes1 = new RhoRoutes[IO] {
         GET / "bar" |>> "bar"
       }
 
-      val srvc2: HttpService[IO] = "foo" /: srvc1 toService()
+      val routes2: HttpRoutes[IO] = "foo" /: routes1 toRoutes()
 
       val req1 = Request[IO](uri = Uri(path ="/foo/bar"))
-      getBody(srvc2(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "bar"
+      getBody(routes2(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "bar"
     }
   }
 }

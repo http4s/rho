@@ -99,7 +99,11 @@ trait ResultSyntaxInstances[F[_]] {
     override def withAttribute[A](key: AttributeKey[A], value: A)(implicit F: Functor[F]): Self =
       Result(r.resp.withAttribute(key, value))
 
+    def withEntity[E](b: E)(implicit w: EntityEncoder[F, E]): Self =
+      Result(r.resp.withEntity(b))
+
+    @deprecated("Use withEntity", "0.19")
     def withBody[U](b: U)(implicit F: Monad[F], w: EntityEncoder[F, U]): F[Self] =
-      F.map(r.resp.withBody(b))(Result(_))
+      F.pure(Result(r.resp.withEntity(b)))
   }
 }

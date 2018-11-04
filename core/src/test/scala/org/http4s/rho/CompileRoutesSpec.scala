@@ -6,49 +6,49 @@ import org.http4s.rho.io._
 import org.http4s.{Method, Request, Uri}
 import org.specs2.mutable.Specification
 
-class CompileServiceSpec extends Specification {
+class CompileRoutesSpec extends Specification {
 
-  def getFoo(implicit c: CompileService[IO, _]): Unit = {
+  def getFoo(implicit c: CompileRoutes[IO, _]): Unit = {
     GET / "hello" |>> "GetFoo"
   }
 
-  def putFoo(implicit c: CompileService[IO, _]): Unit = {
+  def putFoo(implicit c: CompileRoutes[IO, _]): Unit = {
     PUT / "hello" |>> "PutFoo"
   }
 
   "CompileService" should {
     "Build a single route" in {
-      val c = ServiceBuilder[IO]()
+      val c = RoutesBuilder[IO]()
       getFoo(c)
 
-      "GetFoo" === RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(c.toRoutes()).checkOk(Request(uri=Uri(path="/hello")))
     }
 
     "Build multiple routes" in {
-      val c = ServiceBuilder[IO]()
+      val c = RoutesBuilder[IO]()
       getFoo(c)
       putFoo(c)
 
-      "GetFoo" === RRunner(c.toService()).checkOk(Request(uri=Uri(path="/hello")))
-      "PutFoo" === RRunner(c.toService()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
+      "GetFoo" === RRunner(c.toRoutes()).checkOk(Request(uri=Uri(path="/hello")))
+      "PutFoo" === RRunner(c.toRoutes()).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
 
     "Make routes from a collection of RhoRoutes" in {
-      import CompileService.Implicit.compiler
+      import CompileRoutes.Implicit.compiler
       val routes =
         (GET / "hello" |>> "GetFoo") ::
         (PUT / "hello" |>> "PutFoo") :: Nil
 
-      val srvc = CompileService.foldServices[IO](routes, identity)
+      val srvc = CompileRoutes.foldRoutes[IO](routes)
       "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }
 
     "Concatenate correctly" in {
-      val c1 = ServiceBuilder[IO](); getFoo(c1)
-      val c2 = ServiceBuilder[IO](); putFoo(c2)
+      val c1 = RoutesBuilder[IO](); getFoo(c1)
+      val c2 = RoutesBuilder[IO](); putFoo(c2)
 
-      val srvc = c1.append(c2.routes()).toService()
+      val srvc = c1.append(c2.routes()).toRoutes()
       "GetFoo" === RRunner(srvc).checkOk(Request(uri=Uri(path="/hello")))
       "PutFoo" === RRunner(srvc).checkOk(Request(method = Method.PUT, uri=Uri(path="/hello")))
     }

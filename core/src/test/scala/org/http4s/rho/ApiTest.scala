@@ -18,7 +18,7 @@ class ApiTest extends Specification {
   object ruleExecutor extends RuleExecutor[IO]
 
   def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
-    val srvc = new RhoService[F] { exec |>> f }.toService()
+    val srvc = new RhoRoutes[F] { exec |>> f }.toRoutes()
     srvc.apply(_: Request[F])
   }
 
@@ -98,6 +98,7 @@ class ApiTest extends Specification {
       ruleExecutor.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse[IO]]
     }
 
+
     "map simple header params into a complex type" in {
       case class Foo(age: Long, s: HttpDate)
       val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
@@ -146,8 +147,7 @@ class ApiTest extends Specification {
 
       val req = Request[IO](POST, uri = Uri.fromString("/hello/neptune?fav=23").right.getOrElse(sys.error("Fail")))
         .putHeaders(etag)
-        .withBody("cool")
-        .unsafeRunSync()
+        .withEntity("cool")
 
       val resp = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
       resp.headers.get(ETag) must beSome(etag)
@@ -170,8 +170,7 @@ class ApiTest extends Specification {
 
       val req = Request[IO](POST, uri = Uri.fromString("/hello/neptune?fav=23").right.getOrElse(sys.error("Fail")))
         .putHeaders(ETag(ETag.EntityTag("foo")))
-        .withBody("cool")
-        .unsafeRunSync()
+        .withEntity("cool")
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
       route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
@@ -205,8 +204,7 @@ class ApiTest extends Specification {
 
       val req = Request[IO](POST, uri = Uri.fromString("/hello/neptune?fav=23").right.getOrElse(sys.error("Fail")))
         .putHeaders( ETag(ETag.EntityTag("foo")))
-        .withBody("cool")
-        .unsafeRunSync()
+        .withEntity("cool")
 
       checkETag(route(req), "foo")
     }
@@ -342,12 +340,10 @@ class ApiTest extends Specification {
 
 
       val req1 = Request[IO](POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
-                    .withBody("foo")
-                    .unsafeRunSync()
+                    .withEntity("foo")
 
       val req2 = Request[IO](POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
-        .withBody("0123456789") // length 10
-        .unsafeRunSync()
+        .withEntity("0123456789") // length 10
 
       val route = runWith(path.decoding(EntityDecoder.text)) { str: String =>
         Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
@@ -361,8 +357,7 @@ class ApiTest extends Specification {
       val path = POST / "hello"
 
       val req = Request[IO](POST, uri = Uri.fromString("/hello").right.getOrElse(sys.error("Fail")))
-        .withBody("foo")
-        .unsafeRunSync()
+        .withEntity("foo")
 
       val route = runWith(path ^ EntityDecoder.text) { str: String =>
         Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))

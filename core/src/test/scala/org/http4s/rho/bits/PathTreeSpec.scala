@@ -5,9 +5,9 @@ package bits
 import java.nio.charset.StandardCharsets
 
 import cats.effect.IO
+import org.http4s.server.Router
 import org.http4s.server.middleware.TranslateUri
 import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
 
 class PathTreeSpec extends Specification {
   import PathTree._
@@ -36,24 +36,24 @@ class PathTreeSpec extends Specification {
   }
 
   "Honor UriTranslations" in {
-    val svc = TranslateUri[IO]("/bar")(new RhoService[IO] {
+    val svc = TranslateUri("/bar")(Router.define[IO](("/", new RhoRoutes[IO] {
       GET / "foo" |>> "foo"
-    }.toService())
+    }.toRoutes()))(HttpRoutes.empty[IO]))
 
     val req = Request[IO](Method.GET, uri = Uri(path = "/bar/foo"))
     val resp = svc(req).value.unsafeRunSync().getOrElse(Response.notFound)
 
     resp.status must_== Status.Ok
-    val b = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(ByteVector.empty)(_ :+ _).toArray, StandardCharsets.UTF_8)
+    val b = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _), StandardCharsets.UTF_8)
     b must_== "foo"
   }
 
   "PathTree OPTIONS" should {
-    val svc = new RhoService[IO] {
+    val svc = new RhoRoutes[IO] {
       GET / "foo" |>> "foo"
 
       OPTIONS / "bar" |>> "foo"
-    }.toService()
+    }.toRoutes()
 
     "Handle a valid OPTIONS request" in {
       val req = Request[IO](Method.OPTIONS, uri = uri("/bar"))

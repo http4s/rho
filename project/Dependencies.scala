@@ -2,8 +2,8 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  lazy val http4sVersion = "0.18.20"
-  lazy val specs2Version = "4.3.5"
+  lazy val http4sVersion = "0.20.0-M1"
+  lazy val specs2Version = "4.3.4"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
@@ -29,11 +29,12 @@ object Dependencies {
   lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
-    json4s,
-    json4sJackson,
     scalaXml,
     swaggerCore,
-    swaggerModels
+    swaggerModels,
+
+    json4s % "test",
+    json4sJackson % "test"
   )
 
   lazy val exampleDeps = libraryDependencies ++= Seq(

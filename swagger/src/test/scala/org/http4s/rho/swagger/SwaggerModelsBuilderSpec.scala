@@ -13,7 +13,6 @@ import org.http4s.rho.bits._
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
-import scodec.bits.ByteVector
 
 import scala.language.existentials
 import scala.reflect._
@@ -47,8 +46,8 @@ class SwaggerModelsBuilderSpec extends Specification {
   import SwaggerModelsBuilderSpec._
   import models._
 
-  implicit def defaultCompiler: CompileService[IO, RhoRoute.Tpe[IO]] =
-    CompileService.identityCompiler
+  implicit def defaultCompiler: CompileRoutes[IO, RhoRoute.Tpe[IO]] =
+    CompileRoutes.identityCompiler
 
   sealed abstract class Renderable
   case class ModelA(name: String, color: Int) extends Renderable
@@ -582,14 +581,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "collect response of an IO of a primitive" in {
-      val ra = GET / "test" |>> { () => Ok(IO.pure("")) }
+      val ra = GET / "test" |>> { () => Ok("") }
 
       sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of an IO of a non-primitive" in {
-      val ra = GET / "test" |>> { () => Ok(IO.pure(List((0, ModelA("", 0))))) }
+      val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
 
       sb.collectResponses[IO](ra) must havePair(
         "200" -> Response(
@@ -616,17 +615,17 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
   }
 
-  implicit def renderableEncoder[F[_], T <: Renderable](implicit F: Applicative[F]): EntityEncoder[F, T] =
+  implicit def renderableEncoder[F[_], T <: Renderable]: EntityEncoder[F, T] =
     EntityEncoder
-      .stringEncoder[F](F, Charset.`UTF-8`)
+      .stringEncoder[F](Charset.`UTF-8`)
       .contramap { r: T => "" }
-      .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
+      .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
-  implicit def tuple2Encoder[F[_], T <: Renderable](implicit F: Applicative[F]): EntityEncoder[F, (Int, T)] =
+  implicit def tuple2Encoder[F[_], T <: Renderable]: EntityEncoder[F, (Int, T)] =
     EntityEncoder
-      .stringEncoder[F](F, Charset.`UTF-8`)
+      .stringEncoder[F](Charset.`UTF-8`)
       .contramap { r: (Int, T) => "" }
-      .withContentType(`Content-Type`(MediaType.`application/json`, Charset.`UTF-8`))
+      .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[F[_]: Applicative, A]: EntityEncoder[F, List[A]] =
     EntityEncoder.simple[F, List[A]]()(_ => Chunk.bytes("A".getBytes))
@@ -638,11 +637,9 @@ class SwaggerModelsBuilderSpec extends Specification {
 
   object CsvFile {
     implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =
-      EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.`text/csv`, Some(Charset.`UTF-8`))) { file: CsvFile =>
-        ByteVector.encodeUtf8("file content").fold(
-          IO.raiseError,
-          bv => IO.pure(org.http4s.Entity(Stream.emits(bv.toArray), Some(bv.length)))
-        )
+      EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.text.csv, Some(Charset.`UTF-8`))) { file: CsvFile =>
+        val bv = "file content".getBytes(Charset.`UTF-8`.nioCharset)
+        org.http4s.Entity(Stream.emits(bv), Some(bv.length))
       }
   }
 }

@@ -1,21 +1,23 @@
 package com.http4s.rho.swagger.demo
 
-import cats.effect.IO
-import org.http4s.{HttpService, Request, Response, StaticFile}
+import cats.effect.{ContextShift, IO}
+import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 import org.http4s.dsl.io._
+
+import scala.concurrent.ExecutionContext.global
 
 object StaticContentService {
   private val swaggerUiDir = "/swagger-ui"
 
-  def fetchResource(path: String, req: Request[IO]): IO[Response[IO]] = {
-    StaticFile.fromResource(path, Some(req)).getOrElseF(NotFound())
+  def fetchResource(path: String, req: Request[IO])(implicit cs: ContextShift[IO]): IO[Response[IO]] = {
+    StaticFile.fromResource(path, global, Some(req)).getOrElseF(NotFound())
   }
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
    * but its nice to keep it self contained
    */
-  def routes: HttpService[IO] = HttpService {
+  def routes(implicit cs: ContextShift[IO]): HttpRoutes[IO] = HttpRoutes.of {
     // Swagger User Interface
     case req @ GET -> Root / "css" / _       => fetchResource(swaggerUiDir + req.pathInfo, req)
     case req @ GET -> Root / "images" / _    => fetchResource(swaggerUiDir + req.pathInfo, req)

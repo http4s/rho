@@ -3,38 +3,31 @@ package rho
 
 import cats.Monad
 import cats.data.{Kleisli, OptionT}
-import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 import shapeless.{::, HNil}
 
+import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 
-/** The [[AuthedContext]] provides a convenient way to define a RhoService
+
+/** The [[AuthedContext]] provides a convenient way to define a RhoRoutes
   * which works with http4s authentication middleware.
+  * Please note that `AuthMiddleware`-wrapping is mandatory, otherwise context
+  * doesn't take effect.
   * {{{
   *     case class User(name: String, id: UUID)
   *
-  *     object Auth {
-  *       val authUser: Service[Request, User] = Kleisli({ _ =>
-  *         Task.now(User("Test User", UUID.randomUUID()))
-  *       })
-  *
-  *       val authenticated = AuthMiddleware(authUser)
+  *     val middleware = AuthMiddleware { req =>
+  *       OptionT(IO(User("Bob", UUID.randomUUID())))
   *     }
   *
-  *     object MyAuth extends AuthedContext[User]
+  *     object Auth extends AuthedContext[IO, User]
   *
-  *     object MyService extends RhoService {
-  *       import MyAuth._
-  *       GET +? param("foo", "bar") |>> { (req: Request, foo: String) =>
-  *         val user = getAuth(req)
-  *         if (user.name == "Test User") {
-  *           Ok(s"just root with parameter 'foo=\$foo'")
-  *         } else {
-  *           BadRequest("This should not have happened.")
-  *         }
+  *     object BobRoutes extends RhoRoutes[IO] {
+  *       GET +? param("foo", "bar") >>> Auth.auth |>> { (foo: String, user: User) =>
+  *         Ok(s"Bob with id ${user.id}, foo $foo")
   *       }
   *     }
   *
-  *     val service = Auth.authenticated(MyAuth.toService(MyService.toService(SwaggerSupport())))
+  *     val service = middleware.apply(Auth.toService(BobRoutes.toRoutes()))
   * }}}
   *
   * @tparam U authInfo type for this service.
@@ -44,26 +37,26 @@ class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
   /* Attribute key to lookup authInfo in request attributeMap . */
   final private val authKey = AttributeKey[U]
 
-  /** Turn the [[HttpService]] into an `AuthedService`
+  /** Turn the [[HttpRoutes]] into an `AuthedService`
     *
-    * @param service [[HttpService]] to convert
+    * @param routes [[HttpRoutes]] to convert
     * @return An `AuthedService` which can be mounted by http4s servers.
     */
-  def toService(service: HttpService[F]): AuthedService[U, F] = {
+  def toService(routes: HttpRoutes[F]): AuthedService[U, F] = {
     type O[A] = OptionT[F, A]
 
-    Kleisli[O, AuthedRequest[F, U], Response[F]] { (a: AuthedRequest[F, U]) =>
-      service(a.req.withAttribute[U](authKey, a.authInfo))
+    Kleisli[O, AuthedRequest[F, U], Response[F]] { a: AuthedRequest[F, U] =>
+      routes(a.req.withAttribute[U](authKey, a.authInfo))
     }
   }
 
-  /* Get the authInfo object from request. */
-  def getAuth(req: Request[F]): U = {
-    req.attributes.get[U](authKey).get
-  }
+  /** Get the authInfo object from request if `AuthMiddleware` provided one */
+  def getAuth(req: Request[F]): Option[U] =
+    req.attributes.get(authKey)
 
-  def auth(): TypedHeader[F, U :: HNil] = RhoDsl[F].genericRequestHeaderCapture[U] { req =>
-    req.attributes.get(authKey) match {
+  /** Request matcher to capture authentication information */
+  def auth: TypedHeader[F, U :: HNil] = RhoDsl[F].genericRequestHeaderCapture[U] { req =>
+    getAuth(req) match {
       case Some(authInfo) => SuccessResponse(authInfo)
       case None => error("Invalid auth configuration")
     }

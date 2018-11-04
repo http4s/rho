@@ -1,13 +1,13 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import cats.Monad
-import org.http4s.rho.RhoService
+import org.http4s.rho.RhoRoutes
 import org.http4s.rho.hal.{ResourceObjectBuilder => ResObjBuilder, _}
 import org.http4s.{Request, Uri}
 
 import scala.collection.mutable.ListBuffer
 
-class RestService[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoService[F] {
+class RestRoutes[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoRoutes[F] {
 
   // # Query Parameters
 

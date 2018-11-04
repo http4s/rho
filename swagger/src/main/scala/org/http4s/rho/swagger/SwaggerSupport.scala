@@ -75,12 +75,12 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
   }
 
   /**
-   * Create a RhoService with the route to the Swagger json for the given Swagger Specification.
+   * Create a RhoRoutes with the route to the Swagger json for the given Swagger Specification.
    */
   def createSwaggerRoute(
     swagger: => Swagger,
     apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json"))
-  ): RhoService[F] = new RhoService[F] {
+  ): RhoRoutes[F] = new RhoRoutes[F] {
 
     lazy val response: F[OK[String]] = {
       val fOk = Ok.apply(
@@ -90,7 +90,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
       )
 
       F.map(fOk) { ok =>
-        ok.copy(resp = ok.resp.putHeaders(`Content-Type`(MediaType.`application/json`)))
+        ok.copy(resp = ok.resp.putHeaders(`Content-Type`(MediaType.application.json)))
       }
     }
 
