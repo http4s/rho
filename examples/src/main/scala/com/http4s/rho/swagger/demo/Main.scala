@@ -1,15 +1,18 @@
 package com.http4s.rho.swagger.demo
 
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
-import com.http4s.rho.swagger.ui.SwaggerUi
+import cats.data.Kleisli
+import cats.implicits._
+import cats.effect._
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
 import org.http4s.rho.swagger.models.{Info, Tag}
-import org.http4s.rho.swagger.syntax.{io => ioSwagger}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
 import scala.concurrent.ExecutionContext.global
+import org.http4s.HttpRoutes
+import org.http4s.rho.swagger.SwaggerSupport
+import com.http4s.rho.swagger.ui.SwaggerUiRoutes
 
 object Main extends IOApp {
   private val logger = getLogger
@@ -22,14 +25,26 @@ object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
     Blocker[IO].use { blocker =>
-
+      
       val metadata = SwaggerMetadata(
-        apiInfo = Info(title = "Rho demo", version = "1.2.3"),
-        tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
+          apiInfo = Info(title = "Rho demo", version = "1.2.3"),
+          tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
       )
 
+      type IOwithUser[A] = Kleisli[IO, SimpleUser, A]
+      val middleware = SwaggerSupport[IOwithUser].createRhoMiddleware(swaggerMetadata = metadata)
+ 
+      val myAuthedService: HttpRoutes[IO] = ExampleAuth.simpleAuthMiddlware {
+        middleware(new MyAuthedRoutes[IO]().getRoutes).toAuthedService()
+      }
+
+      val swaggerUiRoutes = SwaggerUiRoutes[IO](swaggerUiPath="swagger-ui", swaggerSpecRelativePath="../swagger.json", blocker)
+      val myRoutes = myAuthedService <+> swaggerUiRoutes.toRoutes()
+
+      /*
       val swaggerUiRhoMiddleware = SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
       val myRoutes = new MyRoutes[IO](ioSwagger).toRoutes(swaggerUiRhoMiddleware)
+      */
 
       BlazeServerBuilder[IO](global)
         .withHttpApp(myRoutes.orNotFound)

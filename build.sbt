@@ -143,7 +143,8 @@ lazy val buildSettings = publishing ++
       logbackClassic % "test"
     ),
     libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value
+    libraryDependencies += `scala-reflect` % scalaVersion.value,
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
   )
 
 // to keep REPL usable
