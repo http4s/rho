@@ -21,7 +21,8 @@ if [[ $TRAVIS_BRANCH = "master" || $TRAVIS_BRANCH = "release-"* ]] && [[ $TRAVIS
     export GIT_COMMITTER_EMAIL=$GIT_AUTHOR_EMAIL
     SBT_COMMAND="$SBT_COMMAND ;docs/ghpagesPushSite"
   fi
-
+else
+  SBT_COMMAND="$SBT_COMMAND ;doc"
 fi
 
 sbt ++$TRAVIS_SCALA_VERSION $SBT_COMMAND
