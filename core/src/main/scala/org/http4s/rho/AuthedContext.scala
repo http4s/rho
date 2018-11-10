@@ -23,7 +23,7 @@ import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
   *
   *     object BobRoutes extends RhoRoutes[IO] {
   *       GET +? param("foo", "bar") >>> Auth.auth |>> { (foo: String, user: User) =>
-  *         Ok(s"Bob with id ${user.id}, foo $foo")
+  *         Ok(s"Bob with id \${user.id}, foo \$foo")
   *       }
   *     }
   *
