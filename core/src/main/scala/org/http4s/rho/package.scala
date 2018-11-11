@@ -14,7 +14,7 @@ import scala.language.implicitConversions
 import scala.reflect.runtime.universe.TypeTag
 import scala.util.control.NonFatal
 
-package object rho extends Http4s {
+package object rho extends org.http4s.syntax.AllSyntax {
   type RhoMiddleware[F[_]] = Seq[RhoRoute[F, _ <: HList]] => Seq[RhoRoute[F, _ <: HList]]
 
   val PathEmpty: PathRule = PathMatch("")

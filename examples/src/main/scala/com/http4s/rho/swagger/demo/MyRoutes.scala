@@ -85,7 +85,7 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
           Headers(cookie.values.toList.map { c => headers.`Set-Cookie`(ResponseCookie(c.name, c.content, expires = Some(HttpDate.Epoch), maxAge = Some(0)))})
       }
 
-      Ok("Deleted cookies!").map(_.replaceAllHeaders(hs))
+      Ok("Deleted cookies!").map(_.withHeaders(hs))
     }
 
   "This route allows your to post stuff" **
