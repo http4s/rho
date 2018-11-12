@@ -33,8 +33,6 @@ package object model {
   case class FooSealed(a: Int, foo: String, foo2: Foo) extends Sealed
   case class BarSealed(str: String, foo: String) extends Sealed
 
-  case class ContainsSealed(seal: Sealed)
-
   sealed trait SealedEnum
   case object FooEnum extends SealedEnum
   case object BarEnum extends SealedEnum
@@ -337,6 +335,13 @@ class TypeBuilderSpec extends Specification {
       val Some(foo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
       val Some(fooRef) = foo.allOf.collectFirst {case ref: models.RefModel => ref}
       fooRef.ref must_== "Sealed"
+    }
+
+    "Not modify unrelated types when building model for sealed trait" in {
+      val unrelatedModel = modelOf[FooDefault]
+      val jointModel = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
+
+      jointModel must_== (unrelatedModel ++ modelOf[Sealed])
     }
   }
 
