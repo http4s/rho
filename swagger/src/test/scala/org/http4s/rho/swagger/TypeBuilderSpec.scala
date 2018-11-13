@@ -24,7 +24,7 @@ package object model {
   case class FooWithListOfLists(values: Seq[Seq[Int]])
   case class FooWithList(l: List[Int])
   case class FooWithMap(l: Map[String, Int])
-  case class FooVal(str: String) extends AnyVal
+  case class FooVal(foo: Foo) extends AnyVal
   case class BarWithFooVal(fooVal: FooVal)
   @DiscriminatorField("foobar")
   sealed trait Sealed {
@@ -36,6 +36,16 @@ package object model {
   sealed trait SealedEnum
   case object FooEnum extends SealedEnum
   case object BarEnum extends SealedEnum
+
+  case class SealedEnumContainer(e: SealedEnum)
+
+  sealed trait BTree
+  case class Branch(left: BTree, right: BTree) extends BTree
+  case class Leaf(value: String) extends BTree
+
+  case class BarList(tail: Option[BarList])
+
+  case class FooEither(stringOrFoo: Either[String, FooEither])
 }
 
 class TypeBuilderSpec extends Specification {
@@ -307,41 +317,67 @@ class TypeBuilderSpec extends Specification {
       }
     }
 
-    "Build an empty model for an AnyVal" in {
-      val ms = modelOf[FooVal]
-      ms must be empty
+    // fails because the implementation for AnyVals is just Seg.empty
+    "Treat AnyVals transparently" in {
+      modelOf[FooVal] == modelOf[Foo]
     }
 
+    // fails because the implementation for AnyVals is just Seg.empty
     "Build a model with the underlying type for AnyVals" in {
       val ms = modelOf[BarWithFooVal]
 
-      ms.size must_== 1
-      val m = ms.head
+      ms.size must_== 2
+      val Some(m) = ms.find(_.id2 == "BarWithFooVal")
 
       m.properties.size must_== 1
       m.properties.head must beLike {
-        case (name, prop) =>
+        case (name, prop: AbstractProperty) =>
           name must_== "fooVal"
-          prop.`type` must_== "string"
+          prop.`$ref` must_== Some("Foo")
       }
     }
 
+    // Fails because Foo gets a ComposedModel while it should get a ModelImpl
     "Build a model for sealed traits" in {
       val ms = modelOf[Sealed]
       ms.foreach(_.toJModel) // Testing that there are no exceptions
       ms.size must_== 4
-      val Some(seal: models.ModelImpl) = ms.find(_.id2 == "Sealed")
-      seal.discriminator must_== Some("foobar")
-      val Some(foo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
-      val Some(fooRef) = foo.allOf.collectFirst {case ref: models.RefModel => ref}
+      val Some(_: models.ModelImpl) = ms.find(_.id2 == "Foo") // Foo should not become a ComposedModel
+      val Some(seald: models.ModelImpl) = ms.find(_.id2 == "Sealed")
+      seald.discriminator must_== Some("foobar")
+      val Some(sealedFoo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
+      val Some(fooRef) = sealedFoo.allOf.collectFirst {case ref: models.RefModel => ref}
       fooRef.ref must_== "Sealed"
     }
 
+    // Fails because FooDefault model appears twice in the results. Once as a ModelImpl and once as ComposedModel.
     "Not modify unrelated types when building model for sealed trait" in {
       val unrelatedModel = modelOf[FooDefault]
       val jointModel = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
 
       jointModel must_== (unrelatedModel ++ modelOf[Sealed])
+    }
+
+    "Build a model for a case class containing a sealed enum" in {
+      val ms = modelOf[SealedEnumContainer]
+      ms.size must_== 1
+    }
+
+    // Fails because neither the execution path for case class nor the execution path for sum type does the `(!known.exists(_ =:= ntpe))` check
+    "Build a model for a type recursive through sealed trait" in {
+      modelOf[BTree] must not(throwA[StackOverflowError])
+      modelOf[BTree].size must_== 3
+    }
+
+    "Build a model for a type recursive through Option" in {
+      modelOf[BarList] must not(throwA[StackOverflowError])
+      modelOf[BarList].size must_== 1
+    }
+
+    // Fails because the execution path for Either and Map discards the `known`
+    "Build a model for a type recursive through Either" in {
+      modelOf[FooEither] must not(throwA[StackOverflowError])
+      modelOf[FooEither].size must_== 1
     }
   }
 
