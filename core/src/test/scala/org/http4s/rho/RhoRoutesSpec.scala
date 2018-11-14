@@ -7,6 +7,7 @@ import cats.effect.IO
 import fs2.Stream
 import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.http4s.rho.io._
+import org.http4s.Uri.uri
 import org.specs2.mutable.Specification
 
 class RhoRoutesSpec extends Specification with RequestRunner {

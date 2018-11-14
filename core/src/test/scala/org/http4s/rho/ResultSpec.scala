@@ -41,24 +41,5 @@ class ResultSpec extends Specification {
 
       resp2.attributes.get(attrKey) must beSome("foo")
     }
-
-    "Add a body" in {
-      val newbody = "foobar"
-      val resp = Ok("foo")
-        .map(_.withEntity(newbody))
-        .unsafeRunSync()
-        .resp
-
-      new String(resp.body.compile.toVector.unsafeRunSync().toArray) must_== newbody
-      resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
-
-      val resp2 = Ok("foo")
-        .map(_.withEntity(newbody))
-        .unsafeRunSync()
-        .resp
-
-      new String(resp2.body.compile.toVector.unsafeRunSync().toArray) must_== newbody
-      resp2.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(newbody.getBytes.length))
-    }
   }
 }

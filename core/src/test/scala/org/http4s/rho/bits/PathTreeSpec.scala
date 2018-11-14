@@ -8,6 +8,7 @@ import cats.effect.IO
 import org.http4s.server.Router
 import org.http4s.server.middleware.TranslateUri
 import org.specs2.mutable.Specification
+import org.http4s.Uri.uri
 
 class PathTreeSpec extends Specification {
   import PathTree._

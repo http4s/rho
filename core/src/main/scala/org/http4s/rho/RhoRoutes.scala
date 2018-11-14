@@ -26,7 +26,6 @@ class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances[F]
     with RoutePrependable[F, RhoRoutes[F]]
-    with EntityEncoderInstances
     with RhoDsl[F]
 {
   final private val routesBuilder = RoutesBuilder[F](routes)
