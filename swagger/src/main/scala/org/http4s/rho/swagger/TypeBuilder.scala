@@ -36,7 +36,7 @@ object TypeBuilder {
           sfs.customSerializers(tpe)
 
         case tpe if tpe.isNothingOrNull || tpe.isUnitOrVoid =>
-          alreadyKnown ++ modelToSwagger(tpe, sfs)
+          modelToSwagger(tpe, sfs).toSet
 
         case tpe if tpe.isEither || tpe.isMap =>
           go(tpe.typeArgs.head, alreadyKnown, known + tpe) ++
@@ -62,7 +62,7 @@ object TypeBuilder {
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
           val ctor = sym.asClass.primaryConstructor.asMethod
-          val models = alreadyKnown ++ modelToSwagger(tpe, sfs)
+          val model = modelToSwagger(tpe, sfs)
           val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
             acc ++ go(t, alreadyKnown, known + tpe)
           }
@@ -75,7 +75,7 @@ object TypeBuilder {
             go(paramType, alreadyKnown, known + tpe)
           }
 
-          models ++ generics ++ children
+          model.toSet ++ generics ++ children
 
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
@@ -88,7 +88,7 @@ object TypeBuilder {
               sym.asClass.knownDirectSubclasses.flatMap { sub =>
                 go(sub.asType.toType, alreadyKnown, known + tpe).map(composedModel(refmodel))
               }
-            alreadyKnown ++ Set(model) ++ children
+            Set(model) ++ children
           }
 
         case _ => Set.empty
