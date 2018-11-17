@@ -129,7 +129,7 @@ object TypeBuilder {
 
   private[this] def isSumType(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
-      !symbol.isModuleClass && symbol.asClass.isCaseClass
+      (!symbol.isModuleClass && symbol.asClass.isCaseClass) || isSumType(symbol)
     }
 
   private[this] def isObjectEnum(sym: Symbol): Boolean =

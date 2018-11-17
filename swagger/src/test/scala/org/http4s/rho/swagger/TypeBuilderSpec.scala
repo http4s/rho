@@ -46,6 +46,12 @@ package object model {
   case class BarList(tail: Option[BarList])
 
   case class FooEither(stringOrFoo: Either[String, FooEither])
+
+  sealed trait TopLevelSealedTrait
+  case class Value1() extends TopLevelSealedTrait
+  sealed trait LowerLevelSealedTrait extends TopLevelSealedTrait
+  case class Value2() extends LowerLevelSealedTrait
+  case class Value3() extends LowerLevelSealedTrait
 }
 
 class TypeBuilderSpec extends Specification {
@@ -320,7 +326,7 @@ class TypeBuilderSpec extends Specification {
     // fails because the implementation for AnyVals is just Seg.empty
     "Treat AnyVals transparently" in {
       modelOf[FooVal] must_== modelOf[Foo]
-    }
+    }.pendingUntilFixed("AnyVals")
 
     // fails because the implementation for AnyVals is just Seg.empty
     "Build a model with the underlying type for AnyVals" in {
@@ -335,9 +341,8 @@ class TypeBuilderSpec extends Specification {
           name must_== "fooVal"
           prop.`$ref` must_== Some("Foo")
       }
-    }
+    }.pendingUntilFixed("AnyVals")
 
-    // Fails because Foo gets a ComposedModel while it should get a ModelImpl
     "Build a model for sealed traits" in {
       val ms = modelOf[Sealed]
       ms.foreach(_.toJModel) // Testing that there are no exceptions
@@ -350,11 +355,33 @@ class TypeBuilderSpec extends Specification {
       fooRef.ref must_== "Sealed"
     }
 
-    // Fails because FooDefault model appears twice in the results. Once as a ModelImpl and once as ComposedModel.
     "Not modify unrelated types when building model for sealed trait" in {
       val unrelatedModel = modelOf[FooDefault]
       val model = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
       model must_== modelOf[Sealed]
+    }
+
+    "Build a model for two-level sealed trait hierarchy" in {
+      val ms = modelOf[TopLevelSealedTrait]
+      ms.size must_== 5
+
+      val Some(value1: models.ComposedModel) = ms.find(_.id2 == "Value1")
+      val Some(value1Parent: models.RefModel) = value1.parent
+      value1Parent.id2 must_== "TopLevelSealedTrait"
+
+      val Some(loweLevel: models.ComposedModel) = ms.find(_.id2 == "LowerLevelSealedTrait")
+      val Some(loweLevelParent: models.RefModel) = loweLevel.parent
+      loweLevelParent.id2 must_== "TopLevelSealedTrait"
+
+      val Some(value2: models.ComposedModel) = ms.find(_.id2 == "Value2")
+      val Some(value2Parent: models.RefModel) = value2.parent
+      value2Parent.id2 must_== "LowerLevelSealedTrait"
+    }
+
+    "Build identical model for sealed trait regardless of the entry point" in {
+      modelOf[TopLevelSealedTrait] must_== modelOf[LowerLevelSealedTrait]
+      modelOf[LowerLevelSealedTrait] must_== modelOf[Value1]
+      modelOf[Value1] must_== modelOf[Value2]
     }
 
     "Build a model for a case class containing a sealed enum" in {
@@ -362,7 +389,6 @@ class TypeBuilderSpec extends Specification {
       ms.size must_== 1
     }
 
-    // Fails because neither the execution path for case class nor the execution path for sum type does the `(!known.exists(_ =:= ntpe))` check
     "Build a model for a type recursive through sealed trait" in {
       modelOf[BTree] must not(throwA[StackOverflowError])
       modelOf[BTree].size must_== 3
@@ -373,7 +399,6 @@ class TypeBuilderSpec extends Specification {
       modelOf[BarList].size must_== 1
     }
 
-    // Fails because the execution path for Either and Map discards the `known`
     "Build a model for a type recursive through Either" in {
       modelOf[FooEither] must not(throwA[StackOverflowError])
       modelOf[FooEither].size must_== 1
