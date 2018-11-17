@@ -62,52 +62,48 @@ object TypeBuilder {
         case ExistentialType(_, _) =>
           Set.empty
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
-          sym.asClass.baseClasses.drop(1).find(isSumType) match {
-            case Some(parentSumType) if !known.contains(parentSumType.asType.toType) =>
-              go(parentSumType.asType.toType, alreadyKnown, known)
-
-            case maybeParentSumType =>
-              val ownModel = maybeParentSumType match {
-                case Some(parentSumType) =>
-                  val parentType = parentSumType.asType.toType
-                  val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
-                  modelToSwagger(tpe, sfs).map(composedModel(parentRefModel))
-                case None =>
-                  modelToSwagger(tpe, sfs)
-              }
-
-              val fieldModels = sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramsym =>
-                val paramType = paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-                go(paramType, alreadyKnown, known + tpe)
-              }
-              ownModel.toSet ++ fieldModels
-          }
-
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
 
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
+          val ownAndParentModel = sym.asClass.baseClasses.drop(1).find(isSumType) match {
+            case Some(parentSumType) =>
+              val parentModel = go(parentSumType.asType.toType, alreadyKnown, known + tpe)
+
+              val parentType = parentSumType.asType.toType
+              val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
+              val ownModel = modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
+              parentModel ++ ownModel
+            case None =>
+              modelToSwagger(tpe, sfs).toSet
+          }
+
+          val fieldModels = sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramsym =>
+            val paramType = paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+            go(paramType, alreadyKnown, known + tpe)
+          }
+
+          ownAndParentModel ++ fieldModels
+
+
         case tpe@TypeRef(_, sym, _) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
-          sym.asClass.baseClasses.drop(1).find(isSumType) match {
-            case Some(parentSumType) if !known.contains(parentSumType.asType.toType) =>
-              go(parentSumType.asType.toType, alreadyKnown, known)
+          val ownAndParentModel = sym.asClass.baseClasses.drop(1).find(isSumType) match {
+            case Some(parentSumType) =>
+              val parentModel = go(parentSumType.asType.toType, alreadyKnown, known + tpe)
 
-            case maybeParentSumType =>
-              val ownModel = maybeParentSumType match {
-                case Some(parentSumType) =>
-                  val parentType = parentSumType.asType.toType
-                  val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
-                  modelToSwagger(tpe, sfs).map(composedModel(parentRefModel))
-                case None =>
-                  modelToSwagger(tpe, sfs).map(addDiscriminator(sym))
-              }
-
-              val childTypeModels = sym.asClass.knownDirectSubclasses.flatMap { childType =>
-                go(childType.asType.toType, alreadyKnown, known + tpe)
-              }
-              ownModel.toSet ++ childTypeModels
+              val parentType = parentSumType.asType.toType
+              val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
+              val ownModel = modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
+              parentModel ++ ownModel
+            case None =>
+              modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet
           }
+
+          val childTypeModels = sym.asClass.knownDirectSubclasses.flatMap { childType =>
+            go(childType.asType.toType, alreadyKnown, known + tpe)
+          }
+          ownAndParentModel ++ childTypeModels
 
         case _ => Set.empty
       }
