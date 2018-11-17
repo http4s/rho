@@ -319,7 +319,7 @@ class TypeBuilderSpec extends Specification {
 
     // fails because the implementation for AnyVals is just Seg.empty
     "Treat AnyVals transparently" in {
-      modelOf[FooVal] == modelOf[Foo]
+      modelOf[FooVal] must_== modelOf[Foo]
     }
 
     // fails because the implementation for AnyVals is just Seg.empty
@@ -353,9 +353,8 @@ class TypeBuilderSpec extends Specification {
     // Fails because FooDefault model appears twice in the results. Once as a ModelImpl and once as ComposedModel.
     "Not modify unrelated types when building model for sealed trait" in {
       val unrelatedModel = modelOf[FooDefault]
-      val jointModel = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
-
-      jointModel must_== (unrelatedModel ++ modelOf[Sealed])
+      val model = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
+      model must_== modelOf[Sealed]
     }
 
     "Build a model for a case class containing a sealed enum" in {

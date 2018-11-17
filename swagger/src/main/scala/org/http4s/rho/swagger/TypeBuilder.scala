@@ -10,6 +10,8 @@ import scala.util.control.NonFatal
 
 import cats.syntax.all._
 
+import scala.collection.immutable.ListSet
+
 case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
 
 object TypeBuilder {
@@ -18,18 +20,18 @@ object TypeBuilder {
   private[this] val logger = getLogger
 
   def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type): Set[Model] =
-    try collectModels(t.dealias, alreadyKnown, Set.empty, sfs, et)
+    try collectModels(t.dealias, alreadyKnown, ListSet.empty, sfs, et)
     catch { case NonFatal(_) => Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], sfs: SwaggerFormats, et: Type): Set[Model] = {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: TypeSet, sfs: SwaggerFormats, et: Type): Set[Model] = {
 
-    def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] =
+    def go(t: Type, alreadyKnown: Set[Model], known: TypeSet): Set[Model] =
       t.dealias match {
 
         case tpe if alreadyKnown.exists(_.id == tpe.fullName) =>
           Set.empty
 
-        case tpe if known.exists(_ =:= tpe) =>
+        case tpe if known.contains(tpe) =>
           Set.empty
 
         case tpe if sfs.customSerializers.isDefinedAt(tpe) =>
@@ -61,34 +63,50 @@ object TypeBuilder {
           Set.empty
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
-          val ctor = sym.asClass.primaryConstructor.asMethod
-          val model = modelToSwagger(tpe, sfs)
-          val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
-            acc ++ go(t, alreadyKnown, known + tpe)
-          }
-          val children = ctor.paramLists.flatten.flatMap { paramsym =>
-            val paramType =
-              if (sym.isClass)
-                paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-              else
-                sym.typeSignature
-            go(paramType, alreadyKnown, known + tpe)
-          }
+          sym.asClass.baseClasses.drop(1).find(isSumType) match {
+            case Some(parentSumType) if !known.contains(parentSumType.asType.toType) =>
+              go(parentSumType.asType.toType, alreadyKnown, known)
 
-          model.toSet ++ generics ++ children
+            case maybeParentSumType =>
+              val ownModel = maybeParentSumType match {
+                case Some(parentSumType) =>
+                  val parentType = parentSumType.asType.toType
+                  val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
+                  modelToSwagger(tpe, sfs).map(composedModel(parentRefModel))
+                case None =>
+                  modelToSwagger(tpe, sfs)
+              }
+
+              val fieldModels = sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramsym =>
+                val paramType = paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+                go(paramType, alreadyKnown, known + tpe)
+              }
+              ownModel.toSet ++ fieldModels
+          }
 
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
 
         case tpe@TypeRef(_, sym, _) if isSumType(sym) =>
           // TODO promote methods on sealed trait from children to model
-          modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { (model: Model) =>
-            val refmodel = RefModel(model.id, model.id2, model.id2)
-            val children =
-              sym.asClass.knownDirectSubclasses.flatMap { sub =>
-                go(sub.asType.toType, alreadyKnown, known + tpe).map(composedModel(refmodel))
+          sym.asClass.baseClasses.drop(1).find(isSumType) match {
+            case Some(parentSumType) if !known.contains(parentSumType.asType.toType) =>
+              go(parentSumType.asType.toType, alreadyKnown, known)
+
+            case maybeParentSumType =>
+              val ownModel = maybeParentSumType match {
+                case Some(parentSumType) =>
+                  val parentType = parentSumType.asType.toType
+                  val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
+                  modelToSwagger(tpe, sfs).map(composedModel(parentRefModel))
+                case None =>
+                  modelToSwagger(tpe, sfs).map(addDiscriminator(sym))
               }
-            Set(model) ++ children
+
+              val childTypeModels = sym.asClass.knownDirectSubclasses.flatMap { childType =>
+                go(childType.asType.toType, alreadyKnown, known + tpe)
+              }
+              ownModel.toSet ++ childTypeModels
           }
 
         case _ => Set.empty
@@ -306,4 +324,13 @@ object TypeBuilder {
     private[this] def isCollection(t: Type): Boolean =
       t <:< typeOf[collection.Traversable[_]] || t <:< typeOf[java.util.Collection[_]]
   }
+
+  implicit class WrappedType(val t: Type){
+    override def equals(obj: Any): Boolean = obj match{
+      case wt2: WrappedType => t =:= wt2.t
+      case _ => false
+    }
+  }
+
+  type TypeSet = ListSet[WrappedType]
 }
