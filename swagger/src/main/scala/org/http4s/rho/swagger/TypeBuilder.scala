@@ -7,7 +7,6 @@ import org.log4s.getLogger
 
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
-
 import cats.syntax.all._
 
 import scala.collection.immutable.ListSet
@@ -65,45 +64,33 @@ object TypeBuilder {
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
-          val ownAndParentModel = sym.asClass.baseClasses.drop(1).find(isSumType) match {
-            case Some(parentSumType) =>
-              val parentModel = go(parentSumType.asType.toType, alreadyKnown, known + tpe)
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) || isSumType(sym) =>
+          val symIsSumType = isSumType(sym)
+          val maybeParentSumType = sym.asClass.baseClasses.drop(1).find(isSumType)
 
+          val parentModel = maybeParentSumType.toSet[Symbol].flatMap(parentType => go(parentType.asType.toType, alreadyKnown, known + tpe))
+
+          val ownModel = maybeParentSumType match {
+            case Some(parentSumType) =>
               val parentType = parentSumType.asType.toType
               val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
-              val ownModel = modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
-              parentModel ++ ownModel
-            case None =>
+              modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
+            case None if symIsSumType =>
+              modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet // only top level sum types get a discriminator
+            case None /*product type*/ =>
               modelToSwagger(tpe, sfs).toSet
           }
 
-          val fieldModels = sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramsym =>
-            val paramType = paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-            go(paramType, alreadyKnown, known + tpe)
+          val childModels = if (symIsSumType) {
+            sym.asClass.knownDirectSubclasses.flatMap(childType => go(childType.asType.toType, alreadyKnown, known + tpe))
+          } else {
+            sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramSym =>
+              val paramType = paramSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              go(paramType, alreadyKnown, known + tpe)
+            }
           }
 
-          ownAndParentModel ++ fieldModels
-
-
-        case tpe@TypeRef(_, sym, _) if isSumType(sym) =>
-          // TODO promote methods on sealed trait from children to model
-          val ownAndParentModel = sym.asClass.baseClasses.drop(1).find(isSumType) match {
-            case Some(parentSumType) =>
-              val parentModel = go(parentSumType.asType.toType, alreadyKnown, known + tpe)
-
-              val parentType = parentSumType.asType.toType
-              val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
-              val ownModel = modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
-              parentModel ++ ownModel
-            case None =>
-              modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet
-          }
-
-          val childTypeModels = sym.asClass.knownDirectSubclasses.flatMap { childType =>
-            go(childType.asType.toType, alreadyKnown, known + tpe)
-          }
-          ownAndParentModel ++ childTypeModels
+          parentModel ++ ownModel ++ childModels
 
         case _ => Set.empty
       }
