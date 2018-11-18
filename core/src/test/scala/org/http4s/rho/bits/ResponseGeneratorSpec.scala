@@ -41,6 +41,19 @@ class ResponseGeneratorSpec extends Specification {
       resp.headers.get(Location) must beSome(Location(location))
     }
 
+    "Build a redirect response with a body" in {
+      val testBody = "Moved!!!"
+      val location = Uri.fromString("/foo").right.getOrElse(sys.error("Fail."))
+      val result = MovedPermanently(location, testBody).unsafeRunSync()
+      val resp = result.resp
+
+      EntityDecoder[IO, String].decode(resp, false).value.unsafeRunSync() must beRight(testBody)
+      resp.status must_== Status.MovedPermanently
+      resp.headers.get(`Content-Length`) must beSome(`Content-Length`.unsafeFromLong(testBody.length))
+      resp.headers.get(`Transfer-Encoding`) must beNone
+      resp.headers.get(Location) must beSome(Location(location))
+    }
+
     "Explicitly added headers have priority" in {
       implicit val w: EntityEncoder[IO, String] =
         EntityEncoder.encodeBy[IO, String](`Content-Type`(MediaType.text.html))(EntityEncoder.stringEncoder[IO].toEntity(_))

@@ -7,79 +7,83 @@ import org.http4s.headers.`Content-Type`
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
 F[_],
-+CONTINUE,
-+SWITCHINGPROTOCOLS,
-+PROCESSING,
+/* 100 */ +CONTINUE,
+/* 101 */ +SWITCHINGPROTOCOLS,
+/* 102 */ +PROCESSING,
+/* 103 */ +EARLYHINTS,
 
-+OK,
-+CREATED,
-+ACCEPTED,
-+NONAUTHORITATIVEINFORMATION,
-+NOCONTENT,
-+RESETCONTENT,
-+PARTIALCONTENT,
-+MULTISTATUS,
-+ALREADYREPORTED,
-+IMUSED,
+/* 200 */ +OK,
+/* 201 */ +CREATED,
+/* 202 */ +ACCEPTED,
+/* 203 */ +NONAUTHORITATIVEINFORMATION,
+/* 204 */ +NOCONTENT,
+/* 205 */ +RESETCONTENT,
+/* 206 */ +PARTIALCONTENT,
+/* 207 */ +MULTISTATUS,
+/* 208 */ +ALREADYREPORTED,
+/* 226 */ +IMUSED,
 
-+MULTIPLECHOICES,
-+MOVEDPERMANENTLY,
-+FOUND,
-+SEEOTHER,
-+NOTMODIFIED,
-+USEPROXY,
-+TEMPORARYREDIRECT,
-+PERMANENTREDIRECT,
+/* 300 */ +MULTIPLECHOICES,
+/* 301 */ +MOVEDPERMANENTLY,
+/* 302 */ +FOUND,
+/* 303 */ +SEEOTHER,
+/* 304 */ +NOTMODIFIED,
+/* 305 */ /* USEPROXY is deprecated https://tools.ietf.org/html/rfc7231#section-6.4.5*/
+/* 307 */ +TEMPORARYREDIRECT,
+/* 308 */ +PERMANENTREDIRECT,
 
-+BADREQUEST,
-+UNAUTHORIZED,
-+PAYMENTREQUIRED,
-+FORBIDDEN,
-+NOTFOUND,
-+METHODNOTALLOWED,
-+NOTACCEPTABLE,
-+PROXYAUTHENTICATIONREQUIRED,
-+REQUESTTIMEOUT,
-+CONFLICT,
-+GONE,
-+LENGTHREQUIRED,
-+PRECONDITIONFAILED,
-+PAYLOADTOOLARGE,
-+URITOOLONG,
-+UNSUPPORTEDMEDIATYPE,
-+RANGENOTSATISFIABLE,
-+EXPECTATIONFAILED,
-+UNPROCESSABLEENTITY,
-+LOCKED,
-+FAILEDDEPENDENCY,
-+UPGRADEREQUIRED,
-+PRECONDITIONREQUIRED,
-+TOOMANYREQUESTS,
-+REQUESTHEADERFIELDSTOOLARGE,
+/* 400 */ +BADREQUEST,
+/* 401 */ +UNAUTHORIZED,
+/* 402 */ +PAYMENTREQUIRED,
+/* 403 */ +FORBIDDEN,
+/* 404 */ +NOTFOUND,
+/* 405 */ +METHODNOTALLOWED,
+/* 406 */ +NOTACCEPTABLE,
+/* 407 */ +PROXYAUTHENTICATIONREQUIRED,
+/* 408 */ +REQUESTTIMEOUT,
+/* 409 */ +CONFLICT,
+/* 410 */ +GONE,
+/* 411 */ +LENGTHREQUIRED,
+/* 412 */ +PRECONDITIONFAILED,
+/* 413 */ +PAYLOADTOOLARGE,
+/* 414 */ +URITOOLONG,
+/* 415 */ +UNSUPPORTEDMEDIATYPE,
+/* 416 */ +RANGENOTSATISFIABLE,
+/* 417 */ +EXPECTATIONFAILED,
+/* 421 */ +MISDIRECTEDREQUEST,
+/* 422 */ +UNPROCESSABLEENTITY,
+/* 423 */ +LOCKED,
+/* 424 */ +FAILEDDEPENDENCY,
+/* 424 */ +TOOEARLY,
+/* 426 */ +UPGRADEREQUIRED,
+/* 428 */ +PRECONDITIONREQUIRED,
+/* 429 */ +TOOMANYREQUESTS,
+/* 431 */ +REQUESTHEADERFIELDSTOOLARGE,
+/* 451 */ +UNAVAILABLEFORLEGALREASONS,
 
-+INTERNALSERVERERROR,
-+NOTIMPLEMENTED,
-+BADGATEWAY,
-+SERVICEUNAVAILABLE,
-+GATEWAYTIMEOUT,
-+HTTPVERSIONNOTSUPPORTED,
-+VARIANTALSONEGOTIATES,
-+INSUFFICIENTSTORAGE,
-+LOOPDETECTED,
-+NOTEXTENDED,
-+NETWORKAUTHENTICATIONREQUIRED
+/* 500 */ +INTERNALSERVERERROR,
+/* 501 */ +NOTIMPLEMENTED,
+/* 502 */ +BADGATEWAY,
+/* 503 */ +SERVICEUNAVAILABLE,
+/* 504 */ +GATEWAYTIMEOUT,
+/* 505 */ +HTTPVERSIONNOTSUPPORTED,
+/* 506 */ +VARIANTALSONEGOTIATES,
+/* 507 */ +INSUFFICIENTSTORAGE,
+/* 508 */ +LOOPDETECTED,
+/* 510 */ +NOTEXTENDED,
+/* 511 */ +NETWORKAUTHENTICATIONREQUIRED
 ](resp: Response[F])
 
 object Result {
 
   /** Result type with completely ambiguous return types */
-  type BaseResult[F[_]] = Result[F, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any]
+  type BaseResult[F[_]] = Result[F, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any]
 
   /** Result with no inferred return types */
-  type TopResult[F[_]] = Result[F, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing]
+  type TopResult[F[_]] = Result[F, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing, Nothing]
 
   /** Existential result type */
-  type ExResult[F[_]] = Result[F, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]
+  type ExResult[F[_]] = Result[F, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]
 }
 
 trait ResultSyntaxInstances[F[_]] {
