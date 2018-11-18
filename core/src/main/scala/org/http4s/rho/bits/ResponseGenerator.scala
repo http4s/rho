@@ -164,7 +164,7 @@ trait ResponseGeneratorInstances[F[_]] {
   object Processing extends EmptyResponseGenerator[F](Status.Processing) {
     type T = PROCESSING
   }
-  
+
   /* 103 */
   object EarlyHints extends EmptyResponseGenerator[F](Status.EarlyHints) {
     type T = EARLYHINTS

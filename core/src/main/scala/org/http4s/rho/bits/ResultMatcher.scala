@@ -169,7 +169,7 @@ object ResultMatcher extends ResultMatcherOps {
     /* 507 */ mINSUFFICIENTSTORAGE: MaybeWritable.Aux[F, INSUFFICIENTSTORAGE],
     /* 508 */ mLOOPDETECTED: MaybeWritable.Aux[F, LOOPDETECTED],
     /* 510 */ mNOTEXTENDED: MaybeWritable.Aux[F, NOTEXTENDED],
-    /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable.Aux[F, NETWORKAUTHENTICATIONREQUIRED],
+    /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable.Aux[F, NETWORKAUTHENTICATIONREQUIRED]
    ): ResultMatcher[F, Result[
     F,
     /* 100 */ CONTINUE,
