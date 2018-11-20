@@ -326,7 +326,7 @@ class TypeBuilderSpec extends Specification {
     // fails because the implementation for AnyVals is just Seg.empty
     "Treat AnyVals transparently" in {
       modelOf[FooVal] must_== modelOf[Foo]
-    }.pendingUntilFixed("AnyVals")
+    }.pendingUntilFixed("https://github.com/http4s/rho/issues/272")
 
     // fails because the implementation for AnyVals is just Seg.empty
     "Build a model with the underlying type for AnyVals" in {
@@ -341,13 +341,13 @@ class TypeBuilderSpec extends Specification {
           name must_== "fooVal"
           prop.`$ref` must_== Some("Foo")
       }
-    }.pendingUntilFixed("AnyVals")
+    }.pendingUntilFixed("https://github.com/http4s/rho/issues/272")
 
     "Build a model for sealed traits" in {
       val ms = modelOf[Sealed]
       ms.foreach(_.toJModel) // Testing that there are no exceptions
       ms.size must_== 4
-      val Some(_: models.ModelImpl) = ms.find(_.id2 == "Foo") // Foo should not become a ComposedModel
+      ms.find(_.id2 == "Foo").get must haveClass[models.ModelImpl]  // Foo should not become a ComposedModel
       val Some(seald: models.ModelImpl) = ms.find(_.id2 == "Sealed")
       seald.discriminator must_== Some("foobar")
       val Some(sealedFoo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
