@@ -308,12 +308,12 @@ object TypeBuilder {
       t <:< typeOf[collection.Traversable[_]] || t <:< typeOf[java.util.Collection[_]]
   }
 
-  implicit class WrappedType(val t: Type){
+  private implicit class WrappedType(val t: Type){
     override def equals(obj: Any): Boolean = obj match{
       case wt2: WrappedType => t =:= wt2.t
       case _ => false
     }
   }
 
-  type TypeSet = ListSet[WrappedType]
+  private type TypeSet = ListSet[WrappedType]
 }
