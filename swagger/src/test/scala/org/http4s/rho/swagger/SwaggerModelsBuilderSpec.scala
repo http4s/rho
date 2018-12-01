@@ -49,7 +49,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   implicit def defaultCompiler: CompileRoutes[IO, RhoRoute.Tpe[IO]] =
     CompileRoutes.identityCompiler
 
-  sealed abstract class Renderable
+  trait Renderable
   case class ModelA(name: String, color: Int) extends Renderable
   case class ModelB(name: String, id: Long) extends Renderable
   case class ModelC(name: String, shape: String) extends Renderable

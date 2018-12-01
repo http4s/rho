@@ -24,7 +24,7 @@ package object model {
   case class FooWithListOfLists(values: Seq[Seq[Int]])
   case class FooWithList(l: List[Int])
   case class FooWithMap(l: Map[String, Int])
-  case class FooVal(str: String) extends AnyVal
+  case class FooVal(foo: Foo) extends AnyVal
   case class BarWithFooVal(fooVal: FooVal)
   @DiscriminatorField("foobar")
   sealed trait Sealed {
@@ -33,11 +33,25 @@ package object model {
   case class FooSealed(a: Int, foo: String, foo2: Foo) extends Sealed
   case class BarSealed(str: String, foo: String) extends Sealed
 
-  case class ContainsSealed(seal: Sealed)
-
   sealed trait SealedEnum
   case object FooEnum extends SealedEnum
   case object BarEnum extends SealedEnum
+
+  case class SealedEnumContainer(e: SealedEnum)
+
+  sealed trait BTree
+  case class Branch(left: BTree, right: BTree) extends BTree
+  case class Leaf(value: String) extends BTree
+
+  case class BarList(tail: Option[BarList])
+
+  case class FooEither(stringOrFoo: Either[String, FooEither])
+
+  sealed trait TopLevelSealedTrait
+  case class Value1() extends TopLevelSealedTrait
+  sealed trait LowerLevelSealedTrait extends TopLevelSealedTrait
+  case class Value2() extends LowerLevelSealedTrait
+  case class Value3() extends LowerLevelSealedTrait
 }
 
 class TypeBuilderSpec extends Specification {
@@ -309,34 +323,85 @@ class TypeBuilderSpec extends Specification {
       }
     }
 
-    "Build an empty model for an AnyVal" in {
-      val ms = modelOf[FooVal]
-      ms must be empty
-    }
+    // fails because the implementation for AnyVals is just Seg.empty
+    "Treat AnyVals transparently" in {
+      modelOf[FooVal] must_== modelOf[Foo]
+    }.pendingUntilFixed("https://github.com/http4s/rho/issues/272")
 
+    // fails because the implementation for AnyVals is just Seg.empty
     "Build a model with the underlying type for AnyVals" in {
       val ms = modelOf[BarWithFooVal]
 
-      ms.size must_== 1
-      val m = ms.head
+      ms.size must_== 2
+      val Some(m) = ms.find(_.id2 == "BarWithFooVal")
 
       m.properties.size must_== 1
       m.properties.head must beLike {
-        case (name, prop) =>
+        case (name, prop: AbstractProperty) =>
           name must_== "fooVal"
-          prop.`type` must_== "string"
+          prop.`$ref` must_== Some("Foo")
       }
-    }
+    }.pendingUntilFixed("https://github.com/http4s/rho/issues/272")
 
     "Build a model for sealed traits" in {
       val ms = modelOf[Sealed]
       ms.foreach(_.toJModel) // Testing that there are no exceptions
       ms.size must_== 4
-      val Some(seal: models.ModelImpl) = ms.find(_.id2 == "Sealed")
-      seal.discriminator must_== Some("foobar")
-      val Some(foo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
-      val Some(fooRef) = foo.allOf.collectFirst {case ref: models.RefModel => ref}
+      ms.find(_.id2 == "Foo").get must haveClass[models.ModelImpl]  // Foo should not become a ComposedModel
+      val Some(seald: models.ModelImpl) = ms.find(_.id2 == "Sealed")
+      seald.discriminator must_== Some("foobar")
+      val Some(sealedFoo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
+      val Some(fooRef) = sealedFoo.allOf.collectFirst {case ref: models.RefModel => ref}
       fooRef.ref must_== "Sealed"
+    }
+
+    "Not modify unrelated types when building model for sealed trait" in {
+      val unrelatedModel = modelOf[FooDefault]
+      val model = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
+      model must_== modelOf[Sealed]
+    }
+
+    "Build a model for two-level sealed trait hierarchy" in {
+      val ms = modelOf[TopLevelSealedTrait]
+      ms.size must_== 5
+
+      val Some(value1: models.ComposedModel) = ms.find(_.id2 == "Value1")
+      val Some(value1Parent: models.RefModel) = value1.parent
+      value1Parent.id2 must_== "TopLevelSealedTrait"
+
+      val Some(loweLevel: models.ComposedModel) = ms.find(_.id2 == "LowerLevelSealedTrait")
+      val Some(loweLevelParent: models.RefModel) = loweLevel.parent
+      loweLevelParent.id2 must_== "TopLevelSealedTrait"
+
+      val Some(value2: models.ComposedModel) = ms.find(_.id2 == "Value2")
+      val Some(value2Parent: models.RefModel) = value2.parent
+      value2Parent.id2 must_== "LowerLevelSealedTrait"
+    }
+
+    "Build identical model for sealed trait regardless of the entry point" in {
+      modelOf[TopLevelSealedTrait] must_== modelOf[LowerLevelSealedTrait]
+      modelOf[LowerLevelSealedTrait] must_== modelOf[Value1]
+      modelOf[Value1] must_== modelOf[Value2]
+    }
+
+    "Build a model for a case class containing a sealed enum" in {
+      val ms = modelOf[SealedEnumContainer]
+      ms.size must_== 1
+    }
+
+    "Build a model for a type recursive through sealed trait" in {
+      modelOf[BTree] must not(throwA[StackOverflowError])
+      modelOf[BTree].size must_== 3
+    }
+
+    "Build a model for a type recursive through Option" in {
+      modelOf[BarList] must not(throwA[StackOverflowError])
+      modelOf[BarList].size must_== 1
+    }
+
+    "Build a model for a type recursive through Either" in {
+      modelOf[FooEither] must not(throwA[StackOverflowError])
+      modelOf[FooEither].size must_== 1
     }
   }
 

@@ -7,8 +7,9 @@ import org.log4s.getLogger
 
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
-
 import cats.syntax.all._
+
+import scala.collection.immutable.ListSet
 
 case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
 
@@ -18,43 +19,40 @@ object TypeBuilder {
   private[this] val logger = getLogger
 
   def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type): Set[Model] =
-    try collectModels(t.dealias, alreadyKnown, Set.empty, sfs, et)
+    try collectModels(t.dealias, alreadyKnown, ListSet.empty, sfs, et)
     catch { case NonFatal(_) => Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: Set[Type], sfs: SwaggerFormats, et: Type): Set[Model] = {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: TypeSet, sfs: SwaggerFormats, et: Type): Set[Model] = {
 
-    def go(t: Type, alreadyKnown: Set[Model], known: Set[Type]): Set[Model] =
+    def go(t: Type, alreadyKnown: Set[Model], known: TypeSet): Set[Model] =
       t.dealias match {
+
+        case tpe if alreadyKnown.exists(_.id == tpe.fullName) =>
+          Set.empty
+
+        case tpe if known.contains(tpe) =>
+          Set.empty
 
         case tpe if sfs.customSerializers.isDefinedAt(tpe) =>
           sfs.customSerializers(tpe)
 
         case tpe if tpe.isNothingOrNull || tpe.isUnitOrVoid =>
-          alreadyKnown ++ modelToSwagger(tpe, sfs)
+          modelToSwagger(tpe, sfs).toSet
 
         case tpe if tpe.isEither || tpe.isMap =>
-          go(tpe.typeArgs.head, alreadyKnown, tpe.typeArgs.toSet) ++
-            go(tpe.typeArgs.last, alreadyKnown, tpe.typeArgs.toSet)
+          go(tpe.typeArgs.head, alreadyKnown, known + tpe) ++
+            go(tpe.typeArgs.last, alreadyKnown, known + tpe)
 
-        case tpe if (tpe.isCollection || tpe.isOption) && tpe.typeArgs.nonEmpty =>
-          val ntpe = tpe.typeArgs.head
-          if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
-          else Set.empty
+        case tpe if (tpe.isCollection || tpe.isOption || tpe.isEffect(et)) && tpe.typeArgs.nonEmpty =>
+          go(tpe.typeArgs.head, alreadyKnown, known + tpe)
 
         case tpe if tpe.isStream =>
-          val ntpe = tpe.typeArgs.apply(1)
-          if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
-          else Set.empty
-
-        case tpe if tpe.isEffect(et) =>
-          val ntpe = tpe.typeArgs.head
-          if (!known.exists(_ =:= ntpe)) go(ntpe, alreadyKnown, known + ntpe)
-          else Set.empty
+          go(tpe.typeArgs.apply(1), alreadyKnown, known + tpe)
 
         case tpe if tpe.isSwaggerFile =>
           Set.empty
 
-        case tpe if alreadyKnown.map(_.id).contains(tpe.fullName) || tpe.isPrimitive =>
+        case tpe if tpe.isPrimitive =>
           Set.empty
 
         case tpe if tpe <:< typeOf[AnyVal] =>
@@ -63,36 +61,36 @@ object TypeBuilder {
         case ExistentialType(_, _) =>
           Set.empty
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) =>
-          val ctor = sym.asClass.primaryConstructor.asMethod
-          val models = alreadyKnown ++ modelToSwagger(tpe, sfs)
-          val generics = tpe.typeArgs.foldLeft(List[Model]()) { (acc, t) =>
-            acc ++ go(t, alreadyKnown, tpe.typeArgs.toSet)
-          }
-          val children = ctor.paramLists.flatten.flatMap { paramsym =>
-            val paramType =
-              if (sym.isClass)
-                paramsym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
-              else
-                sym.typeSignature
-            go(paramType, alreadyKnown, known + tpe)
-          }
-
-          models ++ generics ++ children
-
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
 
-        case tpe@TypeRef(_, sym, _) if isSumType(sym) =>
-          // TODO promote methods on sealed trait from children to model
-          modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet.flatMap { (model: Model) =>
-            val refmodel = RefModel(model.id, model.id2, model.id2)
-            val children =
-              sym.asClass.knownDirectSubclasses.flatMap { sub =>
-                go(sub.asType.toType, alreadyKnown, known + tpe).map(composedModel(refmodel))
-              }
-            alreadyKnown ++ Set(model) ++ children
+        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) || isSumType(sym) =>
+          val symIsSumType = isSumType(sym)
+          val maybeParentSumType = sym.asClass.baseClasses.drop(1).find(isSumType)
+
+          val parentModel = maybeParentSumType.toSet[Symbol].flatMap(parentType => go(parentType.asType.toType, alreadyKnown, known + tpe))
+
+          val ownModel = maybeParentSumType match {
+            case Some(parentSumType) =>
+              val parentType = parentSumType.asType.toType
+              val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
+              modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
+            case None if symIsSumType =>
+              modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet // only top level sum types get a discriminator
+            case None /*product type*/ =>
+              modelToSwagger(tpe, sfs).toSet
           }
+
+          val childModels = if (symIsSumType) {
+            sym.asClass.knownDirectSubclasses.flatMap(childType => go(childType.asType.toType, alreadyKnown, known + tpe))
+          } else {
+            sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramSym =>
+              val paramType = paramSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              go(paramType, alreadyKnown, known + tpe)
+            }
+          }
+
+          parentModel ++ ownModel ++ childModels
 
         case _ => Set.empty
       }
@@ -131,7 +129,7 @@ object TypeBuilder {
 
   private[this] def isSumType(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
-      !symbol.isModuleClass && symbol.asClass.isCaseClass
+      (!symbol.isModuleClass && symbol.asClass.isCaseClass) || isSumType(symbol)
     }
 
   private[this] def isObjectEnum(sym: Symbol): Boolean =
@@ -309,4 +307,13 @@ object TypeBuilder {
     private[this] def isCollection(t: Type): Boolean =
       t <:< typeOf[collection.Traversable[_]] || t <:< typeOf[java.util.Collection[_]]
   }
+
+  private implicit class WrappedType(val t: Type){
+    override def equals(obj: Any): Boolean = obj match{
+      case wt2: WrappedType => t =:= wt2.t
+      case _ => false
+    }
+  }
+
+  private type TypeSet = ListSet[WrappedType]
 }
