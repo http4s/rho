@@ -1,11 +1,11 @@
 package com.http4s.rho.swagger.demo
 
 import cats.effect.{ExitCode, IO, IOApp}
-import cats.syntax.semigroupk._
-import cats.syntax.functor._
+import cats.implicits._
 import org.http4s.HttpRoutes
+import org.http4s.syntax.all._
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
-import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
 object Main extends IOApp {
@@ -24,8 +24,8 @@ object Main extends IOApp {
     val myService: HttpRoutes[IO] =
       new MyRoutes[IO](ioSwagger) {}.toRoutes(middleware)
 
-    BlazeBuilder[IO]
-      .mountService(StaticContentService.routes combineK myService, "")
+    BlazeServerBuilder[IO]
+      .withHttpApp((StaticContentService.routes <+> myService).orNotFound)
       .bindLocal(port)
       .serve.compile.drain.as(ExitCode.Success)
   }

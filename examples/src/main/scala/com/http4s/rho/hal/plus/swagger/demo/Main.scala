@@ -1,10 +1,10 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.syntax.semigroupk._
-import cats.syntax.functor._
+import cats.implicits._
 import cats.effect.{ExitCode, IO, IOApp}
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
-import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.syntax.all._
+import org.http4s.server.blaze._
 import org.log4s.getLogger
 
 object Main extends IOApp {
@@ -22,8 +22,8 @@ object Main extends IOApp {
     val routes =
       new Routes(businessLayer)
 
-    BlazeBuilder[IO]
-      .mountService(routes.staticContent combineK routes.dynamicContent, "")
+    BlazeServerBuilder[IO]
+      .withHttpApp((routes.staticContent <+> routes.dynamicContent).orNotFound)
       .bindLocal(port)
       .serve.compile.drain.as(ExitCode.Success)
   }
