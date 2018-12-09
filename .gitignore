@@ -17,3 +17,5 @@ atlassian-ide-plugin.xml
 .tags
 .tags_sorted_by_file
 .ensime_lucene
+
+local.*

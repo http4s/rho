@@ -10,21 +10,21 @@ import Dependencies._, RhoPlugin._
 
 lazy val rho = project
   .in(file("."))
-  .settings(buildSettings: _*)
+  .settings(buildSettings)
   .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-examples`)
 
 lazy val `rho-core` = project
   .in(file("core"))
-  .settings(buildSettings: _*)
+  .settings(buildSettings)
 
 lazy val `rho-hal` = project
   .in(file("hal"))
-  .settings(buildSettings :+ halDeps: _*)
+  .settings(buildSettings :+ halDeps)
   .dependsOn(`rho-core`)
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
-  .settings(buildSettings :+ swaggerDeps: _*)
+  .settings(buildSettings :+ swaggerDeps)
   .dependsOn(`rho-core` % "compile->compile;test->test")
 
 lazy val docs = project
@@ -33,7 +33,7 @@ lazy val docs = project
   .enablePlugins(ScalaUnidocPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .enablePlugins(GhpagesPlugin)
-  .settings(Seq(
+  .settings(
     dontPublish,
     description := "Api Documentation",
     autoAPIMappings := true,
@@ -57,19 +57,18 @@ lazy val docs = project
         (f, d) <- (mappings in (ScalaUnidoc, packageDoc)).value
       } yield (f, s"api/$major.$minor/$d")
     }
-  ))
+  )
   .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
 
 lazy val `rho-examples` = project
   .in(file("examples"))
+  .settings(buildSettings)
+  .settings(Revolver.settings)
   .settings(
-    buildSettings ++
-      Revolver.settings ++
-      Seq(
-        exampleDeps,
-        libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
-        dontPublish
-      ): _*)
+    dontPublish,
+    exampleDeps,
+    libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances)
+  )
   .dependsOn(`rho-swagger`, `rho-hal`)
 
 lazy val compileFlags = Seq(
@@ -116,21 +115,29 @@ lazy val buildSettings = publishing ++
 scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-warnings")
 
 lazy val publishing = Seq(
-  extras,
   credentials ++= travisCredentials.toSeq,
   publishMavenStyle in ThisBuild := true,
   publishArtifact in (ThisBuild, Test) := false,
   // Don't publish root pom.  It's not needed.
   packagedArtifacts in LocalRootProject := Map.empty,
   publishArtifact in Test := false,
-  publishTo in ThisBuild := Some(nexusRepoFor(version.value)),
+  publishTo in ThisBuild := Some(nexusRepoFor(version.value, isSnapshot.value)),
+  releaseEarlyWith := SonatypePublisher,
   scmInfo in ThisBuild := {
     val base = "github.com/http4s/rho"
     Some(
       ScmInfo(url(s"https://$base"),
               s"scm:git:https://$base",
               Some(s"scm:git:git@$base")))
-  }
+  },
+  developers := List(
+    Developer("brycelane", "Bryce L. Anderson", "bryce.anderson22@gmail.com", url("https://github.com/bryce-anderson")),
+    Developer("rossabaker", "Ross A. Baker", "ross@rossabaker.com", url("https://github.com/rossabaker")),
+    Developer("before", "André Rouél", "dev@null", url("https://github.com/before")),
+    Developer("zarthross", "Darren A. Gibson", "zarthross@gmail.com", url("https://github.com/zarthross")),
+  ),
+  pgpPublicRing := file("./travis/local.pubring.asc"),
+  pgpSecretRing := file("./travis/local.secring.asc")
 )
 
 lazy val travisCredentials =
@@ -144,22 +151,3 @@ lazy val travisCredentials =
     case _ =>
       None
   }
-
-lazy val extras = pomExtra in ThisBuild := (
-  <developers>
-    <developer>
-      <id>brycelane</id>
-      <name>Bryce L. Anderson</name>
-      <email>bryce.anderson22@gmail.com</email>
-    </developer>
-    <developer>
-      <id>before</id>
-      <name>André Rouél</name>
-    </developer>
-    <developer>
-      <id>rossabaker</id>
-      <name>Ross A. Baker</name>
-      <email>ross@rossabaker.com</email>
-    </developer>
-  </developers>
-)

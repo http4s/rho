@@ -1,3 +1,0 @@
-#!/bin/bash
-
-sbt +clean +publishSigned && sbt sonatypeRelease
