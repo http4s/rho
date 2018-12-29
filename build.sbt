@@ -109,7 +109,8 @@ lazy val buildSettings = publishing ++
       logbackClassic % "test"
     ),
     libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value
+    libraryDependencies += `scala-reflect` % scalaVersion.value,
+    addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.8" cross CrossVersion.binary)
   )
 
 // to keep REPL usable
