@@ -1,12 +1,13 @@
 package org.http4s
 
+import scala.collection.immutable.Seq
 import cats.syntax.functor._
 import cats.{FlatMap, Functor, Monad}
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST.CaptureRule
 import org.http4s.rho.bits._
-import org.http4s.rho.{PathBuilder, PathEmpty, ResultSyntaxInstances}
+import org.http4s.rho.{PathBuilder, PathEmpty, ResultSyntaxInstances, RouteExecutable, RouteExecutableSyntax}
 import org.log4s.getLogger
 import shapeless.{::, HList, HNil}
 
@@ -15,7 +16,11 @@ import scala.reflect.runtime.universe.TypeTag
 import scala.util.control.NonFatal
 
 package object rho extends org.http4s.syntax.AllSyntax {
-  type RhoMiddleware[F[_]] = Seq[RhoRoute[F, _ <: HList]] => Seq[RhoRoute[F, _ <: HList]]
+  type ARhoMiddleware[F[_], R[_[_], _ <: HList]] = Seq[R[F, _ <: HList]] => Seq[R[F, _ <: HList]]
+  type RhoMiddleware[F[_]] = ARhoMiddleware[F, RhoRoute]
+
+  type Action[F[_], T <: HList] = AbstractAction[F, Request, T]
+  type AuthedAction[F[_], T <: HList, U] = AbstractAction[F, AuthedRequest[?[_], U], T]
 
   val PathEmpty: PathRule = PathMatch("")
 }
@@ -23,9 +28,12 @@ package object rho extends org.http4s.syntax.AllSyntax {
 trait RhoDsl[F[_]]
   extends ResultSyntaxInstances[F]
     with QueryParsers[F]
-    with MatchersHListToFunc[F]
     with ResponseGeneratorInstances[F]
     with FailureResponseOps[F] {
+
+  implicit def routeExecutableSyntax[F[_], T <: HList, RE](builder: RE)
+    (implicit re: RouteExecutable[F, T, RE]) =
+    RouteExecutableSyntax(builder)(re)
 
   private[this] val logger = getLogger
 

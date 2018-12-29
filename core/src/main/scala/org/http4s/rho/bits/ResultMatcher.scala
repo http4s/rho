@@ -2,7 +2,7 @@ package org.http4s.rho.bits
 
 import cats.Monad
 import org.http4s.rho.Result
-import org.http4s.{EntityEncoder, MediaType, Request, Response, Status}
+import org.http4s.{EntityEncoder, MediaType, Response, Status}
 
 import scala.reflect.runtime.universe.{Type, WeakTypeTag}
 
@@ -10,7 +10,7 @@ trait ResultMatcher[F[_], -R] {
   def encodings: Set[MediaType]
   def resultInfo: Set[ResultInfo]
 
-  def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]]
+  def conv[RQ[_[_]]: RequestLike](req: RQ[F], r: R)(implicit F: Monad[F]): F[Response[F]]
 }
 
 object ResultMatcher extends ResultMatcherOps {
@@ -305,7 +305,7 @@ object ResultMatcher extends ResultMatcherOps {
     override lazy val encodings: Set[MediaType] =
       allTpes.flatMap { case (_, m) => m.encodings }.toSet
 
-    override def conv(req: Request[F], r: Result[
+    override def conv[R[_[_]]: RequestLike](req: R[F], r: Result[
       F,
       /* 100 */ CONTINUE,
       /* 101 */ SWITCHINGPROTOCOLS,
@@ -449,7 +449,7 @@ object ResultMatcher extends ResultMatcherOps {
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
 
-    override def conv(req: Request[F], r: Option[R])(implicit F: Monad[F]): F[Response[F]] = r match {
+    override def conv[RQ[_[_]]: RequestLike](req: RQ[F], r: Option[R])(implicit F: Monad[F]): F[Response[F]] = r match {
       case Some(res) => Ok.pure(res)
       case None      => NotFound.pure(req.uri.path)
     }
@@ -459,14 +459,14 @@ object ResultMatcher extends ResultMatcherOps {
     override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
 
-    override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = Ok.pure(r)
+    override def conv[RQ[_[_]]: RequestLike](req: RQ[F], r: R)(implicit F: Monad[F]): F[Response[F]] = Ok.pure(r)
   }
 
   implicit def responseMatcher[F[_]]: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
     override def resultInfo: Set[ResultInfo] = Set.empty
 
-    override def conv(req: Request[F], r: Response[F])(implicit F: Monad[F]): F[Response[F]] = F.pure(r)
+    override def conv[RQ[_[_]]: RequestLike](req: RQ[F], r: Response[F])(implicit F: Monad[F]): F[Response[F]] = F.pure(r)
   }
 }
 
@@ -475,6 +475,6 @@ trait ResultMatcherOps {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
 
-    override def conv(req: Request[F], f: F[R])(implicit F: Monad[F]): F[Response[F]] = F.flatMap(f)(r.conv(req, _))
+    override def conv[RQ[_[_]]: RequestLike](req: RQ[F], f: F[R])(implicit F: Monad[F]): F[Response[F]] = F.flatMap(f)(r.conv(req, _))
   }
 }

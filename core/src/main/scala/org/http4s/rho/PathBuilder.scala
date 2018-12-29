@@ -17,13 +17,13 @@ import scala.reflect.runtime.universe.TypeTag
 
 /** Fully functional path building */
 final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule)
-  extends RouteExecutable[F, T]
+  extends TypedBuilder[F, T]
   with Decodable[F, T, Nothing]
   with HeaderAppendable[F, T]
   with RoutePrependable[F, PathBuilder[F, T]]
   with UriConvertible[F]
 {
-  type HeaderAppendResult[T <: HList] = Router[F, T]
+  type HeaderAppendResult[T0 <: HList] = Router[F, T0]
 
   override val rules: RequestRule[F] = EmptyRule[F]()
 
@@ -87,6 +87,9 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
 
   override def decoding[R](decoder: EntityDecoder[F, R])(implicit F: Functor[F], t: TypeTag[R]): CodecRouter[F, T, R] =
     CodecRouter(>>>(TypedHeader[F, HNil](EmptyRule[F]())), decoder)
+}
 
-  override def makeRoute(action: Action[F, T]): RhoRoute[F, T] = RhoRoute(Router(method, path, EmptyRule[F]()), action)
+object PathBuilder {
+  implicit def routeExecutable[F[_], T <: HList]: RouteExecutable[F, T, PathBuilder[F, T]] =
+    (pathBuilder: PathBuilder[F, T]) => Router(pathBuilder.method, pathBuilder.path, EmptyRule[F]())
 }

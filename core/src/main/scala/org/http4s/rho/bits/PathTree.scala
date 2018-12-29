@@ -2,6 +2,7 @@ package org.http4s
 package rho
 package bits
 
+import cats.data.{Kleisli, OptionT}
 import cats.{Applicative, Monad}
 import cats.syntax.flatMap._
 import org.http4s.rho.bits.PathAST._
@@ -16,10 +17,15 @@ import scala.util.control.NonFatal
 
 object PathTree {
 
-  def apply[F[_]](): PathTreeOps[F]#PathTree = {
-    val ops = new PathTreeOps[F] {}
+  private def apply[F[_], Rq[_[_]]: RequestLike, RR[G[_], T <: HList] <: AbstractRhoRoute.Aux[G, Rq, T]]: PathTreeOps[F, Rq, RR]#PathTree = {
+    val ops = new PathTreeOps[F, Rq, RR]
     new ops.PathTree(ops.MatchNode(""))
   }
+
+  def apply[F[_]](): PathTreeOps[F, Request, UnAuthedRhoRoute]#PathTree = apply[F, Request, UnAuthedRhoRoute]
+
+  def authed[F[_], U]()(implicit requestLike: RequestLike[AuthedRequest[?[_], U]]): PathTreeOps[F, AuthedRequest[?[_], U], λ[(G[_], `T <: HList`) => AuthedRhoRoute[G, U, T]]]#PathTree =
+    apply[F, AuthedRequest[?[_], U], λ[(G[_], `T <: HList`) => AuthedRhoRoute[G, U, T]]]
 
   def splitPath(path: String): List[String] = {
     val buff = new ListBuffer[String]
@@ -45,26 +51,28 @@ object PathTree {
 
 }
 
-private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
+private[rho] class PathTreeOps[F[_], Rq[_[_]]: RequestLike, RR[G[_], T <: HList] <: AbstractRhoRoute.Aux[G, Rq, T]] extends RuleExecutor[F] {
+  type Out = Kleisli[OptionT[F, ?], Rq[F], Response[F]]
+
   /* To avoid alocating new NoMatch()s all the time. */
   private val noMatch: RouteResult[F, Nothing] = NoMatch[F]()
 
   /** Data structure for route execution
     *
     * A [[PathTree]] contains a map of the known route paths. The values of the
-    * tree are [[RhoRoute]]'s that can generate a reply to a `Request`.
+    * tree are [[RR]]'s that can generate a reply to a `Request`.
     */
   final class PathTree(private val paths: MatchNode) {
 
     override def toString: String = paths.toString
 
-    /** Create a new [[PathTree]] with the [[RhoRoute]] appended
+    /** Create a new [[PathTree]] with the [[RR]] appended
       *
-      * @param route [[RhoRoute]] to append to the new tree.
-      * @tparam T Result type of the [[RhoRoute]].
+      * @param route [[RR]] to append to the new tree.
+      * @tparam T Result type of the [[RR]].
       * @return A new [[PathTree]] containing the provided route.
       */
-    def appendRoute[T <: HList](route: RhoRoute[F, T])(implicit F: Monad[F]): PathTree = {
+    def appendRoute[T <: HList](route: RR[F, T])(implicit F: Monad[F]): PathTree = {
       val m = route.method
       val newLeaf = makeLeaf(route)
       val newNode = paths.append(route.path, m, newLeaf)
@@ -75,7 +83,12 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     def merge(other: PathTree): PathTree = new PathTree(paths merge other.paths)
 
     /** Attempt to generate a `Response` by executing the tree. */
-    def getResult(req: Request[F])(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = paths.walkTree(req.method, req)
+    def getResult(req: Rq[F])(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = paths.walkTree(req.method, req)
+
+    def toKleisli(implicit F: Monad[F]): Out =
+      Kleisli { (req: Rq[F]) =>
+        getResult(req).toResponse
+      }
   }
 
   private val logger = getLogger
@@ -83,21 +96,21 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   type Action = ResultResponse[F, F[Response[F]]]
 
   /** Generates a list of tokens that represent the path */
-  private def keyToPath(key: Request[F]): List[String] = PathTree.splitPath(key.pathInfo)
+  private def keyToPath(key: Rq[F]): List[String] = PathTree.splitPath(key.pathInfo)
 
-  def makeLeaf[T <: HList](route: RhoRoute[F, T])(implicit F: Monad[F]): Leaf = {
+  def makeLeaf[T <: HList](route: RR[F, T])(implicit F: Monad[F]): Leaf = {
     route.router match {
       case Router(_, _, rules) =>
         Leaf { (req, pathstack) =>
-          runRequestRules(req, rules, pathstack).map{ i =>
+          runRequestRules(req, rules, pathstack).map { i =>
             route.action.act(req, i.asInstanceOf[T])
           }
         }
 
       case c @ CodecRouter(_, parser) =>
         Leaf { (req, pathstack) =>
-          runRequestRules(req, c.router.rules, pathstack).map{ i =>
-            parser.decode(req, false).value.flatMap(_.fold(e =>
+          runRequestRules(req, c.router.rules, pathstack).map { i =>
+            parser.decode(req.toRequest, false).value.flatMap(_.fold(e =>
               e.toHttpResponse(req.httpVersion),
               { body =>
                 // `asInstanceOf` to turn the untyped HList to type T
@@ -111,13 +124,13 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   //////////////////////////////////////////////////////
 
   object Leaf {
-    def apply(f: (Request[F], HList) => Action)(implicit F: Applicative[F]): Leaf = SingleLeaf(f)
+    def apply(f: (Rq[F], HList) => Action)(implicit F: Applicative[F]): Leaf = SingleLeaf(f)
   }
 
   /** Leaves of the PathTree */
   sealed trait Leaf {
     /** Attempt to match this leaf */
-    def attempt(req: Request[F], stack: HList): Action
+    def attempt(req: Rq[F], stack: HList): Action
 
     /** Concatenate this leaf with another, giving the first precedence */
     final def ++(l: Leaf): Leaf = (this, l) match {
@@ -128,8 +141,8 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
-  private case class SingleLeaf(f: (Request[F], HList) => Action)(implicit F: Applicative[F]) extends Leaf {
-    override def attempt(req: Request[F], stack: HList): Action = {
+  private case class SingleLeaf(f: (Rq[F], HList) => Action)(implicit F: Applicative[F]) extends Leaf {
+    override def attempt(req: Rq[F], stack: HList): Action = {
       try f(req, stack)
       catch { case NonFatal(t) =>
         logger.error(t)("Error in action execution")
@@ -140,7 +153,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
 
   private case class ListLeaf(leaves: List[SingleLeaf]) extends Leaf {
-    override def attempt(req: Request[F], stack: HList): Action = {
+    override def attempt(req: Rq[F], stack: HList): Action = {
       def go(l: List[SingleLeaf], error: ResultResponse[F, Nothing]): Action = {
         if (l.nonEmpty) l.head.attempt(req, stack) match {
           case r@SuccessResponse(_)     => r
@@ -211,13 +224,13 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
       * 1: exact matches are given priority to wild cards node at a time
       *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
-    final def walkTree(method: Method, req: Request[F])(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = {
+    final def walkTree(method: Method, req: Rq[F])(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = {
       val path = keyToPath(req)
       walk(method, req, path, HNil)
     }
 
     // This should scan all forward paths.
-    final protected def walk(method: Method, req: Request[F], path: List[String], stack: HList)(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = {
+    final protected def walk(method: Method, req: Rq[F], path: List[String], stack: HList)(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = {
       def tryVariadic(result: RouteResult[F, F[Response[F]]]): RouteResult[F , F[Response[F]]] =
         variadic.get(method) match {
           case None    => result

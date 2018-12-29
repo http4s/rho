@@ -18,7 +18,7 @@ class ApiTest extends Specification {
 
   object ruleExecutor extends RuleExecutor[IO]
 
-  def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
+  def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, Request, T, FU]): Request[F] => OptionT[F, Response[F]] = {
     val srvc = new RhoRoutes[F] { exec |>> f }.toRoutes()
     srvc.apply(_: Request[F])
   }

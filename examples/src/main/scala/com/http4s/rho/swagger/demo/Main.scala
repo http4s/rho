@@ -21,8 +21,16 @@ object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     val middleware = createRhoMiddleware()
 
-    val myService: HttpRoutes[IO] =
-      new MyRoutes[IO](ioSwagger) {}.toRoutes(middleware)
+    val myAuthedRoute: MyAuthedRoutes[IO] = new MyAuthedRoutes[IO]()
+
+    val myRoutes = new MyRoutes[IO](ioSwagger) {}
+
+    val myRhoServices = (
+      (myAuthedRoute.toRhoRoutes(ExampleAuth.simpleAuthMiddlware)) and
+        myRoutes
+      )
+
+    val myService: HttpRoutes[IO] = myRhoServices.toHttpRoutes(middleware)
 
     BlazeServerBuilder[IO]
       .withHttpApp((StaticContentService.routes <+> myService).orNotFound)

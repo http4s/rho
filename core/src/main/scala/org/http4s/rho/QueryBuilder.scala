@@ -21,7 +21,7 @@ import shapeless.{HList, HNil}
 case class QueryBuilder[F[_], T <: HList](method: Method,
                                           path: PathRule,
                                           rules: RequestRule[F])
-  extends RouteExecutable[F, T]
+  extends TypedBuilder[F, T]
   with HeaderAppendable[F, T]
   with UriConvertible[F]
   with RoutePrependable[F, QueryBuilder[F, T]]
@@ -38,10 +38,13 @@ case class QueryBuilder[F[_], T <: HList](method: Method,
   override def /:(prefix: TypedPath[F, HNil]): QueryBuilder[F, T] =
     new QueryBuilder[F, T](method, PathAnd(prefix.rule, path), rules)
   
-  override type HeaderAppendResult[T <: HList] = Router[F, T]
-
-  override def makeRoute(action: Action[F, T]): RhoRoute[F, T] = RhoRoute(Router(method, path, rules), action)
+  override type HeaderAppendResult[T0 <: HList] = Router[F, T0]
 
   override def >>>[T1 <: HList](rule: TypedHeader[F, T1])(implicit prep1: Prepend[T1, T]): Router[F, prep1.Out] =
     Router(method, path, AndRule(rules, rule.rule))
+}
+
+object QueryBuilder {
+  implicit def routeExecutable[F[_], T <: HList]: RouteExecutable[F, T, QueryBuilder[F, T]] =
+    (queryBuilder: QueryBuilder[F, T]) => Router(queryBuilder.method, queryBuilder.path, queryBuilder.rules)
 }

@@ -11,7 +11,7 @@ class Routes(businessLayer: BusinessLayer)(implicit T: Timer[IO], cs: ContextShi
     createRhoMiddleware()
 
   val dynamicContent: HttpRoutes[IO] =
-    new RestRoutes[IO](businessLayer).toRoutes(middleware)
+    new RestRoutes[IO](businessLayer).toHttpRoutes(middleware)
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
