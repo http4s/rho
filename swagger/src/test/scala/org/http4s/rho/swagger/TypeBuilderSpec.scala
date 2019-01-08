@@ -323,12 +323,10 @@ class TypeBuilderSpec extends Specification {
       }
     }
 
-    // fails because the implementation for AnyVals is just Seg.empty
     "Treat AnyVals transparently" in {
       modelOf[FooVal] must_== modelOf[Foo]
-    }.pendingUntilFixed("https://github.com/http4s/rho/issues/272")
+    }
 
-    // fails because the implementation for AnyVals is just Seg.empty
     "Build a model with the underlying type for AnyVals" in {
       val ms = modelOf[BarWithFooVal]
 
@@ -337,11 +335,11 @@ class TypeBuilderSpec extends Specification {
 
       m.properties.size must_== 1
       m.properties.head must beLike {
-        case (name, prop: AbstractProperty) =>
+        case (name, prop: RefProperty) =>
           name must_== "fooVal"
-          prop.`$ref` must_== Some("Foo")
+          prop.ref  must_== "Foo"
       }
-    }.pendingUntilFixed("https://github.com/http4s/rho/issues/272")
+    }
 
     "Build a model for sealed traits" in {
       val ms = modelOf[Sealed]
