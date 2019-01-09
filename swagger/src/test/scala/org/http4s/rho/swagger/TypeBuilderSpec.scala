@@ -9,6 +9,7 @@ import fs2.Stream
 import org.http4s.rho.swagger.models.AbstractProperty
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
+import shapeless.{:+:, CNil}
 
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
 
@@ -52,6 +53,13 @@ package object model {
   sealed trait LowerLevelSealedTrait extends TopLevelSealedTrait
   case class Value2() extends LowerLevelSealedTrait
   case class Value3() extends LowerLevelSealedTrait
+
+  trait Outer[T]{
+    case class Inner(t: T)
+  }
+  object OuterString extends Outer[String]
+
+  type ShapelessIntOrString = Int :+: String :+: CNil
 }
 
 class TypeBuilderSpec extends Specification {
@@ -402,6 +410,18 @@ class TypeBuilderSpec extends Specification {
     "Build a model for a type recursive through Either" in {
       modelOf[FooEither] must not(throwA[StackOverflowError])
       modelOf[FooEither].size must_== 1
+    }
+
+    "Build a model for a class using type parameters of an outer class" in {
+      val ms = modelOf[OuterString.Inner]
+      ms.size must_!== 0 // At least try to return some model.
+      // It won't be a fully correct model since TypeBuilder will fail to resolve the type param T to a concrete type.
+    }
+
+    "Build a model for shapless coproduct (:+:)" in {
+      val ms = modelOf[ShapelessIntOrString]
+      ms.size must_!== 0
+      // It won't be a fully correct model.
     }
   }
 

@@ -133,7 +133,7 @@ object TypeBuilder {
     }
 
   private[this] def isObjectEnum(sym: Symbol): Boolean =
-    sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
+    sym.isClass && sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
 
