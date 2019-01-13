@@ -57,7 +57,7 @@ package object model {
   trait Outer[T]{
     case class Inner(t: T)
   }
-  object OuterString extends Outer[String]
+  object OuterInt extends Outer[Int]
 
   type ShapelessIntOrString = Int :+: String :+: CNil
 }
@@ -413,9 +413,14 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Build a model for a class using type parameters of an outer class" in {
-      val ms = modelOf[OuterString.Inner]
-      ms.size must_!== 0 // At least try to return some model.
-      // It won't be a fully correct model since TypeBuilder will fail to resolve the type param T to a concrete type.
+      val ms = modelOf[OuterInt.Inner]
+      ms.size must_== 1
+      val m = ms.head
+      val t = m.properties.get("t")
+      t should not be empty
+      // It won't be a fully correct model since TypeBuilder will fail to resolve the type param T to a concrete type an will fall back to a string.
+      // t.get.`type` must_== "integer"
+      // t.get.format must_== "int32"
     }
 
     "Build a model for shapless coproduct (:+:)" in {
