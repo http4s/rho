@@ -55,14 +55,17 @@ object TypeBuilder {
         case tpe if tpe.isPrimitive =>
           Set.empty
 
-        case tpe if tpe <:< typeOf[AnyVal] =>
-          Set.empty
-
         case ExistentialType(_, _) =>
           Set.empty
 
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
+
+        case tpe@TypeRef(_, sym, tpeArgs: List[Type]) if tpe.isAnyVal =>
+          sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramSym =>
+            val paramType = paramSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+            go(paramType, alreadyKnown, known + tpe)
+          }.toSet
 
         case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) || isSumType(sym) =>
           val symIsSumType = isSumType(sym)
@@ -186,7 +189,9 @@ object TypeBuilder {
       }
       else if (tpe.isOption && !tpe.isNothingOrNull)
         typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-      else if ((isCaseClass(ptSym) || isSumType(ptSym)) && !(tpe <:< typeOf[AnyVal]))
+      else if (tpe.isAnyVal && !tpe.isPrimitive && !tpe.isUnitOrVoid && !tpe.isNothingOrNull)
+        typeToProperty(ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.head.typeSignature, sfs)
+      else if (isCaseClass(ptSym) || isSumType(ptSym))
         RefProperty(tpe.simpleName)
       else
         DataType.fromType(tpe) match {

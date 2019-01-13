@@ -80,6 +80,9 @@ package object swagger {
 
     def isSwaggerFile: Boolean =
       t <:< typeOf[SwaggerFileResponse[_]]
+
+    def isAnyVal: Boolean =
+      t <:< typeOf[AnyVal]
   }
 
   val DefaultSwaggerFormats: SwaggerFormats = {
