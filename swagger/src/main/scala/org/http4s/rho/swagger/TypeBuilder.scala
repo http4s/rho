@@ -140,10 +140,14 @@ object TypeBuilder {
   private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
+      val constructor = tpe.member(termNames.CONSTRUCTOR)
+      val typeSignature = if(constructor.owner == tpe.termSymbol) {
+        constructor.typeSignature
+      } else {
+        constructor.typeSignatureIn(tpe)
+      }
       val props: Map[String, Property] =
-        tpe
-          .member(termNames.CONSTRUCTOR)
-          .typeSignatureIn(tpe)
+        typeSignature
           .paramLists
           .flatten
           .map(paramSymToProp(sym, tpeArgs, sfs))
