@@ -418,9 +418,8 @@ class TypeBuilderSpec extends Specification {
       val m = ms.head
       val t = m.properties.get("t")
       t should not be empty
-      // It won't be a fully correct model since TypeBuilder will fail to resolve the type param T to a concrete type an will fall back to a string.
-      // t.get.`type` must_== "integer"
-      // t.get.format must_== "int32"
+      t.get.`type` must_== "integer"
+      t.get.format must beSome("int32")
     }
 
     "Build a model for shapless coproduct (:+:)" in {

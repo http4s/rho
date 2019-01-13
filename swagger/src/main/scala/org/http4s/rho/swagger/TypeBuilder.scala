@@ -143,7 +143,7 @@ object TypeBuilder {
       val props: Map[String, Property] =
         tpe
           .member(termNames.CONSTRUCTOR)
-          .typeSignature
+          .typeSignatureIn(tpe)
           .paramLists
           .flatten
           .map(paramSymToProp(sym, tpeArgs, sfs))
