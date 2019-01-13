@@ -136,17 +136,21 @@ object TypeBuilder {
     }
 
   private[this] def isObjectEnum(sym: Symbol): Boolean =
-    sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
+    sym.isClass && sym.asClass.isSealed && sym.asClass.knownDirectSubclasses.forall { symbol =>
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
 
   private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
+      val constructor = tpe.member(termNames.CONSTRUCTOR)
+      val typeSignature = if(constructor.owner == tpe.termSymbol) {
+        constructor.typeSignature
+      } else {
+        constructor.typeSignatureIn(tpe)
+      }
       val props: Map[String, Property] =
-        tpe
-          .member(termNames.CONSTRUCTOR)
-          .typeSignature
+        typeSignature
           .paramLists
           .flatten
           .map(paramSymToProp(sym, tpeArgs, sfs))
