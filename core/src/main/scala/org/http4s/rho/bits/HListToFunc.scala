@@ -30,14 +30,14 @@ trait MatchersHListToFunc[F[_]] {
   }
 
   /** Converter for types `FunctionN` to an `HList` */
-  implicit def instance[T <: HList, TR <: HList, FU, R](implicit F: Monad[F], fp: FnToProduct.Aux[FU, TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[F, R]]): HListToFunc[F, T, FU] = new MatcherHListToFunc[T, FU] {
-    override def matcher: ResultMatcher[F, R] = m.value
+  implicit def instance[T <: HList, TR <: HList, FU, R](implicit F: Monad[F], fp: FnToProduct.Aux[FU, TR => R], rev: Reverse.Aux[T, TR], m: ResultMatcher[F, R]): HListToFunc[F, T, FU] = new MatcherHListToFunc[T, FU] {
+    override def matcher: ResultMatcher[F, R] = m
     override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) => { matcher.conv(req, f.toProduct(rev(h))) }
   }
 
   /** Converter for types `FunctionN` where the first element is a `Request` to an `HList` */
-  implicit def instance1[T <: HList, TR <: HList, FU, R](implicit F: Monad[F], fp: FnToProduct.Aux[FU, Request[F] :: TR => R], rev: Reverse.Aux[T, TR], m: Lazy[ResultMatcher[F, R]]): HListToFunc[F, T, FU] = new MatcherHListToFunc[T, FU] {
-    override def matcher: ResultMatcher[F, R] = m.value
+  implicit def instance1[T <: HList, TR <: HList, FU, R](implicit F: Monad[F], fp: FnToProduct.Aux[FU, Request[F] :: TR => R], rev: Reverse.Aux[T, TR], m: ResultMatcher[F, R]): HListToFunc[F, T, FU] = new MatcherHListToFunc[T, FU] {
+    override def matcher: ResultMatcher[F, R] = m
     override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) => { matcher.conv(req, f.toProduct(req :: rev(h))) }
   }
 
