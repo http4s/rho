@@ -3,6 +3,7 @@ package rho
 
 import cats._
 import org.http4s.headers.`Content-Type`
+import _root_.io.chrisdavenport.vault._
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
@@ -100,7 +101,7 @@ trait ResultSyntaxInstances[F[_]] {
 
     def withHeaders(headers: Header*): Self = Result(resp.withHeaders(headers: _*))
 
-    def withAttributes(attributes: AttributeMap): Self = Result(resp.withAttributes(attributes))
+    def withAttributes(attributes: Vault): Self = Result(resp.withAttributes(attributes))
 
     def transformHeaders(f: Headers => Headers): Self = Result(resp.transformHeaders(f))
 
@@ -139,11 +140,9 @@ trait ResultSyntaxInstances[F[_]] {
 
     def isChunked: Boolean = resp.isChunked
 
-    def withAttribute[A](key: AttributeKey[A], value: A): Self = Result(resp.withAttribute(key, value))
+    def withAttribute[A](key: Key[A], value: A): Self = Result(resp.withAttribute(key, value))
 
-    def withAttribute[A](entry: AttributeEntry[A]): Self = Result(resp.withAttribute(entry))
-
-    def withoutAttribute(key: AttributeKey[_]): Self = Result(resp.withoutAttribute(key))
+    def withoutAttribute(key: Key[_]): Self = Result(resp.withoutAttribute(key))
 
     def attemptAs[T](implicit decoder: EntityDecoder[F, T]): DecodeResult[F, T] = resp.attemptAs(decoder)
 
