@@ -36,7 +36,7 @@ object UriConvertible {
       yield UriConvertible.addPathInfo(request, tpl)
 
   private[rho] def addPathInfo[F[_]](request: Request[F], tpl: UriTemplate): UriTemplate = {
-    val caret = request.attributes.get(Request.Keys.PathInfoCaret).getOrElse(0)
+    val caret = request.attributes.lookup(Request.Keys.PathInfoCaret).getOrElse(0)
     if (caret == 0) tpl
     else if (caret == 1 && request.scriptName == "/") tpl
     else tpl.copy(path = UriTemplate.PathElm(removeSlash(request.scriptName)) :: tpl.path)

@@ -1,8 +1,10 @@
 package org.http4s.rho
 
+import _root_.io.chrisdavenport.vault._
+import cats.effect._
 import org.http4s.headers._
 import org.http4s.rho.io._
-import org.http4s.{AttributeKey, HttpDate}
+import org.http4s.HttpDate
 import org.specs2.mutable.Specification
 
 class ResultSpec extends Specification {
@@ -26,20 +28,20 @@ class ResultSpec extends Specification {
     }
 
     "Add atributes" in {
-      val attrKey = AttributeKey[String]
+      val attrKey = Key.newKey[SyncIO, String].unsafeRunSync()
       val resp = Ok("Foo")
         .map(_.withAttribute(attrKey, "foo"))
         .unsafeRunSync()
         .resp
 
-      resp.attributes.get(attrKey) must beSome("foo")
+      resp.attributes.lookup(attrKey) must beSome("foo")
 
       val resp2 = Ok("Foo")
         .map(_.withAttribute(attrKey, "foo"))
         .unsafeRunSync()
         .resp
 
-      resp2.attributes.get(attrKey) must beSome("foo")
+      resp2.attributes.lookup(attrKey) must beSome("foo")
     }
   }
 }

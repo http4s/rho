@@ -1,6 +1,7 @@
 package org.http4s
 package rho
 
+import _root_.io.chrisdavenport.vault._
 import org.specs2.mutable.Specification
 import UriTemplate._
 import cats.effect.IO
@@ -14,7 +15,7 @@ object UriConvertibleSpec extends Specification {
     "respect if URI template is available" in {
       val request = Request[IO](
         uri = Uri(path = "/some"),
-        attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 5)))
+        attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 5))
       val path = List(PathElm("here"))
       val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
@@ -39,7 +40,7 @@ object UriConvertibleSpec extends Specification {
     "keep the path if PathInfoCaret is 0" in {
       val request = Request[IO](
         uri = Uri(path = "/some"),
-        attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 0)))
+        attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 0))
       val path = List(PathElm("here"))
       val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
@@ -49,7 +50,7 @@ object UriConvertibleSpec extends Specification {
     "keep the path if PathInfoCaret is 1" in {
       val request = Request[IO](
         uri = Uri(path = "/some"),
-        attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 1)))
+        attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 1))
       val path = List(PathElm("here"))
       val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
@@ -59,7 +60,7 @@ object UriConvertibleSpec extends Specification {
     "manipulate the path if PathInfoCaret greater than 1" in {
       val request = Request[IO](
         uri = Uri(path = "/some"),
-        attributes = AttributeMap(AttributeEntry(Request.Keys.PathInfoCaret, 5)))
+        attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 5))
       val path = List(PathElm("here"))
       val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
