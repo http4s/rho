@@ -263,7 +263,9 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     BodyParameter(
       schema      = model.some,
       name        = "body".some,
-      description = tpe.simpleName.some)
+      description = tpe.simpleName.some,
+      required = !tpe.isOption
+    )
   }
 
   def mkPathParam[F[_]](name: String, description: Option[String], parser: StringParser[F, String]): PathParameter = {
