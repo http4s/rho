@@ -214,6 +214,29 @@ class SwaggerModelsBuilderSpec extends Specification {
 
   }
 
+  "SwaggerModelsBuilder.collectBodyParams" should {
+
+    "handle a required body parameter" in {
+      val dec = new EntityDecoder[IO, Foo] {
+        override def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, Foo] = ???
+        override def consumes: Set[MediaRange] = Set.empty
+      }
+      val ra = fooPath.decoding(dec) |>> { _: Foo => "" }
+
+      sb.collectBodyParams[IO](ra) must beSome((p: BodyParameter) => p.required must_== true)
+    }
+
+    "handle an optional body parameter" in {
+      val dec = new EntityDecoder[IO, Option[Foo]] {
+        override def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, Option[Foo]] = ???
+        override def consumes: Set[MediaRange] = Set.empty
+      }
+      val ra = fooPath.decoding(dec) |>> { _: Option[Foo] => "" }
+
+      sb.collectBodyParams[IO](ra) must beSome((p: BodyParameter) => p.required must_== false)
+    }
+  }
+
   "SwaggerModelsBuilder.mkOperation" should {
 
     "Get a route description" in {
@@ -266,7 +289,8 @@ class SwaggerModelsBuilderSpec extends Specification {
             `type` = "array".some,
             items = RefProperty(ref = "String", title = "String".some).some).some,
           name = "body".some,
-          description = "List«String»".some
+          description = "List«String»".some,
+          required = true
         )
       )
     }
