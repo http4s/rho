@@ -206,6 +206,20 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "set required = false if there is a default value for the header" in {
+      val ra = fooPath >>> captureOrElse(`Content-Length`)(`Content-Length`.unsafeFromLong(20)) |>> { (_: `Content-Length`) => "" }
+
+      sb.collectHeaderParams[IO](ra) must_==
+        List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
+    }
+
+    "set required = false if the header is optional" in {
+      val ra = fooPath >>> captureOptionally(`Content-Length`) |>> { (_: Option[`Content-Length`]) => "" }
+
+      sb.collectHeaderParams[IO](ra) must_==
+        List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
+    }
+
+    "set required = false by default if there is a missingHeaderResult for the header" in {
       val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(Right(_)) |>> { (_: `Content-Length`) => "" }
 
       sb.collectHeaderParams[IO](ra) must_==

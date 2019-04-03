@@ -74,6 +74,18 @@ class ApiTest extends Specification {
       ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(HNil)
     }
 
+    "optionally capture header params" in {
+      val req = Request[IO]().putHeaders(lenheader)
+
+      Seq({
+        val c = captureOptionally(headers.`Content-Length`)
+        ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(Some(lenheader) :: HNil)
+      }, {
+        val c = captureOptionally(ETag)
+        ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(None :: HNil)
+      }).reduce(_ and _)
+    }
+
     "Capture params" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
       Seq({
@@ -82,6 +94,18 @@ class ApiTest extends Specification {
       }, {
         val c3 = capture(headers.`Content-Length`) && capture(ETag)
         ruleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(etag :: lenheader :: HNil)
+      }).reduce(_ and _)
+    }
+
+    "Capture params with default" in {
+      val default: `Content-Length` = headers.`Content-Length`.unsafeFromLong(10)
+      val c = captureOrElse(headers.`Content-Length`)(default)
+      Seq({
+        val req = Request[IO]().putHeaders()
+        ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(default :: HNil)
+      }, {
+        val req = Request[IO]().putHeaders(lenheader)
+        ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(lenheader :: HNil)
       }).reduce(_ and _)
     }
 
@@ -118,7 +142,7 @@ class ApiTest extends Specification {
       RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
     }
 
-    "Map with possible default" in {
+    "Map with missing header result" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
 
       val c1 = captureMapR(headers.`Content-Length`)(r => Right(r.length))
