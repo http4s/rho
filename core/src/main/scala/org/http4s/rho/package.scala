@@ -209,14 +209,14 @@ trait RhoDsl[F[_]]
   def captureMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R)(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
     captureMapR(key, None)(f andThen (Right(_)))
 
-  /** Capture a specific header and map its value with an optional default
+  /** Capture a specific header and map its value with an optional override of the missing header response
     *
     * @param key `HeaderKey` used to identify the header to capture
-    * @param default optional default for the case of a missing header
+    * @param missingHeaderResult optional override result for the case of a missing header
     * @param f mapping function
     */
-  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[F[BaseResult[F]]] = None)(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
-    _captureMapR(key, default)(f)
+  def captureMapR[H <: HeaderKey.Extractable, R](key: H, missingHeaderResult: Option[F[BaseResult[F]]] = None)(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
+    _captureMapR(key, missingHeaderResult)(f)
 
   /** Create a header capture rule using the `Request`'s `Headers`
     *
@@ -246,7 +246,7 @@ trait RhoDsl[F[_]]
       }
     }.withMetadata(QueryMetaData(name, description, parser, default = default, m))
 
-  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[F[BaseResult[F]]])(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
+  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, missingHeaderResult: Option[F[BaseResult[F]]])(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
     genericHeaderCapture[R] { headers =>
       headers.get(key) match {
         case Some(h) =>
@@ -259,12 +259,12 @@ trait RhoDsl[F[_]]
               error("Error processing request.")
           }
 
-        case None => default match {
+        case None => missingHeaderResult match {
           case Some(r) => FailureResponse.result(r)
           case None    => badRequest(s"Missing header: ${key.name}")
         }
       }
-    }.withMetadata(HeaderMetaData(key, default.isDefined))
+    }.withMetadata(HeaderMetaData(key, missingHeaderResult.isDefined))
 }
 
 object RhoDsl {
