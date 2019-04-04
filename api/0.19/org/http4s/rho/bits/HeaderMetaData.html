@@ -336,7 +336,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">HeaderMetaData</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.bits.HeaderMetaData.T">T</span></span>, <span name="default">default: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result"> extends <a href="Metadata.html" class="extype" name="org.http4s.rho.bits.Metadata">Metadata</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">HeaderMetaData</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.bits.HeaderMetaData.T">T</span></span>, <span name="isRequired">isRequired: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result"> extends <a href="Metadata.html" class="extype" name="org.http4s.rho.bits.Metadata">Metadata</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       </h4>
 
@@ -397,9 +397,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="org.http4s.rho.bits.HeaderMetaData#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(key:T,default:Boolean):org.http4s.rho.bits.HeaderMetaData[T]"></a><a id="&lt;init&gt;:HeaderMetaData[T]"></a>
+      <a id="&lt;init&gt;(key:T,isRequired:Boolean):org.http4s.rho.bits.HeaderMetaData[T]"></a><a id="&lt;init&gt;:HeaderMetaData[T]"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/HeaderMetaData.html#&lt;init&gt;(key:T,default:Boolean):org.http4s.rho.bits.HeaderMetaData[T]" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/HeaderMetaData.html#&lt;init&gt;(key:T,isRequired:Boolean):org.http4s.rho.bits.HeaderMetaData[T]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -408,7 +408,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">HeaderMetaData</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.bits.HeaderMetaData.T">T</span></span>, <span name="default">default: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
+        <span class="name">HeaderMetaData</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.bits.HeaderMetaData.T">T</span></span>, <span name="isRequired">isRequired: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span>
       </span>
       
       
@@ -553,22 +553,6 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="org.http4s.rho.bits.HeaderMetaData#default" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="default:Boolean"></a>
-      <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/HeaderMetaData.html#default:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">default</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      
-      
     </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a><a id="ensuring((HeaderMetaData[T])⇒Boolean,⇒Any):HeaderMetaData[T]"></a>
       <span class="permalink">
@@ -745,6 +729,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="org.http4s.rho.bits.HeaderMetaData#isRequired" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="isRequired:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/HeaderMetaData.html#isRequired:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isRequired</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      
     </li><li name="org.http4s.rho.bits.HeaderMetaData#key" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="key:T"></a>
       <span class="permalink">
