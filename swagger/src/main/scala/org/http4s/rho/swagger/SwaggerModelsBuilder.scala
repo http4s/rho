@@ -207,7 +207,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       stack match {
         case Nil                                   => Nil
         case AndRule(a,b)::xs                      => go(a::b::xs)
-        case MetaRule(a,HeaderMetaData(key,d))::xs => mkHeaderParam(key, d)::go(a::xs)
+        case MetaRule(a,HeaderMetaData(key,r))::xs => mkHeaderParam(key, r)::go(a::xs)
         case MetaRule(a,_)::xs                     => go(a::xs)
         case (EmptyRule() | CaptureRule(_))::xs    => go(xs)
         case MapRule(r,_)::xs                      => go(r::xs)
@@ -403,11 +403,11 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     }
   }
 
-  def mkHeaderParam(key: HeaderKey.Extractable, hasDefault: Boolean): HeaderParameter =
+  def mkHeaderParam(key: HeaderKey.Extractable, isRequired: Boolean): HeaderParameter =
     HeaderParameter(
       `type`   = "string",
       name     = key.name.toString.some,
-      required = !hasDefault)
+      required = isRequired)
 
   def linearizeStack(stack: List[PathRule]): List[List[PathOperation]] = {
 

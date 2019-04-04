@@ -197,9 +197,29 @@ trait RhoDsl[F[_]]
     }.ignore
 
 
-  /** requires the header and will pull this header from the pile and put it into the function args stack */
+  /** Capture the header and put it into the function args stack, if it exists
+    *
+    * @param key `HeaderKey` used to identify the header to capture
+    */
+  def captureOptionally[H <: HeaderKey.Extractable](key: H)(implicit F: Monad[F]): TypedHeader[F, Option[H#HeaderT] :: HNil] =
+    _captureMapR[H, Option[H#HeaderT]](key, isRequired = false)(Right(_))
+
+  /** requires the header and will pull this header from the pile and put it into the function args stack
+    *
+    * @param key `HeaderKey` used to identify the header to capture
+    */
   def capture[H <: HeaderKey.Extractable](key: H)(implicit F: Monad[F]): TypedHeader[F, H#HeaderT :: HNil] =
     captureMap(key)(identity)
+
+  /** Capture the header and put it into the function args stack, if it exists otherwise put the default in the args stack
+    *
+    * @param key `HeaderKey` used to identify the header to capture
+    * @param default The default to be used if the header was not present
+    */
+  def captureOrElse[H <: HeaderKey.Extractable](key: H)(default: H#HeaderT)(implicit F: Monad[F]): TypedHeader[F, H#HeaderT :: HNil] =
+    captureOptionally[H](key).map { header: Option[H#HeaderT] =>
+      header.getOrElse(default)
+    }
 
   /** Capture a specific header and map its value
     *
@@ -207,16 +227,17 @@ trait RhoDsl[F[_]]
     * @param f mapping function
     */
   def captureMap[H <: HeaderKey.Extractable, R](key: H)(f: H#HeaderT => R)(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
-    captureMapR(key, None)(f andThen (Right(_)))
+    captureMapR(key, None, isRequired = true)(f andThen (Right(_)))
 
-  /** Capture a specific header and map its value with an optional default
+  /** Capture a specific header and map its value with an optional override of the missing header response
     *
     * @param key `HeaderKey` used to identify the header to capture
-    * @param default optional default for the case of a missing header
+    * @param missingHeaderResult optional override result for the case of a missing header
+    * @param isRequired indicates for metadata purposes that the header is required, always true if `missingHeaderResult` is unset
     * @param f mapping function
     */
-  def captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[F[BaseResult[F]]] = None)(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
-    _captureMapR(key, default)(f)
+  def captureMapR[H <: HeaderKey.Extractable, R](key: H, missingHeaderResult: Option[F[BaseResult[F]]] = None, isRequired: Boolean = false)(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
+    _captureMapR(key, missingHeaderResult, missingHeaderResult.isEmpty || isRequired)(f)
 
   /** Create a header capture rule using the `Request`'s `Headers`
     *
@@ -246,25 +267,24 @@ trait RhoDsl[F[_]]
       }
     }.withMetadata(QueryMetaData(name, description, parser, default = default, m))
 
-  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, default: Option[F[BaseResult[F]]])(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
-    genericHeaderCapture[R] { headers =>
-      headers.get(key) match {
-        case Some(h) =>
-          try f(h) match {
-            case Right(r) => SuccessResponse(r)
-            case Left(r) => FailureResponse.result(r)
-          } catch {
-            case NonFatal(e) =>
-              logger.error(e)(s"""Failure during header capture: "${key.name}" = "${h.value}"""")
-              error("Error processing request.")
-          }
+  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, missingHeaderResult: Option[F[BaseResult[F]]], isRequired: Boolean)(f: H#HeaderT => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
+    _captureMapR[H, R](key, isRequired) {
+      case Some(header) => f(header)
+      case None => Left(missingHeaderResult.getOrElse(BadRequest(s"Missing header: ${key.name}").widen[BaseResult[F]]))
+    }
 
-        case None => default match {
-          case Some(r) => FailureResponse.result(r)
-          case None    => badRequest(s"Missing header: ${key.name}")
-        }
+  private def _captureMapR[H <: HeaderKey.Extractable, R](key: H, isRequired: Boolean)(f: Option[H#HeaderT] => Either[F[BaseResult[F]], R])(implicit F: Monad[F]): TypedHeader[F, R :: HNil] =
+    genericHeaderCapture[R] { headers =>
+      val h = headers.get(key)
+      try f(h) match {
+        case Right(r) => SuccessResponse(r)
+        case Left(r) => FailureResponse.result(r)
+      } catch {
+        case NonFatal(e) =>
+          logger.error(e)(s"""Failure during header capture: "${key.name}" ${h.fold("Undefined")(v => s"""= "${v.value}"""")}""")
+          error("Error processing request.")
       }
-    }.withMetadata(HeaderMetaData(key, default.isDefined))
+    }.withMetadata(HeaderMetaData(key, isRequired = isRequired))
 }
 
 object RhoDsl {
