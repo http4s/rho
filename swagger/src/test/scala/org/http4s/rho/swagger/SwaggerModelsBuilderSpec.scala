@@ -377,6 +377,24 @@ class SwaggerModelsBuilderSpec extends Specification {
         case _ => false must_== true
       }
     }
+
+    "maintain order of paths" in {
+      def route(prefix: String) = {
+        GET / prefix / pathVar[Int]("number", "int pathVar") |>> { (i: Int) => "" }
+      }
+      def result(prefix: String) =
+        s"/${prefix}/{number}" -> Path(get = sb.mkOperation(s"/${prefix}/{number}", route(prefix)).some)
+
+      def build(s: Swagger , r2: RhoRoute[IO, _]) =
+        Swagger(paths = sb.collectPaths[IO](r2)(s))
+
+      val prefixRange = (0 to 10)
+      val routes = prefixRange.map(i => s"p$i").map(route).toList
+      val compiledRoutes = routes.foldLeft(Swagger())(build).paths.toList
+      val results = prefixRange.map(i => s"p$i").map(result).toList
+
+      compiledRoutes should_== results
+    }
   }
 
   "SwaggerModelsBuilder.collectDefinitions" should {

@@ -9,6 +9,7 @@ import org.http4s.rho.bits.RequestAST._
 import org.http4s.rho.bits._
 import org.log4s.getLogger
 
+import scala.collection.immutable.ListMap
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
@@ -23,7 +24,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       paths       = collectPaths(rr)(s),
       definitions = collectDefinitions(rr)(s))
 
-  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): Map[String, Path] = {
+  def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): ListMap[String, Path] = {
     val pairs = mkPathStrs(rr).map { ps =>
       val o = mkOperation(ps, rr)
       val p0 = s.paths.get(ps).getOrElse(Path())
