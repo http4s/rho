@@ -8,6 +8,8 @@ import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen._
 import org.scalacheck._
 
+import scala.collection.immutable.ListMap
+
 /**
  * Arbitraries for the creation of Swagger models
  *
@@ -40,7 +42,7 @@ object Arbitraries {
         schemes,
         consumes,
         produces,
-        paths,
+        ListMap(paths.toSeq:_*),
         securityDefinitions,
         definitions,
         parameters,

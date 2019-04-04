@@ -1,10 +1,12 @@
 package org.http4s.rho.swagger
 
+import java.util.ArrayList
+
 import io.swagger.{models => jm}
 import io.swagger.models.utils.PropertyModelConverter
 
 import scala.collection.JavaConverters._
-import java.util.ArrayList
+import scala.collection.immutable.ListMap
 
 object models {
   import JValue._
@@ -18,7 +20,7 @@ object models {
     , schemes             : List[Scheme]                          = Nil
     , consumes            : List[String]                          = Nil
     , produces            : List[String]                          = Nil
-    , paths               : Map[String, Path]                     = Map.empty
+    , paths               : ListMap[String, Path]                 = ListMap.empty
     , securityDefinitions : Map[String, SecuritySchemeDefinition] = Map.empty
     , definitions         : Map[String, Model]                    = Map.empty
     , parameters          : Map[String, Parameter]                = Map.empty
