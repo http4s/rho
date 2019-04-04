@@ -1,11 +1,14 @@
 package org.http4s
 package rho
 
+import cats.Functor
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
+import org.http4s.rho.bits.RequestAST.{AndRule, EmptyRule, RequestRule}
 import org.http4s.rho.bits.{HeaderAppendable, TypedHeader, TypedQuery}
 import shapeless.ops.hlist.Prepend
 import shapeless.{HList, HNil}
+
+import scala.reflect.runtime.universe
 
 /** Typed builder of query rules
   *
@@ -22,6 +25,7 @@ case class QueryBuilder[F[_], T <: HList](method: Method,
                                           path: PathRule,
                                           rules: RequestRule[F])
   extends RouteExecutable[F, T]
+  with Decodable[F, T, Nothing]
   with HeaderAppendable[F, T]
   with UriConvertible[F]
   with RoutePrependable[F, QueryBuilder[F, T]]
@@ -44,4 +48,14 @@ case class QueryBuilder[F[_], T <: HList](method: Method,
 
   override def >>>[T1 <: HList](rule: TypedHeader[F, T1])(implicit prep1: Prepend[T1, T]): Router[F, prep1.Out] =
     Router(method, path, AndRule(rules, rule.rule))
+
+  /** Decode the body using the `EntityDecoder`
+    *
+    * Alias for the `^` operator.
+    *
+    * @param decoder `EntityDecoder` to utilize for decoding the body.
+    * @tparam R2 type of the result.
+    */
+  override def decoding[R2 >: Nothing](decoder: EntityDecoder[F, R2])(implicit F: Functor[F], t: universe.TypeTag[R2]): CodecRouter[F, T, R2] =
+    CodecRouter(>>>(TypedHeader[F, HNil](EmptyRule[F]())), decoder)
 }
