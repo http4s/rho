@@ -93,6 +93,11 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
       "You posted: " + body
     }
 
+  "This route allows your to post stuff with query parameters" **
+    POST / "post-query" +? param[String]("query") ^ EntityDecoder.text[F] |>> { (query: String, body: String) =>
+    s"You queried '$query' and posted: $body"
+  }
+
   "This demonstrates using a process of entities" **
     GET / "stream" |>> {
       val s = 0 until 100 map (i => s"Hello $i\n")

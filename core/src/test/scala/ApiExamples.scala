@@ -176,6 +176,11 @@ class ApiExamples extends Specification {
         POST / "postSomething" ^ UrlForm.entityDecoder[IO] |>> { m: UrlForm =>
           Ok(s"You posted these things: $m")
         }
+
+        // Using decoders after query string
+        POST / "postSomething" +? param[String]("foo") ^ UrlForm.entityDecoder[IO] |>> { (foo: String, m: UrlForm) =>
+          Ok(s"You posted these things ($foo): $m")
+        }
       }
       /// end_src_inlined
 
