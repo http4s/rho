@@ -37,11 +37,11 @@ class ApiExamples extends Specification {
       new RhoRoutes[IO] {
         // Use combinators to parse and capture path parameters
         GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
-          Ok("Received $i")
+          Ok(s"Received $i")
         }
         // the symbol 'world just says 'capture a String' with variable name "world"
         GET / "helloworldstring" / 'world / "foo" |>> { i: String =>
-          Ok("Received $i")
+          Ok(s"Received $i")
         }
         // capture dates
         GET / "helloworlddate" / pathVar[Date] / "foo" |>> { d: Date =>
@@ -131,10 +131,10 @@ class ApiExamples extends Specification {
         /* Access the `Request` by making it the first param of the
            handler function.
          */
-        GET / "request" |>> { req: Request[IO] =>
+        GET / "request" |>> { _: Request[IO] =>
           Ok("I don't actually need a request...")
         }
-        GET / "request" / 'foo |>> { (req: Request[IO], foo: String) =>
+        GET / "request" / 'foo |>> { (_: Request[IO], _: String) =>
           Ok("I wanted a request")
         }
       }

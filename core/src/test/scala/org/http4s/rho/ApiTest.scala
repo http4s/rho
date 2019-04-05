@@ -36,7 +36,7 @@ class ApiTest extends Specification {
     existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
   val RequireThrowException =
-    existsAnd(headers.`Content-Length`){ h => throw new RuntimeException("this could happen") }
+    existsAnd(headers.`Content-Length`){ _ => throw new RuntimeException("this could happen") }
 
   def fetchETag(p: IO[Response[IO]]): ETag = {
     val resp = p.unsafeRunSync()
@@ -184,12 +184,12 @@ class ApiTest extends Specification {
       val lplus1 = captureMap(headers.`Content-Length`)(_.length + 1)
 
       val route1 = runWith((path >>> lplus1 >>> capture(ETag)).decoding(EntityDecoder.text)) {
-        (world: String, lplus1: Long, tag: ETag, body: String) =>
+        (_: String, _: Long, _: ETag, _: String) =>
           Ok("")
       }
 
       val route2 = runWith((path >>> (lplus1 && capture(ETag))).decoding(EntityDecoder.text)) {
-        (world: String, _: Long, tag: ETag, body: String) =>
+        (_: String, _: Long, _: ETag, _: String) =>
           Ok("")
       }
 
@@ -221,7 +221,7 @@ class ApiTest extends Specification {
         capture(ETag)
 
       val route =
-        runWith((path >>> validations).decoding(EntityDecoder.text)) {(world: String, fav: Int, tag: ETag, body: String) =>
+        runWith((path >>> validations).decoding(EntityDecoder.text)) {(world: String, fav: Int, _: ETag, body: String) =>
 
           Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
             .map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
@@ -404,7 +404,7 @@ class ApiTest extends Specification {
 
       route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.BadRequest
 
-      val reqHeaderR = existsAndR(headers.`Content-Length`){ h => Some(Unauthorized("Foo."))}
+      val reqHeaderR = existsAndR(headers.`Content-Length`){ _ => Some(Unauthorized("Foo."))}
       val route2 = runWith(path.validate(reqHeaderR)) { () =>
         Ok("shouldn't get here.")
       }
@@ -418,7 +418,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = uri("/hello?foo=bar"))
                   .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
 
-      val route1 = runWith(path +? param[Int]("foo")) { i: Int =>
+      val route1 = runWith(path +? param[Int]("foo")) { _: Int =>
         Ok("shouldn't get here.")
       }
 

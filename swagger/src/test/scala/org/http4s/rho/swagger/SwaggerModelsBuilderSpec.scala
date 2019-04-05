@@ -68,28 +68,28 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "handle an action with one query parameter" in {
-      val ra = fooPath +? param[Int]("id") |>> { (i: Int) => "" }
+      val ra = fooPath +? param[Int]("id") |>> { (_: Int) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, required = true))
     }
 
     "handle an action with one query parameter with description" in {
-      val ra = fooPath +? paramD[Int]("id", "int id") |>> { (i: Int) => "" }
+      val ra = fooPath +? paramD[Int]("id", "int id") |>> { (_: Int) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
         List(QueryParameter(`type` = "integer".some, name = "id".some, required = true, description = "int id".some))
     }
 
     "handle an action with one optional query parameter" in {
-      val ra = fooPath +? param[Option[String]]("name") |>> { (s: Option[String]) => "" }
+      val ra = fooPath +? param[Option[String]]("name") |>> { (_: Option[String]) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "string".some, name = "name".some, required = false))
     }
 
     "handle an action with one optional seq query parameter" in {
-      val ra = fooPath +? param[Option[Seq[String]]]("name") |>> { (s: Option[Seq[String]]) => "" }
+      val ra = fooPath +? param[Option[Seq[String]]]("name") |>> { (_: Option[Seq[String]]) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
         List(
@@ -100,7 +100,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "handle an action with one optional seq query parameter using a type alias" in {
-      val ra = fooPath +? param[OpSeq]("name") |>> { (s: OpSeq) => "" }
+      val ra = fooPath +? param[OpSeq]("name") |>> { (_: OpSeq) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
         List(
@@ -111,21 +111,21 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "handle an action with one query parameter with default value" in {
-      val ra = fooPath +? param[Int]("id", 6) |>> { (i: Int) => "" }
+      val ra = fooPath +? param[Int]("id", 6) |>> { (_: Int) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false))
     }
 
     "handle an action with one query parameter with default value and description" in {
-      val ra = fooPath +? paramD[Int]("id", 6, "id with default") |>> { (i: Int) => "" }
+      val ra = fooPath +? paramD[Int]("id", 6, "id with default") |>> { (_: Int) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
         List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false, description = "id with default".some))
     }
 
     "handle an action with two query parameters" in {
-      val ra = fooPath +? param[Int]("id") & param[String]("str", "hello") |>> { (i: Int, s: String) => "" }
+      val ra = fooPath +? param[Int]("id") & param[String]("str", "hello") |>> { (_: Int, _: String) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
       List(
@@ -136,7 +136,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with query or-structure" in {
       def orStr(str: String) = s"Optional if the following params are satisfied: [$str]".some
 
-      val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> { (i: Int) => "" }
+      val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> { (_: Int) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
       List(
@@ -262,8 +262,8 @@ class SwaggerModelsBuilderSpec extends Specification {
     "Produce unique operation ids" in {
       val routes = Seq(
         "foo1" ** GET / "bar" |>> { () => "" },
-        "foo2" ** GET / "bar" / pathVar[String]("name") |>> { name: String => "" },
-        "foo3" ** GET / "bar" / pathVar[String]("name1") / pathVar[String]("name2") |>> { (name1: String, name2: String) => "" }
+        "foo2" ** GET / "bar" / pathVar[String]("name") |>> { _: String => "" },
+        "foo3" ** GET / "bar" / pathVar[String]("name1") / pathVar[String]("name2") |>> { (_: String, _: String) => "" }
       )
 
       val operationIds = routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(Info("", ""), r)(s)).paths.values.toList.flatMap(_.get).flatMap(_.operationId)
@@ -293,7 +293,7 @@ class SwaggerModelsBuilderSpec extends Specification {
         override def consumes: Set[MediaRange] = Set.empty
       }
 
-      val ra = POST / "foo" ^ dec |>> { (l: List[String]) => "" }
+      val ra = POST / "foo" ^ dec |>> { (_: List[String]) => "" }
 
       sb.mkOperation("/foo", ra).parameters must_== List(
         BodyParameter(
@@ -363,7 +363,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "find a capture or-path" in {
-      val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> { (i: Int) => "" }
+      val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> { (_: Int) => "" }
 
       sb.collectPaths[IO](ra)(Swagger()) must havePairs(
         "/{foo}" -> Path(get = sb.mkOperation("{foo}", ra).some),
@@ -371,14 +371,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "find a simple path with a capture" in {
-      val ra = GET / "foo" / pathVar[Int]("number") |>> { (i: Int) => "" }
+      val ra = GET / "foo" / pathVar[Int]("number") |>> { (_: Int) => "" }
 
       sb.collectPaths[IO](ra)(Swagger()) must havePair(
         "/foo/{number}" -> Path(get = sb.mkOperation("foo/{number}", ra).some))
     }
 
     "find a simple path with a capture with description" in {
-      val ra = GET / pathVar[Int]("number", "int pathVar") |>> { (i: Int) => "" }
+      val ra = GET / pathVar[Int]("number", "int pathVar") |>> { (_: Int) => "" }
 
       sb.collectPaths[IO](ra)(Swagger()) must havePair(
       "/{number}" -> Path(get = sb.mkOperation("/{number}", ra).some))
@@ -394,7 +394,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "maintain order of paths" in {
       def route(prefix: String) = {
-        GET / prefix / pathVar[Int]("number", "int pathVar") |>> { (i: Int) => "" }
+        GET / prefix / pathVar[Int]("number", "int pathVar") |>> { (_: Int) => "" }
       }
       def result(prefix: String) =
         s"/${prefix}/{number}" -> Path(get = sb.mkOperation(s"/${prefix}/{number}", route(prefix)).some)
@@ -674,13 +674,13 @@ class SwaggerModelsBuilderSpec extends Specification {
   implicit def renderableEncoder[F[_], T <: Renderable]: EntityEncoder[F, T] =
     EntityEncoder
       .stringEncoder[F](Charset.`UTF-8`)
-      .contramap { r: T => "" }
+      .contramap { _: T => "" }
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def tuple2Encoder[F[_], T <: Renderable]: EntityEncoder[F, (Int, T)] =
     EntityEncoder
       .stringEncoder[F](Charset.`UTF-8`)
-      .contramap { r: (Int, T) => "" }
+      .contramap { _: (Int, T) => "" }
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[F[_]: Applicative, A]: EntityEncoder[F, List[A]] =
@@ -693,7 +693,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
   object CsvFile {
     implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =
-      EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.text.csv, Some(Charset.`UTF-8`))) { file: CsvFile =>
+      EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.text.csv, Some(Charset.`UTF-8`))) { _: CsvFile =>
         val bv = "file content".getBytes(Charset.`UTF-8`.nioCharset)
         org.http4s.Entity(Stream.emits(bv), Some(bv.length))
       }
