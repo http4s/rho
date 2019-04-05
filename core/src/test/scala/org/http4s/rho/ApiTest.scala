@@ -131,7 +131,7 @@ class ApiTest extends Specification {
       val path = GET / "hello" >>> paramFoo
       val req = Request[IO](
         uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").right.getOrElse(sys.error("Failed.")),
-        headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
+        headers = Headers.of(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
       )
 
       val expectedFoo = Foo(10, HttpDate.now)

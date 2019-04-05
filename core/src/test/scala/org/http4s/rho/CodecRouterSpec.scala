@@ -22,7 +22,7 @@ class CodecRouterSpec extends Specification {
     "Decode a valid body" in {
 
       val b = Stream.emits("hello".getBytes)
-      val h = Headers(headers.`Content-Type`(MediaType.text.plain))
+      val h = Headers.of(headers.`Content-Type`(MediaType.text.plain))
       val req = Request[IO](Method.POST, Uri(path = "/foo"), headers = h, body = b)
       val result = routes(req).value.unsafeRunSync().getOrElse(Response.notFound)
       val (bb, s) = bodyAndStatus(result)
@@ -33,7 +33,7 @@ class CodecRouterSpec extends Specification {
 
     "Fail on invalid body" in {
       val b = Stream.emits("hello =".getBytes)
-      val h = Headers(headers.`Content-Type`(MediaType.application.`x-www-form-urlencoded`))
+      val h = Headers.of(headers.`Content-Type`(MediaType.application.`x-www-form-urlencoded`))
       val req = Request[IO](Method.POST, Uri(path = "/form"), headers = h, body = b)
 
       routes(req).value.unsafeRunSync().map(_.status) must be some Status.BadRequest

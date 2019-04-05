@@ -58,7 +58,7 @@ class ResponseGeneratorSpec extends Specification {
       implicit val w: EntityEncoder[IO, String] =
         EntityEncoder.encodeBy[IO, String](`Content-Type`(MediaType.text.html))(EntityEncoder.stringEncoder[IO].toEntity(_))
 
-      Ok("some content", Headers(`Content-Type`(MediaType.application.json)))
+      Ok("some content", Headers.of(`Content-Type`(MediaType.application.json)))
         .unsafeRunSync().resp.headers.get(`Content-Type`).get must_== `Content-Type`(MediaType.application.json)
     }
   }
