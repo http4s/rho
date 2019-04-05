@@ -10,7 +10,7 @@ class ParamDefaultValueSpec extends Specification {
     new String(routes(r).value.unsafeRunSync().getOrElse(Response.notFound).body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
 
   def requestGet(s: String, h: Header*): Request[IO] =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers.of(h: _*))
 
   "GET /test1" should {
     val routes = new RhoRoutes[IO] {

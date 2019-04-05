@@ -12,7 +12,7 @@ import org.specs2.mutable.Specification
 
 class RhoRoutesSpec extends Specification with RequestRunner {
   def construct(method: Method, s: String, h: Header*): Request[IO] =
-    Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers(h: _*))
+    Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers.of(h: _*))
 
   def Get(s: String, h: Header*): Request[IO] = construct(Method.GET, s, h:_*)
   def Put(s: String, h: Header*): Request[IO] = construct(Method.PUT, s, h:_*)
