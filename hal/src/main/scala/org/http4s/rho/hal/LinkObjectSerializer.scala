@@ -30,6 +30,6 @@ object LinkObjectSerializer {
   }
 }
 
-class LinkObjectSerializer extends CustomSerializer[LinkObject](format => (
+class LinkObjectSerializer extends CustomSerializer[LinkObject](_ => (
   PartialFunction.empty,
   LinkObjectSerializer.serialize))

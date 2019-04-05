@@ -20,11 +20,11 @@ class RhoRoutesSpec extends Specification with RequestRunner {
   val httpRoutes = new RhoRoutes[IO] {
     GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
 
-    GET / "" +? param("foo", "bar") |>> { foo: String => Ok("this definition should be hidden by the previous definition") }
+    GET / "" +? param("foo", "bar") |>> { _: String => Ok("this definition should be hidden by the previous definition") }
 
     GET / "hello" |>> Ok("route1")
 
-    GET / 'hello |>> { hello: String => Ok("route2") }
+    GET / 'hello |>> { _: String => Ok("route2") }
 
     GET / "hello" / "world" |>> Ok("route3")
 
@@ -65,7 +65,7 @@ class RhoRoutesSpec extends Specification with RequestRunner {
 
     GET / "seq" +? param[Seq[Int]]("foo") |>> { os: Seq[Int] => Ok(os.mkString(" ")) }
 
-    GET / "withreq" +? param[String]("foo") |>> { (req: Request[IO], foo: String) => Ok(s"req $foo") }
+    GET / "withreq" +? param[String]("foo") |>> { (_: Request[IO], foo: String) => Ok(s"req $foo") }
 
     val rootSome = root / "some"
     GET / rootSome |>> Ok("root to some")
@@ -307,7 +307,7 @@ class RhoRoutesSpec extends Specification with RequestRunner {
 
       val srvc = new RhoRoutes[IO] {
         POST / "foo" / pathVar[Int] +? param[String]("param") >>> reqHeader ^ EntityDecoder.text[IO] |>> {
-          (p1: Int, param: String, body: String) => Ok("success")
+          (_: Int, _: String, _: String) => Ok("success")
         }
       }
 

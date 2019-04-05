@@ -16,7 +16,7 @@ class CodecRouterSpec extends Specification {
 
     val routes = new RhoRoutes[IO] {
       (POST / "foo" decoding(EntityDecoder.text[IO])) |>> { s: String => Ok(s"Received: $s") }
-      (POST / "form" decoding(UrlForm.entityDecoder[IO])) |>> { m: UrlForm => Ok("success") }
+      (POST / "form" decoding(UrlForm.entityDecoder[IO])) |>> { _: UrlForm => Ok("success") }
     }.toRoutes()
 
     "Decode a valid body" in {
