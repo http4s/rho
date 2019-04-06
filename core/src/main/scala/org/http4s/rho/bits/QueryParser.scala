@@ -42,7 +42,7 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
     */
   implicit def multipleParse[A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
     override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[F, B[A]] = {
-      val b = cbf()
+      val b = cbf(Seq.empty)
       params.get(name) match {
         case None => SuccessResponse(default.getOrElse(b.result))
         case Some(Seq()) => SuccessResponse(default.getOrElse(b.result))

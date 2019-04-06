@@ -1,6 +1,7 @@
 package org.http4s.rho
 
 import scala.collection.immutable.VectorBuilder
+import scala.collection.immutable.Iterable
 import cats.Monad
 import shapeless.HList
 import org.http4s._
@@ -24,7 +25,7 @@ final class RoutesBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rho
     * @param routes Routes to accumulate.
     * @return `this` instance with its internal state mutated.
     */
-  def append(routes: TraversableOnce[RhoRoute.Tpe[F]]): this.type = {
+  def append(routes: Iterable[RhoRoute.Tpe[F]]): this.type = {
     internalRoutes ++= routes
     this
   }

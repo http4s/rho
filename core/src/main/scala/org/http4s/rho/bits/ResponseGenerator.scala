@@ -69,7 +69,7 @@ abstract class LocationResponseGenerator[F[_]](val status: Status) extends Respo
   type T[_] <: Result.BaseResult[F]
 
   def apply(location: Uri)(implicit F: Applicative[F]): F[T[Unit]] =
-    F.pure(Result(Response(status).putHeaders(Location(location))).asInstanceOf[T[Unit]])
+    F.pure(Result(Response[F](status).putHeaders(Location(location))).asInstanceOf[T[Unit]])
 
   def apply[A](location: Uri, body: A, headers: Headers = Headers.empty)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[T[A]] =
     w.toEntity(body) match { case Entity(proc, len) =>

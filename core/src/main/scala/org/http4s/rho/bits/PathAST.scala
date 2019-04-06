@@ -51,7 +51,7 @@ object PathAST {
       * @return a new [[TypedPath]] that will capture a uri segment.
       */
     def /(symbol: Symbol): TypedPath[F, String :: T] = {
-      val capture = PathCapture(symbol.name, None, StringParser.strParser, implicitly[TypeTag[String]])
+      val capture = PathCapture[F](symbol.name, None, StringParser.strParser, implicitly[TypeTag[String]])
       TypedPath(PathAnd(this.rule, capture))
     }
 

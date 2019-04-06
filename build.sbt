@@ -80,7 +80,6 @@ lazy val compileFlags = Seq(
   "-language:existentials",
   "-language:implicitConversions",
   "-Ywarn-unused",
-  "-Ypartial-unification",
   "-Xfatal-warnings"
 )
 
@@ -92,10 +91,14 @@ lazy val license = licenses in ThisBuild := Seq(
     "http://www.apache.org/licenses/LICENSE-2.0.txt")
 )
 
+val scala_213 = "2.13.0-M5"
+val scala_212 = "2.12.8"
+val scala_211 = "2.11.12"
+
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.12.8",
-    crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
+    scalaVersion := scala_212,
+    crossScalaVersions := Seq(scala_213, scala_212, scala_211),
     scalacOptions ++= compileFlags,
     resolvers += Resolver.sonatypeRepo("snapshots"),
     fork in run := true,
