@@ -31,7 +31,7 @@ trait RhoDslHeaderExtractors[F[_]]
   def existsAnd[H <: HeaderKey.Extractable](header: H)(f: H#HeaderT => Boolean)(implicit F: Monad[F]): TypedHeader[F, HNil] =
     existsAndR[H](header){ h =>
       if (f(h)) None
-      else Some(invalidHeaderResponse(h))
+      else Some(invalidHeaderResponse(header))
     }
 
   /** Check that the header exists and satisfies the condition
@@ -125,15 +125,15 @@ trait RhoDslHeaderExtractors[F[_]]
       }
     }.withMetadata(HeaderMetaData(key, isRequired = isRequired))
 
-  protected def invalidHeaderResponse[H <: HeaderKey.Extractable](h: H#HeaderT)(implicit F: Monad[F]): F[BaseResult[F]] =
-    BadRequest(s"Invalid header: ${h.name} = ${h.value}").widen
+  protected def invalidHeaderResponse[H <: HeaderKey](h: H)(implicit F: Monad[F]): F[BaseResult[F]] =
+    BadRequest(s"Invalid header: ${h.name}").widen
 
   protected def missingHeaderResponse[H <: HeaderKey](key: H)(implicit F: Monad[F]): F[BaseResult[F]] =
-    BadRequest(s"Missing header: ${key.name}").widen[BaseResult[F]]
+    BadRequest(s"Missing header: ${key.name}").widen
 
   protected def errorProcessingHeaderResponse[H <: HeaderKey.Extractable](key: H, header: Option[H#HeaderT], nonfatal: Throwable)(implicit F: Monad[F]): F[BaseResult[F]] = {
     logger.error(nonfatal)(s"""Failure during header capture: "${key.name}" ${header.fold("Undefined")(v => s"""= "${v.value}"""")}""")
-    InternalServerError("Error processing request.").widen[BaseResult[F]]
+    InternalServerError("Error processing request.").widen
   }
 }
 
