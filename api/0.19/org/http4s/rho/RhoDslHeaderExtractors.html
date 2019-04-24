@@ -1684,6 +1684,22 @@
       <p class="shortcomment cmt">Construct a <code>500 InternalServerError</code> FailureResponse
 </p><div class="fullcomment"><div class="comment cmt"><p>Construct a <code>500 InternalServerError</code> FailureResponse
 </p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>Description of the failure</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="bits/FailureResponseOps.html" class="extype" name="org.http4s.rho.bits.FailureResponseOps">FailureResponseOps</a></dd></dl></div>
+    </li><li name="org.http4s.rho.RhoDslHeaderExtractors#errorProcessingHeaderResponse" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="errorProcessingHeaderResponse[H&lt;:org.http4s.HeaderKey.Extractable](key:H,header:Option[H#HeaderT],nonfatal:Throwable)(implicitF:cats.Monad[F]):F[org.http4s.rho.Result.BaseResult[F]]"></a><a id="errorProcessingHeaderResponse[H&lt;:Extractable](H,Option[errorProcessingHeaderResponse.H.HeaderT],Throwable)(Monad[F]):F[BaseResult[F]]"></a>
+      <span class="permalink">
+      <a href="../../../org/http4s/rho/RhoDslHeaderExtractors.html#errorProcessingHeaderResponse[H&lt;:org.http4s.HeaderKey.Extractable](key:H,header:Option[H#HeaderT],nonfatal:Throwable)(implicitF:cats.Monad[F]):F[org.http4s.rho.Result.BaseResult[F]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">errorProcessingHeaderResponse</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey.Extractable">Extractable</span></span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.errorProcessingHeaderResponse.H">H</span></span>, <span name="header">header: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="org.http4s.HeaderKey.HeaderT">errorProcessingHeaderResponse.H.HeaderT</span>]</span>, <span name="nonfatal">nonfatal: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="F">F: <span class="extype" name="cats.Monad">Monad</span>[<span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>[<a href="Result$.html#BaseResult[F[_]]=org.http4s.rho.Result[F,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>[<span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="org.http4s.rho.RhoDslHeaderExtractors#exists" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="exists(header:org.http4s.HeaderKey.Extractable)(implicitF:cats.Monad[F]):org.http4s.rho.bits.TypedHeader[F,shapeless.HNil]"></a><a id="exists(Extractable)(Monad[F]):TypedHeader[F,HNil]"></a>
       <span class="permalink">
@@ -1859,6 +1875,22 @@ which allows it to modify the <code>Request</code> body which should be avoided.
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="org.http4s.rho.RhoDslHeaderExtractors#invalidHeaderResponse" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="invalidHeaderResponse[H&lt;:org.http4s.HeaderKey](h:H)(implicitF:cats.Monad[F]):F[org.http4s.rho.Result.BaseResult[F]]"></a><a id="invalidHeaderResponse[H&lt;:HeaderKey](H)(Monad[F]):F[BaseResult[F]]"></a>
+      <span class="permalink">
+      <a href="../../../org/http4s/rho/RhoDslHeaderExtractors.html#invalidHeaderResponse[H&lt;:org.http4s.HeaderKey](h:H)(implicitF:cats.Monad[F]):F[org.http4s.rho.Result.BaseResult[F]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">invalidHeaderResponse</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey">HeaderKey</span></span>]</span><span class="params">(<span name="h">h: <span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.invalidHeaderResponse.H">H</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="F">F: <span class="extype" name="cats.Monad">Monad</span>[<span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>[<a href="Result$.html#BaseResult[F[_]]=org.http4s.rho.Result[F,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>[<span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -1875,6 +1907,22 @@ which allows it to modify the <code>Request</code> body which should be avoided.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="org.http4s.rho.RhoDslHeaderExtractors#missingHeaderResponse" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="missingHeaderResponse[H&lt;:org.http4s.HeaderKey](key:H)(implicitF:cats.Monad[F]):F[org.http4s.rho.Result.BaseResult[F]]"></a><a id="missingHeaderResponse[H&lt;:HeaderKey](H)(Monad[F]):F[BaseResult[F]]"></a>
+      <span class="permalink">
+      <a href="../../../org/http4s/rho/RhoDslHeaderExtractors.html#missingHeaderResponse[H&lt;:org.http4s.HeaderKey](key:H)(implicitF:cats.Monad[F]):F[org.http4s.rho.Result.BaseResult[F]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">missingHeaderResponse</span><span class="tparams">[<span name="H">H &lt;: <span class="extype" name="org.http4s.HeaderKey">HeaderKey</span></span>]</span><span class="params">(<span name="key">key: <span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.missingHeaderResponse.H">H</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="F">F: <span class="extype" name="cats.Monad">Monad</span>[<span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>[<a href="Result$.html#BaseResult[F[_]]=org.http4s.rho.Result[F,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any,Any]" class="extmbr" name="org.http4s.rho.Result.BaseResult">BaseResult</a>[<span class="extype" name="org.http4s.rho.RhoDslHeaderExtractors.F">F</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
