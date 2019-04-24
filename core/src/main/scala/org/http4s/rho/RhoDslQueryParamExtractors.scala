@@ -56,7 +56,7 @@ trait RhoDslQueryParamExtractors[F[_]]
               (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, { t =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(invalidQueryParameterResponse(name,t))
     })
 
   /** Define a query parameter with description that will be validated with the predicate
@@ -66,7 +66,7 @@ trait RhoDslQueryParamExtractors[F[_]]
                (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramRDescr(name, description, { t: T =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(invalidQueryParameterResponse(name,t))
     })
 
   /** Define a query parameter that will be validated with the predicate
@@ -76,7 +76,7 @@ trait RhoDslQueryParamExtractors[F[_]]
               (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, default, { t: T =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(invalidQueryParameterResponse(name,t))
     })
 
   /** Define a query parameter with description that will be validated with the predicate
@@ -86,7 +86,7 @@ trait RhoDslQueryParamExtractors[F[_]]
                (implicit F: Monad[F], parser: QueryParser[F, T], m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     paramR(name, description, default, { t =>
       if (validate(t)) None
-      else Some(BadRequest(s"""Invalid query parameter: "$name" = "$t"""").widen)
+      else Some(invalidQueryParameterResponse(name,t))
     })
 
   /** Defines a parameter in query string that should be bound to a route definition. */
@@ -121,4 +121,7 @@ trait RhoDslQueryParamExtractors[F[_]]
     */
   def genericRequestQueryCapture[R](f: Request[F] => ResultResponse[F, R]): TypedQuery[F, R :: HNil] =
     TypedQuery(CaptureRule(f))
+
+  protected def invalidQueryParameterResponse[T](name: String, value: T)(implicit F: Monad[F]): F[BaseResult[F]] =
+    BadRequest(s"""Invalid query parameter: "$name" = "$value"""").widen
 }
