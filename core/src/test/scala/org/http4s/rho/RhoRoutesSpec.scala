@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import scala.collection.immutable.Seq
+
 import java.util.concurrent.atomic.AtomicInteger
 
 import cats.effect.IO

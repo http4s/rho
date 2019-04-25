@@ -12,6 +12,7 @@ import org.specs2.mutable.Specification
 import shapeless.{:+:, CNil}
 
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
+import scala.collection.immutable.Seq
 
 package object model {
   case class Foo(a: Int, b: String)

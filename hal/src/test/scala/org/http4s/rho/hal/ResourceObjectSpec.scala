@@ -6,6 +6,8 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.jackson.Serialization._
 import org.specs2.mutable.Specification
 
+import scala.collection.immutable.Seq
+
 object ResourceObjectSpec extends Specification {
   implicit val jsonFormats: Formats = DefaultFormats
 

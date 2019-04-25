@@ -19,6 +19,7 @@ import org.json4s.jackson.JsonMethods
 import shapeless.HNil
 
 import scala.reflect.ClassTag
+import scala.collection.immutable.Seq
 
 abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
   extends RhoRoutes[F] {

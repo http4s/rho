@@ -1,7 +1,7 @@
 package org.http4s.rho
 
 import scala.collection.immutable.VectorBuilder
-import scala.collection.immutable.Iterable
+import scala.collection.immutable.{Iterable, Seq}
 import cats.Monad
 import shapeless.HList
 import org.http4s._

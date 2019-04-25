@@ -4,6 +4,8 @@ import org.http4s.Uri
 import org.http4s.UriTemplate
 import org.http4s.UriTemplate._
 import org.specs2.mutable.Specification
+import scala.collection.immutable.Seq
+
 
 object ResourceObjectBuilderSpec extends Specification {
 

@@ -1,5 +1,7 @@
 package org.http4s.rho
 
+import scala.collection.immutable.Seq
+
 /** Describes Hypertext Application Language types and functions */
 package object hal {
 

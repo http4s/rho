@@ -2,6 +2,7 @@ package org.http4s.rho.swagger
 
 import cats.effect.IO
 
+import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import org.specs2.mutable.Specification
 import cats.syntax.all._

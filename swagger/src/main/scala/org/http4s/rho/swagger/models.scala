@@ -5,6 +5,7 @@ import java.util.ArrayList
 import io.swagger.{models => jm}
 import io.swagger.models.utils.PropertyModelConverter
 
+import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 import scala.collection.immutable.ListMap
 

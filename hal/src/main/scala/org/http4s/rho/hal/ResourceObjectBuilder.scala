@@ -1,6 +1,7 @@
 package org.http4s.rho.hal
 
 import scala.collection.mutable.LinkedHashMap
+import scala.collection.immutable.Seq
 import org.http4s.Uri
 import org.http4s.UriTemplate
 
