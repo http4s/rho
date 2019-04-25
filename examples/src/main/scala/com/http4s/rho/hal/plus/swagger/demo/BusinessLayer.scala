@@ -12,6 +12,7 @@ import net.sf.uadetector.internal.data.domain.{
   OperatingSystem => UOperatingSystem}
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Seq
 
 // --
 // Do not take this implementation too serious. It is only there to have some 
@@ -79,7 +80,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
   private def browserTypes =
     data.getBrowserTypes.asScala.map { t =>
       toBrowserType(t._2)
-    }.toSeq
+    }.toList
 
   private def operatingSystems: List[OperatingSystem] =
     data.getOperatingSystems.asScala.foldLeft(List[OperatingSystem]()) { (acc, o) =>
@@ -128,7 +129,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
 
   def findBrowserPatternsByBrowserId(id: Int) =
     data.getBrowserPatterns.get(id) match {
-      case ps: SortedSet[UBrowserPattern] => Some(ps.asScala.map(p => toBrowserPattern(p)).toSeq)
+      case ps: SortedSet[UBrowserPattern] => Some(ps.asScala.map(p => toBrowserPattern(p)).toList)
       case _ => None
     }
 
@@ -161,7 +162,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
       browser <- browsers
       if browser.id == mapping.getBrowserId
     } yield browser
-    matchingBrowsers.toSeq
+    matchingBrowsers.toList
   }
 
   def findOperatingSystem(id: Int) =
@@ -179,7 +180,7 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
       os <- operatingSystems
       if os.id == mapping.getOperatingSystemId
     } yield os
-    matchingOperatingSystems.toSeq
+    matchingOperatingSystems.toList
   }
 
 }

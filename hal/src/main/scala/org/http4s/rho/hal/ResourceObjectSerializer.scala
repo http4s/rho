@@ -4,6 +4,8 @@ package hal
 import org.json4s._
 import org.json4s.Extraction._
 
+import scala.collection.immutable.Seq
+
 object ResourceObjectSerializer {
 
   def serialize(r: ResourceObject[_, _])(implicit jsonFormats: Formats): JValue = {

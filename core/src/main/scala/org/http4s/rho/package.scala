@@ -1,5 +1,6 @@
-  package org.http4s
+package org.http4s
 
+import scala.collection.immutable.Seq
 import org.http4s.rho.{PathBuilder, PathEmpty, ResultSyntaxInstances, RhoDslHeaderExtractors, RhoDslPathExtractors, RhoDslQueryParamExtractors}
 import org.http4s.rho.bits._
 import org.http4s.rho.bits.PathAST._

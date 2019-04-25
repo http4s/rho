@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import scala.collection.immutable.Seq
+
 import cats.Monad
 import cats.data.Kleisli
 import shapeless.HList

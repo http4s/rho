@@ -5,6 +5,7 @@ import org.http4s.rho.RhoRoutes
 import org.http4s.rho.hal.{ResourceObjectBuilder => ResObjBuilder, _}
 import org.http4s.{Request, Uri}
 
+import scala.collection.immutable.Seq
 import scala.collection.mutable.ListBuffer
 
 class RestRoutes[F[+_]: Monad](val businessLayer: BusinessLayer) extends RhoRoutes[F] {

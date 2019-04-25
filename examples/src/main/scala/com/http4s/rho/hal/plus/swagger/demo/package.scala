@@ -1,6 +1,7 @@
 package com.http4s.rho.hal.plus.swagger
 
 import scala.language.implicitConversions
+import scala.collection.immutable.Seq
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
