@@ -146,7 +146,7 @@ trait ResultSyntaxInstances[F[_]] {
 
     def attemptAs[T](implicit decoder: EntityDecoder[F, T]): DecodeResult[F, T] = resp.attemptAs(decoder)
 
-    def as[T](implicit F: Functor[F], decoder: EntityDecoder[F, T]): F[T] = resp.as(F, decoder)
+    def as[T](implicit F: MonadError[F, Throwable], decoder: EntityDecoder[F, T]): F[T] = resp.as(F, decoder)
 
     def withStatus(status: Status): Self = Result(resp.withStatus(status))
 
