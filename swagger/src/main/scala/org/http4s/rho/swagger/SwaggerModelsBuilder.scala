@@ -10,6 +10,7 @@ import org.http4s.rho.bits._
 import org.log4s.getLogger
 
 import scala.collection.immutable.ListMap
+import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 

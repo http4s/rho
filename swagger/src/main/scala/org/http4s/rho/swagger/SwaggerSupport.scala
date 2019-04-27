@@ -8,7 +8,10 @@ import org.http4s.headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
 import shapeless._
+
+import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
+import scala.collection.immutable.Seq
 
 object SwaggerSupport {
   def apply[F[_]: Monad](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] = new SwaggerSupport[F] {}

@@ -1,6 +1,8 @@
 package org.http4s
 package rho
 
+import scala.collection.immutable.Seq
+
 import cats.Monad
 import org.http4s.rho.bits.PathAST.TypedPath
 import org.log4s.getLogger
