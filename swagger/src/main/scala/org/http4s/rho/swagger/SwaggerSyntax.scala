@@ -15,4 +15,13 @@ trait SwaggerSyntax[F[_]] {
     def **[T <: HNil](builder: PathBuilder[F, T]): PathBuilder[F, T] =
       new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteDesc(description)))
   }
+
+  /** Add support for adding tags before a route using the @@ operator */
+  implicit class ListOps(tags: List[String]) {
+    def @@(method: Method): PathBuilder[F, HNil] =
+      @@(new PathBuilder[F, HNil](method, PathEmpty))
+
+    def @@[T <: HNil](builder: PathBuilder[F, T]): PathBuilder[F, T] =
+      new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteTags(tags)))
+  }
 }

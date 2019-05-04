@@ -156,6 +156,36 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     linearizeStack(rr.path::Nil).flatMap(go(_, None)).headOption
   }
 
+  def collectTags[F[_]](rr: RhoRoute[F, _]): List[String] = {
+
+    def go(stack: List[PathOperation], tags: List[String]): List[String] =
+      stack match {
+        case PathMatch("") :: xs => go(xs, tags)
+        case PathMatch(segment) :: xs =>
+          tags match {
+            case Nil => go(xs, segment :: Nil)
+            case ts => go(xs, ts)
+          }
+        case PathCapture(id, _, _, _) :: xs =>
+          tags match {
+            case Nil => go(xs, id :: Nil)
+            case ts => go(xs, ts)
+          }
+        case Nil | CaptureTail :: _ =>
+          tags match {
+            case Nil => "/" :: Nil
+            case ts => ts
+          }
+        case MetaCons(_, meta) :: xs =>
+          meta match {
+            case RouteTags(ts) => ts
+            case _ => go(xs, tags)
+          }
+      }
+
+    linearizeStack(rr.path::Nil).flatMap(go(_, Nil))
+  }
+
   def collectSecurityScopes[F[_]](rr: RhoRoute[F, _]): List[Map[String, List[String]]] = {
 
     def go(stack: List[PathOperation]): Option[Map[String, List[String]]] =
@@ -229,7 +259,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     val parameters = collectOperationParams(rr)
 
     Operation(
-      tags        = pathStr.split("/").filterNot(_ == "").headOption.getOrElse("/") :: Nil,
+      tags        = collectTags(rr),
       summary     = collectSummary(rr),
       consumes    = rr.validMedia.toList.map(_.show),
       produces    = rr.responseEncodings.toList.map(_.show),

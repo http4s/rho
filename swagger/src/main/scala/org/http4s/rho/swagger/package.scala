@@ -2,7 +2,7 @@ package org.http4s.rho
 
 import fs2.Stream
 import org.http4s.Method
-import org.http4s.rho.bits.{PathAST, SecurityScopesMetaData, TextMetaData}
+import org.http4s.rho.bits.{Metadata, PathAST, SecurityScopesMetaData, TextMetaData}
 import org.http4s.rho.swagger.models.Model
 import shapeless.{HList, HNil}
 
@@ -12,6 +12,8 @@ package object swagger {
 
   /** Metadata carrier for specific routes */
   case class RouteDesc(msg: String) extends TextMetaData
+
+  case class RouteTags(tags: List[String]) extends Metadata
 
   /** Scopes carrier for specific routes */
   case class RouteSecurityScope(definitions: Map[String, List[String]]) extends SecurityScopesMetaData
