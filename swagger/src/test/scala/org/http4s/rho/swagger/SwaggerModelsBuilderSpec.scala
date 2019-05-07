@@ -260,6 +260,11 @@ class SwaggerModelsBuilderSpec extends Specification {
       sb.mkOperation("/foo", ra).summary must_== "foo".some
     }
 
+    "Get explicit route tag" in {
+      val ra = "tag" @@ GET / "bar" |>> { () => "" }
+      sb.mkOperation("/bar", ra).tags must_== List("tag")
+    }
+
     "Get explicit route tags" in {
       val ra = List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
 
@@ -280,8 +285,11 @@ class SwaggerModelsBuilderSpec extends Specification {
     "Mix and match route descriptions and tags" in {
       val ra1 = "foo" ** List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
       val ra2 = List("tag1", "tag2") @@ ("foo" ** GET / "bar") |>> { () => "" }
+      val ra3 = "foo" ** "tag" @@ GET / "bar" |>> { () => "" }
+      val ra4 = "tag" @@ ("foo" ** GET / "bar") |>> { () => "" }
 
       sb.mkOperation("/bar", ra1) must_== sb.mkOperation("/bar", ra2)
+      sb.mkOperation("/bar", ra3) must_== sb.mkOperation("/bar", ra4)
     }
 
     "Preserve explicit tags after prepending segments" in {
