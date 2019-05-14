@@ -151,8 +151,12 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="org.http4s.rho.swagger">swagger</a></dd></dl></div>
     </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="" title="Add support for adding documentation before a route using the ** operator"></a>
-                        <a href="" title="Add support for adding documentation before a route using the ** operator">StrOps</a>
+                        <a class="class" href="SwaggerSyntax$ListOps.html" title="Add support for adding tags before a route using the @@ operator"></a>
+                        <a href="SwaggerSyntax$ListOps.html" title="Add support for adding tags before a route using the @@ operator">ListOps</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
+                        <a class="class" href="" title="Add support for adding documentation to routes using symbolic operators."></a>
+                        <a href="" title="Add support for adding documentation to routes using symbolic operators.">StrOps</a>
                       </li>
               </ul>
             </div>
@@ -181,7 +185,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Add support for adding documentation before a route using the ** operator</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/http4s/rho/tree/v0.19.0/swagger/src/main/scala/org/http4s/rho/swagger/SwaggerSyntax.scala" target="_blank">SwaggerSyntax.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Add support for adding documentation to routes using symbolic operators.</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/http4s/rho/tree/v0.19.0/swagger/src/main/scala/org/http4s/rho/swagger/SwaggerSyntax.scala" target="_blank">SwaggerSyntax.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -237,9 +241,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="org.http4s.rho.swagger.SwaggerSyntax.StrOps#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(description:String):SwaggerSyntax.this.StrOps"></a><a id="&lt;init&gt;:StrOps"></a>
+      <a id="&lt;init&gt;(doc:String):SwaggerSyntax.this.StrOps"></a><a id="&lt;init&gt;:StrOps"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/swagger/SwaggerSyntax$StrOps.html#&lt;init&gt;(description:String):SwaggerSyntax.this.StrOps" title="Permalink">
+      <a href="../../../../org/http4s/rho/swagger/SwaggerSyntax$StrOps.html#&lt;init&gt;(doc:String):SwaggerSyntax.this.StrOps" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -248,7 +252,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">StrOps</span><span class="params">(<span name="description">description: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
+        <span class="name">StrOps</span><span class="params">(<span name="doc">doc: <span class="extype" name="scala.Predef.String">String</span></span>)</span>
       </span>
       
       
@@ -385,6 +389,38 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="org.http4s.rho.swagger.SwaggerSyntax.StrOps#@@" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="@@[T&lt;:shapeless.HNil](builder:org.http4s.rho.PathBuilder[F,T]):org.http4s.rho.PathBuilder[F,T]"></a><a id="@@[T&lt;:HNil](PathBuilder[F,T]):PathBuilder[F,T]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/swagger/SwaggerSyntax$StrOps.html#@@[T&lt;:shapeless.HNil](builder:org.http4s.rho.PathBuilder[F,T]):org.http4s.rho.PathBuilder[F,T]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $at$at" class="name">@@</span><span class="tparams">[<span name="T">T &lt;: <span class="extype" name="shapeless.HNil">HNil</span></span>]</span><span class="params">(<span name="builder">builder: <a href="../PathBuilder.html" class="extype" name="org.http4s.rho.PathBuilder">PathBuilder</a>[<span class="extype" name="org.http4s.rho.swagger.SwaggerSyntax.F">F</span>, <span class="extype" name="org.http4s.rho.swagger.SwaggerSyntax.StrOps.@@.T">T</span>]</span>)</span><span class="result">: <a href="../PathBuilder.html" class="extype" name="org.http4s.rho.PathBuilder">PathBuilder</a>[<span class="extype" name="org.http4s.rho.swagger.SwaggerSyntax.F">F</span>, <span class="extype" name="org.http4s.rho.swagger.SwaggerSyntax.StrOps.@@.T">T</span>]</span>
+      </span>
+      
+      
+    </li><li name="org.http4s.rho.swagger.SwaggerSyntax.StrOps#@@" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="@@(method:org.http4s.Method):org.http4s.rho.PathBuilder[F,shapeless.HNil]"></a><a id="@@(Method):PathBuilder[F,HNil]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/swagger/SwaggerSyntax$StrOps.html#@@(method:org.http4s.Method):org.http4s.rho.PathBuilder[F,shapeless.HNil]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $at$at" class="name">@@</span><span class="params">(<span name="method">method: <span class="extype" name="org.http4s.Method">Method</span></span>)</span><span class="result">: <a href="../PathBuilder.html" class="extype" name="org.http4s.rho.PathBuilder">PathBuilder</a>[<span class="extype" name="org.http4s.rho.swagger.SwaggerSyntax.F">F</span>, <span class="extype" name="shapeless.HNil">HNil</span>]</span>
+      </span>
+      
+      
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
