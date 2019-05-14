@@ -39,7 +39,7 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
     GET |>> TemporaryRedirect(Uri(path = "/swagger-ui"))
 
   // We want to define this chunk of the service as abstract for reuse below
-  val hello = GET / "hello"
+  val hello = "hello" @@ GET / "hello"
 
   "Simple hello world route" **
     hello |>> Ok("Hello world!")
@@ -66,19 +66,23 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
     }
 
   "Adds the cookie Foo=bar to the client" **
+  "cookies" @@
     GET / "addcookie" |>> {
       Ok("You now have a good cookie!").map(_.addCookie("Foo", "bar"))
     }
 
   "Sets the cookie Foo=barr to the client" **
+  "cookies" @@
     GET / "addbadcookie" |>> {
       Ok("You now have an evil cookie!").map(_.addCookie("Foo", "barr"))
     }
 
   "Checks the Foo cookie to make sure its 'bar'" **
+  "cookies" @@
     GET / "checkcookie" >>> requireCookie |>> Ok("Good job, you have the cookie!")
 
   "Clears the cookies" **
+  "cookies" @@
     GET / "clearcookies" |>> { req: Request[F] =>
       val hs = req.headers.get(headers.Cookie) match {
         case None => Headers.empty
@@ -89,12 +93,14 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
       Ok("Deleted cookies!").map(_.withHeaders(hs))
     }
 
-  "This route allows your to post stuff" **
-    POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
+    "This route allows your to post stuff" **
+    List("post", "stuff") @@
+      POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
       "You posted: " + body
     }
 
   "This route allows your to post stuff with query parameters" **
+  List("post", "stuff", "query") @@
     POST / "post-query" +? param[String]("query") ^ EntityDecoder.text[F] |>> { (query: String, body: String) =>
     s"You queried '$query' and posted: $body"
   }

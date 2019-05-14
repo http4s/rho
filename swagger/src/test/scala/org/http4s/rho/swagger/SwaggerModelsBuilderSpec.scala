@@ -260,6 +260,45 @@ class SwaggerModelsBuilderSpec extends Specification {
       sb.mkOperation("/foo", ra).summary must_== "foo".some
     }
 
+    "Get explicit route tag" in {
+      val ra = "tag" @@ GET / "bar" |>> { () => "" }
+      sb.mkOperation("/bar", ra).tags must_== List("tag")
+    }
+
+    "Get explicit route tags" in {
+      val ra = List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
+
+      sb.mkOperation("/bar", ra).tags must_== List("tag1", "tag2")
+    }
+
+    "Default to first segment for tags" in {
+      val ra = GET / "foo" / "bar" |>> { () => "" }
+
+      sb.mkOperation("/foo/bar", ra).tags must_== List("foo")
+    }
+
+    "Default to / as a tag for routes without segments" in {
+      val ra = GET |>> { () => "" }
+      sb.mkOperation("/", ra).tags must_== List("/")
+    }
+
+    "Mix and match route descriptions and tags" in {
+      val ra1 = "foo" ** List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
+      val ra2 = List("tag1", "tag2") @@ ("foo" ** GET / "bar") |>> { () => "" }
+      val ra3 = "foo" ** "tag" @@ GET / "bar" |>> { () => "" }
+      val ra4 = "tag" @@ ("foo" ** GET / "bar") |>> { () => "" }
+
+      sb.mkOperation("/bar", ra1) must_== sb.mkOperation("/bar", ra2)
+      sb.mkOperation("/bar", ra3) must_== sb.mkOperation("/bar", ra4)
+    }
+
+    "Preserve explicit tags after prepending segments" in {
+      val inner = List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
+      val ra = "foo" /: inner
+
+      sb.mkOperation("/foo/bar", ra).tags must_== List("tag1", "tag2")
+    }
+
     "Produce unique operation ids" in {
       val routes = Seq(
         "foo1" ** GET / "bar" |>> { () => "" },
