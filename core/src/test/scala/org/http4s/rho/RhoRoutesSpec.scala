@@ -1,8 +1,7 @@
 package org.http4s
 package rho
 
-import scala.collection.immutable.Seq
-
+import scala.collection.immutable.{ArraySeq, Seq}
 import java.util.concurrent.atomic.AtomicInteger
 
 import cats.effect.IO
@@ -14,7 +13,7 @@ import org.specs2.mutable.Specification
 
 class RhoRoutesSpec extends Specification with RequestRunner {
   def construct(method: Method, s: String, h: Header*): Request[IO] =
-    Request(method, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers.of(h: _*))
+    Request(method, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers.of(h: _*))
 
   def Get(s: String, h: Header*): Request[IO] = construct(Method.GET, s, h:_*)
   def Put(s: String, h: Header*): Request[IO] = construct(Method.PUT, s, h:_*)
@@ -26,7 +25,7 @@ class RhoRoutesSpec extends Specification with RequestRunner {
 
     GET / "hello" |>> Ok("route1")
 
-    GET / 'hello |>> { _: String => Ok("route2") }
+    GET / Symbol("hello") |>> { _: String => Ok("route2") }
 
     GET / "hello" / "world" |>> Ok("route3")
 
@@ -313,8 +312,8 @@ class RhoRoutesSpec extends Specification with RequestRunner {
         }
       }
 
-      val body = Stream.emits("foo".getBytes())
-      val uri = Uri.fromString("/foo/1?param=myparam").right.getOrElse(sys.error("Failed."))
+      val body = Stream.emits(ArraySeq.unsafeWrapArray("foo".getBytes()))
+      val uri = Uri.fromString("/foo/1?param=myparam").getOrElse(sys.error("Failed."))
       val req = Request[IO](method = Method.POST, uri = uri, body = body)
                     .putHeaders(`Content-Type`(MediaType.text.plain),
                                 `Content-Length`.unsafeFromLong("foo".length))
@@ -369,7 +368,7 @@ class RhoRoutesSpec extends Specification with RequestRunner {
         GET / "bar" |>> "bar"
       }
 
-      val routes2: HttpRoutes[IO] = "foo" /: routes1 toRoutes()
+      val routes2: HttpRoutes[IO] = "foo" /: routes1 toRoutes(i => i) // No idea why identity won't compile
 
       val req1 = Request[IO](uri = Uri(path ="/foo/bar"))
       getBody(routes2(req1).value.unsafeRunSync().getOrElse(Response.notFound).body) === "bar"

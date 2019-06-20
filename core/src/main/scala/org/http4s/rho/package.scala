@@ -6,8 +6,6 @@ import org.http4s.rho.bits._
 import org.http4s.rho.bits.PathAST._
 import shapeless.{HList, HNil}
 
-import scala.language.implicitConversions
-
 package object rho extends org.http4s.syntax.AllSyntax {
   type RhoMiddleware[F[_]] = Seq[RhoRoute[F, _ <: HList]] => Seq[RhoRoute[F, _ <: HList]]
 

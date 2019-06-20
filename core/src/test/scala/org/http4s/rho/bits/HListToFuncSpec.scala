@@ -13,7 +13,7 @@ class HListToFuncSpec extends Specification {
   def checkOk(r: Request[IO]): String = getBody(service(r).value.unsafeRunSync().getOrElse(Response.notFound).body)
 
   def Get(s: String, h: Header*): Request[IO] =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers.of(h:_*))
+    Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers.of(h:_*))
 
   val service = new RhoRoutes[IO] {
     GET / "route1" |>> { () => Ok("foo") }

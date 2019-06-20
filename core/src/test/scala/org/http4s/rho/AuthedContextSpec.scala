@@ -34,9 +34,9 @@ object MyRoutes extends RhoRoutes[IO] {
     }
   }
 
-  GET / "public" / 'place |>> { path: String => Ok(s"not authenticated at $path") }
+  GET / "public" / Symbol("place") |>> { path: String => Ok(s"not authenticated at $path") }
 
-  GET / "private" / 'place |>> { (req: Request[IO], path: String) =>
+  GET / "private" / Symbol("place") |>> { (req: Request[IO], path: String) =>
     getAuth(req) match {
       case Some(user) => Ok(s"${user.name} at $path")
       case None => Forbidden(s"not authenticated at $path")

@@ -25,8 +25,8 @@ final class RoutesBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rho
     * @param routes Routes to accumulate.
     * @return `this` instance with its internal state mutated.
     */
-  def append(routes: TraversableOnce[RhoRoute.Tpe[F]]): this.type = {
-    internalRoutes ++= routes
+  def append(routes: IterableOnce[RhoRoute.Tpe[F]]): this.type = {
+    internalRoutes ++= routes.iterator.to(Iterable)
     this
   }
 

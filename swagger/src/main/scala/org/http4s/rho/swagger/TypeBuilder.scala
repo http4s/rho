@@ -314,7 +314,7 @@ object TypeBuilder {
       DateTimeTypes.exists(t <:< _)
 
     private[this] def isCollection(t: Type): Boolean =
-      t <:< typeOf[collection.Traversable[_]] || t <:< typeOf[java.util.Collection[_]]
+      t <:< typeOf[collection.Iterable[_]] || t <:< typeOf[java.util.Collection[_]]
   }
 
   private implicit class WrappedType(val t: Type){

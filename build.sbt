@@ -42,7 +42,6 @@ lazy val docs = project
       version.value,
       apiVersion.value
     ),
-    scalacOptions in (ScalaUnidoc, unidoc) += "-Ypartial-unification",
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       `rho-core`,
       `rho-hal`,
@@ -79,9 +78,7 @@ lazy val compileFlags = Seq(
   "-language:higherKinds",
   "-language:existentials",
   "-language:implicitConversions",
-  "-Ywarn-unused",
-  "-Ypartial-unification",
-  "-Xfatal-warnings"
+  "-Ywarn-unused"
 )
 
 /* Don't publish setting */
@@ -94,7 +91,7 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.12.8",
+    scalaVersion := "2.13.0",
     crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
     scalacOptions ++= compileFlags,
     resolvers += Resolver.sonatypeRepo("snapshots"),

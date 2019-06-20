@@ -5,8 +5,8 @@ import cats.Monad
 import org.http4s.rho.bits.QueryParser.Params
 
 import scala.annotation.tailrec
+import scala.collection.Factory
 import scala.collection.immutable.Seq
-import scala.collection.generic.CanBuildFrom
 
 /** Extract a value from the `Request` `Query`
   *
@@ -41,9 +41,9 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
     *
     * The elements must have the same name and each be a valid representation of the requisite type.
     */
-  implicit def multipleParse[A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: CanBuildFrom[Seq[_], A, B[A]]) = new QueryParser[F, B[A]] {
+  implicit def multipleParse[A, B[_]](implicit F: Monad[F], p: StringParser[F, A], cbf: Factory[A, B[A]]) = new QueryParser[F, B[A]] {
     override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[F, B[A]] = {
-      val b = cbf()
+      val b = cbf.newBuilder
       params.get(name) match {
         case None => SuccessResponse(default.getOrElse(b.result))
         case Some(Seq()) => SuccessResponse(default.getOrElse(b.result))

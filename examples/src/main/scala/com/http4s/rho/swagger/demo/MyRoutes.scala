@@ -51,7 +51,7 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
     HEAD / "hello" |>> { Ok("Hello head!") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+    GET / "result" / Symbol("foo") +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>

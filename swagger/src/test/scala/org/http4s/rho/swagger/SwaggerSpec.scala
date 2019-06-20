@@ -6,7 +6,7 @@ import Arbitraries._
 import io.swagger.models.{Response => jResponse}
 import org.http4s.rho.swagger.models.Swagger
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class SwaggerSpec extends Specification with ScalaCheck {
   "The Swagger model can be translated to a 'Java' Swagger model".p
