@@ -42,6 +42,7 @@ lazy val docs = project
       version.value,
       apiVersion.value
     ),
+    scalacOptions in (ScalaUnidoc, unidoc) ++= versionSpecificEnabledFlags(scalaVersion.value),
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       `rho-core`,
       `rho-hal`,
@@ -67,19 +68,32 @@ lazy val `rho-examples` = project
       Seq(
         exampleDeps,
         libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
-        dontPublish
+        dontPublish,
+        scalacOptions --= versionSpecificDisabledFlags(scalaVersion.value)
       ): _*)
   .dependsOn(`rho-swagger`, `rho-hal`)
 
-lazy val compileFlags = Seq(
+lazy val compilerFlags = Seq(
   "-feature",
   "-deprecation",
   "-unchecked",
   "-language:higherKinds",
   "-language:existentials",
   "-language:implicitConversions",
-  "-Ywarn-unused"
+  "-Ywarn-unused",
+  "-Xfatal-warnings"
 )
+
+def versionSpecificEnabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
+  case Some((2, 13)) => Seq.empty[String]
+  case _ => Seq("Ypartial-unification")
+})
+
+def versionSpecificDisabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
+  case Some((2, 13)) => Seq("-Xfatal-warnings")
+  case _ => Seq.empty
+})
+
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -92,8 +106,8 @@ lazy val license = licenses in ThisBuild := Seq(
 lazy val buildSettings = publishing ++
   Seq(
     scalaVersion := "2.13.0",
-    crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
-    scalacOptions ++= compileFlags,
+    crossScalaVersions := Seq(scalaVersion.value, "2.12.8", "2.11.12"),
+    scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),
     fork in run := true,
     organization in ThisBuild := "org.http4s",
