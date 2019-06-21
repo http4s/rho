@@ -2,13 +2,14 @@ package org.http4s.rho
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.immutable.Seq
-import cats.Monad
+import cats.effect.Sync
 import shapeless.HList
 import org.http4s._
+
 import scala.collection.compat._
 
 /** CompileRoutes which accumulates routes and can build a `HttpRoutes` */
-final class RoutesBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
+final class RoutesBuilder[F[_]: Sync] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
 
   /** Turn the accumulated routes into an `HttpRoutes`
     *
@@ -47,10 +48,10 @@ final class RoutesBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[Rho
 
 object RoutesBuilder {
   /** Constructor method for new `RoutesBuilder` instances */
-  def apply[F[_]: Monad](): RoutesBuilder[F] = apply(Seq.empty)
+  def apply[F[_]: Sync](): RoutesBuilder[F] = apply(Seq.empty)
 
   /** Constructor method for new `RoutesBuilder` instances with existing routes */
-  def apply[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): RoutesBuilder[F] = {
+  def apply[F[_]: Sync](routes: Seq[RhoRoute.Tpe[F]]): RoutesBuilder[F] = {
     val builder = new VectorBuilder[RhoRoute.Tpe[F]]
     builder ++= routes
 

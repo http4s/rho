@@ -13,7 +13,7 @@ case class User(name: String, id: UUID)
 object Auth {
   type O[A] = OptionT[IO, A]
 
-  val authUser: Kleisli[O, Request[IO], User] = Kleisli({ _ =>
+  val authUser = Kleisli[O, Request[IO], User]({ _ =>
     OptionT.some[IO](User("Test User", UUID.randomUUID()))
   })
 

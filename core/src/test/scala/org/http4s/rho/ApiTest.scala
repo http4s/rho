@@ -2,9 +2,8 @@ package org.http4s
 package rho
 
 import scala.collection.immutable.Seq
-import cats.Monad
 import cats.data.OptionT
-import cats.effect.IO
+import cats.effect.{IO, Sync}
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
@@ -19,7 +18,7 @@ class ApiTest extends Specification {
 
   object ruleExecutor extends RuleExecutor[IO]
 
-  def runWith[F[_]: Monad, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
+  def runWith[F[_]: Sync, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
     val srvc = new RhoRoutes[F] { exec |>> f }.toRoutes()
     srvc.apply(_: Request[F])
   }

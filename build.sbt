@@ -16,6 +16,16 @@ lazy val rho = project
 lazy val `rho-core` = project
   .in(file("core"))
   .settings(buildSettings ++ Seq(
+    Compile / unmanagedSourceDirectories ++= {
+      val baseDir = baseDirectory.value
+
+      val mainSrcDir = "src/main/scala"
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, minor)) if minor <= 12 => Seq(baseDir / s"$mainSrcDir-2.12-")
+        case Some((2, minor)) if minor >= 13 => Seq(baseDir / s"$mainSrcDir-2.13+")
+        case _ => Nil
+      }
+    },
     libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.0.0")
   ): _*)
 
@@ -106,7 +116,7 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.12.8",
+    scalaVersion := "2.13.0",
     crossScalaVersions := Seq(scalaVersion.value, "2.12.8", "2.11.12"),
     scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),

@@ -5,7 +5,7 @@ import cats.effect.IO
 import fs2.Stream
 import org.specs2.mutable.Specification
 
-import scala.collection.immutable.ArraySeq
+import scala.collection.compat.immutable.ArraySeq
 
 class CodecRouterSpec extends Specification {
 
