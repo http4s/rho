@@ -1,9 +1,8 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.implicits._
 import cats.effect.{ExitCode, IO, IOApp}
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
-import org.http4s.syntax.all._
+import cats.syntax.semigroupk._ // For <+>
 import org.http4s.server.blaze._
 import org.log4s.getLogger
 
