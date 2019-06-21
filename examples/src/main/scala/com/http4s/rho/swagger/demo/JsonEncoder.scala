@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import org.http4s.headers.`Content-Type`
 import org.http4s.{Entity, EntityEncoder, MediaType}
 
-import scala.collection.immutable.ArraySeq
+import scala.collection.compat.immutable.ArraySeq
 
 object JsonEncoder {
   import fs2.Stream

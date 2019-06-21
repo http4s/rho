@@ -5,7 +5,7 @@ import java.util.ArrayList
 import io.swagger.{models => jm}
 import io.swagger.models.utils.PropertyModelConverter
 
-import scala.collection.MapView
+import scala.collection.compat.view._
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters._
 import scala.collection.immutable.ListMap
@@ -887,7 +887,7 @@ object models {
     def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
       if (m.isEmpty) null else m.asJava
 
-    def fromMap[A, B](m: MapView[A, B]): java.util.Map[A, B] =
+    def fromMap[A, B](m: IterableView[(A, B), Iterable[_]]): java.util.Map[A, B] =
       if (m.isEmpty) null else m.toMap.asJava
   }
 }

@@ -3,9 +3,13 @@ package rho
 package bits
 
 
+import java.nio.charset.StandardCharsets
+
 import cats.effect.IO
 import org.specs2.mutable.Specification
 import org.http4s.Uri.uri
+import org.http4s.server.middleware.TranslateUri
+import org.http4s.server.Router
 
 class PathTreeSpec extends Specification {
   import PathTree._
@@ -33,18 +37,18 @@ class PathTreeSpec extends Specification {
     }
   }
 
-//  "Honor UriTranslations" in {
-//    val svc = TranslateUri("/bar")(Router(("/", new RhoRoutes[IO] {
-//      GET / "foo" |>> "foo"
-//    }.toRoutes()))).orNotFound
-//
-//    val req = Request[IO](Method.GET, uri = Uri(path = "/bar/foo"))
-//    val resp = svc(req).unsafeRunSync()
-//
-//    resp.status must_== Status.Ok
-//    val b = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _), StandardCharsets.UTF_8)
-//    b must_== "foo"
-//  }
+  "Honor UriTranslations" in {
+    val svc = TranslateUri("/bar")(Router("/" -> new RhoRoutes[IO] {
+      GET / "foo" |>> "foo"
+    }.toRoutes())).orNotFound
+
+    val req = Request[IO](Method.GET, uri = Uri(path = "/bar/foo"))
+    val resp = svc(req).unsafeRunSync()
+
+    resp.status must_== Status.Ok
+    val b = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _), StandardCharsets.UTF_8)
+    b must_== "foo"
+  }
 
   "PathTree OPTIONS" should {
     val svc = new RhoRoutes[IO] {

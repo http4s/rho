@@ -14,7 +14,8 @@ import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
 
-import scala.collection.immutable.{ArraySeq, Seq}
+import scala.collection.compat.immutable.ArraySeq
+import scala.collection.immutable.Seq
 import scala.reflect._
 import scala.reflect.runtime.universe._
 

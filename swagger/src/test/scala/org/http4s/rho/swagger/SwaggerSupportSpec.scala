@@ -4,7 +4,6 @@ package swagger
 
 import cats.data.NonEmptyList
 import cats.effect.IO
-import cats.syntax.semigroupk._
 import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
@@ -72,14 +71,12 @@ class SwaggerSupportSpec extends Specification {
     "Provide a way to aggregate routes from multiple RhoRoutes" in {
       val aggregateSwagger = createSwagger()(baseRoutes.getRoutes ++ moarRoutes.getRoutes)
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
-      val httpRoutess = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).map(_.toRoutes())
-
-      val allthogetherRoutes = httpRoutess.reduceLeft(_ combineK _)
+      val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
-        parseJson(RRunner(allthogetherRoutes).checkOk(r)) \\ "paths"
+        parseJson(RRunner(httpRoutes.toRoutes()).checkOk(r)) \\ "paths"
 
       Set(a, b, c, d) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}")
     }
@@ -103,14 +100,12 @@ class SwaggerSupportSpec extends Specification {
     "Provide a way to agregate routes from multiple RhoRoutes, with mixed trailing slashes and non-trailing slashes" in {
       val aggregateSwagger = createSwagger()(baseRoutes.getRoutes ++ moarRoutes.getRoutes  ++ mixedTrailingSlashesRoutes.getRoutes)
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
-      val httpRoutess = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).map(_.toRoutes())
-
-      val allthogetherRoutes = httpRoutess.reduceLeft(_ combineK  _)
+      val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)), (e, JObject(_)), (f, JObject(_)), (g, JObject(_)))) =
-        parseJson(RRunner(allthogetherRoutes).checkOk(r)) \\ "paths"
+        parseJson(RRunner(httpRoutes.toRoutes()).checkOk(r)) \\ "paths"
 
       Set(a, b, c, d, e, f, g) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}", "/foo/", "/foo", "/bar")
     }
