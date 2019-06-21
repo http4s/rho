@@ -15,7 +15,9 @@ lazy val rho = project
 
 lazy val `rho-core` = project
   .in(file("core"))
-  .settings(buildSettings: _*)
+  .settings(buildSettings ++ Seq(
+    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.0.0")
+  ): _*)
 
 lazy val `rho-hal` = project
   .in(file("hal"))
@@ -94,7 +96,6 @@ def versionSpecificDisabledFlags(version: String) = (CrossVersion.partialVersion
   case _ => Seq.empty
 })
 
-
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
 
@@ -105,7 +106,7 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.13.0",
+    scalaVersion := "2.12.8",
     crossScalaVersions := Seq(scalaVersion.value, "2.12.8", "2.11.12"),
     scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),

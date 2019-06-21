@@ -5,6 +5,7 @@ import scala.collection.immutable.Seq
 import cats.Monad
 import shapeless.HList
 import org.http4s._
+import scala.collection.compat._
 
 /** CompileRoutes which accumulates routes and can build a `HttpRoutes` */
 final class RoutesBuilder[F[_]: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
