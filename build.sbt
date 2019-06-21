@@ -98,7 +98,7 @@ lazy val compilerFlags = Seq(
 
 def versionSpecificEnabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
   case Some((2, 13)) => Seq.empty[String]
-  case _ => Seq("Ypartial-unification")
+  case _ => Seq("-Ypartial-unification")
 })
 
 def versionSpecificDisabledFlags(version: String) = (CrossVersion.partialVersion(version) match {

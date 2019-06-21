@@ -1,7 +1,8 @@
 package com.http4s.rho.swagger.demo
 
 import cats.effect.{ExitCode, IO, IOApp}
-import cats.syntax.semigroupk._ // For <+>
+import cats.implicits._
+import org.http4s.implicits._
 import org.http4s.HttpRoutes
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
 import org.http4s.server.blaze.BlazeServerBuilder
