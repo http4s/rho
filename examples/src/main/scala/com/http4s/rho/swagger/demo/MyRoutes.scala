@@ -59,10 +59,11 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
       else BadRequest(s"Negative number: $i")
     }
 
-  "This gets a simple counter for the number of times this route has been requested" **
-    GET / "counter" |>> {
-      val i = new AtomicInteger(0)
-      F.pure(s"The number is ${i.getAndIncrement()}")
+  val counter = new AtomicInteger(0)
+
+  "This uses a simple counter for the number of times this route has been requested" **
+    POST / "counter" |>> { () =>
+      F.pure(s"The number is ${counter.getAndIncrement()}")
     }
 
   "Adds the cookie Foo=bar to the client" **
