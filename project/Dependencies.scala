@@ -3,7 +3,7 @@ import Keys._
 
 object Dependencies {
   lazy val http4sVersion = "0.20.3"
-  lazy val specs2Version = "4.5.1"
+  lazy val specs2Version = "4.6.0"
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
@@ -11,7 +11,7 @@ object Dependencies {
   lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
   lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
   lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
-  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.6.6"
+  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.6.7"
   lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.5.22"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
