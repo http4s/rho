@@ -1,4 +1,5 @@
 import sbt._
+import com.typesafe.tools.mima.plugin.MimaKeys._
 
 object RhoPlugin extends AutoPlugin {
   object autoImport {
@@ -40,4 +41,8 @@ object RhoPlugin extends AutoPlugin {
   }
 
   def isSnapshot(version: String): Boolean = version.endsWith("-SNAPSHOT")
+
+  def rhoPreviousArtifacts(lastVersion: String, projectName: String) = {
+    mimaPreviousArtifacts := Set("org.http4s" %% s"rho-$projectName" % lastVersion)
+  }
 }

@@ -2,7 +2,7 @@
 
 set -e
 
-SBT_COMMAND=";test"
+SBT_COMMAND=";test;mimaReportBinaryIssues"
 
 if [[ $TRAVIS_BRANCH = "master" || $TRAVIS_BRANCH = "release-"* ]] && [[ $TRAVIS_PULL_REQUEST = "false" ]]; then
   openssl aes-256-cbc -K $encrypted_cd7835b02b9f_key -iv $encrypted_cd7835b02b9f_iv -in bin/deployprep.enc -out bin/deployprep -d
