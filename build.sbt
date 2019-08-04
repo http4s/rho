@@ -10,21 +10,25 @@ import Dependencies._, RhoPlugin._
 
 lazy val rho = project
   .in(file("."))
+  .disablePlugins(MimaPlugin)
   .settings(buildSettings: _*)
   .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-examples`)
 
 lazy val `rho-core` = project
   .in(file("core"))
+  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "core"))
   .settings(buildSettings: _*)
 
 lazy val `rho-hal` = project
   .in(file("hal"))
   .settings(buildSettings :+ halDeps: _*)
+  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "hal"))
   .dependsOn(`rho-core`)
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
   .settings(buildSettings :+ swaggerDeps: _*)
+  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "swagger"))
   .dependsOn(`rho-core` % "compile->compile;test->test")
 
 lazy val docs = project
@@ -62,6 +66,7 @@ lazy val docs = project
 
 lazy val `rho-examples` = project
   .in(file("examples"))
+  .disablePlugins(MimaPlugin)
   .settings(
     buildSettings ++
       Revolver.settings ++
