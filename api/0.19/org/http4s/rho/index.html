@@ -376,9 +376,13 @@ which works with http4s authentication middleware.
 Please note that <code>AuthMiddleware</code>-wrapping is mandatory, otherwise context
 doesn't take effect.</p><pre><span class="kw">case</span> <span class="kw">class</span> User(name: <span class="std">String</span>, id: UUID)
 
-<span class="kw">val</span> middleware = AuthMiddleware { req <span class="kw">=&gt;</span>
-  OptionT(IO(User(<span class="lit">"Bob"</span>, UUID.randomUUID())))
+<span class="kw">val</span> authUser: Kleisli[IO, Request[IO], Either[<span class="std">String</span>, User]] = Kleisli{ req <span class="kw">=&gt;</span>
+  IO(Right(User(<span class="lit">"Bob"</span>, UUID.randomUUID())))
 }
+
+<span class="kw">val</span> onFailure: AuthedRoutes[<span class="std">String</span>, IO] = Kleisli(req <span class="kw">=&gt;</span> OptionT.liftF(Forbidden(req.authInfo)))
+
+<span class="kw">val</span> middleware = AuthMiddleware(authUser, onFailure)
 
 <span class="kw">object</span> Auth <span class="kw">extends</span> AuthedContext[IO, User]
 
