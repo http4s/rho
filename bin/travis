@@ -26,3 +26,4 @@ else
 fi
 
 sbt ++$TRAVIS_SCALA_VERSION $SBT_COMMAND
+sbt ++$TRAVIS_SCALA_VERSION mimaReportBinaryIssues

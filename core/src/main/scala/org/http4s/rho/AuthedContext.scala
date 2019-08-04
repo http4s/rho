@@ -16,9 +16,13 @@ import cats.effect._
   * {{{
   *     case class User(name: String, id: UUID)
   *
-  *     val middleware = AuthMiddleware { req =>
-  *       OptionT(IO(User("Bob", UUID.randomUUID())))
+  *     val authUser: Kleisli[IO, Request[IO], Either[String, User]] = Kleisli{ req =>
+  *       IO(Right(User("Bob", UUID.randomUUID())))
   *     }
+  *
+  *     val onFailure: AuthedRoutes[String, IO] = Kleisli(req => OptionT.liftF(Forbidden(req.authInfo)))
+  *
+  *     val middleware = AuthMiddleware(authUser, onFailure)
   *
   *     object Auth extends AuthedContext[IO, User]
   *

@@ -1,12 +1,8 @@
 package com.http4s.rho.swagger.demo
 
-import java.util.concurrent.atomic.AtomicInteger
-
 import cats.Monad
 import cats.effect.Effect
-import cats.syntax.either._
-import cats.syntax.functor._
-import cats.syntax.option._
+import cats.implicits._
 import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
 import com.http4s.rho.swagger.demo.MyRoutes._
 import fs2.Stream
@@ -21,7 +17,7 @@ import shapeless.HNil
 import scala.reflect.ClassTag
 import scala.collection.immutable.Seq
 
-abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implicit F: Monad[F])
+abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
   extends RhoRoutes[F] {
 
   import swaggerSyntax._
@@ -59,10 +55,18 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])(implici
       else BadRequest(s"Negative number: $i")
     }
 
-  "This gets a simple counter for the number of times this route has been requested" **
-    GET / "counter" |>> {
-      val i = new AtomicInteger(0)
-      F.pure(s"The number is ${i.getAndIncrement()}")
+  // Normally this would be part of the constructor since its creation is 'unsafe'
+  private val counterRef = cats.effect.concurrent.Ref.unsafe[F, Int](0)
+
+  "This uses a simple counter for the number of times this route has been requested" **
+    POST / "counter" |>> { () =>
+      counterRef.modify { i =>
+          val inc = i + 1
+          (inc, inc)
+        }
+        .map { counter => (
+          s"The number is ${counter}")
+        }
     }
 
   "Adds the cookie Foo=bar to the client" **
