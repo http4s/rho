@@ -10,4 +10,4 @@ addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.6")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.5.0")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.0")
