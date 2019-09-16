@@ -16,7 +16,7 @@ lazy val rho = project
 
 lazy val `rho-core` = project
   .in(file("core"))
-  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "core"))
+  .settings(mimaConfiguration)
   .settings(buildSettings ++ Seq(
     Compile / unmanagedSourceDirectories ++= {
       val baseDir = baseDirectory.value
@@ -34,13 +34,13 @@ lazy val `rho-core` = project
 lazy val `rho-hal` = project
   .in(file("hal"))
   .settings(buildSettings :+ halDeps: _*)
-  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "hal"))
+  .settings(mimaConfiguration)
   .dependsOn(`rho-core`)
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
   .settings(buildSettings :+ swaggerDeps: _*)
-  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "swagger"))
+  .settings(mimaConfiguration)
   .dependsOn(`rho-core` % "compile->compile;test->test")
 
 lazy val docs = project
