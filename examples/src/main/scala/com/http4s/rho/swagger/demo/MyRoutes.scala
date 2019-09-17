@@ -47,7 +47,7 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
     HEAD / "hello" |>> { Ok("Hello head!") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / Symbol("foo") +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+    GET / "result" / pv"foo" +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
@@ -97,9 +97,9 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
       Ok("Deleted cookies!").map(_.withHeaders(hs))
     }
 
-    "This route allows your to post stuff" **
-    List("post", "stuff") @@
-      POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
+  "This route allows your to post stuff" **
+  List("post", "stuff") @@
+    POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
       "You posted: " + body
     }
 
