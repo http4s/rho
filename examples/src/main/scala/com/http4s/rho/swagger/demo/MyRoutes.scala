@@ -17,7 +17,7 @@ import shapeless.HNil
 import scala.reflect.ClassTag
 import scala.collection.immutable.Seq
 
-abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
+class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
   extends RhoRoutes[F] {
 
   import swaggerSyntax._
