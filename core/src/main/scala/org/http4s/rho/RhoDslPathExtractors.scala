@@ -49,6 +49,6 @@ object RhoDslPathExtractors {
 
   class PathCaptureStringContext[F[_]](val sc: StringContext) extends AnyVal {
     def pv(args: Any*): TypedPath[F, String :: HNil] =
-      TypedPath[F, String :: HNil](PathCapture(sc.s(args), None, StringParser.strParser, stringTag))
+      TypedPath[F, String :: HNil](PathCapture(sc.s(args: _*), None, StringParser.strParser, stringTag))
   }
 }
