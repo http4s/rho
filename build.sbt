@@ -85,8 +85,7 @@ lazy val `rho-examples` = project
       Seq(
         exampleDeps,
         libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
-        dontPublish,
-        scalacOptions --= versionSpecificDisabledFlags(scalaVersion.value)
+        dontPublish
       ): _*)
   .dependsOn(`rho-swagger`, `rho-hal`)
 
@@ -104,11 +103,6 @@ lazy val compilerFlags = Seq(
 def versionSpecificEnabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
   case Some((2, 13)) => Seq.empty[String]
   case _ => Seq("-Ypartial-unification")
-})
-
-def versionSpecificDisabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
-  case Some((2, 13)) => Seq("-Xfatal-warnings")
-  case _ => Seq.empty
 })
 
 /* Don't publish setting */
