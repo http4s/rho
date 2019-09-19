@@ -8,6 +8,6 @@ addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.2")
 
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
 
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.5")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.7")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.5.0")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.6.0")
