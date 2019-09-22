@@ -1,11 +1,11 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.{Blocker, ContextShift, IO, Timer}
 import org.http4s.HttpRoutes
 import org.http4s.rho.RhoMiddleware
 import org.http4s.rho.swagger.syntax.io._
 
-class Routes(businessLayer: BusinessLayer)(implicit T: Timer[IO], cs: ContextShift[IO]) {
+class Routes(businessLayer: BusinessLayer, blocker: Blocker)(implicit T: Timer[IO], cs: ContextShift[IO]) {
 
   val middleware: RhoMiddleware[IO] =
     createRhoMiddleware()
@@ -18,6 +18,6 @@ class Routes(businessLayer: BusinessLayer)(implicit T: Timer[IO], cs: ContextShi
    * but its nice to keep it self contained
    */
   val staticContent: HttpRoutes[IO] =
-    new StaticContentService[IO](org.http4s.dsl.io) {}.routes
+    new StaticContentService[IO](org.http4s.dsl.io, blocker).routes
 
 }
