@@ -9,7 +9,6 @@ import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
 import shapeless._
 
-import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.collection.immutable.Seq
 
