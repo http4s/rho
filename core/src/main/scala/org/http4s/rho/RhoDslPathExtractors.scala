@@ -48,7 +48,7 @@ object RhoDslPathExtractors {
   private val stringTag = implicitly[TypeTag[String]]
 
   class PathCaptureStringContext[F[_]](val sc: StringContext) extends AnyVal {
-    def pv(args: Any*): TypedPath[F, String :: HNil] =
-      TypedPath[F, String :: HNil](PathCapture(sc.s(args: _*), None, StringParser.strParser, stringTag))
+    def pv(): TypedPath[F, String :: HNil] =
+      TypedPath[F, String :: HNil](PathCapture(sc.parts.mkString, None, StringParser.strParser, stringTag))
   }
 }
