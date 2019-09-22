@@ -5,8 +5,6 @@ import cats.effect.{Blocker, ContextShift, Sync, Timer}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 
-import scala.concurrent.ExecutionContext.global
-
 class StaticContentService[F[_]: Sync : Timer : ContextShift](dsl: Http4sDsl[F], blocker: Blocker) {
   import dsl._
 
