@@ -161,7 +161,7 @@ class ApiTest extends Specification {
     }
 
     "Append headers to a Route" in {
-      val path = POST / "hello" / Symbol("world") +? param[Int]("fav")
+      val path = POST / "hello" / pv"world" +? param[Int]("fav")
       val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 }
 
       val route = runWith((path >>> validations >>> capture(ETag)).decoding(EntityDecoder.text[IO])) {
@@ -180,7 +180,7 @@ class ApiTest extends Specification {
     }
 
     "accept compound or sequential header rules" in {
-      val path = POST / "hello" / Symbol("world")
+      val path = POST / "hello" / pv"world"
       val lplus1 = captureMap(headers.`Content-Length`)(_.length + 1)
 
       val route1 = runWith((path >>> lplus1 >>> capture(ETag)).decoding(EntityDecoder.text)) {
@@ -202,8 +202,8 @@ class ApiTest extends Specification {
     }
 
     "Run || routes" in {
-      val p1 = "one" / Symbol("two")
-      val p2 = "three" / Symbol("four")
+      val p1 = "one" / pv"two"
+      val p2 = "three" / pv"four"
 
       val f = runWith(GET / (p1 || p2)) { (s: String) => Ok("").map(_.putHeaders(ETag(ETag.EntityTag(s)))) }
 
@@ -216,7 +216,7 @@ class ApiTest extends Specification {
 
     "Execute a complicated route" in {
 
-      val path = POST / "hello" / Symbol("world") +? param[Int]("fav")
+      val path = POST / "hello" / pv"world" +? param[Int]("fav")
       val validations = existsAnd(headers.`Content-Length`){ h => h.length != 0 } &&
         capture(ETag)
 
@@ -277,7 +277,7 @@ class ApiTest extends Specification {
     }
 
     "capture a variable" in {
-      val stuff = GET / Symbol("hello")
+      val stuff = GET / pv"hello"
       val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
 
       val f = runWith(stuff) { str: String => Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(str)))) }

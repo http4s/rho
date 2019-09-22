@@ -39,8 +39,8 @@ class ApiExamples extends Specification {
         GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
           Ok(s"Received $i")
         }
-        // the symbol Symbol("world") just says 'capture a String' with variable name "world"
-        GET / "helloworldstring" / Symbol("world") / "foo" |>> { i: String =>
+        // the pv"world" (pv stands for path variable) says 'capture a String' with variable name "world"
+        GET / "helloworldstring" / pv"world" / "foo" |>> { i: String =>
           Ok(s"Received $i")
         }
         // capture dates
@@ -134,7 +134,7 @@ class ApiExamples extends Specification {
         GET / "request" |>> { _: Request[IO] =>
           Ok("I don't actually need a request...")
         }
-        GET / "request" / Symbol("foo") |>> { (_: Request[IO], _: String) =>
+        GET / "request" / pv"foo" |>> { (_: Request[IO], _: String) =>
           Ok("I wanted a request")
         }
       }

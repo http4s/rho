@@ -26,7 +26,7 @@ class RhoRoutesSpec extends Specification with RequestRunner {
 
     GET / "hello" |>> Ok("route1")
 
-    GET / Symbol("hello") |>> { _: String => Ok("route2") }
+    GET / pv"hello" |>> { _: String => Ok("route2") }
 
     GET / "hello" / "world" |>> Ok("route3")
 
