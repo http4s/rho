@@ -5,6 +5,7 @@ import java.time.Instant
 import java.util.{Date, UUID}
 
 import cats.effect.IO
+import org.http4s.rho.bits.StringParserSpec.UserId
 import org.specs2.mutable.Specification
 
 class StringParserSpec extends Specification {
@@ -83,4 +84,40 @@ class StringParserSpec extends Specification {
       new UUIDParser[IO]().parse("459043b-4dd9-a36d-b3a11b5eeb17") must haveClass[FailureResponse[IO]]
     }
   }
+
+  "Mapped StringParser" should {
+    val mappedParser = new LongParser[IO].map(UserId)
+
+    "succeed when base parser has succeeded" in {
+      mappedParser.parse("123") === SuccessResponse[IO, UserId](UserId(123L))
+    }
+
+    "fail when base parser has failed" in {
+      mappedParser.parse("abc") must haveClass[FailureResponse[IO]]
+    }
+  }
+
+  "RMapped StringParser" should {
+
+    val rmappedParser = new IntParser[IO].rmap(i =>
+      if(i >= 0) SuccessResponse(i)
+      else FailureResponseOps[IO].badRequest("Only non-negative integers are accepted.")
+    )
+
+    "succeed when base parser has succeeded and the mapping function has returned a SuccessResponse" in {
+      rmappedParser.parse("1") === SuccessResponse[IO, Int](1)
+    }
+
+    "fail when base parser has failed" in {
+      rmappedParser.parse("abc") must haveClass[FailureResponse[IO]]
+    }
+
+    "fail when mapping function has returned a FailureResponse" in {
+      rmappedParser.parse("-1") must haveClass[FailureResponse[IO]]
+    }
+  }
+}
+
+object StringParserSpec {
+  case class UserId(id: Long)
 }
