@@ -1,21 +1,15 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import cats.data.OptionT
-import cats.effect.{ContextShift, Sync, Timer}
+import cats.effect.{Blocker, ContextShift, Sync, Timer}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 
-import scala.concurrent.ExecutionContext.global
-
-abstract class StaticContentService[F[_]: Sync : Timer : ContextShift](dsl: Http4sDsl[F]) {
+class StaticContentService[F[_]: Sync : Timer : ContextShift](dsl: Http4sDsl[F], blocker: Blocker) {
   import dsl._
 
   private val halUiDir = "/hal-browser"
   private val swaggerUiDir = "/swagger-ui"
-
-  def fetchResource(path: String, req: Request[F]): OptionT[F, Response[F]] = {
-    StaticFile.fromResource(path, global, Some(req))
-  }
 
   /**
    * Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
@@ -34,5 +28,9 @@ abstract class StaticContentService[F[_]: Sync : Timer : ContextShift](dsl: Http
     case req @ GET -> Root / "lib" / _       => fetchResource(swaggerUiDir + req.pathInfo, req)
     case req @ GET -> Root / "swagger-ui"    => fetchResource(swaggerUiDir + "/index.html", req)
     case req @ GET -> Root / "swagger-ui.js" => fetchResource(swaggerUiDir + "/swagger-ui.min.js", req)
+  }
+
+  private def fetchResource(path: String, req: Request[F]): OptionT[F, Response[F]] = {
+    StaticFile.fromResource(path, blocker, Some(req))
   }
 }

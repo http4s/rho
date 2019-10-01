@@ -14,7 +14,7 @@ import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
 
-import scala.language.existentials
+import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.reflect._
 import scala.reflect.runtime.universe._
@@ -735,7 +735,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =
       EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.text.csv, Some(Charset.`UTF-8`))) { _: CsvFile =>
         val bv = "file content".getBytes(Charset.`UTF-8`.nioCharset)
-        org.http4s.Entity(Stream.emits(bv), Some(bv.length))
+        org.http4s.Entity(Stream.emits(ArraySeq.unsafeWrapArray(bv)), Some(bv.length))
       }
   }
 }

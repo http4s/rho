@@ -11,7 +11,7 @@ import net.sf.uadetector.internal.data.domain.{
   BrowserType => UBrowserType,
   OperatingSystem => UOperatingSystem}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Seq
 
 // --

@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets
 import org.http4s.headers.`Content-Type`
 import org.http4s.{Entity, EntityEncoder, MediaType}
 
+import scala.collection.compat.immutable.ArraySeq
+
 object JsonEncoder {
   import fs2.Stream
   import org.json4s._
@@ -19,6 +21,6 @@ object JsonEncoder {
   implicit def autoSerializableEntityEncoder[F[_], A <: AutoSerializable]: EntityEncoder[F, A] =
     EntityEncoder.encodeBy(`Content-Type`(MediaType.application.json))(a => {
       val bytes = write(a).getBytes(StandardCharsets.UTF_8)
-      Entity(Stream.emits(bytes), Some(bytes.length))
+      Entity(Stream.emits(ArraySeq.unsafeWrapArray(bytes)), Some(bytes.length))
     })
 }

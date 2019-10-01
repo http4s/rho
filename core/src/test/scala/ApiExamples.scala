@@ -39,8 +39,8 @@ class ApiExamples extends Specification {
         GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
           Ok(s"Received $i")
         }
-        // the symbol 'world just says 'capture a String' with variable name "world"
-        GET / "helloworldstring" / 'world / "foo" |>> { i: String =>
+        // the pv"world" (pv stands for path variable) says 'capture a String' with variable name "world"
+        GET / "helloworldstring" / pv"world" / "foo" |>> { i: String =>
           Ok(s"Received $i")
         }
         // capture dates
@@ -118,7 +118,7 @@ class ApiExamples extends Specification {
         val path2 = "two" / pathVar[Int]
 
         val getLength = captureMap(`Content-Length`)(_.length)
-        val getTag = captureMap(ETag)(_ => -1l)
+        val getTag = captureMap(ETag)(_ => -1L)
 
         GET / (path1 || path2) +? param[String]("foo") >>> (getLength || getTag) |>> {
           (i: Int, foo: String, v: Long) => Ok(s"Received $i, $foo, $v")
@@ -134,7 +134,7 @@ class ApiExamples extends Specification {
         GET / "request" |>> { _: Request[IO] =>
           Ok("I don't actually need a request...")
         }
-        GET / "request" / 'foo |>> { (_: Request[IO], _: String) =>
+        GET / "request" / pv"foo" |>> { (_: Request[IO], _: String) =>
           Ok("I wanted a request")
         }
       }

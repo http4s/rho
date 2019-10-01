@@ -12,7 +12,7 @@ class ParamDefaultValueSpec extends Specification {
     new String(routes(r).value.unsafeRunSync().getOrElse(Response.notFound).body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
 
   def requestGet(s: String, h: Header*): Request[IO] =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).right.getOrElse(sys.error("Failed.")), headers = Headers.of(h: _*))
+    Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers.of(h: _*))
 
   "GET /test1" should {
     val routes = new RhoRoutes[IO] {
@@ -299,13 +299,13 @@ class ParamDefaultValueSpec extends Specification {
       body(routes, requestGet("/test13")) must be equalTo default
     }
     "fail to map parameter with empty value" in {
-      body(routes, requestGet("/test13?param1=")) must be equalTo "Invalid query parameter: \"param1\" = \"List()\""
+      body(routes, requestGet("/test13?param1=")) must be matching """Invalid query parameter: "param1" = "(List|Vector)\(\)"""".r
     }
     "fail to map parameter with one invalid value" in {
-      body(routes, requestGet("/test13?param1=z")) must be equalTo "Invalid query parameter: \"param1\" = \"List(z)\""
+      body(routes, requestGet("/test13?param1=z")) must be matching """Invalid query parameter: "param1" = "(List|Vector)\(z\)"""".r
     }
     "map parameter with many values and one invalid" in {
-      body(routes, requestGet("/test13?param1=z&param1=aa&param1=bb")) must be equalTo "Invalid query parameter: \"param1\" = \"List(z, aa, bb)\""
+      body(routes, requestGet("/test13?param1=z&param1=aa&param1=bb")) must be matching """Invalid query parameter: "param1" = "(List|Vector)\(z, aa, bb\)"""".r
     }
     "map parameter with many valid values" in {
       body(routes, requestGet("/test13?param1=c&param1=d")) must be equalTo "test13:c,d"
@@ -329,7 +329,7 @@ class ParamDefaultValueSpec extends Specification {
       body(routes, requestGet("/test14?param1=")) must be equalTo "Invalid number format: ''"
     }
     "fail to map parameter with one invalid numeric value" in {
-      body(routes, requestGet("/test14?param1=8&param1=5&param1=3")) must be equalTo "Invalid query parameter: \"param1\" = \"List(8, 5, 3)\""
+      body(routes, requestGet("/test14?param1=8&param1=5&param1=3")) must be matching """Invalid query parameter: "param1" = "(List|Vector)\(8, 5, 3\)"""".r
     }
     "fail to map parameter with one non-numeric value" in {
       body(routes, requestGet("/test14?param1=test")) must be equalTo "Invalid number format: 'test'"

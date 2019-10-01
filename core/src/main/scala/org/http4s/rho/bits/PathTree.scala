@@ -258,12 +258,12 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
             if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
             else FailureResponse.pure[F] {
-              val ms = end.keys
+              val ms = end.keySet
               val allowedMethods = ms.mkString(", ")
               val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
 
               F.map(MethodNotAllowed.pure(msg))(
-                _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
+                _.putHeaders(headers.Allow(ms)))
             }
         }
       }

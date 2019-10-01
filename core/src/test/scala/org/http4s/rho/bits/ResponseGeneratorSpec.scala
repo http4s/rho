@@ -30,7 +30,7 @@ class ResponseGeneratorSpec extends Specification {
     }
 
     "Build a redirect response" in {
-      val location = Uri.fromString("/foo").right.getOrElse(sys.error("Fail."))
+      val location = Uri.fromString("/foo").getOrElse(sys.error("Fail."))
       val result = MovedPermanently(location).unsafeRunSync()
       val resp = result.resp
 
@@ -43,7 +43,7 @@ class ResponseGeneratorSpec extends Specification {
 
     "Build a redirect response with a body" in {
       val testBody = "Moved!!!"
-      val location = Uri.fromString("/foo").right.getOrElse(sys.error("Fail."))
+      val location = Uri.fromString("/foo").getOrElse(sys.error("Fail."))
       val result = MovedPermanently(location, testBody).unsafeRunSync()
       val resp = result.resp
 
