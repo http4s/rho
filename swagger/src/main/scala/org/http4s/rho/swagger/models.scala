@@ -19,6 +19,7 @@ object models {
     , info                : Option[Info]                          = None
     , host                : Option[String]                        = None
     , basePath            : Option[String]                        = None
+    , tags                : List[Tag]                             = Nil
     , schemes             : List[Scheme]                          = Nil
     , consumes            : List[String]                          = Nil
     , produces            : List[String]                          = Nil
@@ -859,6 +860,24 @@ object models {
       sp.setPattern(fromOption(pattern))
       sp.setDefault(fromOption(default))
       sp
+    }
+  }
+
+  case class Tag
+    (
+      name: String
+    , description: Option[String]        = None
+    , externalDocs: Option[ExternalDocs] = None
+    , vendorExtensions: Map[String, Any] = Map.empty
+    ) {
+
+    def toJModel: jm.Tag = {
+      val tag = new jm.Tag
+      tag.setName(name)
+      tag.setDescription(fromOption(description))
+      tag.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
+      vendorExtensions.foreach { case (key, value) => tag.setVendorExtension(key, value) }
+      tag
     }
   }
 
