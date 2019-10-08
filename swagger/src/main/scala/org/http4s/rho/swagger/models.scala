@@ -19,7 +19,6 @@ object models {
     , info                : Option[Info]                          = None
     , host                : Option[String]                        = None
     , basePath            : Option[String]                        = None
-    , tags                : List[Tag]                             = Nil
     , schemes             : List[Scheme]                          = Nil
     , consumes            : List[String]                          = Nil
     , produces            : List[String]                          = Nil
@@ -29,6 +28,7 @@ object models {
     , parameters          : Map[String, Parameter]                = Map.empty
     , externalDocs        : Option[ExternalDocs]                  = None
     , security            : List[SecurityRequirement]             = Nil
+    , tags                : List[Tag]                             = Nil
     , vendorExtensions    : Map[String, Any]                      = Map.empty
     ) {
 
@@ -47,6 +47,7 @@ object models {
       s.setDefinitions(fromMap(definitions.view.mapValues(_.toJModel)))
       s.setParameters(fromMap(parameters.view.mapValues(_.toJModel)))
       s.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
+      s.setTags(fromList(tags.map(_.toJModel)))
       vendorExtensions.foreach {
         case (key, value:Map[_,_]) => s.setVendorExtension(key, fromMap(value))
         case (key, value:Option[_]) => s.setVendorExtension(key, fromOption(value))

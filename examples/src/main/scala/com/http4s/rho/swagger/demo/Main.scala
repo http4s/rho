@@ -4,6 +4,7 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
+import org.http4s.rho.swagger.models.Tag
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
@@ -22,7 +23,9 @@ object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] =
     Blocker[IO].use { blocker =>
 
-      val middleware = createRhoMiddleware()
+      val tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
+
+      val middleware = createRhoMiddleware(tags = tags)
 
       val myService: HttpRoutes[IO] =
         new MyRoutes[IO](ioSwagger).toRoutes(middleware)

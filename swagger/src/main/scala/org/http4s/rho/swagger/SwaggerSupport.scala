@@ -34,10 +34,11 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
       produces: List[String] = Nil,
       security: List[SecurityRequirement] = Nil,
       securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+      tags: List[Tag] = Nil,
       vendorExtensions: Map[String, AnyRef] = Map.empty): RhoMiddleware[F] = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, vendorExtensions)(
+      createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, tags, vendorExtensions)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -60,6 +61,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
       produces: List[String] = Nil,
       security: List[SecurityRequirement] = Nil,
       securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+      tags: List[Tag] = Nil,
       vendorExtensions: Map[String, AnyRef] = Map.empty)(routes: Seq[RhoRoute[F, _]]): Swagger = {
 
     val sb = new SwaggerModelsBuilder(swaggerFormats)
@@ -72,6 +74,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
         produces = produces,
         security = security,
         securityDefinitions = securityDefinitions,
+        tags = tags,
         vendorExtensions = vendorExtensions
       )
   }
