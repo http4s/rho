@@ -22,7 +22,13 @@ trait StringParser[F[_], T] extends ResponseGeneratorInstances[F] {
   /** TypeTag of the type T */
   def typeTag: Option[TypeTag[T]]
 
-  def invalidNumberFormat[A](n : String)(implicit F: Monad[F]): FailureResponse[F] = FailureResponse.pure[F] {
+  def map[U](f: T => U)(implicit ttu: TypeTag[U]): StringParser[F, U] =
+    new RMappedParser[F, T, U](this, (t: T) => SuccessResponse(f(t)), ttu)
+
+  def rmap[U](f: T => ResultResponse[F, U])(implicit ttu: TypeTag[U]): StringParser[F, U] =
+    new RMappedParser[F, T, U](this, f, ttu)
+
+  protected def invalidNumberFormat[A](n: String)(implicit F: Monad[F]): FailureResponse[F] = FailureResponse.pure[F] {
     BadRequest.pure(s"Invalid number format: '$n'")
   }
 }
@@ -117,6 +123,12 @@ class UUIDParser[F[_]] extends StringParser[F, UUID] {
           BadRequest.pure(s"Invalid uuid format: $s")
         }
     }
+}
+
+private class RMappedParser[F[_], T, U](base: StringParser[F, T], f: T => ResultResponse[F, U], ttu: TypeTag[U]) extends StringParser[F, U] {
+  override def typeTag: Option[TypeTag[U]] = Some(ttu)
+
+  override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, U] = base.parse(s).flatMap(f)
 }
 
 object StringParser {
