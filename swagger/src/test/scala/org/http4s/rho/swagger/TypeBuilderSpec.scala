@@ -55,6 +55,10 @@ package object model {
   case class Value2() extends LowerLevelSealedTrait
   case class Value3() extends LowerLevelSealedTrait
 
+  sealed trait MixedSealed
+  case class CaseClass() extends MixedSealed
+  case object CaseObject extends MixedSealed
+
   trait Outer[T]{
     case class Inner(t: T)
   }
@@ -389,6 +393,23 @@ class TypeBuilderSpec extends Specification {
       modelOf[TopLevelSealedTrait] must_== modelOf[LowerLevelSealedTrait]
       modelOf[LowerLevelSealedTrait] must_== modelOf[Value1]
       modelOf[Value1] must_== modelOf[Value2]
+    }
+
+    "Build identical model for case objects and empty case classes belonging to a sealed trait" in {
+      val ms = modelOf[MixedSealed]
+      ms.size must_== 3
+
+      val Some(caseClass: models.ComposedModel) = ms.find(_.id2 == "CaseClass")
+      val Some(caseClassParent: models.RefModel) = caseClass.parent
+      caseClassParent.id2 must_== "MixedSealed"
+      val Some(caseClassInnerModel) = caseClass.allOf.find(_.id2 == "CaseClass")
+
+      val Some(caseObject: models.ComposedModel) = ms.find(_.id2 == "CaseObject")
+      val Some(caseObjectParent: models.RefModel) = caseObject.parent
+      caseObjectParent.id2 must_== "MixedSealed"
+      val Some(caseObjectInnerModel) = caseObject.allOf.find(_.id2 == "CaseObject")
+
+      caseClassInnerModel.properties must_== caseObjectInnerModel.properties
     }
 
     "Build a model for a case class containing a sealed enum" in {
