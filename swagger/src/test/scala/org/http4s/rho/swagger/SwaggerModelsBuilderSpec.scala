@@ -176,7 +176,7 @@ class SwaggerModelsBuilderSpec extends Specification {
       )
     }
 
-    "handle and action with query parameters of empty data types" in {
+    "handle an action with query parameters of empty data types" in {
       val ra = fooPath +? param[Unit]("unit") & param[Void]("void") |>> { (_: Unit, _: Void) => "" }
 
       sb.collectQueryParams[IO](ra) must_==
