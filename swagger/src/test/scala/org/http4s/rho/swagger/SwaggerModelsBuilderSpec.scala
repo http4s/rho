@@ -175,6 +175,16 @@ class SwaggerModelsBuilderSpec extends Specification {
         QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty(`type` = "string")), defaultValue = "".some, isArray = true)
       )
     }
+
+    "handle an action with query parameters of empty data types" in {
+      val ra = fooPath +? param[Unit]("unit") & param[Void]("void") |>> { (_: Unit, _: Void) => "" }
+
+      sb.collectQueryParams[IO](ra) must_==
+        List(
+          QueryParameter(`type` = "string".some, name = "unit".some, required = true),
+          QueryParameter(`type` = "string".some, name = "void".some, required = true),
+        )
+    }
   }
 
   "SwaggerModelsBuilder.collectHeaderParams" should {

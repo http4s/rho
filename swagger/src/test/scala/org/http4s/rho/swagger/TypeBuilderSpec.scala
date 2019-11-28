@@ -177,9 +177,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Nothing" in {
       val ms = modelOf[FooGeneric[Nothing]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Nothing»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Nothing»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Nothing"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Nothing"
       }
 
       ms.find(_.id2 == "Nothing") must beSome
@@ -188,9 +188,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Null" in {
       val ms = modelOf[FooGeneric[Null]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Null»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Null»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Null"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Null"
       }
 
       ms.find(_.id2 == "Null") must beSome
@@ -199,9 +199,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Unit" in {
       val ms = modelOf[FooGeneric[Unit]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Unit»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Unit»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Unit"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Unit"
       }
 
       ms.find(_.id2 == "Unit") must beSome
@@ -210,9 +210,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Void" in {
       val ms = modelOf[FooGeneric[Void]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Void»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Void»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Void"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Void"
       }
 
       ms.find(_.id2 == "Void") must beSome

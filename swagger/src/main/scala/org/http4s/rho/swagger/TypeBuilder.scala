@@ -180,20 +180,21 @@ object TypeBuilder {
   private def typeToProperty(tpe: Type, sfs: SwaggerFormats): Property = {
     sfs.customFieldSerializers.applyOrElse(tpe, { _: Type =>
       val TypeRef(_, ptSym: Symbol, _) = tpe
-
-      if (tpe.isMap && !tpe.isNothingOrNull) {
+      if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
+        RefProperty(tpe.simpleName)
+      } else if (tpe.isMap) {
         val pType = tpe.dealias.typeArgs.last
         val itemProperty = typeToProperty(pType, sfs).withRequired(false)
         MapProperty(additionalProperties = itemProperty)
       }
-      else if (tpe.isCollection && !tpe.isNothingOrNull) {
+      else if (tpe.isCollection) {
         val pType = tpe.dealias.typeArgs.head
         val itemProperty = typeToProperty(pType, sfs).withRequired(false)
         ArrayProperty(items = itemProperty)
       }
-      else if (tpe.isOption && !tpe.isNothingOrNull)
+      else if (tpe.isOption)
         typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-      else if (tpe.isAnyVal && !tpe.isPrimitive && !tpe.isUnitOrVoid && !tpe.isNothingOrNull)
+      else if (tpe.isAnyVal && !tpe.isPrimitive)
         typeToProperty(ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.head.typeSignature, sfs)
       else if (isCaseClass(ptSym) || isSumType(ptSym))
         RefProperty(tpe.simpleName)
@@ -261,7 +262,7 @@ object TypeBuilder {
     private[swagger] def fromType(t: Type): DataType = {
       val klass = if (t.isOption && t.typeArgs.nonEmpty) t.typeArgs.head else t
 
-      if (klass.isNothingOrNull || klass.isUnitOrVoid) ComplexDataType(klass.simpleName, qualifiedName = Option(klass.fullName))
+      if (klass.isNothingOrNull || klass.isUnitOrVoid) ComplexDataType("string", qualifiedName = Option(klass.fullName))
       else if (isString(klass)) this.String
       else if (klass <:< typeOf[Byte] || klass <:< typeOf[java.lang.Byte]) this.Byte
       else if (klass <:< typeOf[Long] || klass <:< typeOf[java.lang.Long]) this.Long
