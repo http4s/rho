@@ -5,7 +5,6 @@ package bits
 import cats.{Applicative, Monad}
 import cats.syntax.flatMap._
 import org.http4s.rho.bits.PathAST._
-import org.http4s.util.UrlCodingUtils
 import org.log4s.getLogger
 import shapeless.{HList, HNil}
 
@@ -29,11 +28,11 @@ object PathTree {
     def go(i: Int, begin: Int): Unit = {
       if (i < len) {
         if (path.charAt(i) == '/') {
-          if (i > begin) buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
+          if (i > begin) buff += org.http4s.Uri.decode(path.substring(begin, i))
           go(i + 1, i + 1)
         } else go(i + 1, begin)
       } else {
-        buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
+        buff += org.http4s.Uri.decode(path.substring(begin, i))
       }
     }
 
