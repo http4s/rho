@@ -21,7 +21,7 @@ class RouteAsUriTemplateSpec extends Specification {
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"))))
     }
     "convert to /hello{/world}" in {
-      val route: PathBuilder[IO, _ <: HList] = GET / "hello" / 'world
+      val route: PathBuilder[IO, _ <: HList] = GET / "hello" / pv"world"
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathExp("world"))))
     }
     "convert to /hello/world/next/time" in {
@@ -102,7 +102,7 @@ class RouteAsUriTemplateSpec extends Specification {
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"))))
     }
     "convert to /hello{/world}" in {
-      val route = "hello" / 'world
+      val route = "hello" / pv"world"
       route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathExp("world"))))
     }
     "convert to /hello/world/next/time" in {

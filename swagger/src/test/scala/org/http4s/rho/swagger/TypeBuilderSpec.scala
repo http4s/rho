@@ -55,6 +55,10 @@ package object model {
   case class Value2() extends LowerLevelSealedTrait
   case class Value3() extends LowerLevelSealedTrait
 
+  sealed trait MixedSealed
+  case class CaseClass() extends MixedSealed
+  case object CaseObject extends MixedSealed
+
   trait Outer[T]{
     case class Inner(t: T)
   }
@@ -173,9 +177,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Nothing" in {
       val ms = modelOf[FooGeneric[Nothing]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Nothing»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Nothing»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Nothing"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Nothing"
       }
 
       ms.find(_.id2 == "Nothing") must beSome
@@ -184,9 +188,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Null" in {
       val ms = modelOf[FooGeneric[Null]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Null»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Null»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Null"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Null"
       }
 
       ms.find(_.id2 == "Null") must beSome
@@ -195,9 +199,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Unit" in {
       val ms = modelOf[FooGeneric[Unit]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Unit»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Unit»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Unit"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Unit"
       }
 
       ms.find(_.id2 == "Unit") must beSome
@@ -206,9 +210,9 @@ class TypeBuilderSpec extends Specification {
     "Build a model with a generic of type Void" in {
       val ms = modelOf[FooGeneric[Void]]
       ms.size must_== 2
-      ms.find(_.id2 == "FooGeneric«Void»") must beSome.which { m =>
+      ms.find(_.id2 == "FooGeneric«Void»") must beSome[Model].which { m =>
         m.properties.size must_== 1
-        m.properties("a").`type` must_== "Void"
+        m.properties("a").asInstanceOf[RefProperty].ref must_== "Void"
       }
 
       ms.find(_.id2 == "Void") must beSome
@@ -389,6 +393,23 @@ class TypeBuilderSpec extends Specification {
       modelOf[TopLevelSealedTrait] must_== modelOf[LowerLevelSealedTrait]
       modelOf[LowerLevelSealedTrait] must_== modelOf[Value1]
       modelOf[Value1] must_== modelOf[Value2]
+    }
+
+    "Build identical model for case objects and empty case classes belonging to a sealed trait" in {
+      val ms = modelOf[MixedSealed]
+      ms.size must_== 3
+
+      val Some(caseClass: models.ComposedModel) = ms.find(_.id2 == "CaseClass")
+      val Some(caseClassParent: models.RefModel) = caseClass.parent
+      caseClassParent.id2 must_== "MixedSealed"
+      val Some(caseClassInnerModel) = caseClass.allOf.find(_.id2 == "CaseClass")
+
+      val Some(caseObject: models.ComposedModel) = ms.find(_.id2 == "CaseObject")
+      val Some(caseObjectParent: models.RefModel) = caseObject.parent
+      caseObjectParent.id2 must_== "MixedSealed"
+      val Some(caseObjectInnerModel) = caseObject.allOf.find(_.id2 == "CaseObject")
+
+      caseClassInnerModel.properties must_== caseObjectInnerModel.properties
     }
 
     "Build a model for a case class containing a sealed enum" in {

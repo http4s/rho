@@ -5,6 +5,8 @@ import cats.effect.IO
 import fs2.Stream
 import org.specs2.mutable.Specification
 
+import scala.collection.compat.immutable.ArraySeq
+
 class CodecRouterSpec extends Specification {
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
@@ -21,7 +23,7 @@ class CodecRouterSpec extends Specification {
 
     "Decode a valid body" in {
 
-      val b = Stream.emits("hello".getBytes)
+      val b = Stream.emits(ArraySeq.unsafeWrapArray("hello".getBytes))
       val h = Headers.of(headers.`Content-Type`(MediaType.text.plain))
       val req = Request[IO](Method.POST, Uri(path = "/foo"), headers = h, body = b)
       val result = routes(req).value.unsafeRunSync().getOrElse(Response.notFound)
@@ -32,7 +34,7 @@ class CodecRouterSpec extends Specification {
     }
 
     "Fail on invalid body" in {
-      val b = Stream.emits("hello =".getBytes)
+      val b = Stream.emits(ArraySeq.unsafeWrapArray("hello =".getBytes))
       val h = Headers.of(headers.`Content-Type`(MediaType.application.`x-www-form-urlencoded`))
       val req = Request[IO](Method.POST, Uri(path = "/form"), headers = h, body = b)
 

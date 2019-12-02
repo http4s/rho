@@ -51,7 +51,7 @@ class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
     type O[A] = OptionT[F, A]
 
     Kleisli[O, AuthedRequest[F, U], Response[F]] { a: AuthedRequest[F, U] =>
-      routes(a.req.withAttribute[U](authKey, a.authInfo))
+      routes(a.req.withAttribute[U](authKey, a.context))
     }
   }
 

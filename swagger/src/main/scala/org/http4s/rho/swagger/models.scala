@@ -5,8 +5,9 @@ import java.util.ArrayList
 import io.swagger.{models => jm}
 import io.swagger.models.utils.PropertyModelConverter
 
+import scala.collection.compat.view._
 import scala.collection.immutable.Seq
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.ListMap
 
 object models {
@@ -27,6 +28,7 @@ object models {
     , parameters          : Map[String, Parameter]                = Map.empty
     , externalDocs        : Option[ExternalDocs]                  = None
     , security            : List[SecurityRequirement]             = Nil
+    , tags                : List[Tag]                             = Nil
     , vendorExtensions    : Map[String, Any]                      = Map.empty
     ) {
 
@@ -39,12 +41,13 @@ object models {
       s.setSchemes(fromList(schemes.map(_.toJModel)))
       s.setConsumes(fromList(consumes))
       s.setProduces(fromList(produces))
-      s.setPaths(fromMap(paths.mapValues(_.toJModel)))
+      s.setPaths(fromMap(paths.view.mapValues(_.toJModel)))
       s.setSecurity(fromList(security.map(_.toJModel)))
-      s.setSecurityDefinitions(fromMap(securityDefinitions.mapValues(_.toJModel)))
-      s.setDefinitions(fromMap(definitions.mapValues(_.toJModel)))
-      s.setParameters(fromMap(parameters.mapValues(_.toJModel)))
+      s.setSecurityDefinitions(fromMap(securityDefinitions.view.mapValues(_.toJModel)))
+      s.setDefinitions(fromMap(definitions.view.mapValues(_.toJModel)))
+      s.setParameters(fromMap(parameters.view.mapValues(_.toJModel)))
       s.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
+      s.setTags(fromList(tags.map(_.toJModel)))
       vendorExtensions.foreach {
         case (key, value:Map[_,_]) => s.setVendorExtension(key, fromMap(value))
         case (key, value:Option[_]) => s.setVendorExtension(key, fromOption(value))
@@ -280,9 +283,9 @@ object models {
       o.setConsumes(fromList(consumes))
       o.setProduces(fromList(produces))
       o.setParameters(fromList(parameters.map(_.toJModel)))
-      o.setResponses(fromMap(responses.mapValues(_.toJModel)))
-      o.setSecurity(fromList(security.map { m =>
-        m.mapValues(_.asJava).asJava
+      o.setResponses(fromMap(responses.view.mapValues(_.toJModel).toMap))
+      o.setSecurity(fromList(security.map { m : Map[String, List[String]] =>
+        m.view.mapValues(_.asJava).toMap.asJava
       }))
       o.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       o.setDeprecated(deprecated)
@@ -304,7 +307,7 @@ object models {
       r.setDescription(description)
       r.setResponseSchema(fromOption(schema.map(_.toJModel).map(new PropertyModelConverter().propertyToModel)))
       r.setExamples(fromMap(examples))
-      r.setHeaders(fromMap(headers.mapValues(_.toJModel)))
+      r.setHeaders(fromMap(headers.view.mapValues(_.toJModel).toMap))
       r
     }
   }
@@ -343,7 +346,7 @@ object models {
       m.setDescription(fromOption(description))
       m.setRequired(required.asJava)
       m.setExample(fromOption(example))
-      m.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      m.setProperties(fromMap(properties.view.mapValues(_.toJModel).toMap))
       if (additionalProperties.nonEmpty) m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
       m.setDiscriminator(fromOption(discriminator))
       m.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
@@ -367,7 +370,7 @@ object models {
       val am = new jm.ArrayModel
       am.setType(fromOption(`type`))
       am.setDescription(fromOption(description))
-      am.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      am.setProperties(fromMap(properties.view.mapValues(_.toJModel)))
       am.setItems(fromOption(items.map(_.toJModel)))
       am.setExample(fromOption(example))
       am.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
@@ -395,8 +398,8 @@ object models {
       cm.setAllOf(new ArrayList(allOf.map(_.toJModel).asJava))
       parent.map(_.toJModel).foreach(p => cm.setParent(p))
       child.map(_.toJModel).foreach(c => cm.setChild(c))
-      cm.setInterfaces(interfaces.map(_.toJModel.asInstanceOf[jm.RefModel]).asJava)
-      cm.setProperties(properties.mapValues(_.toJModel).asJava)
+      cm.setInterfaces(interfaces.map(_.toJModel).asJava)
+      cm.setProperties(properties.view.mapValues(_.toJModel).toMap.asJava)
       cm.setExample(fromOption(example))
       cm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       cm
@@ -414,10 +417,10 @@ object models {
     , externalDocs : Option[ExternalDocs]  = None
     ) extends Model {
 
-    def toJModel: jm.Model = {
+    def toJModel: jm.RefModel = {
       val rm = new jm.RefModel(ref)
       rm.setDescription(fromOption(description))
-      rm.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      rm.setProperties(fromMap(properties.view.mapValues(_.toJModel)))
       rm.setExample(fromOption(example))
       rm.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       rm
@@ -633,7 +636,7 @@ object models {
       }
 
       def get$ref() = $ref
-      def set$ref($ref: String) { this.$ref = $ref }
+      def set$ref($ref: String) : Unit = { this.$ref = $ref }
     }
 
     def toJModel: jm.parameters.Parameter = {
@@ -708,7 +711,7 @@ object models {
       }
 
       def get$ref() = $ref
-      def set$ref($ref: String) { this.$ref = $ref }
+      def set$ref($ref: String) : Unit = { this.$ref = $ref }
     }
 
     def withRequired(required: Boolean): AbstractProperty =
@@ -747,7 +750,7 @@ object models {
       ap.setTitle(fromOption(title))
       ap.setDescription(fromOption(description))
       ap.setFormat(fromOption(format))
-      ap.setProperties(fromMap(properties.mapValues(_.toJModel)))
+      ap.setProperties(fromMap(properties.view.mapValues(_.toJModel)))
       ap
     }
   }
@@ -861,6 +864,24 @@ object models {
     }
   }
 
+  case class Tag
+    (
+      name: String
+    , description: Option[String]        = None
+    , externalDocs: Option[ExternalDocs] = None
+    , vendorExtensions: Map[String, Any] = Map.empty
+    ) {
+
+    def toJModel: jm.Tag = {
+      val tag = new jm.Tag
+      tag.setName(name)
+      tag.setDescription(fromOption(description))
+      tag.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
+      vendorExtensions.foreach { case (key, value) => tag.setVendorExtension(key, value) }
+      tag
+    }
+  }
+
   case class ExternalDocs
     (
       description : String
@@ -885,5 +906,8 @@ object models {
 
     def fromMap[A, B](m: Map[A, B]): java.util.Map[A, B] =
       if (m.isEmpty) null else m.asJava
+
+    def fromMap[A, B](m: IterableView[(A, B), Iterable[_]]): java.util.Map[A, B] =
+      if (m.isEmpty) null else m.toMap.asJava
   }
 }

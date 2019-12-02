@@ -2,11 +2,8 @@ package org.http4s
 package rho
 
 import scala.collection.immutable.Seq
-
-import cats.Monad
-import cats.data.Kleisli
+import cats.effect.Sync
 import shapeless.HList
-
 import org.http4s.rho.RhoRoute.Tpe
 import org.http4s.rho.bits.PathTree
 
@@ -43,8 +40,8 @@ object CompileRoutes {
     * @param routes `Seq` of routes to bundle into a service.
     * @return An `HttpRoutes`
     */
-  def foldRoutes[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
+  def foldRoutes[F[_]: Sync](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
     val tree = routes.foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
-    Kleisli((req: Request[F]) => tree.getResult(req).toResponse)
+    HttpRoutes((req: Request[F]) => tree.getResult(req).toResponse)
   }
 }

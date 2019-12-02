@@ -10,14 +10,9 @@ import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
 import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, Uri, headers}
-import org.json4s.DefaultFormats
-import org.json4s.jackson.JsonMethods
 import shapeless.HNil
 
-import scala.reflect.ClassTag
-import scala.collection.immutable.Seq
-
-abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
+class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
   extends RhoRoutes[F] {
 
   import swaggerSyntax._
@@ -47,7 +42,7 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
     HEAD / "hello" |>> { Ok("Hello head!") }
 
   "Generates some JSON data from a route param, and a query Int" **
-    GET / "result" / 'foo +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
+    GET / "result" / pv"foo" +? param[Int]("id") |>> { (name: String, id: Int) => Ok(JsonResult(name, id)) }
 
   "Two different response codes can result from this route based on the number given" **
     GET / "differentstatus" / pathVar[Int] |>> { i: Int =>
@@ -97,9 +92,9 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
       Ok("Deleted cookies!").map(_.withHeaders(hs))
     }
 
-    "This route allows your to post stuff" **
-    List("post", "stuff") @@
-      POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
+  "This route allows your to post stuff" **
+  List("post", "stuff") @@
+    POST / "post" ^ EntityDecoder.text[F] |>> { body: String =>
       "You posted: " + body
     }
 
@@ -121,32 +116,27 @@ abstract class MyRoutes[F[+_] : Effect](swaggerSyntax: SwaggerSyntax[F])
     GET / "file" |>> Ok(SwaggerFileResponse("HELLO"))
 
   "This route demonstrates how to use a complex data type as parameters in route" **
-  GET / "complex" +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (foo: Foo, bars: Seq[Bar]) =>
+    GET / "complex" +? param[Foo]("foo") & param[Bar]("bar", Bar(0)) |>> { (foo: Foo, bars: Bar) =>
     Ok(s"Received foo: $foo, bars: $bars")
   }
 }
 
 object MyRoutes {
-  import scala.reflect.runtime.universe.TypeTag
 
-  case class Foo(k: String, v: Int)
-  case class Bar(id: Long, foo: Foo)
+  case class Foo(key: String, value: String)
 
-  case class JsonResult(name: String, number: Int) extends AutoSerializable
-
-  private implicit val format: DefaultFormats =
-    DefaultFormats
-
-  implicit def jsonParser[F[_], A : TypeTag : ClassTag]: StringParser[F, A] = new StringParser[F, A] with FailureResponseOps[F] {
-    override val typeTag: Option[TypeTag[A]] =
-      implicitly[TypeTag[A]].some
-
-    override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, A] = {
-
-      Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
-        case Left(t) => badRequest[String](t.getMessage)
-        case Right(t) => SuccessResponse(t)
-      }
+  implicit def fooParser[F[_]: Monad]: StringParser[F, Foo] = {
+    val fooRegex = """([^_]+)_([^_]+)""".r
+    StringParser.strParser[F].rmap {
+      case fooRegex(k, v) => SuccessResponse(Foo(k, v))
+      case other => FailureResponse.pure[F](FailureResponseOps[F].BadRequest.pure(s"""Invalid value "$other". Expected "{key}_{value}"."""))
     }
   }
+
+  case class Bar(i: Int) extends AnyVal
+
+  implicit def barParser[F[_]: Monad]: StringParser[F, Bar] =
+    StringParser.intParser[F].map(Bar)
+
+  case class JsonResult(name: String, number: Int) extends AutoSerializable
 }

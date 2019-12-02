@@ -1,10 +1,13 @@
 import sbt._
-import com.typesafe.tools.mima.plugin.MimaKeys._
+import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport.{mimaFailOnNoPrevious, mimaFailOnProblem, mimaPreviousArtifacts}
+import sbt.Keys.{moduleName, organization, scalaBinaryVersion, version}
 
 object RhoPlugin extends AutoPlugin {
   object autoImport {
     val apiVersion = taskKey[(Int, Int)]("Defines the API compatibility version for the project.")
+    val http4sMimaVersion = settingKey[Option[String]]("Version to target for MiMa compatibility")
   }
+  import autoImport._
 
   override def trigger = allRequirements
 
@@ -42,7 +45,19 @@ object RhoPlugin extends AutoPlugin {
 
   def isSnapshot(version: String): Boolean = version.endsWith("-SNAPSHOT")
 
-  def rhoPreviousArtifacts(lastVersion: String, projectName: String) = {
-    mimaPreviousArtifacts := Set("org.http4s" %% s"rho-$projectName" % lastVersion)
-  }
+  def mimaConfiguration: Seq[Setting[_]] = Seq(
+    http4sMimaVersion := {
+      version.value match {
+        case VersionNumber(Seq(major, minor, patch), _, _) if patch.toInt > 0 =>
+          Some(s"$major.$minor.${patch.toInt - 1}")
+        case _ =>
+          None
+      }
+    },
+    mimaFailOnProblem := http4sMimaVersion.value.isDefined,
+    mimaFailOnNoPrevious := false,
+    mimaPreviousArtifacts := (http4sMimaVersion.value.map {
+      organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
+    }).toSet
+  )
 }

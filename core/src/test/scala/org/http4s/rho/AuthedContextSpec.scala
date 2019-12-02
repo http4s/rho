@@ -13,7 +13,7 @@ case class User(name: String, id: UUID)
 object Auth {
   type O[A] = OptionT[IO, A]
 
-  val authUser: Kleisli[O, Request[IO], User] = Kleisli({ _ =>
+  val authUser = Kleisli[O, Request[IO], User]({ _ =>
     OptionT.some[IO](User("Test User", UUID.randomUUID()))
   })
 
@@ -34,9 +34,9 @@ object MyRoutes extends RhoRoutes[IO] {
     }
   }
 
-  GET / "public" / 'place |>> { path: String => Ok(s"not authenticated at $path") }
+  GET / "public" / pv"place" |>> { path: String => Ok(s"not authenticated at $path") }
 
-  GET / "private" / 'place |>> { (req: Request[IO], path: String) =>
+  GET / "private" / pv"place" |>> { (req: Request[IO], path: String) =>
     getAuth(req) match {
       case Some(user) => Ok(s"${user.name} at $path")
       case None => Forbidden(s"not authenticated at $path")

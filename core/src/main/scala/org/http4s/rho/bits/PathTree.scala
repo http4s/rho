@@ -5,7 +5,6 @@ package bits
 import cats.{Applicative, Monad}
 import cats.syntax.flatMap._
 import org.http4s.rho.bits.PathAST._
-import org.http4s.util.UrlCodingUtils
 import org.log4s.getLogger
 import shapeless.{HList, HNil}
 
@@ -29,11 +28,11 @@ object PathTree {
     def go(i: Int, begin: Int): Unit = {
       if (i < len) {
         if (path.charAt(i) == '/') {
-          if (i > begin) buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
+          if (i > begin) buff += org.http4s.Uri.decode(path.substring(begin, i))
           go(i + 1, i + 1)
         } else go(i + 1, begin)
       } else {
-        buff += UrlCodingUtils.urlDecode(path.substring(begin, i))
+        buff += org.http4s.Uri.decode(path.substring(begin, i))
       }
     }
 
@@ -258,12 +257,12 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
             if (!result.isEmpty || end.isEmpty || method == Method.OPTIONS) result
             else FailureResponse.pure[F] {
-              val ms = end.keys
+              val ms = end.keySet
               val allowedMethods = ms.mkString(", ")
               val msg = s"$method not allowed. Defined methods: $allowedMethods\n"
 
               F.map(MethodNotAllowed.pure(msg))(
-                _.putHeaders(headers.Allow(ms.head, ms.tail.toList:_*)))
+                _.putHeaders(headers.Allow(ms)))
             }
         }
       }

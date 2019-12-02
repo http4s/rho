@@ -3,21 +3,20 @@ package rho
 package swagger
 
 import _root_.io.swagger.util.Json
-import cats.Monad
+import cats.effect.Sync
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
 import shapeless._
 
-import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.collection.immutable.Seq
 
 object SwaggerSupport {
-  def apply[F[_]: Monad](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] = new SwaggerSupport[F] {}
+  def apply[F[_]: Sync](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] = new SwaggerSupport[F] {}
 }
 
-abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
+abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
 
   /**
     * Create a RhoMiddleware adding a route to get the Swagger json file
@@ -35,10 +34,11 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
       produces: List[String] = Nil,
       security: List[SecurityRequirement] = Nil,
       securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+      tags: List[Tag] = Nil,
       vendorExtensions: Map[String, AnyRef] = Map.empty): RhoMiddleware[F] = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, vendorExtensions)(
+      createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, tags, vendorExtensions)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -61,6 +61,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
       produces: List[String] = Nil,
       security: List[SecurityRequirement] = Nil,
       securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+      tags: List[Tag] = Nil,
       vendorExtensions: Map[String, AnyRef] = Map.empty)(routes: Seq[RhoRoute[F, _]]): Swagger = {
 
     val sb = new SwaggerModelsBuilder(swaggerFormats)
@@ -73,6 +74,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Monad[F], etag: WeakTypeTag[F[_]
         produces = produces,
         security = security,
         securityDefinitions = securityDefinitions,
+        tags = tags,
         vendorExtensions = vendorExtensions
       )
   }

@@ -1,8 +1,6 @@
 package org.http4s
 package rho.bits
 
-import scala.language.higherKinds
-
 import shapeless.HList
 import shapeless.ops.hlist.Prepend
 

@@ -16,19 +16,31 @@ lazy val rho = project
 
 lazy val `rho-core` = project
   .in(file("core"))
-  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "core"))
-  .settings(buildSettings: _*)
+  .settings(mimaConfiguration)
+  .settings(buildSettings ++ Seq(
+    Compile / unmanagedSourceDirectories ++= {
+      val baseDir = baseDirectory.value
+
+      val mainSrcDir = "src/main/scala"
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, minor)) if minor <= 12 => Seq(baseDir / s"$mainSrcDir-2.12-")
+        case Some((2, minor)) if minor >= 13 => Seq(baseDir / s"$mainSrcDir-2.13+")
+        case _ => Nil
+      }
+    },
+    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2")
+  ): _*)
 
 lazy val `rho-hal` = project
   .in(file("hal"))
   .settings(buildSettings :+ halDeps: _*)
-  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "hal"))
+  .settings(mimaConfiguration)
   .dependsOn(`rho-core`)
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
   .settings(buildSettings :+ swaggerDeps: _*)
-  .settings(rhoPreviousArtifacts(lastVersion = "0.19.0", "swagger"))
+  .settings(mimaConfiguration)
   .dependsOn(`rho-core` % "compile->compile;test->test")
 
 lazy val docs = project
@@ -46,7 +58,7 @@ lazy val docs = project
       version.value,
       apiVersion.value
     ),
-    scalacOptions in (ScalaUnidoc, unidoc) += "-Ypartial-unification",
+    scalacOptions in (ScalaUnidoc, unidoc) ++= versionSpecificEnabledFlags(scalaVersion.value),
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       `rho-core`,
       `rho-hal`,
@@ -77,7 +89,7 @@ lazy val `rho-examples` = project
       ): _*)
   .dependsOn(`rho-swagger`, `rho-hal`)
 
-lazy val compileFlags = Seq(
+lazy val compilerFlags = Seq(
   "-feature",
   "-deprecation",
   "-unchecked",
@@ -85,9 +97,13 @@ lazy val compileFlags = Seq(
   "-language:existentials",
   "-language:implicitConversions",
   "-Ywarn-unused",
-  "-Ypartial-unification",
   "-Xfatal-warnings"
 )
+
+def versionSpecificEnabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
+  case Some((2, 13)) => Seq.empty[String]
+  case _ => Seq("-Ypartial-unification")
+})
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -99,9 +115,9 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.12.8",
-    crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
-    scalacOptions ++= compileFlags,
+    scalaVersion := "2.13.1",
+    crossScalaVersions := Seq(scalaVersion.value, "2.12.10"),
+    scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),
     fork in run := true,
     organization in ThisBuild := "org.http4s",

@@ -14,7 +14,7 @@ import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
 
-import scala.language.existentials
+import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.reflect._
 import scala.reflect.runtime.universe._
@@ -174,6 +174,16 @@ class SwaggerModelsBuilderSpec extends Specification {
         QueryParameter(`type` = "string".some, name = "foo".some, required = true),
         QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty(`type` = "string")), defaultValue = "".some, isArray = true)
       )
+    }
+
+    "handle an action with query parameters of empty data types" in {
+      val ra = fooPath +? param[Unit]("unit") & param[Void]("void") |>> { (_: Unit, _: Void) => "" }
+
+      sb.collectQueryParams[IO](ra) must_==
+        List(
+          QueryParameter(`type` = "string".some, name = "unit".some, required = true),
+          QueryParameter(`type` = "string".some, name = "void".some, required = true),
+        )
     }
   }
 
@@ -448,6 +458,17 @@ class SwaggerModelsBuilderSpec extends Specification {
       val results = prefixRange.map(i => s"p$i").map(result).toList
 
       compiledRoutes should_== results
+    }
+
+    "generate precise consumed media types" in {
+      val dec = new EntityDecoder[IO, List[String]] {
+        def consumes: Set[MediaRange] = Set(MediaType.application.json)
+        def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
+      }
+      val ra = GET / "foo" ^ dec |>> { _: List[String] => "" }
+      val op = sb.mkOperation("/foo", ra)
+
+      op.consumes must_== List("application/json")
     }
   }
 
@@ -735,7 +756,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =
       EntityEncoder.encodeBy[IO, CsvFile](`Content-Type`(MediaType.text.csv, Some(Charset.`UTF-8`))) { _: CsvFile =>
         val bv = "file content".getBytes(Charset.`UTF-8`.nioCharset)
-        org.http4s.Entity(Stream.emits(bv), Some(bv.length))
+        org.http4s.Entity(Stream.emits(ArraySeq.unsafeWrapArray(bv)), Some(bv.length))
       }
   }
 }

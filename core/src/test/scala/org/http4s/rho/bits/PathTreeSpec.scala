@@ -2,13 +2,14 @@ package org.http4s
 package rho
 package bits
 
+
 import java.nio.charset.StandardCharsets
 
 import cats.effect.IO
-import org.http4s.server.Router
-import org.http4s.server.middleware.TranslateUri
 import org.specs2.mutable.Specification
 import org.http4s.Uri.uri
+import org.http4s.server.middleware.TranslateUri
+import org.http4s.server.Router
 
 class PathTreeSpec extends Specification {
   import PathTree._
@@ -37,12 +38,12 @@ class PathTreeSpec extends Specification {
   }
 
   "Honor UriTranslations" in {
-    val svc = TranslateUri("/bar")(Router.define[IO](("/", new RhoRoutes[IO] {
+    val svc = TranslateUri("/bar")(Router("/" -> new RhoRoutes[IO] {
       GET / "foo" |>> "foo"
-    }.toRoutes()))(HttpRoutes.empty[IO]))
+    }.toRoutes())).orNotFound
 
     val req = Request[IO](Method.GET, uri = Uri(path = "/bar/foo"))
-    val resp = svc(req).value.unsafeRunSync().getOrElse(Response.notFound)
+    val resp = svc(req).unsafeRunSync()
 
     resp.status must_== Status.Ok
     val b = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _), StandardCharsets.UTF_8)
