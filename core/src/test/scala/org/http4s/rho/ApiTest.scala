@@ -129,12 +129,13 @@ class ApiTest extends Specification {
       val paramFoo = captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date) map Foo.apply _
 
       val path = GET / "hello" >>> paramFoo
+      val testDate = HttpDate.unsafeFromInstant(java.time.Instant.now)
       val req = Request[IO](
         uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")),
-        headers = Headers.of(headers.`Content-Length`.unsafeFromLong(10), headers.Date(HttpDate.now))
+        headers = Headers.of(headers.`Content-Length`.unsafeFromLong(10), headers.Date(testDate))
       )
 
-      val expectedFoo = Foo(10, HttpDate.now)
+      val expectedFoo = Foo(10, testDate)
       val route = runWith(path) { (f: Foo) => Ok(s"stuff $f") }
 
       val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
