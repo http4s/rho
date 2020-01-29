@@ -243,8 +243,9 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "handle a required body parameter" in {
       val dec = new EntityDecoder[IO, Foo] {
-        override def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, Foo] = ???
+        override def decode(m: Media[IO], strict: Boolean): DecodeResult[IO, Foo] = ???
         override def consumes: Set[MediaRange] = Set.empty
+        
       }
       val ra = fooPath.decoding(dec) |>> { _: Foo => "" }
 
@@ -253,7 +254,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "handle an optional body parameter" in {
       val dec = new EntityDecoder[IO, Option[Foo]] {
-        override def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, Option[Foo]] = ???
+        override def decode(m: Media[IO], strict: Boolean): DecodeResult[IO, Option[Foo]] = ???
         override def consumes: Set[MediaRange] = Set.empty
       }
       val ra = fooPath.decoding(dec) |>> { _: Option[Foo] => "" }
@@ -339,7 +340,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "Handle collection params in body" in {
       val dec = new EntityDecoder[IO, List[String]] {
-        override def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
+        override def decode(m: Media[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
         override def consumes: Set[MediaRange] = Set.empty
       }
 
@@ -463,7 +464,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "generate precise consumed media types" in {
       val dec = new EntityDecoder[IO, List[String]] {
         def consumes: Set[MediaRange] = Set(MediaType.application.json)
-        def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
+        def decode(m: Media[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
       }
       val ra = GET / "foo" ^ dec |>> { _: List[String] => "" }
       val op = sb.mkOperation("/foo", ra)
