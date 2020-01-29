@@ -3,7 +3,7 @@ package rho
 package bits
 
 import cats.{Applicative, Monad}
-import cats.syntax.flatMap._
+import cats.implicits._
 import org.http4s.rho.bits.PathAST._
 import org.log4s.getLogger
 import shapeless.{HList, HNil}
@@ -97,7 +97,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
         Leaf { (req, pathstack) =>
           runRequestRules(req, c.router.rules, pathstack).map{ i =>
             parser.decode(req, false).value.flatMap(_.fold(e =>
-              e.toHttpResponse(req.httpVersion),
+              e.toHttpResponse[F](req.httpVersion).pure[F],
               { body =>
                 // `asInstanceOf` to turn the untyped HList to type T
                 route.action.act(req, (body :: i).asInstanceOf[T])
