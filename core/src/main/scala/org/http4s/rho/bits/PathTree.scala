@@ -95,13 +95,15 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
       case c @ CodecRouter(_, parser) =>
         Leaf { (req, pathstack) =>
-          runRequestRules(req, c.router.rules, pathstack).map{ i =>
-            parser.decode(req, false).value.flatMap(_.fold(e =>
-              e.toHttpResponse[F](req.httpVersion).pure[F],
-              { body =>
-                // `asInstanceOf` to turn the untyped HList to type T
-                route.action.act(req, (body :: i).asInstanceOf[T])
-              }))
+          runRequestRules(req, c.router.rules, pathstack).map { i =>
+            parser.decode(req, false)
+                  .foldF(
+                    _.toHttpResponse[F](req.httpVersion).pure[F],
+                    { body =>
+                      // `asInstanceOf` to turn the untyped HList to type T
+                      route.action.act(req, (body :: i).asInstanceOf[T])
+                    }
+                  )
           }
         }
     }
