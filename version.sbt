@@ -1,2 +1,2 @@
-version       in ThisBuild := "0.20.0-M2"
+version       in ThisBuild := "0.20.0-RC2"
 apiVersion    in ThisBuild := RhoPlugin.extractApiVersion(version.value)
