@@ -19,6 +19,8 @@ object Dependencies {
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.3"
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "1.2.0"
+  lazy val webJarsLocator      = "org.webjars"                 % "webjars-locator"       % "0.34"
+  lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.24.3"
 
   lazy val specs2              = Seq("org.specs2"              %% "specs2-core"          % specs2Version % "test",
                                      "org.specs2"              %% "specs2-scalacheck"    % specs2Version % "test" )
@@ -35,6 +37,11 @@ object Dependencies {
 
     json4s % "test",
     json4sJackson % "test"
+  )
+
+  lazy val swaggerUiDeps = libraryDependencies ++= Seq(
+    webJarsLocator,
+    swaggerUi
   )
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
