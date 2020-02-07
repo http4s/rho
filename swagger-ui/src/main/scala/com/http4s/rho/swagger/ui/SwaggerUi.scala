@@ -5,7 +5,7 @@ import cats.implicits._
 import org.http4s.RhoDsl
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
-import org.http4s.rho.swagger.{SwaggerFormats, SwaggerSupport, SwaggerSyntax}
+import org.http4s.rho.swagger.{SwaggerFormats, SwaggerMetadata, SwaggerSupport, SwaggerSyntax}
 import org.http4s.rho.{RhoMiddleware, RhoRoute, swagger}
 import shapeless.{HList, HNil}
 
@@ -23,17 +23,8 @@ class SwaggerUi[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) 
                            swaggerFormats: SwaggerFormats = swagger.DefaultSwaggerFormats,
                            swaggerSpecPath: String = "swagger.json", //TypedPath(PathMatch("swagger.json")),
                            swaggerUiPath: String = "swagger-ui", //TypedPath(PathMatch("swagger-ui")),
-                           apiInfo: Info = Info(title = "My API", version = "1.0.0"),
                            swaggerRoutesInSwagger: Boolean = false,
-                           host: Option[String] = None,
-                           basePath: Option[String] = None,
-                           schemes: List[Scheme] = Nil,
-                           consumes: List[String] = Nil,
-                           produces: List[String] = Nil,
-                           security: List[SecurityRequirement] = Nil,
-                           securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
-                           tags: List[Tag] = Nil,
-                           vendorExtensions: Map[String, AnyRef] = Map.empty): F[RhoMiddleware[F]] = {
+                           swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): F[RhoMiddleware[F]] = {
 
     val cleanSwaggerSpecPath = swaggerSpecPath.stripPrefix("/").stripSuffix("/")
     val cleanSwaggerUiPath = swaggerUiPath.stripPrefix("/").stripSuffix("/")
@@ -42,7 +33,7 @@ class SwaggerUi[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) 
     SwaggerUiRoutes[F](relativeSwaggerSpecPath, blocker).map { swaggerUiRoutes => { routes =>
 
       lazy val swaggerSpec: Swagger =
-        SwaggerSupport[F].createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, tags, vendorExtensions)(
+        SwaggerSupport[F].createSwagger(swaggerFormats, swaggerMetadata)(
           routes ++ (if (swaggerRoutesInSwagger) swaggerSpecRoute else Seq.empty)
         )
 

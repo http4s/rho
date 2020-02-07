@@ -25,20 +25,11 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
   def createRhoMiddleware(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
       apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
-      apiInfo: Info = Info(title = "My API", version = "1.0.0"),
       swaggerRoutesInSwagger: Boolean = false,
-      host: Option[String] = None,
-      basePath: Option[String] = None,
-      schemes: List[Scheme] = Nil,
-      consumes: List[String] = Nil,
-      produces: List[String] = Nil,
-      security: List[SecurityRequirement] = Nil,
-      securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
-      tags: List[Tag] = Nil,
-      vendorExtensions: Map[String, AnyRef] = Map.empty): RhoMiddleware[F] = { routes =>
+      swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): RhoMiddleware[F] = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, apiInfo, host, basePath, schemes, consumes, produces, security, securityDefinitions, tags, vendorExtensions)(
+      createSwagger(swaggerFormats, swaggerMetadata)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -53,30 +44,10 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
     */
   def createSwagger(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      apiInfo: Info = Info(title = "My API", version = "1.0.0"),
-      host: Option[String] = None,
-      basePath: Option[String] = None,
-      schemes: List[Scheme] = Nil,
-      consumes: List[String] = Nil,
-      produces: List[String] = Nil,
-      security: List[SecurityRequirement] = Nil,
-      securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
-      tags: List[Tag] = Nil,
-      vendorExtensions: Map[String, AnyRef] = Map.empty)(routes: Seq[RhoRoute[F, _]]): Swagger = {
+      swaggerMetadata: SwaggerMetadata = SwaggerMetadata())(routes: Seq[RhoRoute[F, _]]): Swagger = {
 
     val sb = new SwaggerModelsBuilder(swaggerFormats)
-    routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(apiInfo, r)(s))
-      .copy(
-        host = host,
-        basePath = basePath,
-        schemes = schemes,
-        consumes = consumes,
-        produces = produces,
-        security = security,
-        securityDefinitions = securityDefinitions,
-        tags = tags,
-        vendorExtensions = vendorExtensions
-      )
+    routes.foldLeft(swaggerMetadata.toSwagger())((s, r) => sb.mkSwagger(r)(s))
   }
 
   /**
