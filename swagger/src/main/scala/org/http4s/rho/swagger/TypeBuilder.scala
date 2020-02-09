@@ -196,7 +196,7 @@ object TypeBuilder {
         typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
       else if (tpe.isAnyVal && !tpe.isPrimitive)
         typeToProperty(ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.head.typeSignature, sfs)
-      else if (isCaseClass(ptSym) || isSumType(ptSym))
+      else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
         RefProperty(tpe.simpleName)
       else
         DataType.fromType(tpe) match {
