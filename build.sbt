@@ -47,6 +47,11 @@ lazy val `rho-swagger-ui` = project
   .in(file("swagger-ui"))
   .settings(buildSettings :+ swaggerUiDeps: _*)
   .settings(mimaConfiguration)
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey]("swaggerUiVersion" -> Dependencies.swaggerUi.revision),
+    buildInfoPackage := "org.http4s.rho.swagger.ui"
+  )
   .dependsOn(`rho-swagger`)
 
 lazy val docs = project

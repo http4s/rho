@@ -6,8 +6,8 @@ import com.http4s.rho.swagger.ui.SwaggerUiRoutes.Html
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits.PathAST.CaptureTail
+import org.http4s.rho.swagger.ui.BuildInfo
 import org.http4s.{EntityEncoder, MediaType, Request, Response, StaticFile}
-import org.webjars.WebJarAssetLocator
 
 class SwaggerUiRoutes[F[+ _] : Sync : ContextShift](swaggerUiResourcesPath: String,
                                                     indexHtml: Html,
@@ -37,15 +37,11 @@ class SwaggerUiRoutes[F[+ _] : Sync : ContextShift](swaggerUiResourcesPath: Stri
 
 object SwaggerUiRoutes {
 
-  def apply[F[+ _] : Sync : ContextShift](swaggerUrl: String, blocker: Blocker): F[SwaggerUiRoutes[F]] = for {
-
-    swaggerUiResourcesPath <- discoverPathToSwaggerUiResources[F](blocker)
-    indexHtml = defaultIndexHtml(swaggerUrl)
-  } yield new SwaggerUiRoutes[F](swaggerUiResourcesPath, indexHtml, blocker)
-
-  def discoverPathToSwaggerUiResources[F[+_] : Sync : ContextShift](blocker: Blocker): F[String] = for {
-    swaggerUiVersion <- blocker.delay(new WebJarAssetLocator().getWebJars.get("swagger-ui"))
-  } yield s"/META-INF/resources/webjars/swagger-ui/$swaggerUiVersion/"
+  def apply[F[+ _] : Sync : ContextShift](swaggerUrl: String, blocker: Blocker): SwaggerUiRoutes[F] = {
+    val swaggerUiResourcesPath = s"/META-INF/resources/webjars/swagger-ui/${BuildInfo.swaggerUiVersion}/"
+    val indexHtml = defaultIndexHtml(swaggerUrl)
+    new SwaggerUiRoutes[F](swaggerUiResourcesPath, indexHtml, blocker)
+  }
 
   case class Html(html: String)
 

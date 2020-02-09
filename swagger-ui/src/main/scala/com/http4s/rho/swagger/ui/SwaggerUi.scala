@@ -21,16 +21,10 @@ class SwaggerUi[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) 
   def createRhoMiddleware(
                            blocker: Blocker,
                            swaggerFormats: SwaggerFormats = swagger.DefaultSwaggerFormats,
-                           swaggerSpecPath: String = "swagger.json", //TypedPath(PathMatch("swagger.json")),
-                           swaggerUiPath: String = "swagger-ui", //TypedPath(PathMatch("swagger-ui")),
+                           swaggerSpecPath: String = "swagger.json",
+                           swaggerUiPath: String = "swagger-ui",
                            swaggerRoutesInSwagger: Boolean = false,
-                           swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): F[RhoMiddleware[F]] = {
-
-    val cleanSwaggerSpecPath = swaggerSpecPath.stripPrefix("/").stripSuffix("/")
-    val cleanSwaggerUiPath = swaggerUiPath.stripPrefix("/").stripSuffix("/")
-    val relativeSwaggerSpecPath = ("../" * s"$cleanSwaggerUiPath/index.html".count(_ =='/')) + cleanSwaggerSpecPath
-
-    SwaggerUiRoutes[F](relativeSwaggerSpecPath, blocker).map { swaggerUiRoutes => { routes =>
+                           swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): RhoMiddleware[F] = { routes: Seq[RhoRoute[F, _ <: HList]] =>
 
       lazy val swaggerSpec: Swagger =
         SwaggerSupport[F].createSwagger(swaggerFormats, swaggerMetadata)(
@@ -40,14 +34,16 @@ class SwaggerUi[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) 
       lazy val swaggerSpecRoute: Seq[RhoRoute[F, _ <: HList]] =
         SwaggerSupport[F].createSwaggerRoute(swaggerSpec, TypedPath(PathMatch(swaggerSpecPath))).getRoutes
 
+      val cleanSwaggerSpecPath = swaggerSpecPath.stripPrefix("/").stripSuffix("/")
+      val cleanSwaggerUiPath = swaggerUiPath.stripPrefix("/").stripSuffix("/")
+      val relativeSwaggerSpecPath = ("../" * s"$cleanSwaggerUiPath/index.html".count(_ =='/')) + cleanSwaggerSpecPath
 
+      val swaggerUiRoutes = SwaggerUiRoutes[F](relativeSwaggerSpecPath, blocker)
       val swaggerUiTypedPath = typedPath(swaggerUiPath)
       val swaggerUi = (swaggerUiTypedPath /: swaggerUiRoutes).getRoutes
 
       routes ++ swaggerSpecRoute ++ swaggerUi
     }
-    }
-  }
 
   private def typedPath(s: String): TypedPath[F, HNil] =
     s.stripPrefix("/").stripSuffix("/").split("/")
