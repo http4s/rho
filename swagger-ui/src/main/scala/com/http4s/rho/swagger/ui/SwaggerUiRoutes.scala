@@ -2,31 +2,32 @@ package com.http4s.rho.swagger.ui
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import cats.implicits._
-import com.http4s.rho.swagger.ui.SwaggerUiRoutes.Html
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits.PathAST.CaptureTail
 import org.http4s.rho.swagger.ui.BuildInfo
-import org.http4s.{EntityEncoder, MediaType, Request, Response, StaticFile}
+import org.http4s._
 
-class SwaggerUiRoutes[F[+ _] : Sync : ContextShift](swaggerUiResourcesPath: String,
-                                                    indexHtml: Html,
+class SwaggerUiRoutes[F[+ _] : Sync : ContextShift](swaggerUiPath: String,
+                                                    swaggerUiResourcesPath: String,
+                                                    indexHtml: String,
                                                     blocker: Blocker) extends RhoRoutes[F] {
 
-  private implicit val htmlEncoder: EntityEncoder[F, Html] =
+  private val htmlEncoder: EntityEncoder[F, String] =
     EntityEncoder.stringEncoder[F]
-      .contramap[Html](html => html.html)
       .withContentType(`Content-Type`(MediaType.text.html).withCharset(org.http4s.Charset.`UTF-8`))
 
-  GET |>> { req: Request[F] =>
-    PermanentRedirect(req.uri / "index.html")
+  // Serving the html directly here would break all relative paths, so we redirect.
+  GET / swaggerUiPath |>> { req: Request[F] =>
+    PermanentRedirect(req.uri / "")
   }
 
-  GET / "index.html" |>> { () =>
-    indexHtml
+  // The "" is the path that we normally want to use. The "index.html" is here to hide the "index.html" from the webjar.
+  GET / swaggerUiPath / ("" || "index.html") |>> { () =>
+    Ok(indexHtml)(implicitly, htmlEncoder)
   }
 
-  GET / CaptureTail |>> { (req: Request[F], path: List[String]) =>
+  GET / swaggerUiPath / CaptureTail |>> { (req: Request[F], path: List[String]) =>
     fetchResource(swaggerUiResourcesPath + path.mkString("/", "/", ""), req)
   }
 
@@ -37,15 +38,13 @@ class SwaggerUiRoutes[F[+ _] : Sync : ContextShift](swaggerUiResourcesPath: Stri
 
 object SwaggerUiRoutes {
 
-  def apply[F[+ _] : Sync : ContextShift](swaggerUrl: String, blocker: Blocker): SwaggerUiRoutes[F] = {
+  def apply[F[+ _] : Sync : ContextShift](swaggerUiPath: String, swaggerSpecRelativePath: String, blocker: Blocker): SwaggerUiRoutes[F] = {
     val swaggerUiResourcesPath = s"/META-INF/resources/webjars/swagger-ui/${BuildInfo.swaggerUiVersion}/"
-    val indexHtml = defaultIndexHtml(swaggerUrl)
-    new SwaggerUiRoutes[F](swaggerUiResourcesPath, indexHtml, blocker)
+    val indexHtml = defaultIndexHtml(swaggerSpecRelativePath)
+    new SwaggerUiRoutes[F](swaggerUiPath, swaggerUiResourcesPath, indexHtml, blocker)
   }
 
-  case class Html(html: String)
-
-  def defaultIndexHtml(swaggerUrl: String): Html = Html(
+  def defaultIndexHtml(swaggerUrl: String): String =
     s"""
        |<!-- HTML for static distribution bundle build -->
        |<!DOCTYPE html>
@@ -107,5 +106,5 @@ object SwaggerUiRoutes {
        |  </script>
        |</body>
        |</html>
-       |""".stripMargin)
+       |""".stripMargin
 }
