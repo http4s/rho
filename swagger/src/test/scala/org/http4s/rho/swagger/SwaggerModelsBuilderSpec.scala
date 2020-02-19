@@ -449,6 +449,17 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       compiledRoutes should_== results
     }
+
+    "generate precise consumed media types" in {
+      val dec = new EntityDecoder[IO, List[String]] {
+        def consumes: Set[MediaRange] = Set(MediaType.application.json)
+        def decode(msg: Message[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
+      }
+      val ra = GET / "foo" ^ dec |>> { _: List[String] => "" }
+      val op = sb.mkOperation("/foo", ra)
+
+      op.consumes must_== List("application/json")
+    }
   }
 
   "SwaggerModelsBuilder.collectDefinitions" should {

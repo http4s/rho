@@ -255,13 +255,18 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
+  def renderMediaRange: MediaRange => String = {
+    case tpe: MediaType    => tpe.show
+    case range: MediaRange => range.show
+  }
+
   def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _])(implicit etag: WeakTypeTag[F[_]]): Operation = {
     val parameters = collectOperationParams(rr)
 
     Operation(
       tags        = collectTags(rr),
       summary     = collectSummary(rr),
-      consumes    = rr.validMedia.toList.map(_.show),
+      consumes    = rr.validMedia.toList.map(renderMediaRange),
       produces    = rr.responseEncodings.toList.map(_.show),
       operationId = mkOperationId(pathStr, rr.method, parameters).some,
       parameters  = parameters,
