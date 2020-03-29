@@ -204,7 +204,7 @@
                 </div><div class="ancestors">
                   <span class="filtertype">Implicitly<br />
                   </span>
-                  <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
+                  <ol id="implicits"> <li class="in" name="scala.collection.compat.toTraversableLikeExtensionMethods" data-hidden="false"><span>by toTraversableLikeExtensionMethods</span></li><li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -476,6 +476,46 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyVal → Any</dd></dl></div>
+    </li><li name="scala.collection.compat.toTraversableLikeExtensionMethods#groupMap" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="groupMap[K,B,That](key:A=&gt;K)(f:A=&gt;B)(implicitbf:scala.collection.generic.CanBuildFrom[Repr,B,That]):Map[K,That]"></a><a id="groupMap[K,B,That]((A)⇒K)((A)⇒B)(CanBuildFrom[MapViewExtensionMethods[K,V,C],B,That]):Predef.Map[K,That]"></a>
+      <span class="permalink">
+      <a href="../../../../scala/collection/compat/view/MapViewExtensionMethods.html#groupMap[K,B,That](key:A=&gt;K)(f:A=&gt;B)(implicitbf:scala.collection.generic.CanBuildFrom[Repr,B,That]):Map[K,That]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">groupMap</span><span class="tparams">[<span name="K">K</span>, <span name="B">B</span>, <span name="That">That</span>]</span><span class="params">(<span name="key">key: (<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>) ⇒ <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMap.K">K</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>) ⇒ <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMap.B">B</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">bf: <span class="extype" name="scala.collection.generic.CanBuildFrom">CanBuildFrom</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>], <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMap.B">B</span>, <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMap.That">That</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Predef.Map">Predef.Map</span>[<span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMap.K">K</span>, <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMap.That">That</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>] to
+            <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods">TraversableLikeExtensionMethods</span>[<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>, <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]] performed by method toTraversableLikeExtensionMethods in <a href="../index.html" class="extype" name="scala.collection.compat">scala.collection.compat</a>.
+            This conversion will take place only if an implicit value of type <span class="extype" name="scala.collection.generic.IsTraversableLike">IsTraversableLike</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]] is in scope.
+          </dd><dt>Definition Classes</dt><dd>TraversableLikeExtensionMethods</dd></dl></div>
+    </li><li name="scala.collection.compat.toTraversableLikeExtensionMethods#groupMapReduce" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="groupMapReduce[K,B](key:A=&gt;K)(f:A=&gt;B)(reduce:(B,B)=&gt;B):Map[K,B]"></a><a id="groupMapReduce[K,B]((A)⇒K)((A)⇒B)((B,B)⇒B):Predef.Map[K,B]"></a>
+      <span class="permalink">
+      <a href="../../../../scala/collection/compat/view/MapViewExtensionMethods.html#groupMapReduce[K,B](key:A=&gt;K)(f:A=&gt;B)(reduce:(B,B)=&gt;B):Map[K,B]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">groupMapReduce</span><span class="tparams">[<span name="K">K</span>, <span name="B">B</span>]</span><span class="params">(<span name="key">key: (<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>) ⇒ <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.K">K</span></span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>) ⇒ <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.B">B</span></span>)</span><span class="params">(<span name="reduce">reduce: (<span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.B">B</span>, <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.B">B</span>) ⇒ <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.B">B</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.Map">Predef.Map</span>[<span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.K">K</span>, <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.groupMapReduce.B">B</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>] to
+            <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods">TraversableLikeExtensionMethods</span>[<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>, <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]] performed by method toTraversableLikeExtensionMethods in <a href="../index.html" class="extype" name="scala.collection.compat">scala.collection.compat</a>.
+            This conversion will take place only if an implicit value of type <span class="extype" name="scala.collection.generic.IsTraversableLike">IsTraversableLike</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]] is in scope.
+          </dd><dt>Definition Classes</dt><dd>TraversableLikeExtensionMethods</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -508,6 +548,26 @@
       </span>
       
       
+    </li><li name="scala.collection.compat.toTraversableLikeExtensionMethods#tapEach" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="tapEach[U](f:A=&gt;U)(implicitbf:scala.collection.generic.CanBuildFrom[Repr,A,Repr]):Repr"></a><a id="tapEach[U]((A)⇒U)(CanBuildFrom[MapViewExtensionMethods[K,V,C],A,MapViewExtensionMethods[K,V,C]]):MapViewExtensionMethods[K,V,C]"></a>
+      <span class="permalink">
+      <a href="../../../../scala/collection/compat/view/MapViewExtensionMethods.html#tapEach[U](f:A=&gt;U)(implicitbf:scala.collection.generic.CanBuildFrom[Repr,A,Repr]):Repr" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">tapEach</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>) ⇒ <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods.tapEach.U">U</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="bf">bf: <span class="extype" name="scala.collection.generic.CanBuildFrom">CanBuildFrom</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>], <span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>, <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]]</span>)</span><span class="result">: <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>] to
+            <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods">TraversableLikeExtensionMethods</span>[<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>, <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]] performed by method toTraversableLikeExtensionMethods in <a href="../index.html" class="extype" name="scala.collection.compat">scala.collection.compat</a>.
+            This conversion will take place only if an implicit value of type <span class="extype" name="scala.collection.generic.IsTraversableLike">IsTraversableLike</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]] is in scope.
+          </dd><dt>Definition Classes</dt><dd>TraversableLikeExtensionMethods</dd></dl></div>
     </li><li name="scala.Any#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
@@ -559,7 +619,11 @@
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
-        <div class="conversion" name="scala.Predef.any2stringadd">
+        <div class="conversion" name="scala.collection.compat.toTraversableLikeExtensionMethods">
+              <h3>Inherited by implicit conversion toTraversableLikeExtensionMethods from
+                <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>] to <span class="extype" name="scala.collection.compat.TraversableLikeExtensionMethods">TraversableLikeExtensionMethods</span>[<span class="extype" name="scala.collection.generic.IsTraversableLike.A">A</span>, <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.any2stringadd">
               <h3>Inherited by implicit conversion any2stringadd from
                 <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>] to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensionMethods">MapViewExtensionMethods</a>[<span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.K">K</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.V">V</span>, <span class="extype" name="scala.collection.compat.view.MapViewExtensionMethods.C">C</span>]]
               </h3>
