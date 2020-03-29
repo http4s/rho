@@ -6,7 +6,7 @@ import java.util.Date
 import cats.effect.IO
 import cats.syntax.all._
 import fs2.Stream
-import org.http4s.rho.swagger.models.AbstractProperty
+import org.http4s.rho.swagger.models.{AbstractProperty, StringProperty}
 import org.specs2.execute.Result
 import org.specs2.mutable.Specification
 import shapeless.{:+:, CNil}
@@ -415,6 +415,10 @@ class TypeBuilderSpec extends Specification {
     "Build a model for a case class containing a sealed enum" in {
       val ms = modelOf[SealedEnumContainer]
       ms.size must_== 1
+      val sealedEnumContainerModel = ms.head
+      val e = sealedEnumContainerModel.properties("e")
+      val enumProperty = e.asInstanceOf[StringProperty]
+      enumProperty.enums should_== Set("FooEnum", "BarEnum")
     }
 
     "Build a model for a type recursive through sealed trait" in {
