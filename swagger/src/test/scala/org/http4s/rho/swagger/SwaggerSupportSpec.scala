@@ -130,36 +130,38 @@ class SwaggerSupportSpec extends Specification {
     "Swagger support for complex meta data" in {
       val service = baseRoutes.toRoutes(createRhoMiddleware(
         apiPath = "swagger-test.json",
-        apiInfo =  Info(
-          title = "Complex Meta Data API",
-          description = Some("Complex Meta Data API to verify in unit test"),
-          version = "1.0.0",
-          contact = Some(Contact("Name", Some("http://www.test.com/contact"), Some("test@test.com"))),
-          license = Some(License("Apache 2.0", "http://www.apache.org/licenses/LICENSE-2.0.html")),
-          termsOfService = Some("http://www.test.com/tos")
-        ),
         swaggerRoutesInSwagger = true,
-        host = Some("www.test.com"),
-        schemes = List(Scheme.HTTP, Scheme.HTTPS),
-        basePath = Some("/v1"),
-        consumes = List("application/json"),
-        produces = List("application/json"),
-        security= List(SecurityRequirement("apiKey", Nil),SecurityRequirement("vendor_jwk", List("admin"))),
-        securityDefinitions = Map(
-          "api_key" -> ApiKeyAuthDefinition("key", In.QUERY, None),
-          "vendor_jwk" -> OAuth2VendorExtensionsDefinition(
-            authorizationUrl = "https://www.test.com/authorize",
-            flow = "implicit",
-            vendorExtensions = Map(
-              "x-vendor-issuer" -> "https://www.test.com/",
-              "x-vendor-jwks_uri" -> "https://www.test.com/.well-known/jwks.json",
-              "x-vendor-audiences" -> "clientid"
-            ),
-            scopes = Map("openid" -> "Open ID info", "admin" -> "Admin rights")
+        swaggerMetadata = SwaggerMetadata(
+          apiInfo =  Info(
+            title = "Complex Meta Data API",
+            description = Some("Complex Meta Data API to verify in unit test"),
+            version = "1.0.0",
+            contact = Some(Contact("Name", Some("http://www.test.com/contact"), Some("test@test.com"))),
+            license = Some(License("Apache 2.0", "http://www.apache.org/licenses/LICENSE-2.0.html")),
+            termsOfService = Some("http://www.test.com/tos")
+          ),
+          host = Some("www.test.com"),
+          schemes = List(Scheme.HTTP, Scheme.HTTPS),
+          basePath = Some("/v1"),
+          consumes = List("application/json"),
+          produces = List("application/json"),
+          security= List(SecurityRequirement("apiKey", Nil),SecurityRequirement("vendor_jwk", List("admin"))),
+          securityDefinitions = Map(
+            "api_key" -> ApiKeyAuthDefinition("key", In.QUERY, None),
+            "vendor_jwk" -> OAuth2VendorExtensionsDefinition(
+              authorizationUrl = "https://www.test.com/authorize",
+              flow = "implicit",
+              vendorExtensions = Map(
+                "x-vendor-issuer" -> "https://www.test.com/",
+                "x-vendor-jwks_uri" -> "https://www.test.com/.well-known/jwks.json",
+                "x-vendor-audiences" -> "clientid"
+              ),
+              scopes = Map("openid" -> "Open ID info", "admin" -> "Admin rights")
+            )
+          ),
+          vendorExtensions = Map(
+            "x-vendor-endpoints" -> Map("name" -> "www.test.com", "target" -> "298.0.0.1")
           )
-        ),
-        vendorExtensions = Map(
-          "x-vendor-endpoints" -> Map("name" -> "www.test.com", "target" -> "298.0.0.1")
         )
       ))
 

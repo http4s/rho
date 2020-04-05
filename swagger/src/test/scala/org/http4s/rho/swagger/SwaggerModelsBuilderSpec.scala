@@ -317,7 +317,7 @@ class SwaggerModelsBuilderSpec extends Specification {
         "foo3" ** GET / "bar" / pathVar[String]("name1") / pathVar[String]("name2") |>> { (_: String, _: String) => "" }
       )
 
-      val operationIds = routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(Info("", ""), r)(s)).paths.values.toList.flatMap(_.get).flatMap(_.operationId)
+      val operationIds = routes.foldLeft(Swagger())((s, r) => sb.mkSwagger(r)(s)).paths.values.toList.flatMap(_.get).flatMap(_.operationId)
 
       operationIds ==== List("getBar", "getBar-name", "getBar-name1-name2")
       }
