@@ -19,9 +19,8 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
 
   private[this] val logger = getLogger
 
-  def mkSwagger[F[_]](info: Info, rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): Swagger =
-    Swagger(
-      info        = info.some,
+  def mkSwagger[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): Swagger =
+    s.copy(
       paths       = collectPaths(rr)(s),
       definitions = collectDefinitions(rr)(s))
 

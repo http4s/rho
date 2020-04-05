@@ -12,7 +12,7 @@ lazy val rho = project
   .in(file("."))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings: _*)
-  .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-examples`)
+  .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
 
 lazy val `rho-core` = project
   .in(file("core"))
@@ -42,6 +42,17 @@ lazy val `rho-swagger` = project
   .settings(buildSettings :+ swaggerDeps: _*)
   .settings(mimaConfiguration)
   .dependsOn(`rho-core` % "compile->compile;test->test")
+
+lazy val `rho-swagger-ui` = project
+  .in(file("swagger-ui"))
+  .settings(buildSettings :+ swaggerUiDeps: _*)
+  .settings(mimaConfiguration)
+  .enablePlugins(BuildInfoPlugin)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey]("swaggerUiVersion" -> Dependencies.swaggerUi.revision),
+    buildInfoPackage := "org.http4s.rho.swagger.ui"
+  )
+  .dependsOn(`rho-swagger`)
 
 lazy val docs = project
   .in(file("docs"))
@@ -87,7 +98,7 @@ lazy val `rho-examples` = project
         libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
         dontPublish
       ): _*)
-  .dependsOn(`rho-swagger`, `rho-hal`)
+  .dependsOn(`rho-swagger`, `rho-swagger-ui`, `rho-hal`)
 
 lazy val compilerFlags = Seq(
   "-feature",
