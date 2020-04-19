@@ -204,7 +204,7 @@
                 </div><div class="ancestors">
                   <span class="filtertype">Implicitly<br />
                   </span>
-                  <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
+                  <ol id="implicits"> <li class="in" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods" data-hidden="false"><span>by toTrulyTraversableLikeExtensionMethods</span></li><li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -573,6 +573,26 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods#lazyZip" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="lazyZip[El2,Repr2,T2](t2:T2)(implicitw2:T2=&gt;scala.collection.IterableLike[El2,Repr2]):scala.runtime.Tuple2Zipped[El1,Repr1,El2,Repr2]"></a><a id="lazyZip[El2,Repr2,T2](T2)((T2)⇒IterableLike[El2,Repr2]):Tuple2Zipped[El1,Repr1,El2,Repr2]"></a>
+      <span class="permalink">
+      <a href="../../../../scala/collection/compat/view/MapViewExtensions.html#lazyZip[El2,Repr2,T2](t2:T2)(implicitw2:T2=&gt;scala.collection.IterableLike[El2,Repr2]):scala.runtime.Tuple2Zipped[El1,Repr1,El2,Repr2]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">lazyZip</span><span class="tparams">[<span name="El2">El2</span>, <span name="Repr2">Repr2</span>, <span name="T2">T2</span>]</span><span class="params">(<span name="t2">t2: <span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods.lazyZip.T2">T2</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="w2">w2: (<span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods.lazyZip.T2">T2</span>) ⇒ <span class="extype" name="scala.collection.IterableLike">IterableLike</span>[<span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods.lazyZip.El2">El2</span>, <span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods.lazyZip.Repr2">Repr2</span>]</span>)</span><span class="result">: <span class="extype" name="scala.runtime.Tuple2Zipped">Tuple2Zipped</span>[<span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.El1">El1</span>, <span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.Repr1">Repr1</span>, <span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods.lazyZip.El2">El2</span>, <span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods.lazyZip.Repr2">Repr2</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensions">MapViewExtensions</a> to
+            <span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods">TrulyTraversableLikeExtensionMethods</span>[<span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.El1">El1</span>, <span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.Repr1">Repr1</span>] performed by method toTrulyTraversableLikeExtensionMethods in <a href="../index.html" class="extype" name="scala.collection.compat">scala.collection.compat</a>.
+            This conversion will take place only if an implicit value of type (<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensions">MapViewExtensions</a>) ⇒ <span class="extype" name="scala.collection.TraversableLike">TraversableLike</span>[<span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.El1">El1</span>, <span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.Repr1">Repr1</span>] is in scope.
+          </dd><dt>Definition Classes</dt><dd>TrulyTraversableLikeExtensionMethods</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -778,7 +798,11 @@
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
-        <div class="conversion" name="scala.Predef.any2stringadd">
+        <div class="conversion" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods">
+              <h3>Inherited by implicit conversion toTrulyTraversableLikeExtensionMethods from
+                <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensions">MapViewExtensions</a> to <span class="extype" name="scala.collection.compat.TrulyTraversableLikeExtensionMethods">TrulyTraversableLikeExtensionMethods</span>[<span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.El1">El1</span>, <span class="extype" name="scala.collection.compat.toTrulyTraversableLikeExtensionMethods.Repr1">Repr1</span>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.any2stringadd">
               <h3>Inherited by implicit conversion any2stringadd from
                 <a href="" class="extype" name="scala.collection.compat.view.MapViewExtensions">MapViewExtensions</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="scala.collection.compat.view.MapViewExtensions">MapViewExtensions</a>]
               </h3>
