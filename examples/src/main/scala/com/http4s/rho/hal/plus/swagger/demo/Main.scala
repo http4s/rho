@@ -7,6 +7,8 @@ import org.http4s.implicits._
 import org.http4s.server.blaze._
 import org.log4s.getLogger
 
+import scala.concurrent.ExecutionContext.global
+
 object Main extends IOApp {
   private val logger = getLogger
 
@@ -23,7 +25,7 @@ object Main extends IOApp {
       val routes =
         new Routes(businessLayer, blocker)
 
-      BlazeServerBuilder[IO]
+      BlazeServerBuilder[IO](global)
         .withHttpApp((routes.staticContent <+> routes.dynamicContent).orNotFound)
         .bindLocal(port)
         .serve.compile.drain.as(ExitCode.Success)
