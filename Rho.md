@@ -7,7 +7,9 @@ Note: To get the generated swagger.json, you need to visit: `{https|http}://host
 Sample:
 
 ```scala
-val api = new RhoService[IO] {
+import org.http4s.rho.RhoRoutes
+
+val api = new RhoRoutes[IO] {
     GET / "somePath" / pathVar[Int]("someInt", "parameter description") +? paramD[String]("name", "parameter description") |>> {
       (someInt: Int, name: String) => Ok("result")
     }
@@ -35,9 +37,11 @@ So in the sample above, `someInt` is first then `name` and so on. Optionally it 
 Apart from plain URL parameters and path, you can insert header captures and body decoders for your requests, an example:
 
 ```scala
+import org.http4s.rho.RhoRoutes
+
 object Auth extends org.http4s.rho.AuthedContext[IO, AuthInfo]
 
-val api = new RhoService[IO] {
+val api = new RhoRoutes[IO] {
     import org.http4s.rho.swagger.syntax.io._
     
     "Description of api endpoint" **      // Description is optional and specific to Swagger
@@ -142,7 +146,7 @@ val swaggerMiddleware: RhoMiddleware[IO] = ioSwagger.createRhoMiddleware(
   ))
   
 // Create http4s HttpService
-val httpService = api.toService(swaggerMiddleware)
+val httpService = api.toRoute(swaggerMiddleware)
 ```
 
 The example above also shows how to provide basic api info and base path and security specification.
