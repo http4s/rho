@@ -108,6 +108,7 @@ lazy val compilerFlags = Seq(
   "-language:existentials",
   "-language:implicitConversions",
   "-Ywarn-unused",
+  "-Ywarn-unused:-implicits",
   "-Xfatal-warnings"
 )
 
