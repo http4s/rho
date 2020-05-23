@@ -20,7 +20,6 @@ trait RhoDsl[F[_]]
     with QueryParsers[F]
     with MatchersHListToFunc[F]
     with FuncParamsMatchers[F]
-    with FuncResultMatchers[F]
     with ResponseGeneratorInstances[F]
     with FailureResponseOps[F] {
 
