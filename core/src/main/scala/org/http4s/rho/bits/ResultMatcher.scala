@@ -13,7 +13,7 @@ trait ResultMatcher[F[_], -R] {
   def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]]
 }
 
-object ResultMatcher extends ResultMatcherOps {
+object ResultMatcher extends ResultMatcherMidPrioInstances {
 
   sealed trait MaybeWritable[T] {
     def contentType: Set[MediaType]
@@ -455,13 +455,6 @@ object ResultMatcher extends ResultMatcherOps {
     }
   }
 
-  implicit def writableMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] with ResponseGeneratorInstances[F] {
-    override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
-    override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
-
-    override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = Ok.pure(r)
-  }
-
   implicit def responseMatcher[F[_]]: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
     override def resultInfo: Set[ResultInfo] = Set.empty
@@ -470,11 +463,20 @@ object ResultMatcher extends ResultMatcherOps {
   }
 }
 
-trait ResultMatcherOps {
+trait ResultMatcherMidPrioInstances extends ResultMatcherLowPrioInstances {
   implicit def fMatcher[F[_], R](implicit r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
 
     override def conv(req: Request[F], f: F[R])(implicit F: Monad[F]): F[Response[F]] = F.flatMap(f)(r.conv(req, _))
+  }
+}
+
+trait ResultMatcherLowPrioInstances {
+  implicit def writableMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] with ResponseGeneratorInstances[F] {
+    override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
+    override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
+
+    override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = Ok.pure(r)
   }
 }
