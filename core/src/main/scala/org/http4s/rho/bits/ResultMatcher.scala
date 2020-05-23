@@ -13,9 +13,9 @@ trait ResultMatcher[F[_], -R] {
   def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]]
 }
 
-object ResultMatcher extends ResultMatcherMidPrioInstances {
+trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
 
-  sealed trait MaybeWritable[F[_], T] {
+  sealed trait MaybeWritable[T] {
     def contentType: Set[MediaType]
     def resultInfo: Option[Type]
     def encodings: Set[MediaType]
@@ -23,7 +23,7 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
 
   object MaybeWritable extends MaybeWritableOps {
     // This will represent a "missing" result meaning this status wasn't used
-    implicit def maybeWritableAny[F[_]]: MaybeWritable[F, Any] = new MaybeWritable[F, Any] {
+    implicit val maybeWritableAny: MaybeWritable[Any] = new MaybeWritable[Any] {
       override def contentType: Set[MediaType] = Set.empty
       override def encodings: Set[MediaType] = Set.empty
       override def resultInfo: Option[Type] = None
@@ -33,7 +33,7 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
   trait MaybeWritableOps {
     /* Allowing the `Writable` to be `null` only matches real results but allows for
        situations where you return the same status with two types */
-    implicit def maybeIsWritable[F[_], T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable[F, T] = new MaybeWritable[F, T] {
+    implicit def maybeIsWritable[T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable[T] = new MaybeWritable[T] {
       private val ww = Option(w)
       override def contentType: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
       override def encodings: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
@@ -42,7 +42,6 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
   }
 
   implicit def statusMatcher[
-  F[_],
   /* 100 */ CONTINUE,
   /* 101 */ SWITCHINGPROTOCOLS,
   /* 102 */ PROCESSING,
@@ -108,66 +107,66 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
   /* 510 */ NOTEXTENDED,
   /* 511 */ NETWORKAUTHENTICATIONREQUIRED
   ](implicit
-    /* 100 */ mCONTINUE: MaybeWritable[F, CONTINUE],
-    /* 101 */ mSWITCHINGPROTOCOLS: MaybeWritable[F, SWITCHINGPROTOCOLS],
-    /* 102 */ mPROCESSING: MaybeWritable[F, PROCESSING],
-    /* 103 */ mEARLYHINTS: MaybeWritable[F, EARLYHINTS],
-    /* 200 */ mOK: MaybeWritable[F, OK],
-    /* 201 */ mCREATED: MaybeWritable[F, CREATED],
-    /* 202 */ mACCEPTED: MaybeWritable[F, ACCEPTED],
-    /* 203 */ mNONAUTHORITATIVEINFORMATION: MaybeWritable[F, NONAUTHORITATIVEINFORMATION],
-    /* 204 */ mNOCONTENT: MaybeWritable[F, NOCONTENT],
-    /* 205 */ mRESETCONTENT: MaybeWritable[F, RESETCONTENT],
-    /* 206 */ mPARTIALCONTENT: MaybeWritable[F, PARTIALCONTENT],
-    /* 207 */ mMULTISTATUS: MaybeWritable[F, MULTISTATUS],
-    /* 208 */ mALREADYREPORTED: MaybeWritable[F, ALREADYREPORTED],
-    /* 226 */ mIMUSED: MaybeWritable[F, IMUSED],
-    /* 300 */ mMULTIPLECHOICES: MaybeWritable[F, MULTIPLECHOICES],
-    /* 301 */ mMOVEDPERMANENTLY: MaybeWritable[F, MOVEDPERMANENTLY],
-    /* 302 */ mFOUND: MaybeWritable[F, FOUND],
-    /* 303 */ mSEEOTHER: MaybeWritable[F, SEEOTHER],
-    /* 304 */ mNOTMODIFIED: MaybeWritable[F, NOTMODIFIED],
-    /* 307 */ mTEMPORARYREDIRECT: MaybeWritable[F, TEMPORARYREDIRECT],
-    /* 308 */ mPERMANENTREDIRECT: MaybeWritable[F, PERMANENTREDIRECT],
-    /* 400 */ mBADREQUEST: MaybeWritable[F, BADREQUEST],
-    /* 401 */ mUNAUTHORIZED: MaybeWritable[F, UNAUTHORIZED],
-    /* 402 */ mPAYMENTREQUIRED: MaybeWritable[F, PAYMENTREQUIRED],
-    /* 403 */ mFORBIDDEN: MaybeWritable[F, FORBIDDEN],
-    /* 404 */ mNOTFOUND: MaybeWritable[F, NOTFOUND],
-    /* 405 */ mMETHODNOTALLOWED: MaybeWritable[F, METHODNOTALLOWED],
-    /* 406 */ mNOTACCEPTABLE: MaybeWritable[F, NOTACCEPTABLE],
-    /* 407 */ mPROXYAUTHENTICATIONREQUIRED: MaybeWritable[F, PROXYAUTHENTICATIONREQUIRED],
-    /* 408 */ mREQUESTTIMEOUT: MaybeWritable[F, REQUESTTIMEOUT],
-    /* 409 */ mCONFLICT: MaybeWritable[F, CONFLICT],
-    /* 410 */ mGONE: MaybeWritable[F, GONE],
-    /* 411 */ mLENGTHREQUIRED: MaybeWritable[F, LENGTHREQUIRED],
-    /* 412 */ mPRECONDITIONFAILED: MaybeWritable[F, PRECONDITIONFAILED],
-    /* 413 */ mPAYLOADTOOLARGE: MaybeWritable[F, PAYLOADTOOLARGE],
-    /* 414 */ mURITOOLONG: MaybeWritable[F, URITOOLONG],
-    /* 415 */ mUNSUPPORTEDMEDIATYPE: MaybeWritable[F, UNSUPPORTEDMEDIATYPE],
-    /* 416 */ mRANGENOTSATISFIABLE: MaybeWritable[F, RANGENOTSATISFIABLE],
-    /* 417 */ mEXPECTATIONFAILED: MaybeWritable[F, EXPECTATIONFAILED],
-    /* 421 */ mMISDIRECTEDREQUEST: MaybeWritable[F, MISDIRECTEDREQUEST],
-    /* 422 */ mUNPROCESSABLEENTITY: MaybeWritable[F, UNPROCESSABLEENTITY],
-    /* 423 */ mLOCKED: MaybeWritable[F, LOCKED],
-    /* 424 */ mFAILEDDEPENDENCY: MaybeWritable[F, FAILEDDEPENDENCY],
-    /* 424 */ mTOOEARLY: MaybeWritable[F, TOOEARLY],
-    /* 426 */ mUPGRADEREQUIRED: MaybeWritable[F, UPGRADEREQUIRED],
-    /* 428 */ mPRECONDITIONREQUIRED: MaybeWritable[F, PRECONDITIONREQUIRED],
-    /* 429 */ mTOOMANYREQUESTS: MaybeWritable[F, TOOMANYREQUESTS],
-    /* 431 */ mREQUESTHEADERFIELDSTOOLARGE: MaybeWritable[F, REQUESTHEADERFIELDSTOOLARGE],
-    /* 451 */ mUNAVAILABLEFORLEGALREASONS: MaybeWritable[F, UNAVAILABLEFORLEGALREASONS],
-    /* 500 */ mINTERNALSERVERERROR: MaybeWritable[F, INTERNALSERVERERROR],
-    /* 501 */ mNOTIMPLEMENTED: MaybeWritable[F, NOTIMPLEMENTED],
-    /* 502 */ mBADGATEWAY: MaybeWritable[F, BADGATEWAY],
-    /* 503 */ mSERVICEUNAVAILABLE: MaybeWritable[F, SERVICEUNAVAILABLE],
-    /* 504 */ mGATEWAYTIMEOUT: MaybeWritable[F, GATEWAYTIMEOUT],
-    /* 505 */ mHTTPVERSIONNOTSUPPORTED: MaybeWritable[F, HTTPVERSIONNOTSUPPORTED],
-    /* 506 */ mVARIANTALSONEGOTIATES: MaybeWritable[F, VARIANTALSONEGOTIATES],
-    /* 507 */ mINSUFFICIENTSTORAGE: MaybeWritable[F, INSUFFICIENTSTORAGE],
-    /* 508 */ mLOOPDETECTED: MaybeWritable[F, LOOPDETECTED],
-    /* 510 */ mNOTEXTENDED: MaybeWritable[F, NOTEXTENDED],
-    /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable[F, NETWORKAUTHENTICATIONREQUIRED]
+    /* 100 */ mCONTINUE: MaybeWritable[CONTINUE],
+    /* 101 */ mSWITCHINGPROTOCOLS: MaybeWritable[SWITCHINGPROTOCOLS],
+    /* 102 */ mPROCESSING: MaybeWritable[PROCESSING],
+    /* 103 */ mEARLYHINTS: MaybeWritable[EARLYHINTS],
+    /* 200 */ mOK: MaybeWritable[OK],
+    /* 201 */ mCREATED: MaybeWritable[CREATED],
+    /* 202 */ mACCEPTED: MaybeWritable[ACCEPTED],
+    /* 203 */ mNONAUTHORITATIVEINFORMATION: MaybeWritable[NONAUTHORITATIVEINFORMATION],
+    /* 204 */ mNOCONTENT: MaybeWritable[NOCONTENT],
+    /* 205 */ mRESETCONTENT: MaybeWritable[RESETCONTENT],
+    /* 206 */ mPARTIALCONTENT: MaybeWritable[PARTIALCONTENT],
+    /* 207 */ mMULTISTATUS: MaybeWritable[MULTISTATUS],
+    /* 208 */ mALREADYREPORTED: MaybeWritable[ALREADYREPORTED],
+    /* 226 */ mIMUSED: MaybeWritable[IMUSED],
+    /* 300 */ mMULTIPLECHOICES: MaybeWritable[MULTIPLECHOICES],
+    /* 301 */ mMOVEDPERMANENTLY: MaybeWritable[MOVEDPERMANENTLY],
+    /* 302 */ mFOUND: MaybeWritable[FOUND],
+    /* 303 */ mSEEOTHER: MaybeWritable[SEEOTHER],
+    /* 304 */ mNOTMODIFIED: MaybeWritable[NOTMODIFIED],
+    /* 307 */ mTEMPORARYREDIRECT: MaybeWritable[TEMPORARYREDIRECT],
+    /* 308 */ mPERMANENTREDIRECT: MaybeWritable[PERMANENTREDIRECT],
+    /* 400 */ mBADREQUEST: MaybeWritable[BADREQUEST],
+    /* 401 */ mUNAUTHORIZED: MaybeWritable[UNAUTHORIZED],
+    /* 402 */ mPAYMENTREQUIRED: MaybeWritable[PAYMENTREQUIRED],
+    /* 403 */ mFORBIDDEN: MaybeWritable[FORBIDDEN],
+    /* 404 */ mNOTFOUND: MaybeWritable[NOTFOUND],
+    /* 405 */ mMETHODNOTALLOWED: MaybeWritable[METHODNOTALLOWED],
+    /* 406 */ mNOTACCEPTABLE: MaybeWritable[NOTACCEPTABLE],
+    /* 407 */ mPROXYAUTHENTICATIONREQUIRED: MaybeWritable[PROXYAUTHENTICATIONREQUIRED],
+    /* 408 */ mREQUESTTIMEOUT: MaybeWritable[REQUESTTIMEOUT],
+    /* 409 */ mCONFLICT: MaybeWritable[CONFLICT],
+    /* 410 */ mGONE: MaybeWritable[GONE],
+    /* 411 */ mLENGTHREQUIRED: MaybeWritable[LENGTHREQUIRED],
+    /* 412 */ mPRECONDITIONFAILED: MaybeWritable[PRECONDITIONFAILED],
+    /* 413 */ mPAYLOADTOOLARGE: MaybeWritable[PAYLOADTOOLARGE],
+    /* 414 */ mURITOOLONG: MaybeWritable[URITOOLONG],
+    /* 415 */ mUNSUPPORTEDMEDIATYPE: MaybeWritable[UNSUPPORTEDMEDIATYPE],
+    /* 416 */ mRANGENOTSATISFIABLE: MaybeWritable[RANGENOTSATISFIABLE],
+    /* 417 */ mEXPECTATIONFAILED: MaybeWritable[EXPECTATIONFAILED],
+    /* 421 */ mMISDIRECTEDREQUEST: MaybeWritable[MISDIRECTEDREQUEST],
+    /* 422 */ mUNPROCESSABLEENTITY: MaybeWritable[UNPROCESSABLEENTITY],
+    /* 423 */ mLOCKED: MaybeWritable[LOCKED],
+    /* 424 */ mFAILEDDEPENDENCY: MaybeWritable[FAILEDDEPENDENCY],
+    /* 424 */ mTOOEARLY: MaybeWritable[TOOEARLY],
+    /* 426 */ mUPGRADEREQUIRED: MaybeWritable[UPGRADEREQUIRED],
+    /* 428 */ mPRECONDITIONREQUIRED: MaybeWritable[PRECONDITIONREQUIRED],
+    /* 429 */ mTOOMANYREQUESTS: MaybeWritable[TOOMANYREQUESTS],
+    /* 431 */ mREQUESTHEADERFIELDSTOOLARGE: MaybeWritable[REQUESTHEADERFIELDSTOOLARGE],
+    /* 451 */ mUNAVAILABLEFORLEGALREASONS: MaybeWritable[UNAVAILABLEFORLEGALREASONS],
+    /* 500 */ mINTERNALSERVERERROR: MaybeWritable[INTERNALSERVERERROR],
+    /* 501 */ mNOTIMPLEMENTED: MaybeWritable[NOTIMPLEMENTED],
+    /* 502 */ mBADGATEWAY: MaybeWritable[BADGATEWAY],
+    /* 503 */ mSERVICEUNAVAILABLE: MaybeWritable[SERVICEUNAVAILABLE],
+    /* 504 */ mGATEWAYTIMEOUT: MaybeWritable[GATEWAYTIMEOUT],
+    /* 505 */ mHTTPVERSIONNOTSUPPORTED: MaybeWritable[HTTPVERSIONNOTSUPPORTED],
+    /* 506 */ mVARIANTALSONEGOTIATES: MaybeWritable[VARIANTALSONEGOTIATES],
+    /* 507 */ mINSUFFICIENTSTORAGE: MaybeWritable[INSUFFICIENTSTORAGE],
+    /* 508 */ mLOOPDETECTED: MaybeWritable[LOOPDETECTED],
+    /* 510 */ mNOTEXTENDED: MaybeWritable[NOTEXTENDED],
+    /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable[NETWORKAUTHENTICATIONREQUIRED]
    ): ResultMatcher[F, Result[
     F,
     /* 100 */ CONTINUE,
@@ -376,7 +375,7 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
       }.toSet
     }
 
-    private lazy val allTpes: List[(org.http4s.Status, MaybeWritable[F, _])] = {
+    private lazy val allTpes: List[(org.http4s.Status, MaybeWritable[_])] = {
       List(
         (org.http4s.Status.Continue, mCONTINUE),
         (org.http4s.Status.SwitchingProtocols, mSWITCHINGPROTOCOLS),
@@ -442,7 +441,7 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
     }
   }
 
-  implicit def optionMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] with ResponseGeneratorInstances[F] {
+  implicit def optionMatcher[R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] with ResponseGeneratorInstances[F] {
     override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
@@ -453,7 +452,7 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
     }
   }
 
-  implicit def responseMatcher[F[_]]: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
+  implicit def responseMatcher: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
     override def resultInfo: Set[ResultInfo] = Set.empty
 
@@ -461,8 +460,8 @@ object ResultMatcher extends ResultMatcherMidPrioInstances {
   }
 }
 
-trait ResultMatcherMidPrioInstances extends ResultMatcherLowPrioInstances {
-  implicit def fMatcher[F[_], R](implicit r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
+trait ResultMatcherMidPrioInstances[F[_]] extends ResultMatcherLowPrioInstances[F] {
+  implicit def fMatcher[R](implicit r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
 
@@ -470,8 +469,8 @@ trait ResultMatcherMidPrioInstances extends ResultMatcherLowPrioInstances {
   }
 }
 
-trait ResultMatcherLowPrioInstances {
-  implicit def writableMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] with ResponseGeneratorInstances[F] {
+trait ResultMatcherLowPrioInstances[F[_]] {
+  implicit def writableMatcher[R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] with ResponseGeneratorInstances[F] {
     override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
 
