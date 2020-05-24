@@ -1,18 +1,18 @@
 package com.http4s.rho.swagger.demo
 
+import cats._
 import cats.data.{Kleisli, OptionT}
-import cats.effect.{Effect, IO}
+import cats.effect.IO
 import org.http4s.Request
 import org.http4s.rho._
 import org.http4s.rho.swagger.SwaggerSyntax
 import org.http4s.server.AuthMiddleware
-import org.http4s.util.CaseInsensitiveString
 
 object ExampleAuth {
   val simpleAuthService: Kleisli[OptionT[IO, ?], Request[IO], SimpleUser] =
     Kleisli { request =>
       OptionT.fromOption[IO] {
-        request.headers.get(CaseInsensitiveString("user")).map(h => SimpleUser(h.value))
+        request.cookies.find(_.name=="rho-user").map(h => SimpleUser(h.content))
       }
     }
   val simpleAuthMiddlware: AuthMiddleware[IO, SimpleUser] = AuthMiddleware.withFallThrough(simpleAuthService)
@@ -20,7 +20,7 @@ object ExampleAuth {
 }
 case class SimpleUser(name: String)
 
-class MyAuthedRoutes[F[+_] : Effect]
+class MyAuthedRoutes[F[+_]: Monad: Defer]
   extends AuthedRhoRoutes[F, SimpleUser]
     with SwaggerSyntax[Kleisli[F, SimpleUser, ?]] {
   type AF[A] = Kleisli[F, SimpleUser, A]

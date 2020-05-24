@@ -25,7 +25,7 @@ class AuthedApiExamples extends Specification {
         GET / "hello" |>> { () =>
           Kleisli.ask[IO, SimpleUser].flatMap {
             user: SimpleUser =>
-            Ok("Hello, world!")
+            Ok(s"Hello, ${user.name}!")
           }
         }
       }
