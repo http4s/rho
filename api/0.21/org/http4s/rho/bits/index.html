@@ -258,13 +258,21 @@
                         <a class="trait" href="ResultInfo.html" title="Information about the response type"></a>
                         <a href="ResultInfo.html" title="Information about the response type">ResultInfo</a>
                       </li><li class="current-entities indented4">
-                        <a class="object" href="ResultMatcher$.html" title=""></a>
+                        <span class="separator"></span>
                         <a class="trait" href="ResultMatcher.html" title=""></a>
                         <a href="ResultMatcher.html" title="">ResultMatcher</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="trait" href="ResultMatcherOps.html" title=""></a>
-                        <a href="ResultMatcherOps.html" title="">ResultMatcherOps</a>
+                        <a class="trait" href="ResultMatcherLowPrioInstances.html" title=""></a>
+                        <a href="ResultMatcherLowPrioInstances.html" title="">ResultMatcherLowPrioInstances</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="ResultMatcherMidPrioInstances.html" title=""></a>
+                        <a href="ResultMatcherMidPrioInstances.html" title="">ResultMatcherMidPrioInstances</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="ResultMatchers.html" title=""></a>
+                        <a href="ResultMatchers.html" title="">ResultMatchers</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="trait" href="ResultResponse.html" title="Node in the ADT that represents a result, either success or failure"></a>
@@ -902,10 +910,10 @@ They require the needed codecs and generate a response with the correct meta dat
       </span>
       
       
-    </li><li name="org.http4s.rho.bits.ResultMatcherOps" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ResultMatcherOpsextendsAnyRef"></a><a id="ResultMatcherOps:ResultMatcherOps"></a>
+    </li><li name="org.http4s.rho.bits.ResultMatcherLowPrioInstances" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ResultMatcherLowPrioInstances[F[_]]extendsAnyRef"></a><a id="ResultMatcherLowPrioInstances[F[_]]:ResultMatcherLowPrioInstances[F]"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/ResultMatcherOps.html" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/ResultMatcherLowPrioInstances.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -914,7 +922,39 @@ They require the needed codecs and generate a response with the correct meta dat
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a title="" href="ResultMatcherOps.html"><span class="name">ResultMatcherOps</span></a><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a title="" href="ResultMatcherLowPrioInstances.html"><span class="name">ResultMatcherLowPrioInstances</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      
+      
+    </li><li name="org.http4s.rho.bits.ResultMatcherMidPrioInstances" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ResultMatcherMidPrioInstances[F[_]]extendsResultMatcherLowPrioInstances[F]"></a><a id="ResultMatcherMidPrioInstances[F[_]]:ResultMatcherMidPrioInstances[F]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/ResultMatcherMidPrioInstances.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ResultMatcherMidPrioInstances.html"><span class="name">ResultMatcherMidPrioInstances</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="ResultMatcherLowPrioInstances.html" class="extype" name="org.http4s.rho.bits.ResultMatcherLowPrioInstances">ResultMatcherLowPrioInstances</a>[<span class="extype" name="org.http4s.rho.bits.ResultMatcherMidPrioInstances.F">F</span>]</span>
+      </span>
+      
+      
+    </li><li name="org.http4s.rho.bits.ResultMatchers" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ResultMatchers[F[_]]extendsResultMatcherMidPrioInstances[F]"></a><a id="ResultMatchers[F[_]]:ResultMatchers[F]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/ResultMatchers.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ResultMatchers.html"><span class="name">ResultMatchers</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="ResultMatcherMidPrioInstances.html" class="extype" name="org.http4s.rho.bits.ResultMatcherMidPrioInstances">ResultMatcherMidPrioInstances</a>[<span class="extype" name="org.http4s.rho.bits.ResultMatchers.F">F</span>]</span>
       </span>
       
       
@@ -1249,22 +1289,6 @@ They require the needed codecs and generate a response with the correct meta dat
       
       <p class="shortcomment cmt">Rules for extracting non-path related data from the <code>Request</code></p><div class="fullcomment"><div class="comment cmt"><p>Rules for extracting non-path related data from the <code>Request</code></p><p>This AST is subject to change.
 </p></div></div>
-    </li><li name="org.http4s.rho.bits.ResultMatcher" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ResultMatcher"></a><a id="ResultMatcher:ResultMatcher"></a>
-      <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/ResultMatcher$.html" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a title="" href="ResultMatcher$.html"><span class="name">ResultMatcher</span></a><span class="result"> extends <a href="ResultMatcherOps.html" class="extype" name="org.http4s.rho.bits.ResultMatcherOps">ResultMatcherOps</a></span>
-      </span>
-      
-      
     </li><li name="org.http4s.rho.bits.StringParser" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="StringParser"></a><a id="StringParser:StringParser"></a>
       <span class="permalink">
