@@ -21,7 +21,8 @@ trait RhoDsl[F[_]]
     with MatchersHListToFunc[F]
     with FuncParamsMatchers[F]
     with ResponseGeneratorInstances[F]
-    with FailureResponseOps[F] {
+    with FailureResponseOps[F]
+    with ResultMatchers[F] {
 
   implicit def method(m: Method): PathBuilder[F, HNil] = new PathBuilder(m, PathEmpty)
 
