@@ -11,7 +11,6 @@ import shapeless.{HList, HNil}
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
-import scala.util.control.NonFatal
 
 object PathTree {
 
