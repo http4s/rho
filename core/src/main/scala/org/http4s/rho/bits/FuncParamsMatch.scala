@@ -6,7 +6,12 @@ import shapeless.HList
 import scala.annotation.implicitNotFound
 import scala.annotation.nowarn
 
-@implicitNotFound("Expecting a function with parameter types matching (${T}) or (Request[F] :: ${T}). Got (${FU}).")
+@implicitNotFound(
+"""Could not bind route to action;
+  Expecting a function with parameter types matching:
+         (${T}) 
+  or     (Request[F] :: ${T})
+  found: ${FU}""")
 trait FuncParamsMatch[F[_], T <: HList, -FU]
 
 trait FuncParamsMatchers[F[_]] {

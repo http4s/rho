@@ -12,7 +12,12 @@ import scala.annotation.implicitNotFound
  * @tparam T HList type of the incoming values
  * @tparam U type of element onto which T will be mapped
  */
-@implicitNotFound("No HListToFunc instance found. Most likely no ResultMatcher instance is available for the return type of (${U}). This can be caused by a lack of a matching EntityEncoder.")
+@implicitNotFound(
+"""Could not bind route to action;
+No HListToFunc instance found. 
+  Most likely no ResultMatcher instance is available for the return type of 
+    (${U}). 
+  This can be caused by a lack of a matching EntityEncoder.""")
 trait HListToFunc[F[_], T <: HList, -U] {
   def toAction(f: U): Action[F, T]
 }
