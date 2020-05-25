@@ -108,7 +108,6 @@ lazy val compilerFlags = Seq(
   "-language:existentials",
   "-language:implicitConversions",
   "-Ywarn-unused",
-  "-Ywarn-unused:-implicits",
   "-Xfatal-warnings"
 )
 
@@ -127,7 +126,7 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.13.1",
+    scalaVersion := "2.13.2",
     crossScalaVersions := Seq(scalaVersion.value, "2.12.10"),
     scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),
@@ -138,6 +137,8 @@ lazy val buildSettings = publishing ++
     license,
     libraryDependencies ++= Seq(
       shapeless,
+      silencerPlugin,
+      silencerLib,
       http4sServer % "provided",
       logbackClassic % "test"
     ),
