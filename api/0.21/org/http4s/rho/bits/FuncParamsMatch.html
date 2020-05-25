@@ -167,8 +167,8 @@
                         <a href="FloatParser.html" title="">FloatParser</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="trait" href="FuncParamsMatch.html" title=""></a>
-                        <a href="FuncParamsMatch.html" title="">FuncParamsMatch</a>
+                        <a class="trait" href="" title=""></a>
+                        <a href="" title="">FuncParamsMatch</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="trait" href="FuncParamsMatchers.html" title=""></a>
@@ -310,7 +310,7 @@
                         <a class="class" href="TypedHeader.html" title="Typed shell for the Header operations of the DSL"></a>
                         <a href="TypedHeader.html" title="Typed shell for the Header operations of the DSL">TypedHeader</a>
                       </li><li class="current-entities indented4">
-                        <a class="object" href="" title=""></a>
+                        <a class="object" href="TypedQuery$.html" title=""></a>
                         <a class="class" href="TypedQuery.html" title="Typed shell for the Query operations of the DSL"></a>
                         <a href="TypedQuery.html" title="Typed shell for the Query operations of the DSL">TypedQuery</a>
                       </li><li class="current-entities indented4">
@@ -326,36 +326,40 @@
             </div>
           </div>
           <div id="content">
-            <body class="object value">
+            <body class="trait type">
       <div id="definition">
-        <a href="TypedQuery.html" title="See companion class"><div class="big-circle object-companion-class">o</div></a>
+        <div class="big-circle trait">t</div>
         <p id="owner"><a href="../../../index.html" class="extype" name="org">org</a>.<a href="../../index.html" class="extype" name="org.http4s">http4s</a>.<a href="../index.html" class="extype" name="org.http4s.rho">rho</a>.<a href="index.html" class="extype" name="org.http4s.rho.bits">bits</a></p>
-        <h1><a href="TypedQuery.html" title="See companion class">TypedQuery</a><span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html" title="Permalink">
+        <h1>FuncParamsMatch<span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"><div>
-            Companion <a href="TypedQuery.html" title="See companion class">class TypedQuery</a>
-          </div></span></h3>
+        <h3><span class="morelinks"></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">object</span>
+        <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">TypedQuery</span><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <span class="name">FuncParamsMatch</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>, <span name="FU">-FU</span>]</span><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/http4s/rho/tree/master/core/src/main/scala/org/http4s/rho/bits/TypedASTs.scala" target="_blank">TypedASTs.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@implicitNotFound</span><span class="args">(<span>
+      
+      <span class="defval" name="&quot;&quot;&quot;Could not bind route to action;<br/>  Expecting a function with parameter types matching:<br/>         (${T}) <br/>  or     (Request[F] :: ${T})<br/>  found: ${FU}&quot;&quot;&quot;">...</span>
+    </span>)</span>
+              
+        </dd><dt>Source</dt><dd><a href="https://github.com/http4s/rho/tree/master/core/src/main/scala/org/http4s/rho/bits/FuncParamsMatch.scala" target="_blank">FuncParamsMatch.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="scala.Serializable">Serializable</span>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -381,7 +385,12 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="org.http4s.rho.bits.TypedQuery"><span>TypedQuery</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="org.http4s.rho.bits.FuncParamsMatch"><span>FuncParamsMatch</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+                  <span class="filtertype">Implicitly<br />
+                  </span>
+                  <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -411,7 +420,7 @@
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -427,7 +436,7 @@
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html###():Int" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -440,10 +449,53 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.any2stringadd#+" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+(other:String):String"></a><a id="+(String):String"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#+(other:String):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method any2stringadd in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="-&gt;[B](y:B):(A,B)"></a><a id="-&gt;[B](B):(FuncParamsMatch[F,T,FU],B)"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#-&gt;[B](y:B):(A,B)" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>], <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -459,7 +511,7 @@
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -475,7 +527,7 @@
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#clone():Object" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -496,10 +548,90 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a><a id="ensuring((FuncParamsMatch[F,T,FU])⇒Boolean,⇒Any):FuncParamsMatch[F,T,FU]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean):A"></a><a id="ensuring((FuncParamsMatch[F,T,FU])⇒Boolean):FuncParamsMatch[F,T,FU]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#ensuring(cond:A=&gt;Boolean):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]) ⇒ <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a><a id="ensuring(Boolean,⇒Any):FuncParamsMatch[F,T,FU]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>, <span name="msg">msg: ⇒ <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean):A"></a><a id="ensuring(Boolean):FuncParamsMatch[F,T,FU]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#ensuring(cond:Boolean):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -515,7 +647,7 @@
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -531,7 +663,7 @@
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#finalize():Unit" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -550,10 +682,33 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="formatted(fmtstr:String):String"></a><a id="formatted(String):String"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#formatted(fmtstr:String):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method StringFormat in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#getClass():Class[_]" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -572,7 +727,7 @@
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#hashCode():Int" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -591,7 +746,7 @@
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -607,7 +762,7 @@
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -623,7 +778,7 @@
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#notify():Unit" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -642,7 +797,7 @@
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#notifyAll():Unit" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -658,26 +813,10 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="org.http4s.rho.bits.TypedQuery#queryParamKeyLike" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="queryParamKeyLike[F[_],T]:org.http4s.QueryParamKeyLike[org.http4s.rho.bits.TypedQuery[F,T::shapeless.HNil]]"></a><a id="queryParamKeyLike[F[_],T]:QueryParamKeyLike[TypedQuery[F,::[T,HNil]]]"></a>
-      <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#queryParamKeyLike[F[_],T]:org.http4s.QueryParamKeyLike[org.http4s.rho.bits.TypedQuery[F,T::shapeless.HNil]]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">queryParamKeyLike</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="T">T</span>]</span><span class="result">: <span class="extype" name="org.http4s.QueryParamKeyLike">QueryParamKeyLike</span>[<a href="TypedQuery.html" class="extype" name="org.http4s.rho.bits.TypedQuery">TypedQuery</a>[<span class="extype" name="org.http4s.rho.bits.TypedQuery.queryParamKeyLike.F">F</span>, <span class="extype" name="shapeless.::">::</span>[<span class="extype" name="org.http4s.rho.bits.TypedQuery.queryParamKeyLike.T">T</span>, <span class="extype" name="shapeless.HNil">HNil</span>]]]</span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -693,7 +832,7 @@
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#toString():String" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -709,7 +848,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#wait():Unit" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -731,7 +870,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -753,7 +892,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../../../org/http4s/rho/bits/TypedQuery$.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -774,6 +913,26 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="→[B](y:B):(A,B)"></a><a id="→[B](B):(FuncParamsMatch[F,T,FU],B)"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html#→[B](y:B):(A,B)" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>], <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
     </li>
               </ol>
             </div>
@@ -784,16 +943,28 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <span class="extype" name="scala.Serializable">Serializable</span></h3>
-            </div><div class="parent" name="java.io.Serializable">
-              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
-            </div><div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
-        
+        <div class="conversion" name="scala.Predef.any2stringadd">
+              <h3>Inherited by implicit conversion any2stringadd from
+                <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.StringFormat">
+              <h3>Inherited by implicit conversion StringFormat from
+                <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.Ensuring">
+              <h3>Inherited by implicit conversion Ensuring from
+                <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.ArrowAssoc">
+              <h3>Inherited by implicit conversion ArrowAssoc from
+                <a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>] to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="org.http4s.rho.bits.FuncParamsMatch">FuncParamsMatch</a>[<span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.F">F</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.T">T</span>, <span class="extype" name="org.http4s.rho.bits.FuncParamsMatch.FU">FU</span>]]
+              </h3>
+            </div>
         </div>
 
         <div id="groupedMembers">

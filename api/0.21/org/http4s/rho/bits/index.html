@@ -167,6 +167,14 @@
                         <a href="FloatParser.html" title="">FloatParser</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="trait" href="FuncParamsMatch.html" title=""></a>
+                        <a href="FuncParamsMatch.html" title="">FuncParamsMatch</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="FuncParamsMatchers.html" title=""></a>
+                        <a href="FuncParamsMatchers.html" title="">FuncParamsMatchers</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="HListToFunc.html" title="Converter of an value of type F to the HList of type T"></a>
                         <a href="HListToFunc.html" title="Converter of an value of type F to the HList of type T">HListToFunc</a>
                       </li><li class="current-entities indented4">
@@ -538,6 +546,44 @@
       </span>
       
       
+    </li><li name="org.http4s.rho.bits.FuncParamsMatch" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="FuncParamsMatch[F[_],T&lt;:shapeless.HList,-FU]extendsAnyRef"></a><a id="FuncParamsMatch[F[_],T&lt;:HList,-FU]:FuncParamsMatch[F,T,FU]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatch.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FuncParamsMatch.html"><span class="name">FuncParamsMatch</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="T">T &lt;: <span class="extype" name="shapeless.HList">HList</span></span>, <span name="FU">-FU</span>]</span><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@implicitNotFound</span><span class="args">(<span>
+      
+      <span class="defval" name="&quot;&quot;&quot;Could not bind route to action;<br/>  Expecting a function with parameter types matching:<br/>         (${T}) <br/>  or     (Request[F] :: ${T})<br/>  found: ${FU}&quot;&quot;&quot;">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="org.http4s.rho.bits.FuncParamsMatchers" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="FuncParamsMatchers[F[_]]extendsAnyRef"></a><a id="FuncParamsMatchers[F[_]]:FuncParamsMatchers[F]"></a>
+      <span class="permalink">
+      <a href="../../../../org/http4s/rho/bits/FuncParamsMatchers.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FuncParamsMatchers.html"><span class="name">FuncParamsMatchers</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      
+      
     </li><li name="org.http4s.rho.bits.HListToFunc" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="HListToFunc[F[_],T&lt;:shapeless.HList,-U]extendsAnyRef"></a><a id="HListToFunc[F[_],T&lt;:HList,-U]:HListToFunc[F,T,U]"></a>
       <span class="permalink">
@@ -555,7 +601,13 @@
       
       <p class="shortcomment cmt">Converter of an value of type F to the HList of type T
 </p><div class="fullcomment"><div class="comment cmt"><p>Converter of an value of type F to the HList of type T
-</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>HList type of the incoming values</p></dd><dt class="tparam">U</dt><dd class="cmt"><p>type of element onto which T will be mapped</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>HList type of the incoming values</p></dd><dt class="tparam">U</dt><dd class="cmt"><p>type of element onto which T will be mapped</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@implicitNotFound</span><span class="args">(<span>
+      
+      <span class="defval" name="&quot;&quot;&quot;Could not bind route to action;<br/>No HListToFunc instance found. <br/>  Most likely no ResultMatcher instance is available for the return type of <br/>    (${U}). <br/>  This can be caused by a lack of a matching EntityEncoder.&quot;&quot;&quot;">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
     </li><li name="org.http4s.rho.bits.HeaderAppendable" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="HeaderAppendable[F[_],T&lt;:shapeless.HList]extendsAnyRef"></a><a id="HeaderAppendable[F[_],T&lt;:HList]:HeaderAppendable[F,T]"></a>
       <span class="permalink">
