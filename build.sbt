@@ -152,13 +152,10 @@ scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-wa
 
 lazy val publishing = Seq(
   extras,
-  credentials ++= travisCredentials.toSeq,
-  publishMavenStyle in ThisBuild := true,
   publishArtifact in (ThisBuild, Test) := false,
   // Don't publish root pom.  It's not needed.
   packagedArtifacts in LocalRootProject := Map.empty,
   publishArtifact in Test := false,
-  publishTo in ThisBuild := Some(nexusRepoFor(version.value, isSnapshot.value)),
   scmInfo in ThisBuild := {
     val base = "github.com/http4s/rho"
     Some(
@@ -167,18 +164,6 @@ lazy val publishing = Seq(
               Some(s"scm:git:git@$base")))
   }
 )
-
-lazy val travisCredentials =
-  (envOrNone("SONATYPE_USERNAME"), envOrNone("SONATYPE_PASSWORD")) match {
-    case (Some(user), Some(pass)) =>
-      Some(
-        Credentials("Sonatype Nexus Repository Manager",
-                    "oss.sonatype.org",
-                    user,
-                    pass))
-    case _ =>
-      None
-  }
 
 lazy val extras = pomExtra in ThisBuild := (
   <developers>
@@ -195,6 +180,11 @@ lazy val extras = pomExtra in ThisBuild := (
       <id>rossabaker</id>
       <name>Ross A. Baker</name>
       <email>ross@rossabaker.com</email>
+    </developer>
+    <developer>
+      <id>zarthross</id>
+      <name>Darren A Gibson</name>
+      <email>zarthross@gmail.com</email>
     </developer>
   </developers>
 )
