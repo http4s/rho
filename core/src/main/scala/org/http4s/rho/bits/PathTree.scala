@@ -38,7 +38,7 @@ object PathTree {
     val i = if (path.nonEmpty && path.charAt(0) == '/') 1 else 0
     go(i, i)
 
-    buff.result
+    buff.result()
   }
 
 }

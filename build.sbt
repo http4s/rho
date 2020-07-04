@@ -57,6 +57,7 @@ lazy val `rho-swagger-ui` = project
 lazy val docs = project
   .in(file("docs"))
   .settings(buildSettings)
+  .disablePlugins(MimaPlugin)
   .enablePlugins(ScalaUnidocPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .enablePlugins(GhpagesPlugin)
@@ -126,8 +127,8 @@ lazy val license = licenses in ThisBuild := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := "2.13.2",
-    crossScalaVersions := Seq(scalaVersion.value, "2.12.10"),
+    scalaVersion := scala_213,
+    crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),
     fork in run := true,
@@ -157,7 +158,7 @@ lazy val publishing = Seq(
   // Don't publish root pom.  It's not needed.
   packagedArtifacts in LocalRootProject := Map.empty,
   publishArtifact in Test := false,
-  publishTo in ThisBuild := Some(nexusRepoFor(version.value)),
+  publishTo in ThisBuild := Some(nexusRepoFor(version.value, isSnapshot.value)),
   scmInfo in ThisBuild := {
     val base = "github.com/http4s/rho"
     Some(

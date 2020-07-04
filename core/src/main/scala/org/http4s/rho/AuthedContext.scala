@@ -40,7 +40,7 @@ import cats.effect._
 class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
 
   /* Attribute key to lookup authInfo in request attributeMap . */
-  final private val authKey = Key.newKey[SyncIO, U].unsafeRunSync
+  final private val authKey = Key.newKey[SyncIO, U].unsafeRunSync()
 
   /** Turn the [[HttpRoutes]] into an `AuthedService`
     *

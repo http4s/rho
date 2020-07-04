@@ -5,6 +5,9 @@ object Dependencies {
   lazy val http4sVersion = "0.21.6"
   lazy val specs2Version = "4.10.0"
 
+  val scala_213 = "2.13.2"
+  val scala_212 = "2.12.11"
+
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion

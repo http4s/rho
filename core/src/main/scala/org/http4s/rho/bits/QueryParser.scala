@@ -45,8 +45,8 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
     override def collect(name: String, params: Params, default: Option[B[A]]): ResultResponse[F, B[A]] = {
       val b = cbf.newBuilder
       params.get(name) match {
-        case None => SuccessResponse(default.getOrElse(b.result))
-        case Some(Seq()) => SuccessResponse(default.getOrElse(b.result))
+        case None => SuccessResponse(default.getOrElse(b.result()))
+        case Some(Seq()) => SuccessResponse(default.getOrElse(b.result()))
         case Some(values) =>
           val it = values.iterator
           @tailrec
