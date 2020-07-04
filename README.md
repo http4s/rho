@@ -28,7 +28,7 @@ Rho artifacts are available at Maven Central and snapshots are available from th
 Read the [Rho Scaladocs](http://rho.http4s.org)
 
 ```scala
-resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.sonatypeRepo("snapshots")  // Only if you are using a -snapshot version
 
 libraryDependencies += "org.http4s" %% "rho-swagger" % version
 
