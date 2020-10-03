@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [1.8, 1.11, 1.14]
+        scala: [2.12.11, 2.13.2]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java }}
+    - name: Cache Coursier
+      uses: actions/cache@v1
+      with:
+        path: ~/.cache/coursier
+        key: sbt-coursier-cache
+    - name: Cache SBT
+      uses: actions/cache@v1
+      with:
+        path: ~/.sbt
+        key: sbt-${{ hashFiles('**/build.sbt') }}
+    - name: Run Compile
+      run: sbt ++${{ matrix.scala }} compile  
+    - name: Run Test
+      run: sbt ++${{ matrix.scala }} test
+    - name: Scaladoc
+      run: sbt ++${{ matrix.scala }} doc

@@ -13,7 +13,7 @@ trait ResultMatcher[F[_], -R] {
   def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]]
 }
 
-object ResultMatcher extends ResultMatcherOps {
+trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
 
   sealed trait MaybeWritable[T] {
     def contentType: Set[MediaType]
@@ -22,8 +22,6 @@ object ResultMatcher extends ResultMatcherOps {
   }
 
   object MaybeWritable extends MaybeWritableOps {
-    type Aux[F[_], T] = MaybeWritable[T]
-
     // This will represent a "missing" result meaning this status wasn't used
     implicit val maybeWritableAny: MaybeWritable[Any] = new MaybeWritable[Any] {
       override def contentType: Set[MediaType] = Set.empty
@@ -35,7 +33,7 @@ object ResultMatcher extends ResultMatcherOps {
   trait MaybeWritableOps {
     /* Allowing the `Writable` to be `null` only matches real results but allows for
        situations where you return the same status with two types */
-    implicit def maybeIsWritable[F[_], T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable.Aux[F, T] = new MaybeWritable[T] {
+    implicit def maybeIsWritable[T](implicit t: WeakTypeTag[T], w: EntityEncoder[F, T] = null): MaybeWritable[T] = new MaybeWritable[T] {
       private val ww = Option(w)
       override def contentType: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
       override def encodings: Set[MediaType] = ww.flatMap(_.contentType.map(_.mediaType)).toSet
@@ -44,7 +42,6 @@ object ResultMatcher extends ResultMatcherOps {
   }
 
   implicit def statusMatcher[
-  F[_],
   /* 100 */ CONTINUE,
   /* 101 */ SWITCHINGPROTOCOLS,
   /* 102 */ PROCESSING,
@@ -110,66 +107,66 @@ object ResultMatcher extends ResultMatcherOps {
   /* 510 */ NOTEXTENDED,
   /* 511 */ NETWORKAUTHENTICATIONREQUIRED
   ](implicit
-    /* 100 */ mCONTINUE: MaybeWritable.Aux[F, CONTINUE],
-    /* 101 */ mSWITCHINGPROTOCOLS: MaybeWritable.Aux[F, SWITCHINGPROTOCOLS],
-    /* 102 */ mPROCESSING: MaybeWritable.Aux[F, PROCESSING],
-    /* 103 */ mEARLYHINTS: MaybeWritable.Aux[F, EARLYHINTS],
-    /* 200 */ mOK: MaybeWritable.Aux[F, OK],
-    /* 201 */ mCREATED: MaybeWritable.Aux[F, CREATED],
-    /* 202 */ mACCEPTED: MaybeWritable.Aux[F, ACCEPTED],
-    /* 203 */ mNONAUTHORITATIVEINFORMATION: MaybeWritable.Aux[F, NONAUTHORITATIVEINFORMATION],
-    /* 204 */ mNOCONTENT: MaybeWritable.Aux[F, NOCONTENT],
-    /* 205 */ mRESETCONTENT: MaybeWritable.Aux[F, RESETCONTENT],
-    /* 206 */ mPARTIALCONTENT: MaybeWritable.Aux[F, PARTIALCONTENT],
-    /* 207 */ mMULTISTATUS: MaybeWritable.Aux[F, MULTISTATUS],
-    /* 208 */ mALREADYREPORTED: MaybeWritable.Aux[F, ALREADYREPORTED],
-    /* 226 */ mIMUSED: MaybeWritable.Aux[F, IMUSED],
-    /* 300 */ mMULTIPLECHOICES: MaybeWritable.Aux[F, MULTIPLECHOICES],
-    /* 301 */ mMOVEDPERMANENTLY: MaybeWritable.Aux[F, MOVEDPERMANENTLY],
-    /* 302 */ mFOUND: MaybeWritable.Aux[F, FOUND],
-    /* 303 */ mSEEOTHER: MaybeWritable.Aux[F, SEEOTHER],
-    /* 304 */ mNOTMODIFIED: MaybeWritable.Aux[F, NOTMODIFIED],
-    /* 307 */ mTEMPORARYREDIRECT: MaybeWritable.Aux[F, TEMPORARYREDIRECT],
-    /* 308 */ mPERMANENTREDIRECT: MaybeWritable.Aux[F, PERMANENTREDIRECT],
-    /* 400 */ mBADREQUEST: MaybeWritable.Aux[F, BADREQUEST],
-    /* 401 */ mUNAUTHORIZED: MaybeWritable.Aux[F, UNAUTHORIZED],
-    /* 402 */ mPAYMENTREQUIRED: MaybeWritable.Aux[F, PAYMENTREQUIRED],
-    /* 403 */ mFORBIDDEN: MaybeWritable.Aux[F, FORBIDDEN],
-    /* 404 */ mNOTFOUND: MaybeWritable.Aux[F, NOTFOUND],
-    /* 405 */ mMETHODNOTALLOWED: MaybeWritable.Aux[F, METHODNOTALLOWED],
-    /* 406 */ mNOTACCEPTABLE: MaybeWritable.Aux[F, NOTACCEPTABLE],
-    /* 407 */ mPROXYAUTHENTICATIONREQUIRED: MaybeWritable.Aux[F, PROXYAUTHENTICATIONREQUIRED],
-    /* 408 */ mREQUESTTIMEOUT: MaybeWritable.Aux[F, REQUESTTIMEOUT],
-    /* 409 */ mCONFLICT: MaybeWritable.Aux[F, CONFLICT],
-    /* 410 */ mGONE: MaybeWritable.Aux[F, GONE],
-    /* 411 */ mLENGTHREQUIRED: MaybeWritable.Aux[F, LENGTHREQUIRED],
-    /* 412 */ mPRECONDITIONFAILED: MaybeWritable.Aux[F, PRECONDITIONFAILED],
-    /* 413 */ mPAYLOADTOOLARGE: MaybeWritable.Aux[F, PAYLOADTOOLARGE],
-    /* 414 */ mURITOOLONG: MaybeWritable.Aux[F, URITOOLONG],
-    /* 415 */ mUNSUPPORTEDMEDIATYPE: MaybeWritable.Aux[F, UNSUPPORTEDMEDIATYPE],
-    /* 416 */ mRANGENOTSATISFIABLE: MaybeWritable.Aux[F, RANGENOTSATISFIABLE],
-    /* 417 */ mEXPECTATIONFAILED: MaybeWritable.Aux[F, EXPECTATIONFAILED],
-    /* 421 */ mMISDIRECTEDREQUEST: MaybeWritable.Aux[F, MISDIRECTEDREQUEST],
-    /* 422 */ mUNPROCESSABLEENTITY: MaybeWritable.Aux[F, UNPROCESSABLEENTITY],
-    /* 423 */ mLOCKED: MaybeWritable.Aux[F, LOCKED],
-    /* 424 */ mFAILEDDEPENDENCY: MaybeWritable.Aux[F, FAILEDDEPENDENCY],
-    /* 424 */ mTOOEARLY: MaybeWritable.Aux[F, TOOEARLY],
-    /* 426 */ mUPGRADEREQUIRED: MaybeWritable.Aux[F, UPGRADEREQUIRED],
-    /* 428 */ mPRECONDITIONREQUIRED: MaybeWritable.Aux[F, PRECONDITIONREQUIRED],
-    /* 429 */ mTOOMANYREQUESTS: MaybeWritable.Aux[F, TOOMANYREQUESTS],
-    /* 431 */ mREQUESTHEADERFIELDSTOOLARGE: MaybeWritable.Aux[F, REQUESTHEADERFIELDSTOOLARGE],
-    /* 451 */ mUNAVAILABLEFORLEGALREASONS: MaybeWritable.Aux[F, UNAVAILABLEFORLEGALREASONS],
-    /* 500 */ mINTERNALSERVERERROR: MaybeWritable.Aux[F, INTERNALSERVERERROR],
-    /* 501 */ mNOTIMPLEMENTED: MaybeWritable.Aux[F, NOTIMPLEMENTED],
-    /* 502 */ mBADGATEWAY: MaybeWritable.Aux[F, BADGATEWAY],
-    /* 503 */ mSERVICEUNAVAILABLE: MaybeWritable.Aux[F, SERVICEUNAVAILABLE],
-    /* 504 */ mGATEWAYTIMEOUT: MaybeWritable.Aux[F, GATEWAYTIMEOUT],
-    /* 505 */ mHTTPVERSIONNOTSUPPORTED: MaybeWritable.Aux[F, HTTPVERSIONNOTSUPPORTED],
-    /* 506 */ mVARIANTALSONEGOTIATES: MaybeWritable.Aux[F, VARIANTALSONEGOTIATES],
-    /* 507 */ mINSUFFICIENTSTORAGE: MaybeWritable.Aux[F, INSUFFICIENTSTORAGE],
-    /* 508 */ mLOOPDETECTED: MaybeWritable.Aux[F, LOOPDETECTED],
-    /* 510 */ mNOTEXTENDED: MaybeWritable.Aux[F, NOTEXTENDED],
-    /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable.Aux[F, NETWORKAUTHENTICATIONREQUIRED]
+    /* 100 */ mCONTINUE: MaybeWritable[CONTINUE],
+    /* 101 */ mSWITCHINGPROTOCOLS: MaybeWritable[SWITCHINGPROTOCOLS],
+    /* 102 */ mPROCESSING: MaybeWritable[PROCESSING],
+    /* 103 */ mEARLYHINTS: MaybeWritable[EARLYHINTS],
+    /* 200 */ mOK: MaybeWritable[OK],
+    /* 201 */ mCREATED: MaybeWritable[CREATED],
+    /* 202 */ mACCEPTED: MaybeWritable[ACCEPTED],
+    /* 203 */ mNONAUTHORITATIVEINFORMATION: MaybeWritable[NONAUTHORITATIVEINFORMATION],
+    /* 204 */ mNOCONTENT: MaybeWritable[NOCONTENT],
+    /* 205 */ mRESETCONTENT: MaybeWritable[RESETCONTENT],
+    /* 206 */ mPARTIALCONTENT: MaybeWritable[PARTIALCONTENT],
+    /* 207 */ mMULTISTATUS: MaybeWritable[MULTISTATUS],
+    /* 208 */ mALREADYREPORTED: MaybeWritable[ALREADYREPORTED],
+    /* 226 */ mIMUSED: MaybeWritable[IMUSED],
+    /* 300 */ mMULTIPLECHOICES: MaybeWritable[MULTIPLECHOICES],
+    /* 301 */ mMOVEDPERMANENTLY: MaybeWritable[MOVEDPERMANENTLY],
+    /* 302 */ mFOUND: MaybeWritable[FOUND],
+    /* 303 */ mSEEOTHER: MaybeWritable[SEEOTHER],
+    /* 304 */ mNOTMODIFIED: MaybeWritable[NOTMODIFIED],
+    /* 307 */ mTEMPORARYREDIRECT: MaybeWritable[TEMPORARYREDIRECT],
+    /* 308 */ mPERMANENTREDIRECT: MaybeWritable[PERMANENTREDIRECT],
+    /* 400 */ mBADREQUEST: MaybeWritable[BADREQUEST],
+    /* 401 */ mUNAUTHORIZED: MaybeWritable[UNAUTHORIZED],
+    /* 402 */ mPAYMENTREQUIRED: MaybeWritable[PAYMENTREQUIRED],
+    /* 403 */ mFORBIDDEN: MaybeWritable[FORBIDDEN],
+    /* 404 */ mNOTFOUND: MaybeWritable[NOTFOUND],
+    /* 405 */ mMETHODNOTALLOWED: MaybeWritable[METHODNOTALLOWED],
+    /* 406 */ mNOTACCEPTABLE: MaybeWritable[NOTACCEPTABLE],
+    /* 407 */ mPROXYAUTHENTICATIONREQUIRED: MaybeWritable[PROXYAUTHENTICATIONREQUIRED],
+    /* 408 */ mREQUESTTIMEOUT: MaybeWritable[REQUESTTIMEOUT],
+    /* 409 */ mCONFLICT: MaybeWritable[CONFLICT],
+    /* 410 */ mGONE: MaybeWritable[GONE],
+    /* 411 */ mLENGTHREQUIRED: MaybeWritable[LENGTHREQUIRED],
+    /* 412 */ mPRECONDITIONFAILED: MaybeWritable[PRECONDITIONFAILED],
+    /* 413 */ mPAYLOADTOOLARGE: MaybeWritable[PAYLOADTOOLARGE],
+    /* 414 */ mURITOOLONG: MaybeWritable[URITOOLONG],
+    /* 415 */ mUNSUPPORTEDMEDIATYPE: MaybeWritable[UNSUPPORTEDMEDIATYPE],
+    /* 416 */ mRANGENOTSATISFIABLE: MaybeWritable[RANGENOTSATISFIABLE],
+    /* 417 */ mEXPECTATIONFAILED: MaybeWritable[EXPECTATIONFAILED],
+    /* 421 */ mMISDIRECTEDREQUEST: MaybeWritable[MISDIRECTEDREQUEST],
+    /* 422 */ mUNPROCESSABLEENTITY: MaybeWritable[UNPROCESSABLEENTITY],
+    /* 423 */ mLOCKED: MaybeWritable[LOCKED],
+    /* 424 */ mFAILEDDEPENDENCY: MaybeWritable[FAILEDDEPENDENCY],
+    /* 424 */ mTOOEARLY: MaybeWritable[TOOEARLY],
+    /* 426 */ mUPGRADEREQUIRED: MaybeWritable[UPGRADEREQUIRED],
+    /* 428 */ mPRECONDITIONREQUIRED: MaybeWritable[PRECONDITIONREQUIRED],
+    /* 429 */ mTOOMANYREQUESTS: MaybeWritable[TOOMANYREQUESTS],
+    /* 431 */ mREQUESTHEADERFIELDSTOOLARGE: MaybeWritable[REQUESTHEADERFIELDSTOOLARGE],
+    /* 451 */ mUNAVAILABLEFORLEGALREASONS: MaybeWritable[UNAVAILABLEFORLEGALREASONS],
+    /* 500 */ mINTERNALSERVERERROR: MaybeWritable[INTERNALSERVERERROR],
+    /* 501 */ mNOTIMPLEMENTED: MaybeWritable[NOTIMPLEMENTED],
+    /* 502 */ mBADGATEWAY: MaybeWritable[BADGATEWAY],
+    /* 503 */ mSERVICEUNAVAILABLE: MaybeWritable[SERVICEUNAVAILABLE],
+    /* 504 */ mGATEWAYTIMEOUT: MaybeWritable[GATEWAYTIMEOUT],
+    /* 505 */ mHTTPVERSIONNOTSUPPORTED: MaybeWritable[HTTPVERSIONNOTSUPPORTED],
+    /* 506 */ mVARIANTALSONEGOTIATES: MaybeWritable[VARIANTALSONEGOTIATES],
+    /* 507 */ mINSUFFICIENTSTORAGE: MaybeWritable[INSUFFICIENTSTORAGE],
+    /* 508 */ mLOOPDETECTED: MaybeWritable[LOOPDETECTED],
+    /* 510 */ mNOTEXTENDED: MaybeWritable[NOTEXTENDED],
+    /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable[NETWORKAUTHENTICATIONREQUIRED]
    ): ResultMatcher[F, Result[
     F,
     /* 100 */ CONTINUE,
@@ -444,7 +441,7 @@ object ResultMatcher extends ResultMatcherOps {
     }
   }
 
-  implicit def optionMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] with ResponseGeneratorInstances[F] {
+  implicit def optionMatcher[R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, Option[R]] = new ResultMatcher[F, Option[R]] with ResponseGeneratorInstances[F] {
     override val encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
     override val resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias),
                                                    StatusOnly(Status.NotFound))
@@ -455,14 +452,7 @@ object ResultMatcher extends ResultMatcherOps {
     }
   }
 
-  implicit def writableMatcher[F[_], R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] with ResponseGeneratorInstances[F] {
-    override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
-    override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
-
-    override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = Ok.pure(r)
-  }
-
-  implicit def responseMatcher[F[_]]: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
+  implicit def responseMatcher: ResultMatcher[F, Response[F]] = new ResultMatcher[F, Response[F]] {
     override def encodings: Set[MediaType] = Set.empty
     override def resultInfo: Set[ResultInfo] = Set.empty
 
@@ -470,11 +460,20 @@ object ResultMatcher extends ResultMatcherOps {
   }
 }
 
-trait ResultMatcherOps {
-  implicit def fMatcher[F[_], R](implicit r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
+trait ResultMatcherMidPrioInstances[F[_]] extends ResultMatcherLowPrioInstances[F] {
+  implicit def fMatcher[R](implicit r: ResultMatcher[F, R]): ResultMatcher[F, F[R]] = new ResultMatcher[F, F[R]] {
     override def encodings: Set[MediaType] = r.encodings
     override def resultInfo: Set[ResultInfo] = r.resultInfo
 
     override def conv(req: Request[F], f: F[R])(implicit F: Monad[F]): F[Response[F]] = F.flatMap(f)(r.conv(req, _))
+  }
+}
+
+trait ResultMatcherLowPrioInstances[F[_]] {
+  implicit def writableMatcher[R](implicit o: WeakTypeTag[R], w: EntityEncoder[F, R]): ResultMatcher[F, R] = new ResultMatcher[F, R] with ResponseGeneratorInstances[F] {
+    override def encodings: Set[MediaType] = w.contentType.map(_.mediaType).toSet
+    override def resultInfo: Set[ResultInfo] = Set(StatusAndType(Status.Ok, o.tpe.dealias))
+
+    override def conv(req: Request[F], r: R)(implicit F: Monad[F]): F[Response[F]] = Ok.pure(r)
   }
 }

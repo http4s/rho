@@ -1,13 +1,13 @@
 ρ: A DSL for building HTTP services with http4s
 -----------------------------------------------
 
-[![Build Status](https://travis-ci.org/http4s/rho.svg?branch=master)](https://travis-ci.org/http4s/rho)
+[![CI](https://github.com/http4s/rho/workflows/CI/badge.svg)](https://github.com/http4s/rho/actions?query=workflow%3A%22CI%22)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.http4s/rho-core_2.12)
 [![Gitter](https://badges.gitter.im/http4s/rho.svg)](https://gitter.im/http4s/rho?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 
 ```scala
-val httpService = new RhoService[IO] {
+val httpService = new RhoRoutes[IO] {
    GET / "hello" / 'world +? param[Int]("fav") |>> { (world: String, fav: Int) => 
      Ok(s"Received $fav, $world") 
    }
@@ -28,7 +28,7 @@ Rho artifacts are available at Maven Central and snapshots are available from th
 Read the [Rho Scaladocs](http://rho.http4s.org)
 
 ```scala
-resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers += Resolver.sonatypeRepo("snapshots")  // Only if you are using a -snapshot version
 
 libraryDependencies += "org.http4s" %% "rho-swagger" % version
 

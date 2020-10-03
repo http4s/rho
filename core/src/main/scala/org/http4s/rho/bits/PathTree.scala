@@ -11,7 +11,6 @@ import shapeless.{HList, HNil}
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
-import scala.util.control.NonFatal
 
 object PathTree {
 
@@ -39,7 +38,7 @@ object PathTree {
     val i = if (path.nonEmpty && path.charAt(0) == '/') 1 else 0
     go(i, i)
 
-    buff.result
+    buff.result()
   }
 
 }

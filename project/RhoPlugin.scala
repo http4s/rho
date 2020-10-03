@@ -1,24 +1,17 @@
 import sbt._
-import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport.{mimaFailOnNoPrevious, mimaFailOnProblem, mimaPreviousArtifacts}
-import sbt.Keys.{moduleName, organization, scalaBinaryVersion, version}
+import sbt.Keys._
+import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
+import sbtdynver.DynVerPlugin.autoImport.previousStableVersion
 
 object RhoPlugin extends AutoPlugin {
   object autoImport {
     val apiVersion = taskKey[(Int, Int)]("Defines the API compatibility version for the project.")
-    val http4sMimaVersion = settingKey[Option[String]]("Version to target for MiMa compatibility")
   }
   import autoImport._
 
   override def trigger = allRequirements
 
   val homepageUrl = "https://github.com/http4s/rho"
-
-  /** Some helper functions **************************************/
-  def nexusRepoFor(version: String): Resolver = {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot(version)) "snapshots" at nexus + "content/repositories/snapshots"
-    else "releases" at nexus + "service/local/staging/deploy/maven2"
-  }
 
   def extractApiVersion(version: String) = {
     val VersionExtractor = """(\d+)\.(\d+)\..*""".r
@@ -43,21 +36,11 @@ object RhoPlugin extends AutoPlugin {
     opts
   }
 
-  def isSnapshot(version: String): Boolean = version.endsWith("-SNAPSHOT")
-
   def mimaConfiguration: Seq[Setting[_]] = Seq(
-    http4sMimaVersion := {
-      version.value match {
-        case VersionNumber(Seq(major, minor, patch), _, _) if patch.toInt > 0 =>
-          Some(s"$major.$minor.${patch.toInt - 1}")
-        case _ =>
-          None
-      }
-    },
-    mimaFailOnProblem := http4sMimaVersion.value.isDefined,
-    mimaFailOnNoPrevious := false,
-    mimaPreviousArtifacts := (http4sMimaVersion.value.map {
-      organization.value % s"${moduleName.value}_${scalaBinaryVersion.value}" % _
-    }).toSet
+    mimaPreviousArtifacts := previousStableVersion.value.map( _ =>
+      organization.value %% name.value % "0.20.0"
+    ).toSet.filter { module => 
+      !(module.name == "rho-swagger-ui" && module.revision == "0.20.0")
+    }
   )
 }
