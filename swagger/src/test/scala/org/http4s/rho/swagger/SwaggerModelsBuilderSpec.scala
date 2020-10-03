@@ -56,7 +56,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   case class ModelC(name: String, shape: String) extends Renderable
   case class ModelMap(bar: String, baz: Map[String, Int]) extends Renderable
 
-  val sb = new SwaggerModelsBuilder(DefaultSwaggerFormats)
+  val sb = new SwaggerModelsBuilder[IO](DefaultSwaggerFormats)
   val fooPath = GET / "foo"
   val barPath = GET / "bar"
   type OpSeq = Option[Seq[String]]
@@ -65,34 +65,34 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "handle head request" in {
       val ra = HEAD / "foobar" |>> { "" }
-      sb.collectPaths[IO](ra)(Swagger()).get("/foobar").flatMap(_.head) must beSome[Operation]
+      sb.collectPaths(ra)(Swagger()).get("/foobar").flatMap(_.head) must beSome[Operation]
     }
 
     "handle an action with one query parameter" in {
       val ra = fooPath +? param[Int]("id") |>> { (_: Int) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, required = true))
     }
 
     "handle an action with one query parameter with description" in {
       val ra = fooPath +? paramD[Int]("id", "int id") |>> { (_: Int) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
         List(QueryParameter(`type` = "integer".some, name = "id".some, required = true, description = "int id".some))
     }
 
     "handle an action with one optional query parameter" in {
       val ra = fooPath +? param[Option[String]]("name") |>> { (_: Option[String]) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
       List(QueryParameter(`type` = "string".some, name = "name".some, required = false))
     }
 
     "handle an action with one optional seq query parameter" in {
       val ra = fooPath +? param[Option[Seq[String]]]("name") |>> { (_: Option[Seq[String]]) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
         List(
           QueryParameter(`type` = None, name = "name".some,
             items = Some(AbstractProperty(`type` = "string")),
@@ -103,7 +103,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with one optional seq query parameter using a type alias" in {
       val ra = fooPath +? param[OpSeq]("name") |>> { (_: OpSeq) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
         List(
           QueryParameter(`type` = None, name = "name".some,
             items = Some(AbstractProperty(`type` = "string")),
@@ -114,21 +114,21 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with one query parameter with default value" in {
       val ra = fooPath +? param[Int]("id", 6) |>> { (_: Int) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
       List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false))
     }
 
     "handle an action with one query parameter with default value and description" in {
       val ra = fooPath +? paramD[Int]("id", 6, "id with default") |>> { (_: Int) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
         List(QueryParameter(`type` = "integer".some, name = "id".some, defaultValue = "6".some, required = false, description = "id with default".some))
     }
 
     "handle an action with two query parameters" in {
       val ra = fooPath +? param[Int]("id") & param[String]("str", "hello") |>> { (_: Int, _: String) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
       List(
         QueryParameter(`type` = "integer".some, name = "id".some,  required = true),
         QueryParameter(`type` = "string".some,  name = "str".some, defaultValue = "hello".some, required = false))
@@ -139,7 +139,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = fooPath +? (param[Int]("id") || param[Int]("id2")) |>> { (_: Int) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
       List(
         QueryParameter(`type` = "integer".some, name = "id".some,  description = orStr("id2"), required = true),
         QueryParameter(`type` = "integer".some, name = "id2".some, description = orStr("id"),  required = true))
@@ -148,28 +148,28 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with one query parameter of complex data type" in {
        val ra = fooPath +? param[Foo]("foo") |>> { (_: Foo) => "" }
 
-       sb.collectQueryParams[IO](ra) must_==
+       sb.collectQueryParams(singleLinearRoute(ra)) must_==
        List(QueryParameter(`type` = "string".some, name = "foo".some, required = true))
     }
 
     "handle an action with one optional query parameter of complex data type" in {
        val ra = fooPath +? param[Option[Foo]]("foo") |>> { (_: Option[Foo]) => "" }
 
-       sb.collectQueryParams[IO](ra) must_==
+       sb.collectQueryParams(singleLinearRoute(ra)) must_==
        List(QueryParameter(`type` = "string".some, name = "foo".some, required = false))
     }
 
     "handle an action with one optional query parameter of complex (but AnyVal) data type" in {
        val ra = fooPath +? param[Option[FooVal]]("foo") |>> { (_: Option[FooVal]) => "" }
 
-       sb.collectQueryParams[IO](ra) must_==
+       sb.collectQueryParams(singleLinearRoute(ra)) must_==
        List(QueryParameter(`type` = "string".some, name = "foo".some, required = false))
     }
 
     "handle and action with two query parameters of complex data type" in {
       val ra = fooPath +? param[Foo]("foo") & param[Seq[Bar]]("bar", Nil) |>> { (_: Foo, _: Seq[Bar]) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
       List(
         QueryParameter(`type` = "string".some, name = "foo".some, required = true),
         QueryParameter(`type` = None, name = "bar".some, items = Some(AbstractProperty(`type` = "string")), defaultValue = "".some, isArray = true)
@@ -179,7 +179,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with query parameters of empty data types" in {
       val ra = fooPath +? param[Unit]("unit") & param[Void]("void") |>> { (_: Unit, _: Void) => "" }
 
-      sb.collectQueryParams[IO](ra) must_==
+      sb.collectQueryParams(singleLinearRoute(ra)) must_==
         List(
           QueryParameter(`type` = "string".some, name = "unit".some, required = true),
           QueryParameter(`type` = "string".some, name = "void".some, required = true),
@@ -192,14 +192,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     "handle an action with single header rule" in {
       val ra = fooPath >>> exists(`Content-Length`) |>> { () => "" }
 
-      sb.collectHeaderParams[IO](ra) must_==
+      sb.collectHeaderParams(singleLinearRoute(ra)) must_==
       List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = true))
     }
 
     "handle an action with two header rules" in {
       val ra = fooPath >>> (exists(`Content-Length`) && exists(`Content-MD5`)) |>> { () => "" }
 
-      sb.collectHeaderParams[IO](ra) must_==
+      sb.collectHeaderParams(singleLinearRoute(ra)) must_==
       List(
         HeaderParameter(`type` = "string", name = "Content-Length".some, required = true),
         HeaderParameter(`type` = "string", name = "Content-MD5".some,    required = true))
@@ -210,7 +210,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> { () => "" }
 
-      sb.collectHeaderParams[IO](ra) must_==
+      sb.collectHeaderParams(singleLinearRoute(ra)) must_==
       List(
         HeaderParameter(`type` = "string", name = "Content-Length".some, description = orStr("Content-MD5"), required = true),
         HeaderParameter(`type` = "string", name = "Content-MD5".some,    description = orStr("Content-Length"), required = true))
@@ -219,21 +219,21 @@ class SwaggerModelsBuilderSpec extends Specification {
     "set required = false if there is a default value for the header" in {
       val ra = fooPath >>> captureOrElse(`Content-Length`)(`Content-Length`.unsafeFromLong(20)) |>> { (_: `Content-Length`) => "" }
 
-      sb.collectHeaderParams[IO](ra) must_==
+      sb.collectHeaderParams(singleLinearRoute(ra)) must_==
         List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
     }
 
     "set required = false if the header is optional" in {
       val ra = fooPath >>> captureOptionally(`Content-Length`) |>> { (_: Option[`Content-Length`]) => "" }
 
-      sb.collectHeaderParams[IO](ra) must_==
+      sb.collectHeaderParams(singleLinearRoute(ra)) must_==
         List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
     }
 
     "set required = false by default if there is a missingHeaderResult for the header" in {
       val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(Right(_)) |>> { (_: `Content-Length`) => "" }
 
-      sb.collectHeaderParams[IO](ra) must_==
+      sb.collectHeaderParams(singleLinearRoute(ra)) must_==
         List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = false))
     }
 
@@ -249,7 +249,7 @@ class SwaggerModelsBuilderSpec extends Specification {
       }
       val ra = fooPath.decoding(dec) |>> { _: Foo => "" }
 
-      sb.collectBodyParams[IO](ra) must beSome((p: BodyParameter) => p.required must_== true)
+      sb.collectBodyParams(singleLinearRoute(ra)) must beSome((p: BodyParameter) => p.required must_== true)
     }
 
     "handle an optional body parameter" in {
@@ -259,7 +259,7 @@ class SwaggerModelsBuilderSpec extends Specification {
       }
       val ra = fooPath.decoding(dec) |>> { _: Option[Foo] => "" }
 
-      sb.collectBodyParams[IO](ra) must beSome((p: BodyParameter) => p.required must_== false)
+      sb.collectBodyParams(singleLinearRoute(ra)) must beSome((p: BodyParameter) => p.required must_== false)
     }
   }
 
@@ -268,29 +268,29 @@ class SwaggerModelsBuilderSpec extends Specification {
     "Get a route description" in {
       val ra = "foo" ** GET / "bar" |>> { () => "" }
 
-      sb.mkOperation("/foo", ra).summary must_== "foo".some
+      sb.mkOperation(singleLinearRoute(ra)).summary must_== "foo".some
     }
 
     "Get explicit route tag" in {
       val ra = "tag" @@ GET / "bar" |>> { () => "" }
-      sb.mkOperation("/bar", ra).tags must_== List("tag")
+      sb.mkOperation(singleLinearRoute(ra)).tags must_== List("tag")
     }
 
     "Get explicit route tags" in {
       val ra = List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
 
-      sb.mkOperation("/bar", ra).tags must_== List("tag1", "tag2")
+      sb.mkOperation(singleLinearRoute(ra)).tags must_== List("tag1", "tag2")
     }
 
     "Default to first segment for tags" in {
       val ra = GET / "foo" / "bar" |>> { () => "" }
 
-      sb.mkOperation("/foo/bar", ra).tags must_== List("foo")
+      sb.mkOperation(singleLinearRoute(ra)).tags must_== List("foo")
     }
 
     "Default to / as a tag for routes without segments" in {
       val ra = GET |>> { () => "" }
-      sb.mkOperation("/", ra).tags must_== List("/")
+      sb.mkOperation(singleLinearRoute(ra)).tags must_== List("/")
     }
 
     "Mix and match route descriptions and tags" in {
@@ -299,15 +299,15 @@ class SwaggerModelsBuilderSpec extends Specification {
       val ra3 = "foo" ** "tag" @@ GET / "bar" |>> { () => "" }
       val ra4 = "tag" @@ ("foo" ** GET / "bar") |>> { () => "" }
 
-      sb.mkOperation("/bar", ra1) must_== sb.mkOperation("/bar", ra2)
-      sb.mkOperation("/bar", ra3) must_== sb.mkOperation("/bar", ra4)
+      sb.mkOperation(singleLinearRoute(ra1)) must_== sb.mkOperation(singleLinearRoute(ra2))
+      sb.mkOperation(singleLinearRoute(ra3)) must_== sb.mkOperation(singleLinearRoute(ra4))
     }
 
     "Preserve explicit tags after prepending segments" in {
       val inner = List("tag1", "tag2") @@ GET / "bar" |>> { () => "" }
       val ra = "foo" /: inner
 
-      sb.mkOperation("/foo/bar", ra).tags must_== List("tag1", "tag2")
+      sb.mkOperation(singleLinearRoute(ra)).tags must_== List("tag1", "tag2")
     }
 
     "Produce unique operation ids" in {
@@ -327,7 +327,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = x ^^ "foo1" ** GET / "bar" |>> { () => "" }
 
-      sb.mkOperation("/foo", ra).security must_== List(x)
+      sb.mkOperation(singleLinearRoute(ra)).security must_== List(x)
     }
 
     "Create Security Scopes" in {
@@ -335,7 +335,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = x ^^ "foo1" ** GET / "bar" |>> { () => "" }
 
-      sb.mkOperation("/foo", ra).security must_== List(x)
+      sb.mkOperation(singleLinearRoute(ra)).security must_== List(x)
     }
 
     "Handle collection params in body" in {
@@ -346,7 +346,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
       val ra = POST / "foo" ^ dec |>> { (_: List[String]) => "" }
 
-      sb.mkOperation("/foo", ra).parameters must_== List(
+      sb.mkOperation(singleLinearRoute(ra)).parameters must_== List(
         BodyParameter(
           schema = ArrayModel(
             id = "scala.collection.immutable.List«java.lang.String»",
@@ -365,74 +365,80 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "find a simple path - GET" in {
       val ra = GET / "foo" |>> { () => "" }
-      val paths = sb.collectPaths[IO](ra)(Swagger())
+      val paths = sb.collectPaths(ra)(Swagger())
 
-      paths must havePair("/foo" -> Path(get = sb.mkOperation("/foo", ra).some))
+      paths must havePair("/foo" -> Path(get = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple path - PUT" in {
       val ra = PUT / "foo" |>> { () => "" }
-      val paths = sb.collectPaths[IO](ra)(Swagger())
+      val paths = sb.collectPaths(ra)(Swagger())
 
-      paths must havePair("/foo" -> Path(put = sb.mkOperation("/foo", ra).some))
+      paths must havePair("/foo" -> Path(put = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple path - POST" in {
       val ra = POST / "foo" |>> { () => "" }
-      val paths = sb.collectPaths[IO](ra)(Swagger())
+      val paths = sb.collectPaths(ra)(Swagger())
 
-      paths must havePair("/foo" -> Path(post = sb.mkOperation("/foo", ra).some))
+      paths must havePair("/foo" -> Path(post = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple path - PATCH" in {
       val ra = PATCH / "foo" |>> { () => "" }
-      val paths = sb.collectPaths[IO](ra)(Swagger())
+      val paths = sb.collectPaths(ra)(Swagger())
 
-      paths must havePair("/foo" -> Path(patch = sb.mkOperation("/foo", ra).some))
+      paths must havePair("/foo" -> Path(patch = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple path - OPTIONS" in {
       val ra = OPTIONS / "foo" |>> { () => "" }
-      val paths = sb.collectPaths[IO](ra)(Swagger())
+      val paths = sb.collectPaths(ra)(Swagger())
 
-      paths must havePair("/foo" -> Path(options = sb.mkOperation("/foo", ra).some))
+      paths must havePair("/foo" -> Path(options = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple and-path" in {
       val ra = GET / "foo" / "bar" |>> { () => "" }
-      val paths = sb.collectPaths[IO](ra)(Swagger())
+      val paths = sb.collectPaths(ra)(Swagger())
 
-      paths must havePair("/foo/bar" -> Path(get = sb.mkOperation("/foo/bar", ra).some))
+      paths must havePair("/foo/bar" -> Path(get = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple or-path" in {
       val ra = GET / ("foo" || "bar") |>> { () => "" }
 
-      sb.collectPaths[IO](ra)(Swagger()) must havePairs(
-        "/foo" -> Path(get = sb.mkOperation("/foo", ra).some),
-        "/bar" -> Path(get = sb.mkOperation("/bar", ra).some))
+      val rFoo = GET / "foo" |>> { () => "" }
+      val rBar = GET / "bar" |>> { () => "" }
+
+      sb.collectPaths(ra)(Swagger()) must havePairs(
+        "/foo" -> Path(get = sb.mkOperation(singleLinearRoute(rFoo)).some),
+        "/bar" -> Path(get = sb.mkOperation(singleLinearRoute(rBar)).some))
     }
 
     "find a capture or-path" in {
       val ra = GET / (pathVar[Int]("foo") || pathVar[Int]("bar")) |>> { (_: Int) => "" }
 
-      sb.collectPaths[IO](ra)(Swagger()) must havePairs(
-        "/{foo}" -> Path(get = sb.mkOperation("{foo}", ra).some),
-        "/{bar}" -> Path(get = sb.mkOperation("{bar}", ra).some))
+      val rFoo = GET / pathVar[Int]("foo") |>> { (_: Int) => "" }
+      val rBar = GET / pathVar[Int]("bar") |>> { (_: Int) => "" }
+
+      sb.collectPaths(ra)(Swagger()) must havePairs(
+        "/{foo}" -> Path(get = sb.mkOperation(singleLinearRoute(rFoo)).some),
+        "/{bar}" -> Path(get = sb.mkOperation(singleLinearRoute(rBar)).some))
     }
 
     "find a simple path with a capture" in {
       val ra = GET / "foo" / pathVar[Int]("number") |>> { (_: Int) => "" }
 
-      sb.collectPaths[IO](ra)(Swagger()) must havePair(
-        "/foo/{number}" -> Path(get = sb.mkOperation("foo/{number}", ra).some))
+      sb.collectPaths(ra)(Swagger()) must havePair(
+        "/foo/{number}" -> Path(get = sb.mkOperation(singleLinearRoute(ra)).some))
     }
 
     "find a simple path with a capture with description" in {
       val ra = GET / pathVar[Int]("number", "int pathVar") |>> { (_: Int) => "" }
 
-      sb.collectPaths[IO](ra)(Swagger()) must havePair(
-      "/{number}" -> Path(get = sb.mkOperation("/{number}", ra).some))
+      sb.collectPaths(ra)(Swagger()) must havePair(
+      "/{number}" -> Path(get = sb.mkOperation(singleLinearRoute(ra)).some))
 
       ra.path match {
         case PathAnd(_, p) =>
@@ -448,10 +454,10 @@ class SwaggerModelsBuilderSpec extends Specification {
         GET / prefix / pathVar[Int]("number", "int pathVar") |>> { (_: Int) => "" }
       }
       def result(prefix: String) =
-        s"/${prefix}/{number}" -> Path(get = sb.mkOperation(s"/${prefix}/{number}", route(prefix)).some)
+        s"/${prefix}/{number}" -> Path(get = sb.mkOperation(singleLinearRoute(route(prefix))).some)
 
       def build(s: Swagger , r2: RhoRoute[IO, _]) =
-        Swagger(paths = sb.collectPaths[IO](r2)(s))
+        Swagger(paths = sb.collectPaths(r2)(s))
 
       val prefixRange = (0 to 10)
       val routes = prefixRange.map(i => s"p$i").map(route).toList
@@ -467,7 +473,7 @@ class SwaggerModelsBuilderSpec extends Specification {
         def decode(m: Media[IO], strict: Boolean): DecodeResult[IO, List[String]] = ???
       }
       val ra = GET / "foo" ^ dec |>> { _: List[String] => "" }
-      val op = sb.mkOperation("/foo", ra)
+      val op = sb.mkOperation(singleLinearRoute(ra))
 
       op.consumes must_== List("application/json")
     }
@@ -491,7 +497,7 @@ class SwaggerModelsBuilderSpec extends Specification {
         }
       }
 
-      sb.collectDefinitions[IO](ra)(Swagger()) must havePairs(
+      sb.collectDefinitions(ra)(Swagger()) must havePairs(
 
         "ModelA" ->
           ModelImpl(
@@ -531,7 +537,7 @@ class SwaggerModelsBuilderSpec extends Specification {
         Ok((1, ModelA("modela", 1)))
       }
 
-      sb.collectDefinitions[IO](ra)(Swagger()) must havePairs(
+      sb.collectDefinitions(ra)(Swagger()) must havePairs(
 
         "Tuple2«Int,ModelA»" ->
           ModelImpl(
@@ -547,13 +553,13 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of case class containing a map of primitive types" in {
       val ra = GET / "test" |>> { () => Ok(ModelMap("asdf", Map("foo"->1))) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = RefProperty("ModelMap",false,None,None,None).some
         )
       )
-      sb.collectDefinitions[IO](ra)(Swagger()) must havePair(
+      sb.collectDefinitions(ra)(Swagger()) must havePair(
         "ModelMap" ->
           ModelImpl(
             id          = prefix + "ModelMap",
@@ -577,42 +583,42 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect an empty response with response code forbidding entity" in {
       val ra = GET / "test" |>> { () => NoContent.apply }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "204" -> Response(description = "No Content", schema = None))
     }
 
     "collect an empty response with response code allowing entity" in {
       val ra = GET / "test" |>> { () => Ok(()) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(description = "OK", schema = None))
     }
 
       "collect response of primitive types" in {
       val ra = GET / "test" |>> { () => Ok("") }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response with file type" in {
       val ra = GET / "test" |>> { () => Ok(SwaggerFileResponse(CsvFile())) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "file").some))
     }
 
     "collect response of user-defined types" in {
       val ra = GET / "test" |>> { () => Ok(ModelA("", 0)) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(description = "OK", schema = RefProperty(ref = "ModelA").some))
     }
 
     "collect response of collection of primitive types" in {
       val ra = GET / "test" |>> { () => Ok(List("")) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = AbstractProperty(`type` = "string")).some))
@@ -621,7 +627,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of collection of unit" in {
       val ra = GET / "test" |>> { () => Ok(List(())) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Unit")).some))
@@ -630,7 +636,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of map of primitive types" in {
       val ra = GET / "test" |>> { () => Ok(Map("foo"->"bar")) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = MapProperty(additionalProperties = AbstractProperty(`type` = "string")).some))
@@ -639,7 +645,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of map of unit" in {
       val ra = GET / "test" |>> { () => Ok(Map(("foo", ()))) }
 
-      sb.collectResponses(ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = MapProperty(additionalProperties = RefProperty(ref = "Unit")).some))
@@ -648,7 +654,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of collection of user-defined types" in {
       val ra = GET / "test" |>> { () => Ok(List(ModelA("", 0))) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "ModelA")).some))
@@ -657,7 +663,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of tuples" in {
       val ra = GET / "test" |>> { () => Ok((0, ModelA("", 0))) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = RefProperty(ref = "Tuple2«Int,ModelA»").some))
@@ -666,7 +672,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of a collection of tuples" in {
       val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
@@ -676,10 +682,10 @@ class SwaggerModelsBuilderSpec extends Specification {
       val ra1 = GET / "test" |>> { () => Ok(Stream.eval(IO.pure(""))) }
       val ra2 = GET / "test" |>> { () => Ok(Stream.emit("").covary[IO]) }
 
-      sb.collectResponses[IO](ra1) must havePair(
+      sb.collectResponses(singleLinearRoute(ra1)) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
 
-      sb.collectResponses[IO](ra2) must havePair(
+      sb.collectResponses(singleLinearRoute(ra2)) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
@@ -687,12 +693,12 @@ class SwaggerModelsBuilderSpec extends Specification {
       val ra1 = GET / "test" |>> { () => Ok(Stream.eval(IO.pure(List((0, ModelA("", 0)))))) }
       val ra2 = GET / "test" |>> { () => Ok(Stream.emit(List((0, ModelA("", 0)))).covary[IO]) }
 
-      sb.collectResponses[IO](ra1) must havePair(
+      sb.collectResponses(singleLinearRoute(ra1)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
 
-      sb.collectResponses[IO](ra2) must havePair(
+      sb.collectResponses(singleLinearRoute(ra2)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
@@ -701,14 +707,14 @@ class SwaggerModelsBuilderSpec extends Specification {
     "collect response of an IO of a primitive" in {
       val ra = GET / "test" |>> { () => Ok("") }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(description = "OK", schema = AbstractProperty(`type` = "string").some))
     }
 
     "collect response of an IO of a non-primitive" in {
       val ra = GET / "test" |>> { () => Ok(List((0, ModelA("", 0)))) }
 
-      sb.collectResponses[IO](ra) must havePair(
+      sb.collectResponses(singleLinearRoute(ra)) must havePair(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some))
@@ -723,7 +729,7 @@ class SwaggerModelsBuilderSpec extends Specification {
         }
       }
 
-      sb.collectResponses[IO](ra) must havePairs(
+      sb.collectResponses(singleLinearRoute(ra)) must havePairs(
         "200" -> Response(
           description = "OK",
           schema      = ArrayProperty(items = RefProperty(ref = "Tuple2«Int,ModelA»")).some),
@@ -732,6 +738,12 @@ class SwaggerModelsBuilderSpec extends Specification {
           schema      = AbstractProperty(`type` = "string").some))
     }
   }
+
+  def singleLinearRoute(rr: RhoRoute[IO, _]): sb.LinearRoute =
+    sb.linearizeRoute(rr) match {
+      case Seq(lr) => lr
+      case other => throw new Exception(s"Expected $rr\n to linearize to exactly one LinearRoute. Instead got:\n${other.mkString("\n")}")
+    }
 
   implicit def renderableEncoder[F[_], T <: Renderable]: EntityEncoder[F, T] =
     EntityEncoder
