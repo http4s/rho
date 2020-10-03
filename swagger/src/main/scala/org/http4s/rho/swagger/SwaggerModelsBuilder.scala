@@ -25,9 +25,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       definitions = collectDefinitions(rr)(s))
 
   def collectPaths[F[_]](rr: RhoRoute[F, _])(s: Swagger)(implicit etag: WeakTypeTag[F[_]]): ListMap[String, Path] = {
-    val pairs = mkPathStrs(rr).map { ps =>
-      val o = mkOperation(ps, rr)
-      val p0 = s.paths.get(ps).getOrElse(Path())
+    val pairs = linearizeStack(rr.path::Nil).map { linearRoute: List[PathOperation] =>
+      val ps = mkPathStr(linearRoute)
+      val o = mkOperation(ps, linearRoute, rr)
+      val p0 = s.paths.getOrElse(ps, Path())
       val p1 = rr.method.name.toLowerCase match {
         case "get"     => p0.copy(get = o.some)
         case "put"     => p0.copy(put = o.some)
@@ -90,7 +91,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     go(rr.rules::Nil)
   }
 
-  def mkPathStrs[F[_]](rr: RhoRoute[F, _]): List[String] = {
+  def mkPathStr[F[_]](linearRoute: List[PathOperation]): String = {
 
     def go(stack: List[PathOperation], pathStr: String): String =
       stack match {
@@ -103,7 +104,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case CaptureTail :: _             => pathStr + "/{tail...}"
       }
 
-    linearizeStack(rr.path::Nil).map(go(_, ""))
+    go(linearRoute, "")
   }
 
   def collectPathParams[F[_]](rr: RhoRoute[F, _]): List[PathParameter] = {
@@ -134,7 +135,7 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
       case StatusOnly(s)         => mkResponse(s.code.toString, s.reason, none, etag.tpe)
     }.toMap
 
-  def collectSummary[F[_]](rr: RhoRoute[F, _]): Option[String] = {
+  def collectSummary[F[_]](linearRoute: List[PathOperation]): Option[String] = {
 
     def go(stack: List[PathOperation], summary: Option[String]): Option[String] =
       stack match {
@@ -152,10 +153,10 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
         case Nil => summary
       }
 
-    linearizeStack(rr.path::Nil).flatMap(go(_, None)).headOption
+    go(linearRoute, None)
   }
 
-  def collectTags[F[_]](rr: RhoRoute[F, _]): List[String] = {
+  def collectTags[F[_]](linearPath: List[PathOperation]): List[String] = {
 
     def go(stack: List[PathOperation], tags: List[String]): List[String] =
       stack match {
@@ -182,20 +183,19 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
           }
       }
 
-    linearizeStack(rr.path::Nil).flatMap(go(_, Nil))
+    go(linearPath, Nil)
   }
 
-  def collectSecurityScopes[F[_]](rr: RhoRoute[F, _]): List[Map[String, List[String]]] = {
+  def collectSecurityScopes[F[_]](linearRoute: List[PathOperation]): List[Map[String, List[String]]] = {
 
     def go(stack: List[PathOperation]): Option[Map[String, List[String]]] =
-
       stack match {
         case Nil => None
         case MetaCons(_, RouteSecurityScope(secScope)) :: _ => secScope.some
         case _ :: xs => go(xs)
       }
 
-     linearizeStack(rr.path::Nil).flatMap(go)
+     go(linearRoute).toList
   }
 
   def collectOperationParams[F[_]](rr: RhoRoute[F, _]): List[Parameter] =
@@ -259,17 +259,17 @@ private[swagger] class SwaggerModelsBuilder(formats: SwaggerFormats) {
     case range: MediaRange => range.show
   }
 
-  def mkOperation[F[_]](pathStr: String, rr: RhoRoute[F, _])(implicit etag: WeakTypeTag[F[_]]): Operation = {
+  def mkOperation[F[_]](pathStr: String, linearRoute: List[PathOperation], rr: RhoRoute[F, _])(implicit etag: WeakTypeTag[F[_]]): Operation = {
     val parameters = collectOperationParams(rr)
 
     Operation(
-      tags        = collectTags(rr),
-      summary     = collectSummary(rr),
+      tags        = collectTags(linearRoute),
+      summary     = collectSummary(linearRoute),
       consumes    = rr.validMedia.toList.map(renderMediaRange),
       produces    = rr.responseEncodings.toList.map(_.show),
       operationId = mkOperationId(pathStr, rr.method, parameters).some,
       parameters  = parameters,
-      security    = collectSecurityScopes(rr),
+      security    = collectSecurityScopes(linearRoute),
       responses   = collectResponses(rr))
   }
 
