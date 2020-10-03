@@ -255,7 +255,7 @@ object models {
       p
     }
 
-    def flatMapOperations(f: Operation => Option[Operation]): Path =
+    def collectSomeOperations(f: Operation => Option[Operation]): Path =
       copy(
         get = get.flatMap(f),
         put = put.flatMap(f),
