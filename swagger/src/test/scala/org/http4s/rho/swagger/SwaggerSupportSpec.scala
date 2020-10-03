@@ -46,20 +46,20 @@ class SwaggerSupportSpec extends Specification {
 
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
-      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
+      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
-      Set(a, b, c) should_== Set("/swagger.json", "/hello", "/hello/{string}")
+      Set(a, b, c, d) should_== Set("/swagger.json", "/swagger.yaml", "/hello", "/hello/{string}")
     }
 
     "Support prefixed routes" in {
       val service = ("foo" /: baseRoutes).toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
       val r = Request[IO](GET, Uri(path = "/swagger.json"))
 
-      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
+      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
-      Set(a, b, c) should_== Set("/swagger.json", "/foo/hello", "/foo/hello/{string}")
+      Set(a, b, c, d) should_== Set("/swagger.json", "/swagger.yaml", "/foo/hello", "/foo/hello/{string}")
     }
 
     "Provide a method to build the Swagger model for a list of routes" in {
@@ -118,7 +118,7 @@ class SwaggerSupportSpec extends Specification {
       val json = parseJson(RRunner(service).checkOk(r))
 
       val JObject(List((a, JArray(List(JObject(List((e,JArray(List(JString(f))))))))), (b, JArray(List(JObject(List((g,JArray(List(JString(h))))))))))) = json \\ "security"
-      val JObject(List((c, JString(i)), (d, JString(j)), _)) = json \\ "summary"
+      val JObject(List(_, (c, JString(i)), _, (d, JString(j)))) = json \\ "summary"
 
       Set(a,b) should_== Set("security", "security")
       Set(c,d) should_== Set("summary", "summary")
@@ -129,7 +129,8 @@ class SwaggerSupportSpec extends Specification {
 
     "Swagger support for complex meta data" in {
       val service = baseRoutes.toRoutes(createRhoMiddleware(
-        apiPath = "swagger-test.json",
+        jsonApiPath = "swagger-test.json",
+        yamlApiPath = "swagger-test.yaml",
         swaggerRoutesInSwagger = true,
         swaggerMetadata = SwaggerMetadata(
           apiInfo =  Info(
@@ -192,7 +193,7 @@ class SwaggerSupportSpec extends Specification {
       val json = parseJson(RRunner(service).checkOk(r))
 
       val JObject(List((a, JArray(List(JObject(List((e,JArray(List(JString(f))))))))), (b, JArray(List(JObject(List((g,JArray(List(JString(h))))))))))) = json \\ "security"
-      val JObject(List((c, JString(i)), (d, JString(j)), _)) = json \\ "summary"
+      val JObject(List(_, (c, JString(i)), _, (d, JString(j)))) = json \\ "summary"
 
       Set(a,b) should_== Set("security", "security")
       Set(c,d) should_== Set("summary", "summary")
