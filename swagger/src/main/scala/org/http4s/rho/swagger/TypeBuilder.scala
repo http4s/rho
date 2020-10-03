@@ -18,11 +18,11 @@ object TypeBuilder {
 
   private[this] val logger = getLogger
 
-  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type): Set[Model] =
+  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type)(implicit st: ShowType): Set[Model] =
     try collectModels(t.dealias, alreadyKnown, ListSet.empty, sfs, et)
     catch { case NonFatal(_) => Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: TypeSet, sfs: SwaggerFormats, et: Type): Set[Model] = {
+  private def collectModels(t: Type, alreadyKnown: Set[Model], known: TypeSet, sfs: SwaggerFormats, et: Type)(implicit st: ShowType): Set[Model] = {
 
     def go(t: Type, alreadyKnown: Set[Model], known: TypeSet): Set[Model] =
       t.dealias match {
@@ -101,7 +101,7 @@ object TypeBuilder {
     go(t, alreadyKnown, known)
   }
 
-  private def addDiscriminator(sym: Symbol)(model: ModelImpl): ModelImpl = {
+  private def addDiscriminator(sym: Symbol)(model: ModelImpl)(implicit st: ShowType): ModelImpl = {
     val typeVar = sym.annotations
       .withFilter(_.tree.tpe <:< typeOf[DiscriminatorField])
       .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field } )
@@ -140,7 +140,7 @@ object TypeBuilder {
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
 
-  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats): Option[ModelImpl] =
+  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats)(implicit st: ShowType): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
       val constructor = tpe.member(termNames.CONSTRUCTOR)
@@ -169,7 +169,7 @@ object TypeBuilder {
     }
 
   private def paramSymToProp
-  (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol): (String, Property) = {
+  (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol)(implicit st: ShowType): (String, Property) = {
     val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
     val prop = typeToProperty(pType, sfs)
@@ -177,7 +177,7 @@ object TypeBuilder {
   }
 
   // Turn a `Type` into the appropriate `Property` representation
-  private def typeToProperty(tpe: Type, sfs: SwaggerFormats): Property = {
+  private def typeToProperty(tpe: Type, sfs: SwaggerFormats)(implicit st: ShowType): Property = {
     sfs.customFieldSerializers.applyOrElse(tpe, { _: Type =>
       val TypeRef(_, ptSym: Symbol, _) = tpe
       if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
@@ -251,15 +251,15 @@ object TypeBuilder {
     def apply(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) =
       new ValueDataType(name, format, qualifiedName)
 
-    def apply(tag: TypeTag[_]): DataType = apply(tag.tpe)
-    def apply(tag: Type): DataType = fromType(tag.dealias)
+    def apply(tag: TypeTag[_])(implicit st: ShowType): DataType = apply(tag.tpe)
+    def apply(tag: Type)(implicit st: ShowType): DataType = fromType(tag.dealias)
 
     private[this] val StringTypes = Set[Type](typeOf[String], typeOf[java.lang.String])
     private[this] def isString(t: Type) = StringTypes.exists(t =:= _)
     private[this] val BoolTypes = Set[Type](typeOf[Boolean], typeOf[java.lang.Boolean])
     private[this] def isBool(t: Type) = BoolTypes.exists(t =:= _)
 
-    private[swagger] def fromType(t: Type): DataType = {
+    private[swagger] def fromType(t: Type)(implicit st: ShowType): DataType = {
       val klass = if (t.isOption && t.typeArgs.nonEmpty) t.typeArgs.head else t
 
       if (klass.isNothingOrNull || klass.isUnitOrVoid) ComplexDataType("string", qualifiedName = Option(klass.fullName))

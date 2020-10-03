@@ -26,10 +26,11 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
       apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
       swaggerRoutesInSwagger: Boolean = false,
-      swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): RhoMiddleware[F] = { routes =>
+      swaggerMetadata: SwaggerMetadata = SwaggerMetadata(),
+      showType: ShowType = DefaultShowType): RhoMiddleware[F] = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, swaggerMetadata)(
+      createSwagger(swaggerFormats, swaggerMetadata, showType)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
@@ -44,9 +45,10 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
     */
   def createSwagger(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      swaggerMetadata: SwaggerMetadata = SwaggerMetadata())(routes: Seq[RhoRoute[F, _]]): Swagger = {
+      swaggerMetadata: SwaggerMetadata = SwaggerMetadata(),
+      showType: ShowType = DefaultShowType)(routes: Seq[RhoRoute[F, _]]): Swagger = {
 
-    val sb = new SwaggerModelsBuilder(swaggerFormats)
+    val sb = new SwaggerModelsBuilder(swaggerFormats)(showType)
     routes.foldLeft(swaggerMetadata.toSwagger())((s, r) => sb.mkSwagger(r)(s))
   }
 

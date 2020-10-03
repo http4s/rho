@@ -31,23 +31,11 @@ package object swagger {
   implicit class ReflectionHelpers[F[_]](t: Type) {
     import scala.reflect.runtime.universe._
 
-    val genericStart = "«"
-    val genericSep = ","
-    val genericEnd = "»"
+    def simpleName(implicit st: ShowType): String =
+      st.showType(t.typeSymbol.name.decodedName.toString, t.typeArgs.map(_.simpleName))
 
-    def simpleName: String = {
-      t.typeSymbol.name.decodedName.toString + {
-        if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.simpleName).mkString(genericStart, genericSep, genericEnd)
-      }
-    }
-
-    def fullName: String = {
-      t.typeSymbol.fullName + {
-        if (t.typeArgs.isEmpty) ""
-        else t.typeArgs.map(_.fullName).mkString(genericStart, genericSep, genericEnd)
-      }
-    }
+    def fullName(implicit st: ShowType): String =
+      st.showType(t.typeSymbol.fullName.toString, t.typeArgs.map(_.fullName))
 
     def isArray: Boolean =
       t <:< typeOf[Array[_]]
@@ -86,6 +74,20 @@ package object swagger {
     def isAnyVal: Boolean =
       t <:< typeOf[AnyVal]
   }
+
+  trait ShowType {
+    def showType(typeName: String, typeArgumentNames: Seq[String]): String
+  }
+
+  class ShowTypeWithBrackets(openingBracket: String, separator: String, closingBracket: String) extends ShowType{
+    override def showType(typeName: String, typeArgumentNames: Seq[String]): String =
+      typeName + {
+        if (typeArgumentNames.isEmpty) ""
+        else typeArgumentNames.mkString(openingBracket, separator, closingBracket)
+      }
+  }
+
+  val DefaultShowType = new ShowTypeWithBrackets("«", ",", "»")
 
   val DefaultSwaggerFormats: SwaggerFormats = {
     val ignoreExistentialType: PartialFunction[Type, Set[Model]] = {
