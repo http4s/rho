@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  lazy val http4sVersion = "0.21.8"
+  lazy val http4sVersion = "0.21.9"
   lazy val specs2Version = "4.10.5"
 
   val scala_213 = "2.13.2"
