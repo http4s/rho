@@ -11,10 +11,10 @@ import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe.WeakTypeTag
 
 object SwaggerUi {
-  def apply[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]): SwaggerUi[F] = new SwaggerUi[F]()
+  def apply[F[_] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]): SwaggerUi[F] = new SwaggerUi[F]()
 }
 
-class SwaggerUi[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
+class SwaggerUi[F[_] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
 
   def createRhoMiddleware(
                            blocker: Blocker,
