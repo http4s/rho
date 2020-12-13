@@ -20,6 +20,7 @@ package object model {
   type Bar = Foo
   case class FooDefault(a: Int = 0)
   case class FooGeneric[+A](a: A)
+  case class FooDoubleGeneric[+A, +B](a: A, b: B)
   type Foos = Seq[Foo]
   case class FooComposite(single: Foo, many: Seq[Foo])
   case class FooCompositeWithAlias(single: Bar, many: Seq[Bar], manyAlias: Foos)
@@ -71,13 +72,15 @@ class TypeBuilderSpec extends Specification {
   import model._
   import models.{ArrayProperty, Model, RefProperty}
 
-  def modelOf[T](implicit t: TypeTag[T]): Set[Model] =
+  def modelOf[T](implicit t: TypeTag[T], st: ShowType): Set[Model] =
     modelOfWithFormats(DefaultSwaggerFormats)
 
-  def modelOfWithFormats[T](formats: SwaggerFormats)(implicit t: TypeTag[T]): Set[Model] =
+  def modelOfWithFormats[T](formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 
   "TypeBuilder" should {
+
+    implicit val showType: ShowType = DefaultShowType
 
     "Not Build a model for a primitive" in {
 
@@ -451,10 +454,21 @@ class TypeBuilderSpec extends Specification {
       ms.size must_!== 0
       // It won't be a fully correct model.
     }
+
+    "Format names of generic types according to provided ShowType instance" in {
+      implicit val showType: ShowType = new ShowTypeWithBrackets("<", ";" , ">")
+
+      val ms = modelOf[FooDoubleGeneric[Int, String]]
+      ms.size must_== 1
+      val m = ms.head
+      m.description must_== "FooDoubleGeneric<Int;String>".some
+    }
   }
 
   "DataType" should {
     import org.http4s.rho.swagger.TypeBuilder.DataType
+
+    implicit val showType: ShowType = DefaultShowType
 
     "Get the correct name for primitives" in {
       DataType(typeTag[Int]).name must_== "integer"

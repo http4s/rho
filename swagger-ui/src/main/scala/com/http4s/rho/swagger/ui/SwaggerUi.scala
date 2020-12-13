@@ -3,7 +3,7 @@ package com.http4s.rho.swagger.ui
 import cats.effect.{Blocker, ContextShift, Sync}
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
-import org.http4s.rho.swagger.{SwaggerFormats, SwaggerMetadata, SwaggerSupport, SwaggerSyntax}
+import org.http4s.rho.swagger.{DefaultShowType, ShowType, SwaggerFormats, SwaggerMetadata, SwaggerSupport, SwaggerSyntax}
 import org.http4s.rho.{RhoMiddleware, RhoRoute, swagger}
 import shapeless.HList
 
@@ -19,20 +19,27 @@ class SwaggerUi[F[+ _] : Sync : ContextShift](implicit etag: WeakTypeTag[F[_]]) 
   def createRhoMiddleware(
                            blocker: Blocker,
                            swaggerFormats: SwaggerFormats = swagger.DefaultSwaggerFormats,
-                           swaggerSpecPath: String = "swagger.json",
+                           swaggerSpecJsonPath: String = "swagger.json",
+                           swaggerSpecYamlPath: String = "swagger.yaml",
+                           useYamlInSwaggerUi: Boolean = false,
                            swaggerUiPath: String = "swagger-ui",
                            swaggerRoutesInSwagger: Boolean = false,
-                           swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): RhoMiddleware[F] = { routes: Seq[RhoRoute[F, _ <: HList]] =>
+                           swaggerMetadata: SwaggerMetadata = SwaggerMetadata(),
+                           showType: ShowType = DefaultShowType): RhoMiddleware[F] = { routes: Seq[RhoRoute[F, _ <: HList]] =>
 
     lazy val swaggerSpec: Swagger =
-      SwaggerSupport[F].createSwagger(swaggerFormats, swaggerMetadata)(
+      SwaggerSupport[F].createSwagger(swaggerFormats, swaggerMetadata, showType)(
         routes ++ (if (swaggerRoutesInSwagger) swaggerSpecRoute else Seq.empty)
       )
 
     lazy val swaggerSpecRoute: Seq[RhoRoute[F, _ <: HList]] =
-      SwaggerSupport[F].createSwaggerRoute(swaggerSpec, TypedPath(PathMatch(swaggerSpecPath))).getRoutes
+      SwaggerSupport[F].createSwaggerRoute(
+        swaggerSpec,
+        TypedPath(PathMatch(swaggerSpecJsonPath)),
+        TypedPath(PathMatch(swaggerSpecYamlPath))
+      ).getRoutes
 
-    val cleanSwaggerSpecPath = swaggerSpecPath.stripPrefix("/").stripSuffix("/")
+    val cleanSwaggerSpecPath = (if(useYamlInSwaggerUi) swaggerSpecYamlPath else swaggerSpecJsonPath).stripPrefix("/").stripSuffix("/")
     val cleanSwaggerUiPath = swaggerUiPath.stripPrefix("/").stripSuffix("/")
     val relativeSwaggerSpecPath = ("../" * s"$cleanSwaggerUiPath/".count(_ == '/')) + cleanSwaggerSpecPath
 

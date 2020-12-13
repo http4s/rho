@@ -56,7 +56,7 @@ class SwaggerModelsBuilderSpec extends Specification {
   case class ModelC(name: String, shape: String) extends Renderable
   case class ModelMap(bar: String, baz: Map[String, Int]) extends Renderable
 
-  val sb = new SwaggerModelsBuilder[IO](DefaultSwaggerFormats)
+  val sb = new SwaggerModelsBuilder[IO](DefaultSwaggerFormats)(DefaultShowType, implicitly[WeakTypeTag[IO[_]]])
   val fooPath = GET / "foo"
   val barPath = GET / "bar"
   type OpSeq = Option[Seq[String]]

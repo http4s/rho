@@ -2,7 +2,7 @@ package org.http4s
 package rho
 package swagger
 
-import _root_.io.swagger.util.Json
+import _root_.io.swagger.util.{Json, Yaml}
 import cats.effect.Sync
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
@@ -19,22 +19,24 @@ object SwaggerSupport {
 abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
 
   /**
-    * Create a RhoMiddleware adding a route to get the Swagger json file
+    * Create a RhoMiddleware adding a route to get the Swagger JSON/YAML files
     * representing the full API
     */
   def createRhoMiddleware(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
+      jsonApiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
+      yamlApiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.yaml")),
       swaggerRoutesInSwagger: Boolean = false,
-      swaggerMetadata: SwaggerMetadata = SwaggerMetadata()): RhoMiddleware[F] = { routes =>
+      swaggerMetadata: SwaggerMetadata = SwaggerMetadata(),
+      showType: ShowType = DefaultShowType): RhoMiddleware[F] = { routes =>
 
     lazy val swaggerSpec: Swagger =
-      createSwagger(swaggerFormats, swaggerMetadata)(
+      createSwagger(swaggerFormats, swaggerMetadata, showType)(
         routes ++ (if(swaggerRoutesInSwagger) swaggerRoute else Seq.empty )
       )
 
     lazy val swaggerRoute: Seq[RhoRoute[F, _ <: HList]] =
-      createSwaggerRoute(swaggerSpec, apiPath).getRoutes
+      createSwaggerRoute(swaggerSpec, jsonApiPath, yamlApiPath).getRoutes
 
     routes ++ swaggerRoute
   }
@@ -44,9 +46,10 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
     */
   def createSwagger(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,
-      swaggerMetadata: SwaggerMetadata = SwaggerMetadata())(routes: Seq[RhoRoute[F, _]]): Swagger = {
+      swaggerMetadata: SwaggerMetadata = SwaggerMetadata(),
+      showType: ShowType = DefaultShowType)(routes: Seq[RhoRoute[F, _]]): Swagger = {
 
-    val sb = new SwaggerModelsBuilder[F](swaggerFormats)
+    val sb = new SwaggerModelsBuilder[F](swaggerFormats)(showType, etag)
     routes.foldLeft(swaggerMetadata.toSwagger())((s, r) => sb.mkSwagger(r)(s))
   }
 
@@ -55,21 +58,28 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
    */
   def createSwaggerRoute(
     swagger: => Swagger,
-    apiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json"))
+    jsonApiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.json")),
+    yamlApiPath: TypedPath[F, HNil] = TypedPath(PathMatch("swagger.yaml"))
   ): RhoRoutes[F] = new RhoRoutes[F] {
 
-    lazy val response: F[OK[String]] = {
-      val fOk = Ok.apply(
+    "Swagger documentation (JSON)" ** GET / jsonApiPath |>> (() => jsonResponse)
+
+    lazy val jsonResponse: F[OK[String]] =
+      Ok.apply(
         Json.mapper()
           .writerWithDefaultPrettyPrinter()
-          .writeValueAsString(swagger.toJModel)
+          .writeValueAsString(swagger.toJModel),
+        Headers.of(`Content-Type`(MediaType.application.json))
       )
 
-      F.map(fOk) { ok =>
-        ok.copy(resp = ok.resp.putHeaders(`Content-Type`(MediaType.application.json)))
-      }
-    }
+    "Swagger documentation (YAML)" ** GET / yamlApiPath |>> (() => yamlResponse)
 
-    "Swagger documentation" ** GET / apiPath |>> (() => response)
+    lazy val yamlResponse: F[OK[String]] =
+      Ok.apply(
+        Yaml.mapper()
+          .writerWithDefaultPrettyPrinter()
+          .writeValueAsString(swagger.toJModel),
+        Headers.of(`Content-Type`(MediaType.text.yaml))
+      )
   }
 }

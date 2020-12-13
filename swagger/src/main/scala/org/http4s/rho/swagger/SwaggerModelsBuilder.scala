@@ -14,7 +14,7 @@ import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 
-private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(implicit etag: WeakTypeTag[F[_]]) {
+private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(implicit st: ShowType, etag: WeakTypeTag[F[_]]) {
   import models._
 
   private[this] val logger = getLogger
