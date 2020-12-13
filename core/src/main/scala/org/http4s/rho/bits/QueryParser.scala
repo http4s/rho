@@ -66,7 +66,7 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
     }
   }
 
-  /** Extract an element from the `Query` using a [[StringParser]] */
+  /** Extract an element from the `Query` using a [[org.http4s.rho.bits.StringParser]] */
   implicit def standardCollector[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, A] {
     override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] = {
       params.get(name) match {
