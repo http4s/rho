@@ -20,6 +20,8 @@ class SwaggerFormatsSpec extends Specification {
   import model._
   import models._
 
+  implicit val showType: ShowType = DefaultShowType
+
   "SwaggerFormats" should {
 
     "withSerializers" in {
