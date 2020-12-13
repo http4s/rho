@@ -49,7 +49,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
       swaggerMetadata: SwaggerMetadata = SwaggerMetadata(),
       showType: ShowType = DefaultShowType)(routes: Seq[RhoRoute[F, _]]): Swagger = {
 
-    val sb = new SwaggerModelsBuilder(swaggerFormats)(showType)
+    val sb = new SwaggerModelsBuilder[F](swaggerFormats)(showType, etag)
     routes.foldLeft(swaggerMetadata.toSwagger())((s, r) => sb.mkSwagger(r)(s))
   }
 
