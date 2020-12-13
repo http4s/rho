@@ -96,18 +96,18 @@ object ResourceObjectBuilderSpec extends Specification {
             .link("ea:customer", LinkObject("/customers/7809"))
             .content(Map("total" -> 30.00,
               "currency" -> "USD",
-              "status" -> "shipped")).build,
+              "status" -> "shipped")).build(),
           new ResourceObjectBuilder[Map[String, Any], Nothing]()
             .link("self", LinkObject("/orders/124"))
             .link("ea:basket", LinkObject("/baskets/97213"))
             .link("ea:customer", LinkObject("/customers/12369"))
             .content(Map("total" -> 20.00,
               "currency" -> "USD",
-              "status" -> "processing")).build)
+              "status" -> "processing")).build())
         .content(Map(
           "currentlyProcessing" -> 14,
           "shippedToday" -> 20))
-        .build
+        .build()
 
     "build a ResourceObject" in {
       documentBuilder must be equalTo document
