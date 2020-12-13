@@ -10,7 +10,7 @@ import scala.collection.compat.immutable.ArraySeq
 class CodecRouterSpec extends Specification {
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
-    val rbody = new String(resp.body.compile.toVector.unsafeRunSync.foldLeft(Array[Byte]())(_ :+ _))
+    val rbody = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
     (rbody, resp.status)
   }
 

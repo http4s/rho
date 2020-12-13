@@ -70,9 +70,9 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
   implicit def standardCollector[A](implicit F: Monad[F], p: StringParser[F, A]) = new QueryParser[F, A] {
     override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] = {
       params.get(name) match {
-        case Some(Seq(value, _*)) => p.parse(value)
+        case Some(values) if values.nonEmpty => p.parse(values.head)
 
-        case Some(Seq()) => default match {
+        case Some(_) => default match {
           case Some(defaultValue) => SuccessResponse(defaultValue)
           case None => badRequest(s"Value of query parameter '$name' missing")
         }

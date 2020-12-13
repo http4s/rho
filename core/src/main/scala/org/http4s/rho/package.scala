@@ -32,7 +32,7 @@ trait RhoDsl[F[_]]
     * val hello = Root / "hello"
     * }}}
     */
-  def root(): TypedPath[F, HNil] = TypedPath(PathEmpty)
+  def root: TypedPath[F, HNil] = TypedPath(PathEmpty)
 
   def * : CaptureTail.type = CaptureTail
 }
