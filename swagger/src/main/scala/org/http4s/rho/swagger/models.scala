@@ -254,6 +254,17 @@ object models {
       vendorExtensions.foreach { case (key, value) => p.setVendorExtension(key, value) }
       p
     }
+
+    def collectSomeOperations(f: Operation => Option[Operation]): Path =
+      copy(
+        get = get.flatMap(f),
+        put = put.flatMap(f),
+        post = post.flatMap(f),
+        delete = delete.flatMap(f),
+        patch = patch.flatMap(f),
+        options = options.flatMap(f),
+        head = head.flatMap(f)
+      )
   }
 
   case class Operation
