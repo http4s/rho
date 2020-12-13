@@ -7,6 +7,8 @@ object Dependencies {
 
   val scala_213 = "2.13.4"
   val scala_212 = "2.12.12"
+  val rhoCrossScalaVersions = List(scala_213, scala_212)
+
 
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
