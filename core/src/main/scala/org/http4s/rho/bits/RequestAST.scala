@@ -16,7 +16,8 @@ object RequestAST {
   case class CaptureRule[F[_], T](reader: Request[F] => ResultResponse[F, T]) extends RequestRule[F]
 
   /** Transform data from the `Request` */
-  case class MapRule[F[_], T <: HList, R <: HList](rule: RequestRule[F], f: T => R) extends RequestRule[F]
+  case class MapRule[F[_], T <: HList, R <: HList](rule: RequestRule[F], f: T => R)
+      extends RequestRule[F]
 
   /** Ignore any results obtained form the enclosed rules */
   case class IgnoreRule[F[_]](rule: RequestRule[F]) extends RequestRule[F]

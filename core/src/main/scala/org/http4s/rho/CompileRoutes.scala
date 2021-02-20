@@ -41,7 +41,7 @@ object CompileRoutes {
     * @return An `HttpRoutes`
     */
   def foldRoutes[F[_]: Defer: Monad](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
-    val tree = routes.foldLeft(PathTree[F]()){ (t, r) => t.appendRoute(r) }
+    val tree = routes.foldLeft(PathTree[F]())((t, r) => t.appendRoute(r))
     HttpRoutes((req: Request[F]) => tree.getResult(req).toResponse)
   }
 }

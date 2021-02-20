@@ -39,7 +39,8 @@ class SwaggerFormatsSpec extends Specification {
     }
 
     "withFieldSerializers" in {
-      val arrProp = ArrayProperty(items = RefProperty("Fruit"), required = true, uniqueItems = false)
+      val arrProp =
+        ArrayProperty(items = RefProperty("Fruit"), required = true, uniqueItems = false)
       val sfs = DefaultSwaggerFormats.withFieldSerializers(typeOf[Seq[Fruit]], arrProp)
       val itag = implicitly[TypeTag[IO[_]]]
 

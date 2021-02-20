@@ -25,22 +25,26 @@ object RhoPlugin extends AutoPlugin {
       if (version.endsWith("SNAPSHOT")) {
         s"$homepageUrl/tree/master€{FILE_PATH}.scala"
       } else {
-        val (major,minor) = apiVersion
+        val (major, minor) = apiVersion
         s"$homepageUrl/tree/v$major.$minor.0€{FILE_PATH}.scala"
       }
 
-    val opts = List("-implicits",
-      "-doc-source-url", sourceLoc,
-      "-sourcepath", base.getAbsolutePath
+    val opts = List(
+      "-implicits",
+      "-doc-source-url",
+      sourceLoc,
+      "-sourcepath",
+      base.getAbsolutePath
     )
     opts
   }
 
   def mimaConfiguration: Seq[Setting[_]] = Seq(
-    mimaPreviousArtifacts := previousStableVersion.value.map( _ =>
-      organization.value %% name.value % "0.20.0"
-    ).toSet.filter { module => 
-      !(module.name == "rho-swagger-ui" && module.revision == "0.20.0")
-    }
+    mimaPreviousArtifacts := previousStableVersion.value
+      .map(_ => organization.value %% name.value % "0.21.0-RC2")
+      .toSet
+      .filter { module =>
+        !(module.name == "rho-swagger-ui" && module.revision == "0.20.0")
+      }
   )
 }

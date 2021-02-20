@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 
+// format: off
 object Dependencies {
   lazy val http4sVersion = "0.21.19"
   lazy val specs2Version = "4.10.6"

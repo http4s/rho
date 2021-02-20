@@ -59,7 +59,8 @@ class StringParserSpec extends Specification {
 
     "parse date" in {
       new DateParser[IO]().parse("2018-02-09") === SuccessResponse[IO, Date](
-        new SimpleDateFormat("yyyy-MM-dd").parse("2018-02-09"))
+        new SimpleDateFormat("yyyy-MM-dd").parse("2018-02-09")
+      )
     }
 
     "parse non-date" in {
@@ -68,7 +69,8 @@ class StringParserSpec extends Specification {
 
     "parse instant" in {
       new InstantParser[IO]().parse("2018-02-09T00:00:00Z") === SuccessResponse[IO, Instant](
-        Instant.parse("2018-02-09T00:00:00Z"))
+        Instant.parse("2018-02-09T00:00:00Z")
+      )
     }
 
     "parse non-instant" in {
@@ -76,12 +78,15 @@ class StringParserSpec extends Specification {
     }
 
     "parse uuid" in {
-      new UUIDParser[IO]().parse("459043db-c29e-4dd9-a36d-b3a11b5eeb17") === SuccessResponse[IO, UUID](
-        UUID.fromString("459043db-c29e-4dd9-a36d-b3a11b5eeb17"))
+      new UUIDParser[IO]()
+        .parse("459043db-c29e-4dd9-a36d-b3a11b5eeb17") === SuccessResponse[IO, UUID](
+        UUID.fromString("459043db-c29e-4dd9-a36d-b3a11b5eeb17")
+      )
     }
 
     "parse non-uuid" in {
-      new UUIDParser[IO]().parse("459043b-4dd9-a36d-b3a11b5eeb17") must haveClass[FailureResponse[IO]]
+      new UUIDParser[IO]()
+        .parse("459043b-4dd9-a36d-b3a11b5eeb17") must haveClass[FailureResponse[IO]]
     }
   }
 
@@ -100,7 +105,7 @@ class StringParserSpec extends Specification {
   "RMapped StringParser" should {
 
     val rmappedParser = new IntParser[IO].rmap(i =>
-      if(i >= 0) SuccessResponse(i)
+      if (i >= 0) SuccessResponse(i)
       else FailureResponseOps[IO].badRequest("Only non-negative integers are accepted.")
     )
 

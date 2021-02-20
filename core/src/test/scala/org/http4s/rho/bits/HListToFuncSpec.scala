@@ -6,14 +6,19 @@ import cats.effect.IO
 import org.specs2.mutable.Specification
 
 class HListToFuncSpec extends Specification {
-  def getBody(b: EntityBody[IO]): String = {
+  def getBody(b: EntityBody[IO]): String =
     new String(b.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
-  }
 
-  def checkOk(r: Request[IO]): String = getBody(service(r).value.unsafeRunSync().getOrElse(Response.notFound).body)
+  def checkOk(r: Request[IO]): String = getBody(
+    service(r).value.unsafeRunSync().getOrElse(Response.notFound).body
+  )
 
   def Get(s: String, h: Header*): Request[IO] =
-    Request(bits.MethodAliases.GET, Uri.fromString(s).getOrElse(sys.error("Failed.")), headers = Headers.of(h:_*))
+    Request(
+      bits.MethodAliases.GET,
+      Uri.fromString(s).getOrElse(sys.error("Failed.")),
+      headers = Headers.of(h: _*)
+    )
 
   val service = new RhoRoutes[IO] {
     GET / "route1" |>> { () => Ok("foo") }

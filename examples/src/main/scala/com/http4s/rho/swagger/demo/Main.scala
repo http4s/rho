@@ -22,19 +22,21 @@ object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
     Blocker[IO].use { blocker =>
-
       val metadata = SwaggerMetadata(
         apiInfo = Info(title = "Rho demo", version = "1.2.3"),
         tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
       )
 
-      val swaggerUiRhoMiddleware = SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
+      val swaggerUiRhoMiddleware =
+        SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
       val myRoutes = new MyRoutes[IO](ioSwagger).toRoutes(swaggerUiRhoMiddleware)
 
       BlazeServerBuilder[IO](global)
         .withHttpApp(myRoutes.orNotFound)
         .bindLocal(port)
-        .serve.compile.drain
+        .serve
+        .compile
+        .drain
         .as(ExitCode.Success)
     }
 }

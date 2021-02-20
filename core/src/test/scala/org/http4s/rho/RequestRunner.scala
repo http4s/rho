@@ -23,9 +23,8 @@ trait RequestRunner {
 }
 
 object RequestRunner {
-  def getBody(b: EntityBody[IO]): String = {
+  def getBody(b: EntityBody[IO]): String =
     new String(b.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
-  }
 }
 
 case class RRunner(httpRoutes: HttpRoutes[IO]) extends RequestRunner

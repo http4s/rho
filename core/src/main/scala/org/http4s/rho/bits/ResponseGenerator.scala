@@ -21,7 +21,8 @@ sealed trait ResponseGenerator {
 abstract class EmptyResponseGenerator[F[_]](val status: Status) extends ResponseGenerator {
   type T <: Result.BaseResult[F]
   private def pureResult(implicit F: Applicative[F]): F[Response[F]] = F.pure(Response[F](status))
-  private def result(implicit F: Applicative[F]): F[T] = F.map(pureResult)(Result(_).asInstanceOf[T])
+  private def result(implicit F: Applicative[F]): F[T] =
+    F.map(pureResult)(Result(_).asInstanceOf[T])
 
   /** Generate a [[Result]] that carries the type information */
   def apply(implicit F: Applicative[F]): F[T] = result
@@ -38,30 +39,32 @@ abstract class EntityResponseGenerator[F[_]](val status: Status) extends Respons
     apply(body, Headers.empty)
 
   /** Generate a [[Result]] that carries the type information */
-  def apply[A](body: A, headers: Headers)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[T[A]] = {
-    w.toEntity(body) match { case Entity(proc, len) =>
-      val hs = len match {
-        case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
-        case None    => w.headers ++ headers
-      }
-      F.pure(Result(Response[F](status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
+  def apply[A](body: A, headers: Headers)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[T[A]] =
+    w.toEntity(body) match {
+      case Entity(proc, len) =>
+        val hs = len match {
+          case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
+          case None => w.headers ++ headers
+        }
+        F.pure(Result(Response[F](status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
     }
-  }
 
   /** Generate wrapper free `Response` */
   def pure[A](body: A)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[Response[F]] =
     pure(body, Headers.empty)
 
   /** Generate wrapper free `Response` */
-  def pure[A](body: A, headers: Headers)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[Response[F]] = {
-    w.toEntity(body) match { case Entity(proc, len) =>
-      val hs = len match {
-        case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
-        case None    => w.headers ++ headers
-      }
-      F.pure(Response(status = status, headers = hs, body = proc))
+  def pure[A](body: A, headers: Headers)(implicit
+      F: Monad[F],
+      w: EntityEncoder[F, A]): F[Response[F]] =
+    w.toEntity(body) match {
+      case Entity(proc, len) =>
+        val hs = len match {
+          case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
+          case None => w.headers ++ headers
+        }
+        F.pure(Response(status = status, headers = hs, body = proc))
     }
-  }
 
 }
 
@@ -71,17 +74,21 @@ abstract class LocationResponseGenerator[F[_]](val status: Status) extends Respo
   def apply(location: Uri)(implicit F: Applicative[F]): F[T[Unit]] =
     F.pure(Result(Response(status).putHeaders(Location(location))).asInstanceOf[T[Unit]])
 
-  def apply[A](location: Uri, body: A, headers: Headers = Headers.empty)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[T[A]] =
-    w.toEntity(body) match { case Entity(proc, len) =>
-      val hs = (len match {
-        case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
-        case None    => w.headers ++ headers
-      }).put(Location(location))
-      F.pure(Result(Response[F](status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
+  def apply[A](location: Uri, body: A, headers: Headers = Headers.empty)(implicit
+      F: Monad[F],
+      w: EntityEncoder[F, A]): F[T[A]] =
+    w.toEntity(body) match {
+      case Entity(proc, len) =>
+        val hs = (len match {
+          case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
+          case None => w.headers ++ headers
+        }).put(Location(location))
+        F.pure(Result(Response[F](status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
     }
 }
 
 trait ResponseGeneratorInstances[F[_]] {
+  //format: off
   // type 1xx                                                 | 100   | 101   | 102   | 103    | 200   | 201   | 202   | 203   | 204   | 205   | 206   | 207   | 208   | 226    | 300   | 301   | 302   | 303   | 304   | 307   | 308    | 400   | 401   | 402   | 403   | 404   | 405   | 406   | 407   | 408   | 409   | 410   | 411   | 412   | 413   | 414   | 415   | 416   | 417   | 421   | 422   | 423   | 424   | 425   | 426   | 428   | 429   | 431   | 451    | 500   | 501   | 502   | 503   | 504   | 505   | 506   | 507   | 508   | 510   | 511  |
   /* 100 */ type CONTINUE                         = Result[F, Unit   ,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
   /* 101 */ type SWITCHINGPROTOCOLS               = Result[F, Nothing,Unit   ,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing]
@@ -147,7 +154,7 @@ trait ResponseGeneratorInstances[F[_]] {
   /* 508 */ type LOOPDETECTED[A]                  = Result[F, Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,A      ,Nothing,Nothing]
   /* 510 */ type NOTEXTENDED[A]                   = Result[F, Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,A      ,Nothing]
   /* 511 */ type NETWORKAUTHENTICATIONREQUIRED[A] = Result[F, Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing, Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,Nothing,A      ]
-
+  //format: on
 
   // 1xx
   /* 100 */
@@ -187,7 +194,8 @@ trait ResponseGeneratorInstances[F[_]] {
   }
 
   /* 203 */
-  object NonAuthoritativeInformation extends EntityResponseGenerator[F](Status.NonAuthoritativeInformation) {
+  object NonAuthoritativeInformation
+      extends EntityResponseGenerator[F](Status.NonAuthoritativeInformation) {
     type T[A] = NONAUTHORITATIVEINFORMATION[A]
   }
 
@@ -296,7 +304,8 @@ trait ResponseGeneratorInstances[F[_]] {
   }
 
   /* 407 */
-  object ProxyAuthenticationRequired extends EntityResponseGenerator[F](Status.ProxyAuthenticationRequired) {
+  object ProxyAuthenticationRequired
+      extends EntityResponseGenerator[F](Status.ProxyAuthenticationRequired) {
     type T[A] = PROXYAUTHENTICATIONREQUIRED[A]
   }
 
@@ -391,12 +400,14 @@ trait ResponseGeneratorInstances[F[_]] {
   }
 
   /* 431 */
-  object RequestHeaderFieldsTooLarge extends EntityResponseGenerator[F](Status.RequestHeaderFieldsTooLarge) {
+  object RequestHeaderFieldsTooLarge
+      extends EntityResponseGenerator[F](Status.RequestHeaderFieldsTooLarge) {
     type T[A] = REQUESTHEADERFIELDSTOOLARGE[A]
   }
 
   /* 451 */
-  object UnavailableForLegalReasons extends EntityResponseGenerator[F](Status.UnavailableForLegalReasons) {
+  object UnavailableForLegalReasons
+      extends EntityResponseGenerator[F](Status.UnavailableForLegalReasons) {
     type T[A] = UNAVAILABLEFORLEGALREASONS[A]
   }
 
@@ -427,7 +438,8 @@ trait ResponseGeneratorInstances[F[_]] {
   }
 
   /* 505 */
-  object HttpVersionNotSupported extends EntityResponseGenerator[F](Status.HttpVersionNotSupported) {
+  object HttpVersionNotSupported
+      extends EntityResponseGenerator[F](Status.HttpVersionNotSupported) {
     type T[A] = HTTPVERSIONNOTSUPPORTED[A]
   }
 
@@ -452,7 +464,8 @@ trait ResponseGeneratorInstances[F[_]] {
   }
 
   /* 511 */
-  object NetworkAuthenticationRequired extends EntityResponseGenerator[F](Status.NetworkAuthenticationRequired) {
+  object NetworkAuthenticationRequired
+      extends EntityResponseGenerator[F](Status.NetworkAuthenticationRequired) {
     type T[A] = NETWORKAUTHENTICATIONREQUIRED[A]
   }
 }
