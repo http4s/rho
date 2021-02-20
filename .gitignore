@@ -21,3 +21,4 @@ atlassian-ide-plugin.xml
 .vscode
 .bloop
 .metals
+**/metals.sbt
