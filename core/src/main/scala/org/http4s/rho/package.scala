@@ -1,7 +1,14 @@
 package org.http4s
 
 import scala.collection.immutable.Seq
-import org.http4s.rho.{PathBuilder, PathEmpty, ResultSyntaxInstances, RhoDslHeaderExtractors, RhoDslPathExtractors, RhoDslQueryParamExtractors}
+import org.http4s.rho.{
+  PathBuilder,
+  PathEmpty,
+  ResultSyntaxInstances,
+  RhoDslHeaderExtractors,
+  RhoDslPathExtractors,
+  RhoDslQueryParamExtractors
+}
 import org.http4s.rho.bits._
 import org.http4s.rho.bits.PathAST._
 import shapeless.{HList, HNil}
@@ -13,7 +20,7 @@ package object rho extends org.http4s.syntax.AllSyntax {
 }
 
 trait RhoDsl[F[_]]
-  extends RhoDslQueryParamExtractors[F]
+    extends RhoDslQueryParamExtractors[F]
     with RhoDslPathExtractors[F]
     with RhoDslHeaderExtractors[F]
     with ResultSyntaxInstances[F]
@@ -26,8 +33,7 @@ trait RhoDsl[F[_]]
 
   implicit def method(m: Method): PathBuilder[F, HNil] = new PathBuilder(m, PathEmpty)
 
-  /**
-    * Helper to be able to define a path with one level only.
+  /** Helper to be able to define a path with one level only.
     * {{{
     * val hello = Root / "hello"
     * }}}

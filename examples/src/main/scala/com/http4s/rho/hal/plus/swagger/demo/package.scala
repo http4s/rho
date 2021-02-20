@@ -22,7 +22,7 @@ import org.json4s.jackson.JsonMethods.render
 
 package object demo {
 
-  ///// implicit helper functions ///// 
+  ///// implicit helper functions /////
 
   /** Defines the defaults to render known and unknown types to JSON */
   implicit val jsonFormats: Formats =
@@ -46,15 +46,14 @@ package object demo {
   /** Extracts the name of the first query parameter as string */
   implicit def paramName[F[_]](q: TypedQuery[F, _]): String = q.names.head
 
-  ///// regular helper functions ///// 
+  ///// regular helper functions /////
 
-  /**
-   * Converts a sequence of `Try` into a `Try` of sequences. In case failures
-   * are in there the first failure will be returned.
-   */
+  /** Converts a sequence of `Try` into a `Try` of sequences. In case failures
+    * are in there the first failure will be returned.
+    */
   def flattenTry[T](xs: Seq[Try[T]]): Try[Seq[T]] = {
     val (ss: Seq[Success[T]] @unchecked, fs: Seq[Failure[T]] @unchecked) = xs.partition(_.isSuccess)
-    if (fs.isEmpty) Success(ss map (_.get))
+    if (fs.isEmpty) Success(ss.map(_.get))
     else Failure[Seq[T]](fs(0).exception) // Only keep the first failure
   }
 

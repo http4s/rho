@@ -20,6 +20,9 @@ trait RouteExecutable[F[_], T <: HList] extends TypedBuilder[F, T] { exec =>
   def makeRoute(action: Action[F, T]): RhoRoute[F, T]
 
   /** Compiles a HTTP request definition into an action */
-  final def |>>[U, R](f: U)(implicit @nowarn("cat=unused") fpm: FuncParamsMatch[F, T, U], hltf: HListToFunc[F, T, U], srvc: CompileRoutes[F, R]): R =
+  final def |>>[U, R](f: U)(implicit
+      @nowarn("cat=unused") fpm: FuncParamsMatch[F, T, U],
+      hltf: HListToFunc[F, T, U],
+      srvc: CompileRoutes[F, R]): R =
     srvc.compile(makeRoute(hltf.toAction(f)))
 }

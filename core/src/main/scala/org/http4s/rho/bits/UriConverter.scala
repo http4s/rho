@@ -17,14 +17,14 @@ object UriConverter {
     import org.http4s.UriTemplate.PathExp
     @scala.annotation.tailrec
     def go(r: List[PathRule], acc: Path): Path = r match {
-      case Nil                            => acc
-      case PathAnd(a, b) :: rs            => go(a :: b :: rs, acc)
-      case PathOr(a, _) :: rs             => go(a :: rs, acc) // we decided to take the first root
-      case PathMatch("") :: rs            => go(rs, acc)
-      case PathMatch(s) :: rs             => go(rs, PathElm(s) :: acc)
+      case Nil => acc
+      case PathAnd(a, b) :: rs => go(a :: b :: rs, acc)
+      case PathOr(a, _) :: rs => go(a :: rs, acc) // we decided to take the first root
+      case PathMatch("") :: rs => go(rs, acc)
+      case PathMatch(s) :: rs => go(rs, PathElm(s) :: acc)
       case PathCapture(id, _, _, _) :: rs => go(rs, PathExp(id) :: acc)
-      case CaptureTail :: rs              => go(rs, acc)
-      case MetaCons(p, _) :: rs           => go(p::rs, acc)
+      case CaptureTail :: rs => go(rs, acc)
+      case MetaCons(p, _) :: rs => go(p :: rs, acc)
     }
     Success(go(List(rule), Nil).reverse)
   }
@@ -33,14 +33,14 @@ object UriConverter {
     import org.http4s.UriTemplate.ParamExp
     @scala.annotation.tailrec
     def go(rule: List[RequestRule[F]], acc: Query): Try[Query] = rule match {
-      case Nil                                             => Success(acc.reverse)
+      case Nil => Success(acc.reverse)
       case MetaRule(r, QueryMetaData(n, _, _, _, _)) :: rs => go(r :: rs, ParamExp(n) :: acc)
-      case MetaRule(r, _) :: rs                            => go(r :: rs, acc)
-      case AndRule(a, b) :: rs                             => go(a :: b :: rs, acc)
-      case (EmptyRule() | CaptureRule(_)) :: rs            => go(rs, acc)
-      case MapRule(a,_) :: rs                              => go(a :: rs, acc)
-      case IgnoreRule(r) :: rs                             => go(r :: rs, acc)
-      case OrRule(_, _) :: _                               => Failure(new Exception("Cannot create a query from 'or'ed paths"))
+      case MetaRule(r, _) :: rs => go(r :: rs, acc)
+      case AndRule(a, b) :: rs => go(a :: b :: rs, acc)
+      case (EmptyRule() | CaptureRule(_)) :: rs => go(rs, acc)
+      case MapRule(a, _) :: rs => go(a :: rs, acc)
+      case IgnoreRule(r) :: rs => go(r :: rs, acc)
+      case OrRule(_, _) :: _ => Failure(new Exception("Cannot create a query from 'or'ed paths"))
     }
     go(List(rule), Nil)
   }

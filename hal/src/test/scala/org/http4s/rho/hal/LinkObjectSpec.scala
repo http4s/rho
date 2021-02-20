@@ -18,10 +18,16 @@ class LinkObjectSpec extends Specification {
       new LinkObject("/link", templated = Some(true)).templated.get must beTrue
     }
     "have a type property optionally" in {
-      new LinkObject("/link", `type` = Some("application/json")).`type`.get must be equalTo "application/json"
+      new LinkObject(
+        "/link",
+        `type` = Some("application/json")
+      ).`type`.get must be equalTo "application/json"
     }
     "have a deprecation property optionally" in {
-      new LinkObject("/link", deprecation = Some("http://more/info/about/deprecated")).deprecation.get must be equalTo "http://more/info/about/deprecated"
+      new LinkObject(
+        "/link",
+        deprecation = Some("http://more/info/about/deprecated")
+      ).deprecation.get must be equalTo "http://more/info/about/deprecated"
     }
     "have a name property optionally" in {
       new LinkObject("/link", name = Some("Max")).name.get must be equalTo "Max"
@@ -30,13 +36,28 @@ class LinkObjectSpec extends Specification {
       new LinkObject("/link", profile = Some("profile1")).profile.get must be equalTo "profile1"
     }
     "have a title property optionally" in {
-      new LinkObject("/link", title = Some("The case for hyperlinks in APIs")).title.get must be equalTo "The case for hyperlinks in APIs"
+      new LinkObject(
+        "/link",
+        title = Some("The case for hyperlinks in APIs")
+      ).title.get must be equalTo "The case for hyperlinks in APIs"
     }
     "have a hreflang property optionally" in {
-      new LinkObject("/link", hreflang = Some("/href/lang")).hreflang.get must be equalTo "/href/lang"
+      new LinkObject(
+        "/link",
+        hreflang = Some("/href/lang")
+      ).hreflang.get must be equalTo "/href/lang"
     }
     "have empty optional properties per default" in {
-      new LinkObject("/link") must be equalTo new LinkObject("/link", None, None, None, None, None, None, None)
+      new LinkObject("/link") must be equalTo new LinkObject(
+        "/link",
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+      )
     }
   }
 

@@ -1,10 +1,10 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.PathAST.{PathAnd, TypedPath, PathRule}
+import org.http4s.rho.bits.PathAST.{PathAnd, PathRule, TypedPath}
 import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
 import org.http4s.rho.bits.TypedQuery
-import shapeless.{HNil, HList}
+import shapeless.{HList, HNil}
 import shapeless.ops.hlist.Prepend
 
 /** DSL construct for building query rules without a known `Method`
@@ -14,9 +14,9 @@ import shapeless.ops.hlist.Prepend
   * @tparam T The `HList` representation of the values to be extracted from the `Request`.
   */
 final case class RequestLineBuilder[F[_], T <: HList](path: PathRule, rules: RequestRule[F])
-  extends TypedBuilder[F, T]
-  with RoutePrependable[F, RequestLineBuilder[F, T]]
-  with UriConvertible[F] {
+    extends TypedBuilder[F, T]
+    with RoutePrependable[F, RequestLineBuilder[F, T]]
+    with UriConvertible[F] {
 
   /** Prepend the prefix to the path rules
     *
@@ -32,6 +32,7 @@ final case class RequestLineBuilder[F[_], T <: HList](path: PathRule, rules: Req
     * @tparam T1 The types of elements captured by query.
     * @return A [[QueryBuilder]] with which to continue building the route.
     */
-  def &[T1 <: HList](query: TypedQuery[F, T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[F, prep.Out] =
+  def &[T1 <: HList](query: TypedQuery[F, T1])(implicit
+      prep: Prepend[T1, T]): RequestLineBuilder[F, prep.Out] =
     RequestLineBuilder(path, AndRule(rules, query.rule))
 }

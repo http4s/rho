@@ -37,7 +37,8 @@ class TypedQuerySpec extends Specification {
     }
 
     "find {?a}{&b}{&c}{&d}{&e}{&f}" in {
-      val route = param[Int]("a") && param[Int]("b") && param[Int]("c") && param[Int]("d") && param[Int]("e")
+      val route =
+        param[Int]("a") && param[Int]("b") && param[Int]("c") && param[Int]("d") && param[Int]("e")
       route.names must equalTo(List("a", "b", "c", "d", "e"))
     }
   }

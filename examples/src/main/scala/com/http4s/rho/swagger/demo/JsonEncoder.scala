@@ -19,8 +19,8 @@ object JsonEncoder {
     Serialization.formats(NoTypeHints)
 
   implicit def autoSerializableEntityEncoder[F[_], A <: AutoSerializable]: EntityEncoder[F, A] =
-    EntityEncoder.encodeBy(`Content-Type`(MediaType.application.json))(a => {
+    EntityEncoder.encodeBy(`Content-Type`(MediaType.application.json)) { a =>
       val bytes = write(a).getBytes(StandardCharsets.UTF_8)
       Entity(Stream.emits(ArraySeq.unsafeWrapArray(bytes)), Some(bytes.length))
-    })
+    }
 }

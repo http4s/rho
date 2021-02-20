@@ -60,7 +60,7 @@ package object model {
   case class CaseClass() extends MixedSealed
   case object CaseObject extends MixedSealed
 
-  trait Outer[T]{
+  trait Outer[T] {
     case class Inner(t: T)
   }
   object OuterInt extends Outer[Int]
@@ -75,7 +75,8 @@ class TypeBuilderSpec extends Specification {
   def modelOf[T](implicit t: TypeTag[T], st: ShowType): Set[Model] =
     modelOfWithFormats(DefaultSwaggerFormats)
 
-  def modelOfWithFormats[T](formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
+  def modelOfWithFormats[T](
+      formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 
   "TypeBuilder" should {
@@ -85,17 +86,28 @@ class TypeBuilderSpec extends Specification {
     "Not Build a model for a primitive" in {
 
       val primitives = Set[TypeTag[_]](
-        typeTag[String],               typeTag[Int],
-        typeTag[Long],                 typeTag[Double],
-        typeTag[Float],                typeTag[Byte],
-        typeTag[BigInt],               typeTag[Boolean],
-        typeTag[Short],                typeTag[java.lang.Integer],
-        typeTag[java.lang.Long],       typeTag[java.lang.Double],
-        typeTag[java.lang.Float],      typeTag[BigDecimal],
-        typeTag[java.lang.Byte],       typeTag[java.lang.Boolean],
-        typeTag[Number],               typeTag[java.lang.Short],
-        typeTag[Date],                 typeTag[Timestamp],
-        typeTag[Symbol],               typeTag[java.math.BigDecimal],
+        typeTag[String],
+        typeTag[Int],
+        typeTag[Long],
+        typeTag[Double],
+        typeTag[Float],
+        typeTag[Byte],
+        typeTag[BigInt],
+        typeTag[Boolean],
+        typeTag[Short],
+        typeTag[java.lang.Integer],
+        typeTag[java.lang.Long],
+        typeTag[java.lang.Double],
+        typeTag[java.lang.Float],
+        typeTag[BigDecimal],
+        typeTag[java.lang.Byte],
+        typeTag[java.lang.Boolean],
+        typeTag[Number],
+        typeTag[java.lang.Short],
+        typeTag[Date],
+        typeTag[Timestamp],
+        typeTag[Symbol],
+        typeTag[java.math.BigDecimal],
         typeTag[java.math.BigInteger]
       )
 
@@ -120,10 +132,10 @@ class TypeBuilderSpec extends Specification {
       typeOf[java.util.Collection[String]].isCollection must_== true
       typeOf[String].isCollection must_== false
 
-      typeOf[Either[Int,String]].isEither must_== true
+      typeOf[Either[Int, String]].isEither must_== true
       typeOf[String].isEither must_== false
 
-      typeOf[Map[Int,String]].isMap must_== true
+      typeOf[Map[Int, String]].isMap must_== true
       typeOf[String].isMap must_== false
 
       typeOf[Nothing].isNothingOrNull must_== true
@@ -229,13 +241,10 @@ class TypeBuilderSpec extends Specification {
       m1.properties.size must_== 2
       m1.properties.get("single").get.`type` must_== "ref"
 
-      m1.properties.get("many") must beLike {
-        case Some(array: ArrayProperty) =>
-
-          array.items must beLike {
-            case ref: RefProperty =>
-              ref.ref must_== "Foo"
-          }
+      m1.properties.get("many") must beLike { case Some(array: ArrayProperty) =>
+        array.items must beLike { case ref: RefProperty =>
+          ref.ref must_== "Foo"
+        }
       }
 
       val m2 = ms.tail.head
@@ -272,7 +281,7 @@ class TypeBuilderSpec extends Specification {
 
     "Build a model from an Option with overridden formats" in {
       val formats = DefaultSwaggerFormats.withFieldSerializers({
-        case x if x =:= typeOf[String] => AbstractProperty(`type`="a_string")
+        case x if x =:= typeOf[String] => AbstractProperty(`type` = "a_string")
       })
 
       val ms = modelOfWithFormats[FooWithOption](formats)
@@ -306,14 +315,13 @@ class TypeBuilderSpec extends Specification {
       val m = ms.head
       m.description must_== "FooWithList".some
 
-      m.properties.head._2 must beLike {
-        case items: ArrayProperty =>
-          items.`type` must_== "array"
-          items.required must_== true
+      m.properties.head._2 must beLike { case items: ArrayProperty =>
+        items.`type` must_== "array"
+        items.required must_== true
 
-          items.items.required must_== false
-          items.items.`type` must_== "integer"
-          items.items.format must_== Some("int32")
+        items.items.required must_== false
+        items.items.`type` must_== "integer"
+        items.items.format must_== Some("int32")
       }
     }
 
@@ -323,19 +331,17 @@ class TypeBuilderSpec extends Specification {
       val m = ms.head
       m.description must_== "FooWithListOfLists".some
 
-      m.properties.head._2 must beLike {
-        case items: ArrayProperty =>
+      m.properties.head._2 must beLike { case items: ArrayProperty =>
+        items.`type` must_== "array"
+        items.required must_== true
+
+        items.items must beLike { case items: ArrayProperty =>
           items.`type` must_== "array"
-          items.required must_== true
 
-          items.items must beLike {
-            case items: ArrayProperty =>
-              items.`type` must_== "array"
-
-              items.items.required must_== false
-              items.items.`type` must_== "integer"
-              items.items.format must_== Some("int32")
-          }
+          items.items.required must_== false
+          items.items.`type` must_== "integer"
+          items.items.format must_== Some("int32")
+        }
       }
     }
 
@@ -350,10 +356,9 @@ class TypeBuilderSpec extends Specification {
       val Some(m) = ms.find(_.id2 == "BarWithFooVal")
 
       m.properties.size must_== 1
-      m.properties.head must beLike {
-        case (name, prop: RefProperty) =>
-          name must_== "fooVal"
-          prop.ref  must_== "Foo"
+      m.properties.head must beLike { case (name, prop: RefProperty) =>
+        name must_== "fooVal"
+        prop.ref must_== "Foo"
       }
     }
 
@@ -361,17 +366,23 @@ class TypeBuilderSpec extends Specification {
       val ms = modelOf[Sealed]
       ms.foreach(_.toJModel) // Testing that there are no exceptions
       ms.size must_== 4
-      ms.find(_.id2 == "Foo").get must haveClass[models.ModelImpl]  // Foo should not become a ComposedModel
+      ms.find(_.id2 == "Foo")
+        .get must haveClass[models.ModelImpl] // Foo should not become a ComposedModel
       val Some(seald: models.ModelImpl) = ms.find(_.id2 == "Sealed")
       seald.discriminator must_== Some("foobar")
       val Some(sealedFoo: models.ComposedModel) = ms.find(_.id2 == "FooSealed")
-      val Some(fooRef) = sealedFoo.allOf.collectFirst {case ref: models.RefModel => ref}
+      val Some(fooRef) = sealedFoo.allOf.collectFirst { case ref: models.RefModel => ref }
       fooRef.ref must_== "Sealed"
     }
 
     "Not modify unrelated types when building model for sealed trait" in {
       val unrelatedModel = modelOf[FooDefault]
-      val model = TypeBuilder.collectModels(typeOf[Sealed], unrelatedModel, DefaultSwaggerFormats, typeOf[IO[_]])
+      val model = TypeBuilder.collectModels(
+        typeOf[Sealed],
+        unrelatedModel,
+        DefaultSwaggerFormats,
+        typeOf[IO[_]]
+      )
       model must_== modelOf[Sealed]
     }
 
@@ -456,7 +467,7 @@ class TypeBuilderSpec extends Specification {
     }
 
     "Format names of generic types according to provided ShowType instance" in {
-      implicit val showType: ShowType = new ShowTypeWithBrackets("<", ";" , ">")
+      implicit val showType: ShowType = new ShowTypeWithBrackets("<", ";", ">")
 
       val ms = modelOf[FooDoubleGeneric[Int, String]]
       ms.size must_== 1
@@ -481,8 +492,10 @@ class TypeBuilderSpec extends Specification {
 
     "Get the DataType of the underlying type for an AnyVal" in {
       val datatypes = List[(TypeTag[_], TypeTag[_])](
-        (typeTag[StringAnyVal], typeTag[String]), (typeTag[IntAnyVal], typeTag[Int]),
-        (typeTag[DoubleAnyVal], typeTag[Double]), (typeTag[EntityAnyVal], typeTag[Entity])
+        (typeTag[StringAnyVal], typeTag[String]),
+        (typeTag[IntAnyVal], typeTag[Int]),
+        (typeTag[DoubleAnyVal], typeTag[Double]),
+        (typeTag[EntityAnyVal], typeTag[Entity])
       )
 
       Result.foreach(datatypes) { case (anyValType, underlyingType) =>

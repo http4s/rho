@@ -1,4 +1,3 @@
-
 import java.util.Date
 import java.util.UUID
 import java.time.Instant
@@ -29,7 +28,7 @@ class ApiExamples extends Specification {
         val pathPart1 = GET / "hello"
 
         pathPart1 / "world" |>> { () => Ok("Hello, world!") }
-        pathPart1 / "you"   |>> { () => Ok("Hello, you!") }
+        pathPart1 / "you" |>> { () => Ok("Hello, you!") }
       }
       /// end_src_inlined
 
@@ -178,8 +177,9 @@ class ApiExamples extends Specification {
         }
 
         // Using decoders after query string
-        POST / "postSomething" +? param[String]("foo") ^ UrlForm.entityDecoder[IO] |>> { (foo: String, m: UrlForm) =>
-          Ok(s"You posted these things ($foo): $m")
+        POST / "postSomething" +? param[String]("foo") ^ UrlForm.entityDecoder[IO] |>> {
+          (foo: String, m: UrlForm) =>
+            Ok(s"You posted these things ($foo): $m")
         }
       }
       /// end_src_inlined
@@ -193,7 +193,7 @@ class ApiExamples extends Specification {
         val rawFoo = param[Int]("i") & param[String]("v") & param[Double]("a")
 
         val paramFoobar: TypedQuery[IO, Foo :: HNil] = rawFoo.map {
-          (i: Int, v: String, a: Double) => Foo(i,v,a)
+          (i: Int, v: String, a: Double) => Foo(i, v, a)
         }
 
         GET / "foo2-test" +? paramFoobar |>> { (f: Foo) =>

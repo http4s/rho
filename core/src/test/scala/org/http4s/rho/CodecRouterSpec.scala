@@ -10,15 +10,17 @@ import scala.collection.compat.immutable.ArraySeq
 class CodecRouterSpec extends Specification {
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
-    val rbody = new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
+    val rbody = new String(
+      resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _)
+    )
     (rbody, resp.status)
   }
 
   "A CodecRouter in a RhoRoutes" should {
 
     val routes = new RhoRoutes[IO] {
-      (POST / "foo" decoding(EntityDecoder.text[IO])) |>> { s: String => Ok(s"Received: $s") }
-      (POST / "form" decoding(UrlForm.entityDecoder[IO])) |>> { _: UrlForm => Ok("success") }
+      (POST / "foo" decoding (EntityDecoder.text[IO])) |>> { s: String => Ok(s"Received: $s") }
+      (POST / "form" decoding (UrlForm.entityDecoder[IO])) |>> { _: UrlForm => Ok("success") }
     }.toRoutes()
 
     "Decode a valid body" in {

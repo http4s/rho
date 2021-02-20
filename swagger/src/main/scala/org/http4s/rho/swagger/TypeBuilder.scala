@@ -18,11 +18,17 @@ object TypeBuilder {
 
   private[this] val logger = getLogger
 
-  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type)(implicit st: ShowType): Set[Model] =
+  def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type)(implicit
+      st: ShowType): Set[Model] =
     try collectModels(t.dealias, alreadyKnown, ListSet.empty, sfs, et)
     catch { case NonFatal(_) => Set.empty }
 
-  private def collectModels(t: Type, alreadyKnown: Set[Model], known: TypeSet, sfs: SwaggerFormats, et: Type)(implicit st: ShowType): Set[Model] = {
+  private def collectModels(
+      t: Type,
+      alreadyKnown: Set[Model],
+      known: TypeSet,
+      sfs: SwaggerFormats,
+      et: Type)(implicit st: ShowType): Set[Model] = {
 
     def go(t: Type, alreadyKnown: Set[Model], known: TypeSet): Set[Model] =
       t.dealias match {
@@ -43,7 +49,8 @@ object TypeBuilder {
           go(tpe.typeArgs.head, alreadyKnown, known + tpe) ++
             go(tpe.typeArgs.last, alreadyKnown, known + tpe)
 
-        case tpe if (tpe.isCollection || tpe.isOption || tpe.isEffect(et)) && tpe.typeArgs.nonEmpty =>
+        case tpe
+            if (tpe.isCollection || tpe.isOption || tpe.isEffect(et)) && tpe.typeArgs.nonEmpty =>
           go(tpe.typeArgs.head, alreadyKnown, known + tpe)
 
         case tpe if tpe.isStream =>
@@ -61,34 +68,43 @@ object TypeBuilder {
         case TypeRef(_, sym, _) if isObjectEnum(sym) =>
           Set.empty
 
-        case tpe@TypeRef(_, sym, tpeArgs: List[Type]) if tpe.isAnyVal =>
+        case tpe @ TypeRef(_, sym, tpeArgs: List[Type]) if tpe.isAnyVal =>
           sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramSym =>
             val paramType = paramSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
             go(paramType, alreadyKnown, known + tpe)
           }.toSet
 
-        case tpe@TypeRef(_, sym: Symbol, tpeArgs: List[Type]) if isCaseClass(sym) || isSumType(sym) =>
+        case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type])
+            if isCaseClass(sym) || isSumType(sym) =>
           val symIsSumType = isSumType(sym)
           val maybeParentSumType = sym.asClass.baseClasses.drop(1).find(isSumType)
 
-          val parentModel = maybeParentSumType.toSet[Symbol].flatMap(parentType => go(parentType.asType.toType, alreadyKnown, known + tpe))
+          val parentModel = maybeParentSumType
+            .toSet[Symbol]
+            .flatMap(parentType => go(parentType.asType.toType, alreadyKnown, known + tpe))
 
           val ownModel = maybeParentSumType match {
             case Some(parentSumType) =>
               val parentType = parentSumType.asType.toType
-              val parentRefModel = RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
+              val parentRefModel =
+                RefModel(parentType.fullName, parentType.simpleName, parentType.simpleName)
               modelToSwagger(tpe, sfs).map(composedModel(parentRefModel)).toSet
             case None if symIsSumType =>
-              modelToSwagger(tpe, sfs).map(addDiscriminator(sym)).toSet // only top level sum types get a discriminator
+              modelToSwagger(tpe, sfs)
+                .map(addDiscriminator(sym))
+                .toSet // only top level sum types get a discriminator
             case None /*product type*/ =>
               modelToSwagger(tpe, sfs).toSet
           }
 
           val childModels = if (symIsSumType) {
-            sym.asClass.knownDirectSubclasses.flatMap(childType => go(childType.asType.toType, alreadyKnown, known + tpe))
+            sym.asClass.knownDirectSubclasses.flatMap(childType =>
+              go(childType.asType.toType, alreadyKnown, known + tpe)
+            )
           } else {
             sym.asClass.primaryConstructor.asMethod.paramLists.flatten.flatMap { paramSym =>
-              val paramType = paramSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
+              val paramType =
+                paramSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
               go(paramType, alreadyKnown, known + tpe)
             }
           }
@@ -104,8 +120,9 @@ object TypeBuilder {
   private def addDiscriminator(sym: Symbol)(model: ModelImpl)(implicit st: ShowType): ModelImpl = {
     val typeVar = sym.annotations
       .withFilter(_.tree.tpe <:< typeOf[DiscriminatorField])
-      .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field } )
-      .headOption.getOrElse("type")
+      .flatMap(_.tree.children.tail.collect { case Literal(Constant(field: String)) => field })
+      .headOption
+      .getOrElse("type")
     val subclasses = sym.asClass.knownDirectSubclasses.map(_.asType.toType.simpleName)
 
     model
@@ -113,11 +130,11 @@ object TypeBuilder {
         discriminator = Some(typeVar),
         `type` = Some("object"),
         properties =
-        model.properties + (typeVar -> StringProperty(required = true, enums = subclasses))
+          model.properties + (typeVar -> StringProperty(required = true, enums = subclasses))
       )
   }
 
-  private def composedModel(parent: RefModel)(subtype: Model): Model = {
+  private def composedModel(parent: RefModel)(subtype: Model): Model =
     ComposedModel(
       id = subtype.id,
       id2 = subtype.id2,
@@ -125,7 +142,6 @@ object TypeBuilder {
       allOf = List(parent, subtype),
       parent = parent.some
     )
-  }
 
   private[this] def isCaseClass(sym: Symbol): Boolean =
     sym.isClass && sym.asClass.isCaseClass && sym.asClass.primaryConstructor.isMethod
@@ -140,36 +156,36 @@ object TypeBuilder {
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
 
-  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats)(implicit st: ShowType): Option[ModelImpl] =
+  private def modelToSwagger(tpe: Type, sfs: SwaggerFormats)(implicit
+      st: ShowType): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
       val constructor = tpe.member(termNames.CONSTRUCTOR)
-      val typeSignature = if(constructor.owner == tpe.termSymbol) {
+      val typeSignature = if (constructor.owner == tpe.termSymbol) {
         constructor.typeSignature
       } else {
         constructor.typeSignatureIn(tpe)
       }
       val props: Map[String, Property] =
-        typeSignature
-          .paramLists
-          .flatten
+        typeSignature.paramLists.flatten
           .map(paramSymToProp(sym, tpeArgs, sfs))
           .toMap
 
       ModelImpl(
-        id          = tpe.fullName,
-        id2         = tpe.simpleName,
+        id = tpe.fullName,
+        id2 = tpe.simpleName,
         description = tpe.simpleName.some,
-        `type`      = "object".some,
-        properties  = props).some
+        `type` = "object".some,
+        properties = props
+      ).some
     } catch {
       case NonFatal(t) =>
         logger.info(t)(s"Failed to build model for type $tpe")
         None
     }
 
-  private def paramSymToProp
-  (sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol)(implicit st: ShowType): (String, Property) = {
+  private def paramSymToProp(sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol)(
+      implicit st: ShowType): (String, Property) = {
     val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
     val prop = typeToProperty(pType, sfs)
@@ -177,40 +193,43 @@ object TypeBuilder {
   }
 
   // Turn a `Type` into the appropriate `Property` representation
-  private def typeToProperty(tpe: Type, sfs: SwaggerFormats)(implicit st: ShowType): Property = {
-    sfs.customFieldSerializers.applyOrElse(tpe, { _: Type =>
-      val TypeRef(_, ptSym: Symbol, _) = tpe
-      if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
-        RefProperty(tpe.simpleName)
-      } else if (tpe.isMap) {
-        val pType = tpe.dealias.typeArgs.last
-        val itemProperty = typeToProperty(pType, sfs).withRequired(false)
-        MapProperty(additionalProperties = itemProperty)
+  private def typeToProperty(tpe: Type, sfs: SwaggerFormats)(implicit st: ShowType): Property =
+    sfs.customFieldSerializers.applyOrElse(
+      tpe,
+      { _: Type =>
+        val TypeRef(_, ptSym: Symbol, _) = tpe
+        if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
+          RefProperty(tpe.simpleName)
+        } else if (tpe.isMap) {
+          val pType = tpe.dealias.typeArgs.last
+          val itemProperty = typeToProperty(pType, sfs).withRequired(false)
+          MapProperty(additionalProperties = itemProperty)
+        } else if (tpe.isCollection) {
+          val pType = tpe.dealias.typeArgs.head
+          val itemProperty = typeToProperty(pType, sfs).withRequired(false)
+          ArrayProperty(items = itemProperty)
+        } else if (tpe.isOption)
+          typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
+        else if (tpe.isAnyVal && !tpe.isPrimitive)
+          typeToProperty(
+            ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.head.typeSignature,
+            sfs
+          )
+        else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
+          RefProperty(tpe.simpleName)
+        else
+          DataType.fromType(tpe) match {
+            case DataType.ValueDataType(name, format, qName) =>
+              AbstractProperty(`type` = name, description = qName, format = format)
+            case DataType.ComplexDataType(name, qName) =>
+              AbstractProperty(`type` = name, description = qName)
+            case DataType.ContainerDataType(name, _, _) =>
+              AbstractProperty(`type` = name)
+            case DataType.EnumDataType(enums) =>
+              StringProperty(enums = enums)
+          }
       }
-      else if (tpe.isCollection) {
-        val pType = tpe.dealias.typeArgs.head
-        val itemProperty = typeToProperty(pType, sfs).withRequired(false)
-        ArrayProperty(items = itemProperty)
-      }
-      else if (tpe.isOption)
-        typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-      else if (tpe.isAnyVal && !tpe.isPrimitive)
-        typeToProperty(ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.head.typeSignature, sfs)
-      else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
-        RefProperty(tpe.simpleName)
-      else
-        DataType.fromType(tpe) match {
-          case DataType.ValueDataType(name, format, qName) =>
-            AbstractProperty(`type` = name, description = qName, format = format)
-          case DataType.ComplexDataType(name, qName) =>
-            AbstractProperty(`type` = name, description = qName)
-          case DataType.ContainerDataType(name, _, _) =>
-            AbstractProperty(`type` = name)
-          case DataType.EnumDataType(enums) =>
-            StringProperty(enums = enums)
-        }
-    })
-  }
+    )
 
   sealed trait DataType {
     def name: String
@@ -218,8 +237,16 @@ object TypeBuilder {
 
   object DataType {
 
-    case class ValueDataType(name: String, format: Option[String] = None, qualifiedName: Option[String] = None) extends DataType
-    case class ContainerDataType(name: String, typeArg: Option[DataType] = None, uniqueItems: Boolean = false) extends DataType
+    case class ValueDataType(
+        name: String,
+        format: Option[String] = None,
+        qualifiedName: Option[String] = None)
+        extends DataType
+    case class ContainerDataType(
+        name: String,
+        typeArg: Option[DataType] = None,
+        uniqueItems: Boolean = false)
+        extends DataType
     case class ComplexDataType(name: String, qualifiedName: Option[String] = None) extends DataType
     case class EnumDataType(enums: Set[String]) extends DataType { val name = "string" }
 
@@ -262,7 +289,8 @@ object TypeBuilder {
     private[swagger] def fromType(t: Type)(implicit st: ShowType): DataType = {
       val klass = if (t.isOption && t.typeArgs.nonEmpty) t.typeArgs.head else t
 
-      if (klass.isNothingOrNull || klass.isUnitOrVoid) ComplexDataType("string", qualifiedName = Option(klass.fullName))
+      if (klass.isNothingOrNull || klass.isUnitOrVoid)
+        ComplexDataType("string", qualifiedName = Option(klass.fullName))
       else if (isString(klass)) this.String
       else if (klass <:< typeOf[Byte] || klass <:< typeOf[java.lang.Byte]) this.Byte
       else if (klass <:< typeOf[Long] || klass <:< typeOf[java.lang.Long]) this.Long
@@ -284,7 +312,13 @@ object TypeBuilder {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs(1)))
         else GenArray()
       } else if (klass <:< typeOf[AnyVal]) {
-        fromType(klass.members.filter(_.isConstructor).flatMap(_.asMethod.paramLists.flatten).head.typeSignature)
+        fromType(
+          klass.members
+            .filter(_.isConstructor)
+            .flatMap(_.asMethod.paramLists.flatten)
+            .head
+            .typeSignature
+        )
       } else if (isObjectEnum(klass.typeSymbol)) {
         EnumDataType(klass.typeSymbol.asClass.knownDirectSubclasses.map(_.name.toString))
       } else {
@@ -295,15 +329,23 @@ object TypeBuilder {
 
     private[this] val IntTypes =
       Set[Type](
-        typeOf[Int], typeOf[java.lang.Integer], typeOf[Short],
-        typeOf[java.lang.Short], typeOf[BigInt], typeOf[java.math.BigInteger])
+        typeOf[Int],
+        typeOf[java.lang.Integer],
+        typeOf[Short],
+        typeOf[java.lang.Short],
+        typeOf[BigInt],
+        typeOf[java.math.BigInteger]
+      )
 
     private[this] def isInt(t: Type): Boolean = IntTypes.exists(t =:= _)
 
     private[this] val DecimalTypes =
       Set[Type](
-        typeOf[Double], typeOf[java.lang.Double],
-        typeOf[BigDecimal], typeOf[java.math.BigDecimal])
+        typeOf[Double],
+        typeOf[java.lang.Double],
+        typeOf[BigDecimal],
+        typeOf[java.math.BigDecimal]
+      )
 
     private[this] def isDecimal(t: Type): Boolean =
       DecimalTypes.exists(t =:= _)
@@ -318,8 +360,8 @@ object TypeBuilder {
       t <:< typeOf[collection.Iterable[_]] || t <:< typeOf[java.util.Collection[_]]
   }
 
-  private implicit class WrappedType(val t: Type){
-    override def equals(obj: Any): Boolean = obj match{
+  private implicit class WrappedType(val t: Type) {
+    override def equals(obj: Any): Boolean = obj match {
       case wt2: WrappedType => t =:= wt2.t
       case _ => false
     }

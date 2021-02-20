@@ -5,9 +5,8 @@ import org.json4s._
 import scala.collection.mutable.ArrayBuffer
 
 object LinkObjectSerializer {
-  val serialize: PartialFunction[Any, JValue] = {
-    case l: LinkObject =>
-      serialize(l)
+  val serialize: PartialFunction[Any, JValue] = { case l: LinkObject =>
+    serialize(l)
   }
   def serialize(l: LinkObject): JObject = {
     val b = new ArrayBuffer[JField]()
@@ -30,6 +29,7 @@ object LinkObjectSerializer {
   }
 }
 
-class LinkObjectSerializer extends CustomSerializer[LinkObject](_ => (
-  PartialFunction.empty,
-  LinkObjectSerializer.serialize))
+class LinkObjectSerializer
+    extends CustomSerializer[LinkObject](_ =>
+      (PartialFunction.empty, LinkObjectSerializer.serialize)
+    )

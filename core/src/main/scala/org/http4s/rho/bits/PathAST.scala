@@ -17,14 +17,16 @@ object PathAST {
       *
       * Alias of `&&`
       */
-    def and[T2 <: HList](next: TypedPath[F, T2])(implicit prep: Prepend[T2, T]): TypedPath[F, prep.Out] =
+    def and[T2 <: HList](next: TypedPath[F, T2])(implicit
+        prep: Prepend[T2, T]): TypedPath[F, prep.Out] =
       TypedPath(PathAnd(this.rule, next.rule))
 
     /** Match this rule and then `next` rule
       *
       * Alias of `and`
       */
-    def &&[T2 <: HList](p2: TypedPath[F, T2])(implicit prep: Prepend[T2, T]): TypedPath[F, prep.Out] = and(p2)
+    def &&[T2 <: HList](p2: TypedPath[F, T2])(implicit
+        prep: Prepend[T2, T]): TypedPath[F, prep.Out] = and(p2)
 
     /** Match this rule or `alt` rule if this rule fails
       *
@@ -51,7 +53,8 @@ object PathAST {
       * @return a new [[TypedPath]] that will capture a uri segment.
       */
     def /(symbol: Symbol): TypedPath[F, String :: T] = {
-      val capture = PathCapture(symbol.name, None, StringParser.strParser, implicitly[TypeTag[String]])
+      val capture =
+        PathCapture(symbol.name, None, StringParser.strParser, implicitly[TypeTag[String]])
       TypedPath(PathAnd(this.rule, capture))
     }
 
@@ -60,7 +63,8 @@ object PathAST {
       * @param rules [[TypedPath]] rules to append to the path capture rules.
       * @return a new [[TypedPath]] that will execute the appended rules.
       */
-    def /[T2 <: HList](rules: TypedPath[F, T2])(implicit prep: Prepend[T2, T]): TypedPath[F, prep.Out] =
+    def /[T2 <: HList](rules: TypedPath[F, T2])(implicit
+        prep: Prepend[T2, T]): TypedPath[F, prep.Out] =
       TypedPath(PathAnd(this.rule, rules.rule))
 
     /** Prepend this path rule to the [[RequestLineBuilder]]
@@ -68,7 +72,8 @@ object PathAST {
       * @param builder [[RequestLineBuilder]] rules to append to the path capture rules.
       * @return a new [[RequestLineBuilder]] with this rule prepended.
       */
-    def /[T2 <: HList](builder: RequestLineBuilder[F, T2])(implicit prep: Prepend[T, T2]): RequestLineBuilder[F, prep.Out] =
+    def /[T2 <: HList](builder: RequestLineBuilder[F, T2])(implicit
+        prep: Prepend[T, T2]): RequestLineBuilder[F, prep.Out] =
       RequestLineBuilder(PathAnd(this.rule, builder.path), builder.rules)
 
     /** Capture a query rule
@@ -77,7 +82,8 @@ object PathAST {
       * @tparam T1 The types of elements captured by query.
       * @return A [[QueryBuilder]] with which to continue building the route.
       */
-    def +?[T1 <: HList](query: TypedQuery[F, T1])(implicit prep: Prepend[T1, T]): RequestLineBuilder[F, prep.Out] =
+    def +?[T1 <: HList](query: TypedQuery[F, T1])(implicit
+        prep: Prepend[T1, T]): RequestLineBuilder[F, prep.Out] =
       RequestLineBuilder(rule, query.rule)
 
     private val uriTemplate =
@@ -101,7 +107,12 @@ object PathAST {
 
   case class PathMatch(s: String) extends PathOperation
 
-  case class PathCapture[F[_]](name: String, description: Option[String], parser: StringParser[F, _], m: TypeTag[_]) extends PathOperation
+  case class PathCapture[F[_]](
+      name: String,
+      description: Option[String],
+      parser: StringParser[F, _],
+      m: TypeTag[_])
+      extends PathOperation
 
   case object CaptureTail extends PathOperation
 

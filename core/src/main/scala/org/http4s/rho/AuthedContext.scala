@@ -8,7 +8,6 @@ import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 import _root_.io.chrisdavenport.vault._
 import cats.effect._
 
-
 /** The [[AuthedContext]] provides a convenient way to define a RhoRoutes
   * which works with http4s authentication middleware.
   * Please note that `AuthMiddleware`-wrapping is mandatory, otherwise context

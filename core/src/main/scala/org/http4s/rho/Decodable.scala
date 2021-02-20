@@ -20,7 +20,8 @@ trait Decodable[F[_], T <: HList, R] {
     * @param decoder `EntityDecoder` to utilize for decoding the body.
     * @tparam R2 type of the result.
     */
-  def decoding[R2 >: R](decoder: EntityDecoder[F, R2])(implicit F: Functor[F], t: TypeTag[R2]): CodecRouter[F, T, R2]
+  def decoding[R2 >: R](
+      decoder: EntityDecoder[F, R2])(implicit F: Functor[F], t: TypeTag[R2]): CodecRouter[F, T, R2]
 
   /** Decode the body using the `EntityDecoder`
     *
@@ -28,5 +29,7 @@ trait Decodable[F[_], T <: HList, R] {
     * @param decoder `EntityDecoder` to utilize for decoding the body.
     * @tparam R2 type of the result.
     */
-  final def ^[R2 >: R](decoder: EntityDecoder[F, R2])(implicit F: Functor[F], t: TypeTag[R2]): CodecRouter[F, T, R2] = decoding(decoder)
+  final def ^[R2 >: R](decoder: EntityDecoder[F, R2])(implicit
+      F: Functor[F],
+      t: TypeTag[R2]): CodecRouter[F, T, R2] = decoding(decoder)
 }

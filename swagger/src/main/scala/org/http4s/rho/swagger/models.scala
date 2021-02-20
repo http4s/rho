@@ -13,24 +13,23 @@ import scala.collection.immutable.ListMap
 object models {
   import JValue._
 
-  case class Swagger
-    (
-      swagger             : String                                = "2.0"
-    , info                : Option[Info]                          = None
-    , host                : Option[String]                        = None
-    , basePath            : Option[String]                        = None
-    , schemes             : List[Scheme]                          = Nil
-    , consumes            : List[String]                          = Nil
-    , produces            : List[String]                          = Nil
-    , paths               : ListMap[String, Path]                 = ListMap.empty
-    , securityDefinitions : Map[String, SecuritySchemeDefinition] = Map.empty
-    , definitions         : Map[String, Model]                    = Map.empty
-    , parameters          : Map[String, Parameter]                = Map.empty
-    , externalDocs        : Option[ExternalDocs]                  = None
-    , security            : List[SecurityRequirement]             = Nil
-    , tags                : List[Tag]                             = Nil
-    , vendorExtensions    : Map[String, Any]                      = Map.empty
-    ) {
+  case class Swagger(
+      swagger: String = "2.0",
+      info: Option[Info] = None,
+      host: Option[String] = None,
+      basePath: Option[String] = None,
+      schemes: List[Scheme] = Nil,
+      consumes: List[String] = Nil,
+      produces: List[String] = Nil,
+      paths: ListMap[String, Path] = ListMap.empty,
+      securityDefinitions: Map[String, SecuritySchemeDefinition] = Map.empty,
+      definitions: Map[String, Model] = Map.empty,
+      parameters: Map[String, Parameter] = Map.empty,
+      externalDocs: Option[ExternalDocs] = None,
+      security: List[SecurityRequirement] = Nil,
+      tags: List[Tag] = Nil,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) {
 
     def toJModel: jm.Swagger = {
       val s = new jm.Swagger
@@ -49,25 +48,24 @@ object models {
       s.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       s.setTags(fromList(tags.map(_.toJModel)))
       vendorExtensions.foreach {
-        case (key, value:Map[_,_]) => s.setVendorExtension(key, fromMap(value))
-        case (key, value:Option[_]) => s.setVendorExtension(key, fromOption(value))
-        case (key, value:List[_]) => s.setVendorExtension(key, fromList(value))
+        case (key, value: Map[_, _]) => s.setVendorExtension(key, fromMap(value))
+        case (key, value: Option[_]) => s.setVendorExtension(key, fromOption(value))
+        case (key, value: List[_]) => s.setVendorExtension(key, fromList(value))
         case (key, value) => s.setVendorExtension(key, value)
       }
       s
     }
   }
 
-  case class Info
-    (
-      title            : String
-    , version          : String
-    , description      : Option[String]   = None
-    , termsOfService   : Option[String]   = None
-    , contact          : Option[Contact]  = None
-    , license          : Option[License]  = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) {
+  case class Info(
+      title: String,
+      version: String,
+      description: Option[String] = None,
+      termsOfService: Option[String] = None,
+      contact: Option[Contact] = None,
+      license: Option[License] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) {
 
     def toJModel: jm.Info = {
       val i = new jm.Info
@@ -82,22 +80,20 @@ object models {
     }
   }
 
-  case class Contact
-    (
-      name  : String
-    , url   : Option[String] = None
-    , email : Option[String] = None
-    ) {
+  case class Contact(
+      name: String,
+      url: Option[String] = None,
+      email: Option[String] = None
+  ) {
 
     def toJModel: jm.Contact =
       (new jm.Contact).name(name).url(fromOption(url)).email(fromOption(email))
   }
 
-  case class License
-    (
-      name  : String
-    , url   : String
-    ) {
+  case class License(
+      name: String,
+      url: String
+  ) {
 
     def toJModel: jm.License =
       (new jm.License).name(name).url(url)
@@ -107,10 +103,10 @@ object models {
     def toJModel: jm.Scheme
   }
   object Scheme {
-    object HTTP  extends Scheme { def toJModel: jm.Scheme = jm.Scheme.HTTP }
+    object HTTP extends Scheme { def toJModel: jm.Scheme = jm.Scheme.HTTP }
     object HTTPS extends Scheme { def toJModel: jm.Scheme = jm.Scheme.HTTPS }
-    object WS    extends Scheme { def toJModel: jm.Scheme = jm.Scheme.WS }
-    object WSS   extends Scheme { def toJModel: jm.Scheme = jm.Scheme.WSS }
+    object WS extends Scheme { def toJModel: jm.Scheme = jm.Scheme.WS }
+    object WSS extends Scheme { def toJModel: jm.Scheme = jm.Scheme.WSS }
   }
 
   sealed trait SecuritySchemeDefinition {
@@ -119,13 +115,12 @@ object models {
     def toJModel: jm.auth.SecuritySchemeDefinition
   }
 
-  case class OAuth2Definition
-    (
-      authorizationUrl : String
-    , tokenUrl         : String
-    , flow             : String
-    , scopes           : Map[String, String]
-    ) extends SecuritySchemeDefinition {
+  case class OAuth2Definition(
+      authorizationUrl: String,
+      tokenUrl: String,
+      flow: String,
+      scopes: Map[String, String]
+  ) extends SecuritySchemeDefinition {
 
     override val `type` = "oauth2"
 
@@ -139,13 +134,12 @@ object models {
     }
   }
 
-  case class OAuth2VendorExtensionsDefinition
-  (
-      authorizationUrl : String
-    , vendorExtensions : Map[String, AnyRef]
-    , flow             : String
-    , scopes           : Map[String, String]
-    , tokenUrl         : Option[String] = None
+  case class OAuth2VendorExtensionsDefinition(
+      authorizationUrl: String,
+      vendorExtensions: Map[String, AnyRef],
+      flow: String,
+      scopes: Map[String, String],
+      tokenUrl: Option[String] = None
   ) extends SecuritySchemeDefinition {
 
     override val `type` = "oauth2"
@@ -157,24 +151,23 @@ object models {
       oa2d.setFlow(flow)
       oa2d.setScopes(fromMap(scopes))
 
-      if(tokenUrl.isDefined)
+      if (tokenUrl.isDefined)
         oa2d.setTokenUrl(tokenUrl.get)
 
       oa2d
     }
   }
 
-  case class ApiKeyAuthDefinition
-  (
-    name : String
-    , in   : In
-    , description: Option[String] = None
+  case class ApiKeyAuthDefinition(
+      name: String,
+      in: In,
+      description: Option[String] = None
   ) extends SecuritySchemeDefinition {
 
     override val `type` = "apiKey"
 
     def toJModel: jm.auth.ApiKeyAuthDefinition = {
-      val akad  = new jm.auth.ApiKeyAuthDefinition
+      val akad = new jm.auth.ApiKeyAuthDefinition
       val definition = akad.name(name).in(in.toJModel)
       description.foreach(definition.setDescription)
       definition
@@ -193,14 +186,13 @@ object models {
   }
   object In {
     case object HEADER extends In { def toJModel: jm.auth.In = jm.auth.In.HEADER }
-    case object QUERY  extends In { def toJModel: jm.auth.In = jm.auth.In.QUERY  }
+    case object QUERY extends In { def toJModel: jm.auth.In = jm.auth.In.QUERY }
   }
 
-  case class SecurityRequirement
-    (
-      name   : String
-    , scopes : List[String]
-    ) {
+  case class SecurityRequirement(
+      name: String,
+      scopes: List[String]
+  ) {
 
     def toJModel: jm.SecurityRequirement = {
       val sr = new jm.SecurityRequirement
@@ -209,37 +201,35 @@ object models {
     }
   }
 
-  case class SecurityScope
-    (
-      name        : String
-    , description : String
-    ) {
+  case class SecurityScope(
+      name: String,
+      description: String
+  ) {
 
     def toJModel: jm.SecurityScope =
       new jm.SecurityScope(name, description)
   }
 
-  case class Path
-    (
-      get              : Option[Operation] = None
-    , put              : Option[Operation] = None
-    , post             : Option[Operation] = None
-    , delete           : Option[Operation] = None
-    , patch            : Option[Operation] = None
-    , options          : Option[Operation] = None
-    , head             : Option[Operation] = None
-    , parameters       : List[Parameter]   = Nil
-    , vendorExtensions : Map[String, Any]  = Map.empty
-    ) {
+  case class Path(
+      get: Option[Operation] = None,
+      put: Option[Operation] = None,
+      post: Option[Operation] = None,
+      delete: Option[Operation] = None,
+      patch: Option[Operation] = None,
+      options: Option[Operation] = None,
+      head: Option[Operation] = None,
+      parameters: List[Parameter] = Nil,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) {
 
     def operations: Seq[Operation] =
       get.toList ++
-      put.toList ++
-      post.toList ++
-      delete.toList ++
-      patch.toList ++
-      options.toList ++
-      head.toList
+        put.toList ++
+        post.toList ++
+        delete.toList ++
+        patch.toList ++
+        options.toList ++
+        head.toList
 
     def toJModel: jm.Path = {
       val p = new jm.Path
@@ -267,22 +257,21 @@ object models {
       )
   }
 
-  case class Operation
-    (
-      tags             : List[String]                    = Nil
-    , summary          : Option[String]                  = None
-    , description      : Option[String]                  = None
-    , operationId      : Option[String]                  = None
-    , schemes          : List[Scheme]                    = Nil
-    , consumes         : List[String]                    = Nil
-    , produces         : List[String]                    = Nil
-    , parameters       : List[Parameter]                 = Nil
-    , responses        : Map[String, Response]           = Map.empty
-    , security         : List[Map[String, List[String]]] = Nil
-    , externalDocs     : Option[ExternalDocs]            = None
-    , deprecated       : Boolean                         = false
-    , vendorExtensions : Map[String, Any]                = Map.empty
-    ) {
+  case class Operation(
+      tags: List[String] = Nil,
+      summary: Option[String] = None,
+      description: Option[String] = None,
+      operationId: Option[String] = None,
+      schemes: List[Scheme] = Nil,
+      consumes: List[String] = Nil,
+      produces: List[String] = Nil,
+      parameters: List[Parameter] = Nil,
+      responses: Map[String, Response] = Map.empty,
+      security: List[Map[String, List[String]]] = Nil,
+      externalDocs: Option[ExternalDocs] = None,
+      deprecated: Boolean = false,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) {
 
     def toJModel: jm.Operation = {
       val o = new jm.Operation
@@ -295,7 +284,7 @@ object models {
       o.setProduces(fromList(produces))
       o.setParameters(fromList(parameters.map(_.toJModel)))
       o.setResponses(fromMap(responses.view.mapValues(_.toJModel).toMap))
-      o.setSecurity(fromList(security.map { m : Map[String, List[String]] =>
+      o.setSecurity(fromList(security.map { m: Map[String, List[String]] =>
         m.view.mapValues(_.asJava).toMap.asJava
       }))
       o.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
@@ -305,18 +294,19 @@ object models {
     }
   }
 
-  case class Response
-    (
-      description : String
-    , schema      : Option[Property]      = None
-    , examples    : Map[String, String]   = Map.empty
-    , headers     : Map[String, Property] = Map.empty
-    ) {
+  case class Response(
+      description: String,
+      schema: Option[Property] = None,
+      examples: Map[String, String] = Map.empty,
+      headers: Map[String, Property] = Map.empty
+  ) {
 
     def toJModel: jm.Response = {
       val r = new jm.Response
       r.setDescription(description)
-      r.setResponseSchema(fromOption(schema.map(_.toJModel).map(new PropertyModelConverter().propertyToModel)))
+      r.setResponseSchema(
+        fromOption(schema.map(_.toJModel).map(new PropertyModelConverter().propertyToModel))
+      )
       r.setExamples(fromMap(examples))
       r.setHeaders(fromMap(headers.view.mapValues(_.toJModel).toMap))
       r
@@ -329,26 +319,25 @@ object models {
     def description: Option[String]
     def properties: Map[String, Property]
     def example: Option[String]
-    def externalDocs : Option[ExternalDocs]
+    def externalDocs: Option[ExternalDocs]
 
     def toJModel: jm.Model
   }
 
-  case class ModelImpl
-    (
-      id                   : String
-    , id2                  : String
-    , description          : Option[String]        = None
-    , `type`               : Option[String]        = None
-    , name                 : Option[String]        = None
-    , required             : List[String]          = Nil
-    , properties           : Map[String, Property] = Map.empty
-    , isSimple             : Boolean               = false
-    , example              : Option[String]        = None
-    , additionalProperties : Option[Property]      = None
-    , discriminator        : Option[String]        = None
-    , externalDocs         : Option[ExternalDocs]  = None
-    ) extends Model {
+  case class ModelImpl(
+      id: String,
+      id2: String,
+      description: Option[String] = None,
+      `type`: Option[String] = None,
+      name: Option[String] = None,
+      required: List[String] = Nil,
+      properties: Map[String, Property] = Map.empty,
+      isSimple: Boolean = false,
+      example: Option[String] = None,
+      additionalProperties: Option[Property] = None,
+      discriminator: Option[String] = None,
+      externalDocs: Option[ExternalDocs] = None
+  ) extends Model {
 
     def toJModel: jm.Model = {
       val m = new jm.ModelImpl
@@ -358,24 +347,24 @@ object models {
       m.setRequired(required.asJava)
       m.setExample(fromOption(example))
       m.setProperties(fromMap(properties.view.mapValues(_.toJModel).toMap))
-      if (additionalProperties.nonEmpty) m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
+      if (additionalProperties.nonEmpty)
+        m.setAdditionalProperties(fromOption(additionalProperties.map(_.toJModel)))
       m.setDiscriminator(fromOption(discriminator))
       m.setExternalDocs(fromOption(externalDocs.map(_.toJModel)))
       m
     }
   }
 
-  case class ArrayModel
-    (
-      id           : String
-    , id2          : String
-    , description  : Option[String]        = None
-    ,`type`        : Option[String]        = None
-    , properties   : Map[String, Property] = Map.empty
-    , items        : Option[Property]      = None
-    , example      : Option[String]        = None
-    , externalDocs : Option[ExternalDocs]  = None
-    ) extends Model {
+  case class ArrayModel(
+      id: String,
+      id2: String,
+      description: Option[String] = None,
+      `type`: Option[String] = None,
+      properties: Map[String, Property] = Map.empty,
+      items: Option[Property] = None,
+      example: Option[String] = None,
+      externalDocs: Option[ExternalDocs] = None
+  ) extends Model {
 
     def toJModel: jm.Model = {
       val am = new jm.ArrayModel
@@ -389,19 +378,18 @@ object models {
     }
   }
 
-  case class ComposedModel
-    (
-      id           : String
-    , id2          : String
-    , description  : Option[String]        = None
-    , allOf        : List[Model]           = Nil
-    , parent       : Option[Model]         = None
-    , child        : Option[Model]         = None
-    , interfaces   : List[RefModel]        = Nil
-    , properties   : Map[String, Property] = Map.empty
-    , example      : Option[String]        = None
-    , externalDocs : Option[ExternalDocs]  = None
-    ) extends Model {
+  case class ComposedModel(
+      id: String,
+      id2: String,
+      description: Option[String] = None,
+      allOf: List[Model] = Nil,
+      parent: Option[Model] = None,
+      child: Option[Model] = None,
+      interfaces: List[RefModel] = Nil,
+      properties: Map[String, Property] = Map.empty,
+      example: Option[String] = None,
+      externalDocs: Option[ExternalDocs] = None
+  ) extends Model {
 
     def toJModel: jm.Model = {
       val cm = new jm.ComposedModel
@@ -417,16 +405,15 @@ object models {
     }
   }
 
-  case class RefModel
-    (
-      id           : String
-    , id2          : String
-    , ref          : String
-    , description  : Option[String]        = None
-    , properties   : Map[String, Property] = Map.empty
-    , example      : Option[String]        = None
-    , externalDocs : Option[ExternalDocs]  = None
-    ) extends Model {
+  case class RefModel(
+      id: String,
+      id2: String,
+      ref: String,
+      description: Option[String] = None,
+      properties: Map[String, Property] = Map.empty,
+      example: Option[String] = None,
+      externalDocs: Option[ExternalDocs] = None
+  ) extends Model {
 
     def toJModel: jm.RefModel = {
       val rm = new jm.RefModel(ref)
@@ -453,26 +440,25 @@ object models {
     implicit class Ops(val parameter: Parameter) extends AnyVal {
       def withDesc(desc: Option[String]): Parameter =
         parameter match {
-          case p : BodyParameter => p.copy(description = desc)
-          case p : CookieParameter => p.copy(description = desc)
-          case p : FormParameter => p.copy(description = desc)
-          case p : HeaderParameter => p.copy(description = desc)
-          case p : PathParameter => p.copy(description = desc)
-          case p : QueryParameter => p.copy(description = desc)
-          case p : RefParameter => p.copy(description = desc)
+          case p: BodyParameter => p.copy(description = desc)
+          case p: CookieParameter => p.copy(description = desc)
+          case p: FormParameter => p.copy(description = desc)
+          case p: HeaderParameter => p.copy(description = desc)
+          case p: PathParameter => p.copy(description = desc)
+          case p: QueryParameter => p.copy(description = desc)
+          case p: RefParameter => p.copy(description = desc)
         }
     }
   }
 
-  case class BodyParameter
-    (
-      schema           : Option[Model]    = None
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) extends Parameter {
+  case class BodyParameter(
+      schema: Option[Model] = None,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) extends Parameter {
 
     override val in = Some("body")
 
@@ -488,19 +474,18 @@ object models {
     }
   }
 
-  case class CookieParameter
-    (
-      `type`           : String
-    , format           : Option[String]   = None
-    , collectionFormat : Option[String]   = None
-    , items            : Option[Property] = None
-    , defaultValue     : Option[String]   = None
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) extends Parameter {
+  case class CookieParameter(
+      `type`: String,
+      format: Option[String] = None,
+      collectionFormat: Option[String] = None,
+      items: Option[Property] = None,
+      defaultValue: Option[String] = None,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) extends Parameter {
 
     override val in = Some("cookie")
 
@@ -519,19 +504,18 @@ object models {
     }
   }
 
-  case class FormParameter
-    (
-      `type`           : String
-    , format           : Option[String]   = None
-    , collectionFormat : Option[String]   = None
-    , items            : Option[Property] = None
-    , defaultValue     : Option[String]   = None
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) extends Parameter {
+  case class FormParameter(
+      `type`: String,
+      format: Option[String] = None,
+      collectionFormat: Option[String] = None,
+      items: Option[Property] = None,
+      defaultValue: Option[String] = None,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) extends Parameter {
 
     override val in = Some("formData")
 
@@ -551,19 +535,18 @@ object models {
     }
   }
 
-  case class HeaderParameter
-    (
-      `type`           : String
-    , format           : Option[String]   = None
-    , collectionFormat : Option[String]   = None
-    , items            : Option[Property] = None
-    , defaultValue     : Option[String]   = None
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) extends Parameter {
+  case class HeaderParameter(
+      `type`: String,
+      format: Option[String] = None,
+      collectionFormat: Option[String] = None,
+      items: Option[Property] = None,
+      defaultValue: Option[String] = None,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) extends Parameter {
 
     override val in = Some("header")
 
@@ -583,19 +566,18 @@ object models {
     }
   }
 
-  case class PathParameter
-    (
-      `type`           : String
-    , format           : Option[String]   = None
-    , collectionFormat : Option[String]   = None
-    , items            : Option[Property] = None
-    , defaultValue     : Option[String]   = None
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) extends Parameter {
+  case class PathParameter(
+      `type`: String,
+      format: Option[String] = None,
+      collectionFormat: Option[String] = None,
+      items: Option[Property] = None,
+      defaultValue: Option[String] = None,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) extends Parameter {
 
     override val in = Some("path")
 
@@ -616,28 +598,39 @@ object models {
 
   }
 
-  case class QueryParameter
-    (
-      `type`           : Option[String]   = None
-    , $ref             : Option[String]   = None
-    , format           : Option[String]   = None
-    , collectionFormat : Option[String]   = None
-    , items            : Option[Property] = None
-    , defaultValue     : Option[String]   = None
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    , isArray          : Boolean          = false
-    , enums            : List[String]     = List.empty
-    ) extends Parameter {
+  case class QueryParameter(
+      `type`: Option[String] = None,
+      $ref: Option[String] = None,
+      format: Option[String] = None,
+      collectionFormat: Option[String] = None,
+      items: Option[Property] = None,
+      defaultValue: Option[String] = None,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty,
+      isArray: Boolean = false,
+      enums: List[String] = List.empty
+  ) extends Parameter {
 
     override val in = Some("query")
 
     import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
-    @JsonPropertyOrder(Array("name", "in", "description", "required", "type", "$ref", "items", "collectionFormat", "default"))
+    @JsonPropertyOrder(
+      Array(
+        "name",
+        "in",
+        "description",
+        "required",
+        "type",
+        "$ref",
+        "items",
+        "collectionFormat",
+        "default"
+      )
+    )
     private class QueryRefParameter extends jm.parameters.QueryParameter {
       protected var $ref: String = _
 
@@ -647,7 +640,7 @@ object models {
       }
 
       def get$ref() = $ref
-      def set$ref($ref: String) : Unit = { this.$ref = $ref }
+      def set$ref($ref: String): Unit = this.$ref = $ref
     }
 
     def toJModel: jm.parameters.Parameter = {
@@ -669,15 +662,14 @@ object models {
     }
   }
 
-  case class RefParameter
-    (
-      ref              : String
-    , name             : Option[String]   = None
-    , description      : Option[String]   = None
-    , required         : Boolean          = false
-    , access           : Option[String]   = None
-    , vendorExtensions : Map[String, Any] = Map.empty
-    ) extends Parameter {
+  case class RefParameter(
+      ref: String,
+      name: Option[String] = None,
+      description: Option[String] = None,
+      required: Boolean = false,
+      access: Option[String] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) extends Parameter {
 
     override val in = None
 
@@ -703,15 +695,14 @@ object models {
     def toJModel: jm.properties.Property
   }
 
-  case class AbstractProperty
-    (
-      `type`      : String         = null
-    , $ref        : Option[String] = None
-    , required    : Boolean        = false
-    , title       : Option[String] = None
-    , description : Option[String] = None
-    , format      : Option[String] = None
-    ) extends Property {
+  case class AbstractProperty(
+      `type`: String = null,
+      $ref: Option[String] = None,
+      required: Boolean = false,
+      title: Option[String] = None,
+      description: Option[String] = None,
+      format: Option[String] = None
+  ) extends Property {
 
     class RefProperty extends jm.properties.AbstractProperty {
       protected var $ref: String = _
@@ -722,7 +713,7 @@ object models {
       }
 
       def get$ref() = $ref
-      def set$ref($ref: String) : Unit = { this.$ref = $ref }
+      def set$ref($ref: String): Unit = this.$ref = $ref
     }
 
     def withRequired(required: Boolean): AbstractProperty =
@@ -740,13 +731,12 @@ object models {
     }
   }
 
-  case class ObjectProperty
-  (
-    required    : Boolean        = false
-    , title       : Option[String] = None
-    , description : Option[String] = None
-    , format      : Option[String] = None
-    , properties  : Map[String, Property] = Map.empty
+  case class ObjectProperty(
+      required: Boolean = false,
+      title: Option[String] = None,
+      description: Option[String] = None,
+      format: Option[String] = None,
+      properties: Map[String, Property] = Map.empty
   ) extends Property {
 
     override val `type` = "object"
@@ -766,13 +756,12 @@ object models {
     }
   }
 
-  case class MapProperty
-  (
-      additionalProperties  : Property
-    , required              : Boolean        = false
-    , title                 : Option[String] = None
-    , description           : Option[String] = None
-    , format                : Option[String] = None
+  case class MapProperty(
+      additionalProperties: Property,
+      required: Boolean = false,
+      title: Option[String] = None,
+      description: Option[String] = None,
+      format: Option[String] = None
   ) extends Property {
 
     override val `type` = "object"
@@ -792,15 +781,14 @@ object models {
     }
   }
 
-  case class ArrayProperty
-    (
-      items       : Property
-    , uniqueItems : Boolean        = false
-    , required    : Boolean        = true
-    , title       : Option[String] = None
-    , description : Option[String] = None
-    , format      : Option[String] = None
-    ) extends Property {
+  case class ArrayProperty(
+      items: Property,
+      uniqueItems: Boolean = false,
+      required: Boolean = true,
+      title: Option[String] = None,
+      description: Option[String] = None,
+      format: Option[String] = None
+  ) extends Property {
 
     override val `type` = "array"
 
@@ -819,14 +807,13 @@ object models {
     }
   }
 
-  case class RefProperty
-    (
-      ref         : String
-    , required    : Boolean        = false
-    , title       : Option[String] = None
-    , description : Option[String] = None
-    , format      : Option[String] = None
-    ) extends Property {
+  case class RefProperty(
+      ref: String,
+      required: Boolean = false,
+      title: Option[String] = None,
+      description: Option[String] = None,
+      format: Option[String] = None
+  ) extends Property {
 
     override val `type` = "ref"
 
@@ -843,18 +830,17 @@ object models {
     }
   }
 
-  case class StringProperty
-    (
-      title       : Option[String] = None
-    , description : Option[String] = None
-    , format      : Option[String] = None
-    , required: Boolean = false
-    , enums: Set[String]
-    , minLength: Option[Int] = None
-    , maxLength: Option[Int] = None
-    , pattern: Option[String] = None
-    , default: Option[String] = None
-    ) extends Property {
+  case class StringProperty(
+      title: Option[String] = None,
+      description: Option[String] = None,
+      format: Option[String] = None,
+      required: Boolean = false,
+      enums: Set[String],
+      minLength: Option[Int] = None,
+      maxLength: Option[Int] = None,
+      pattern: Option[String] = None,
+      default: Option[String] = None
+  ) extends Property {
     override val `type` = "string"
 
     def withRequired(required: Boolean): StringProperty =
@@ -875,13 +861,12 @@ object models {
     }
   }
 
-  case class Tag
-    (
-      name: String
-    , description: Option[String]        = None
-    , externalDocs: Option[ExternalDocs] = None
-    , vendorExtensions: Map[String, Any] = Map.empty
-    ) {
+  case class Tag(
+      name: String,
+      description: Option[String] = None,
+      externalDocs: Option[ExternalDocs] = None,
+      vendorExtensions: Map[String, Any] = Map.empty
+  ) {
 
     def toJModel: jm.Tag = {
       val tag = new jm.Tag
@@ -893,11 +878,10 @@ object models {
     }
   }
 
-  case class ExternalDocs
-    (
-      description : String
-    , url         : String
-    ) {
+  case class ExternalDocs(
+      description: String,
+      url: String
+  ) {
 
     def toJModel: jm.ExternalDocs = {
       val ed = new jm.ExternalDocs
