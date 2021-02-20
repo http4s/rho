@@ -9,7 +9,9 @@ import org.http4s._
 import scala.collection.compat._
 
 /** CompileRoutes which accumulates routes and can build a `HttpRoutes` */
-final class RoutesBuilder[F[_]: Defer: Monad] private(internalRoutes: VectorBuilder[RhoRoute.Tpe[F]]) extends CompileRoutes[F, RhoRoute.Tpe[F]] {
+final class RoutesBuilder[F[_]: Defer: Monad] private (
+    internalRoutes: VectorBuilder[RhoRoute.Tpe[F]])
+    extends CompileRoutes[F, RhoRoute.Tpe[F]] {
 
   /** Turn the accumulated routes into an `HttpRoutes`
     *
@@ -47,6 +49,7 @@ final class RoutesBuilder[F[_]: Defer: Monad] private(internalRoutes: VectorBuil
 }
 
 object RoutesBuilder {
+
   /** Constructor method for new `RoutesBuilder` instances */
   def apply[F[_]: Defer: Monad](): RoutesBuilder[F] = apply(Seq.empty)
 

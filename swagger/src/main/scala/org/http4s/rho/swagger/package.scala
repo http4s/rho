@@ -16,16 +16,21 @@ package object swagger {
   case class RouteTags(tags: List[String]) extends Metadata
 
   /** Scopes carrier for specific routes */
-  case class RouteSecurityScope(definitions: Map[String, List[String]]) extends SecurityScopesMetaData
+  case class RouteSecurityScope(definitions: Map[String, List[String]])
+      extends SecurityScopesMetaData
 
   /** Add support for adding security scopes before a route using the ^^ operator */
   implicit class SecOps[F[_]](definitions: Map[String, List[String]]) {
     def ^^(method: Method): PathBuilder[F, HNil] = ^^(new PathBuilder[F, HNil](method, PathEmpty))
 
-    def ^^(route: RhoRoute.Tpe[F]): PathBuilder[F, HNil] = new PathBuilder(route.method, PathAST.MetaCons(route.path, RouteSecurityScope(definitions)))
+    def ^^(route: RhoRoute.Tpe[F]): PathBuilder[F, HNil] =
+      new PathBuilder(route.method, PathAST.MetaCons(route.path, RouteSecurityScope(definitions)))
 
-    def ^^[T<: HList](builder: PathBuilder[F, T]): PathBuilder[F, T] =
-      new PathBuilder(builder.method, PathAST.MetaCons(builder.path, RouteSecurityScope(definitions)))
+    def ^^[T <: HList](builder: PathBuilder[F, T]): PathBuilder[F, T] =
+      new PathBuilder(
+        builder.method,
+        PathAST.MetaCons(builder.path, RouteSecurityScope(definitions))
+      )
   }
 
   implicit class ReflectionHelpers[F[_]](t: Type) {
@@ -79,7 +84,8 @@ package object swagger {
     def showType(typeName: String, typeArgumentNames: Seq[String]): String
   }
 
-  class ShowTypeWithBrackets(openingBracket: String, separator: String, closingBracket: String) extends ShowType{
+  class ShowTypeWithBrackets(openingBracket: String, separator: String, closingBracket: String)
+      extends ShowType {
     override def showType(typeName: String, typeArgumentNames: Seq[String]): String =
       typeName + {
         if (typeArgumentNames.isEmpty) ""
@@ -90,8 +96,8 @@ package object swagger {
   val DefaultShowType = new ShowTypeWithBrackets("«", ",", "»")
 
   val DefaultSwaggerFormats: SwaggerFormats = {
-    val ignoreExistentialType: PartialFunction[Type, Set[Model]] = {
-      case ExistentialType(_, _) => Set.empty
+    val ignoreExistentialType: PartialFunction[Type, Set[Model]] = { case ExistentialType(_, _) =>
+      Set.empty
     }
 
     SwaggerFormats(

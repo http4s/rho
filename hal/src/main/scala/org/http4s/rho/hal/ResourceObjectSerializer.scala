@@ -37,9 +37,10 @@ object ResourceObjectSerializer {
     root
   }
 
-  private[hal] def serializeEmbedded(embedded: Embedded[_])(implicit jsonFormats: Formats): Option[JField] = {
+  private[hal] def serializeEmbedded(embedded: Embedded[_])(implicit
+      jsonFormats: Formats): Option[JField] = {
     val embeddedAsFields = for {
-      fieldOption <- embedded map serializeEmbeddedDef
+      fieldOption <- embedded.map(serializeEmbeddedDef)
       field <- fieldOption
     } yield field
     if (embeddedAsFields.isEmpty)
@@ -48,7 +49,8 @@ object ResourceObjectSerializer {
       Some(JField("_embedded", JObject(embeddedAsFields.toList)))
   }
 
-  private[hal] def serializeEmbeddedDef(embeddedDef: EmbeddedDef[_])(implicit jsonFormats: Formats): Option[JField] =
+  private[hal] def serializeEmbeddedDef(embeddedDef: EmbeddedDef[_])(implicit
+      jsonFormats: Formats): Option[JField] =
     serializeSingleOrMany(embeddedDef)(ResourceObjectSerializer.serialize)
 
   private[hal] def serializeLinkDef(linkDef: LinkObjectDef): Option[JField] =
@@ -56,7 +58,7 @@ object ResourceObjectSerializer {
 
   private[hal] def serializeLinks(links: Links): Option[JField] = {
     val linksAsFields = for {
-      fieldOption <- links map serializeLinkDef
+      fieldOption <- links.map(serializeLinkDef)
       field <- fieldOption
     } yield field
     if (linksAsFields.isEmpty)
@@ -65,11 +67,12 @@ object ResourceObjectSerializer {
       Some(JField("_links", JObject(linksAsFields.toList)))
   }
 
-  private[hal] def serializeSingleOrMany[T](entry: (String, Either[T, Seq[T]]))(f: T => JValue): Option[JField] = entry._2 match {
+  private[hal] def serializeSingleOrMany[T](entry: (String, Either[T, Seq[T]]))(
+      f: T => JValue): Option[JField] = entry._2 match {
     case Left(v) =>
       Some(JField(entry._1, f(v)))
     case Right(vs) =>
-      val xs = vs map f
+      val xs = vs.map(f)
       Some(JField(entry._1, JArray(xs.toList)))
     case _ =>
       None
@@ -77,9 +80,12 @@ object ResourceObjectSerializer {
 
 }
 
-class ResourceObjectSerializer extends CustomSerializer[ResourceObject[_, _]](format => (
-  PartialFunction.empty,
-  {
-    case r: ResourceObject[_, _] =>
-      ResourceObjectSerializer.serialize(r)(format)
-  }))
+class ResourceObjectSerializer
+    extends CustomSerializer[ResourceObject[_, _]](format =>
+      (
+        PartialFunction.empty,
+        { case r: ResourceObject[_, _] =>
+          ResourceObjectSerializer.serialize(r)(format)
+        }
+      )
+    )

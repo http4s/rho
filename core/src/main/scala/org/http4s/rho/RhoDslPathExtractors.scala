@@ -11,34 +11,30 @@ trait RhoDslPathExtractors[F[_]] {
 
   implicit def pathMatch(s: String): TypedPath[F, HNil] = TypedPath(PathMatch(s))
 
-  /**
-    * Provides 'pathVar syntax for String path variables (Scala 2.12 only)
+  /** Provides 'pathVar syntax for String path variables (Scala 2.12 only)
     */
   implicit def pathCapture(s: Symbol): TypedPath[F, String :: HNil] =
     TypedPath(PathCapture(s.name, None, StringParser.strParser, stringTag))
 
-  /**
-    * Provides pv"pathVarName" syntax for String path variables as an alternative for 'pathVar (Symbol) syntax which was removed in Scala 2.13.
+  /** Provides pv"pathVarName" syntax for String path variables as an alternative for 'pathVar (Symbol) syntax which was removed in Scala 2.13.
     */
   implicit def pathCapture(sc: StringContext): PathCaptureStringContext[F] =
     new PathCaptureStringContext[F](sc)
 
-  /**
-    * Defines a path variable of a URI that should be bound to a route definition
+  /** Defines a path variable of a URI that should be bound to a route definition
     */
   def pathVar[T](implicit parser: StringParser[F, T], m: TypeTag[T]): TypedPath[F, T :: HNil] =
     pathVar(m.tpe.toString.toLowerCase)(parser)
 
-  /**
-    * Defines a path variable of a URI that should be bound to a route definition
+  /** Defines a path variable of a URI that should be bound to a route definition
     */
   def pathVar[T](id: String)(implicit parser: StringParser[F, T]): TypedPath[F, T :: HNil] =
     TypedPath(PathCapture[F](id, None, parser, stringTag))
 
-  /**
-    * Defines a path variable of a URI with description that should be bound to a route definition
+  /** Defines a path variable of a URI with description that should be bound to a route definition
     */
-  def pathVar[T](id: String, description: String)(implicit parser: StringParser[F, T]): TypedPath[F, T :: HNil] =
+  def pathVar[T](id: String, description: String)(implicit
+      parser: StringParser[F, T]): TypedPath[F, T :: HNil] =
     TypedPath(PathCapture[F](id, Some(description), parser, stringTag))
 
 }
@@ -49,6 +45,8 @@ object RhoDslPathExtractors {
 
   class PathCaptureStringContext[F[_]](val sc: StringContext) extends AnyVal {
     def pv(): TypedPath[F, String :: HNil] =
-      TypedPath[F, String :: HNil](PathCapture(sc.parts.mkString, None, StringParser.strParser, stringTag))
+      TypedPath[F, String :: HNil](
+        PathCapture(sc.parts.mkString, None, StringParser.strParser, stringTag)
+      )
   }
 }

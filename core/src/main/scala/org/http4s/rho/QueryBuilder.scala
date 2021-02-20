@@ -21,32 +21,33 @@ import scala.reflect.runtime.universe
   * @tparam T The HList representation of the types the route expects to extract
   *           from a `Request`.
   */
-case class QueryBuilder[F[_], T <: HList](method: Method,
-                                          path: PathRule,
-                                          rules: RequestRule[F])
-  extends RouteExecutable[F, T]
-  with Decodable[F, T, Nothing]
-  with HeaderAppendable[F, T]
-  with UriConvertible[F]
-  with RoutePrependable[F, QueryBuilder[F, T]]
-{
+case class QueryBuilder[F[_], T <: HList](method: Method, path: PathRule, rules: RequestRule[F])
+    extends RouteExecutable[F, T]
+    with Decodable[F, T, Nothing]
+    with HeaderAppendable[F, T]
+    with UriConvertible[F]
+    with RoutePrependable[F, QueryBuilder[F, T]] {
+
   /** Capture a query rule
     *
     * @param query Query capture rule.
     * @tparam T1 types of elements captured by query.
     * @return a [[QueryBuilder]] with which to continue building the route.
     */
-  def &[T1 <: HList](query: TypedQuery[F, T1])(implicit prep: Prepend[T1, T]): QueryBuilder[F, prep.Out] =
+  def &[T1 <: HList](query: TypedQuery[F, T1])(implicit
+      prep: Prepend[T1, T]): QueryBuilder[F, prep.Out] =
     QueryBuilder(method, path, AndRule(rules, query.rule))
 
   override def /:(prefix: TypedPath[F, HNil]): QueryBuilder[F, T] =
     new QueryBuilder[F, T](method, PathAnd(prefix.rule, path), rules)
-  
+
   override type HeaderAppendResult[T <: HList] = Router[F, T]
 
-  override def makeRoute(action: Action[F, T]): RhoRoute[F, T] = RhoRoute(Router(method, path, rules), action)
+  override def makeRoute(action: Action[F, T]): RhoRoute[F, T] =
+    RhoRoute(Router(method, path, rules), action)
 
-  override def >>>[T1 <: HList](rule: TypedHeader[F, T1])(implicit prep1: Prepend[T1, T]): Router[F, prep1.Out] =
+  override def >>>[T1 <: HList](rule: TypedHeader[F, T1])(implicit
+      prep1: Prepend[T1, T]): Router[F, prep1.Out] =
     Router(method, path, AndRule(rules, rule.rule))
 
   /** Decode the body using the `EntityDecoder`
@@ -56,6 +57,8 @@ case class QueryBuilder[F[_], T <: HList](method: Method,
     * @param decoder `EntityDecoder` to utilize for decoding the body.
     * @tparam R2 type of the result.
     */
-  override def decoding[R2 >: Nothing](decoder: EntityDecoder[F, R2])(implicit F: Functor[F], t: universe.TypeTag[R2]): CodecRouter[F, T, R2] =
+  override def decoding[R2 >: Nothing](decoder: EntityDecoder[F, R2])(implicit
+      F: Functor[F],
+      t: universe.TypeTag[R2]): CodecRouter[F, T, R2] =
     CodecRouter(>>>(TypedHeader[F, HNil](EmptyRule[F]())), decoder)
 }

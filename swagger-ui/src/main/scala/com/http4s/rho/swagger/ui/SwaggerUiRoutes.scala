@@ -8,13 +8,16 @@ import org.http4s.rho.bits.PathAST.CaptureTail
 import org.http4s.rho.swagger.ui.BuildInfo
 import org.http4s._
 
-class SwaggerUiRoutes[F[_] : Sync : ContextShift](swaggerUiPath: String,
-                                                    swaggerUiResourcesPath: String,
-                                                    indexHtml: String,
-                                                    blocker: Blocker) extends RhoRoutes[F] {
+class SwaggerUiRoutes[F[_]: Sync: ContextShift](
+    swaggerUiPath: String,
+    swaggerUiResourcesPath: String,
+    indexHtml: String,
+    blocker: Blocker)
+    extends RhoRoutes[F] {
 
   private val htmlEncoder: EntityEncoder[F, String] =
-    EntityEncoder.stringEncoder[F]
+    EntityEncoder
+      .stringEncoder[F]
       .withContentType(`Content-Type`(MediaType.text.html).withCharset(org.http4s.Charset.`UTF-8`))
 
   // Serving the html directly here would break all relative paths, so we redirect.
@@ -38,8 +41,12 @@ class SwaggerUiRoutes[F[_] : Sync : ContextShift](swaggerUiPath: String,
 
 object SwaggerUiRoutes {
 
-  def apply[F[_] : Sync : ContextShift](swaggerUiPath: String, swaggerSpecRelativePath: String, blocker: Blocker): SwaggerUiRoutes[F] = {
-    val swaggerUiResourcesPath = s"/META-INF/resources/webjars/swagger-ui/${BuildInfo.swaggerUiVersion}/"
+  def apply[F[_]: Sync: ContextShift](
+      swaggerUiPath: String,
+      swaggerSpecRelativePath: String,
+      blocker: Blocker): SwaggerUiRoutes[F] = {
+    val swaggerUiResourcesPath =
+      s"/META-INF/resources/webjars/swagger-ui/${BuildInfo.swaggerUiVersion}/"
     val indexHtml = defaultIndexHtml(swaggerSpecRelativePath)
     new SwaggerUiRoutes[F](swaggerUiPath, swaggerUiResourcesPath, indexHtml, blocker)
   }

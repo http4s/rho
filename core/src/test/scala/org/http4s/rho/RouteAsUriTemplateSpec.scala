@@ -18,18 +18,26 @@ class RouteAsUriTemplateSpec extends Specification {
     }
     "convert to /hello/world" in {
       val route: PathBuilder[IO, _ <: HList] = GET / "hello" / "world"
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path = List(PathElm("hello"), PathElm("world")))
+      )
     }
     "convert to /hello{/world}" in {
       val route: PathBuilder[IO, _ <: HList] = GET / "hello" / pv"world"
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathExp("world"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path = List(PathElm("hello"), PathExp("world")))
+      )
     }
     "convert to /hello/world/next/time" in {
       val route1 = "hello" / "world"
       val route2 = "next" / "time"
       val route = GET / route1 / route2
 
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"), PathElm("next"), PathElm("time"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path =
+          List(PathElm("hello"), PathElm("world"), PathElm("next"), PathElm("time"))
+        )
+      )
     }
     "convert to {/id}" in {
       val route: PathBuilder[IO, _ <: HList] = GET / pathVar[Int]("id")
@@ -42,7 +50,9 @@ class RouteAsUriTemplateSpec extends Specification {
     }
     "convert to /orders{/id}/items" in {
       val route: PathBuilder[IO, _ <: HList] = GET / "orders" / pathVar[Int]("id") / "items"
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("orders"), PathExp("id"), PathElm("items"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path = List(PathElm("orders"), PathExp("id"), PathElm("items")))
+      )
     }
   }
 
@@ -85,7 +95,8 @@ class RouteAsUriTemplateSpec extends Specification {
       requestLine.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
     }
     "convert to /hello{/world}{?start}{&limit}" in {
-      val requestLine = "hello" / pathVar[String]("world") +? param[Int]("start") & param[Int]("limit")
+      val requestLine =
+        "hello" / pathVar[String]("world") +? param[Int]("start") & param[Int]("limit")
       val p = List(PathElm("hello"), PathExp("world"))
       val q = List(ParamExp("start"), ParamExp("limit"))
       requestLine.asUriTemplate(request).get must equalTo(UriTemplate(path = p, query = q))
@@ -99,18 +110,26 @@ class RouteAsUriTemplateSpec extends Specification {
     }
     "convert to /hello/world" in {
       val route = "hello" / "world"
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path = List(PathElm("hello"), PathElm("world")))
+      )
     }
     "convert to /hello{/world}" in {
       val route = "hello" / pv"world"
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathExp("world"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path = List(PathElm("hello"), PathExp("world")))
+      )
     }
     "convert to /hello/world/next/time" in {
       val route1 = "hello" / "world"
       val route2 = "next" / "time"
       val route = route1 && route2
 
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("hello"), PathElm("world"), PathElm("next"), PathElm("time"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path =
+          List(PathElm("hello"), PathElm("world"), PathElm("next"), PathElm("time"))
+        )
+      )
     }
     "convert to {/id}" in {
       val route = pathVar[Int]("id")
@@ -123,7 +142,9 @@ class RouteAsUriTemplateSpec extends Specification {
     }
     "convert to /orders{/id}/items" in {
       val route = "orders" / pathVar[Int]("id") / "items"
-      route.asUriTemplate(request).get must equalTo(UriTemplate(path = List(PathElm("orders"), PathExp("id"), PathElm("items"))))
+      route.asUriTemplate(request).get must equalTo(
+        UriTemplate(path = List(PathElm("orders"), PathExp("id"), PathElm("items")))
+      )
     }
   }
 

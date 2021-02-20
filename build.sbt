@@ -17,7 +17,8 @@ lazy val rho = project
 lazy val `rho-core` = project
   .in(file("core"))
   .settings(mimaConfiguration)
-  .settings(buildSettings ++ Seq(
+  .settings(buildSettings)
+  .settings(
     Compile / unmanagedSourceDirectories ++= {
       val baseDir = baseDirectory.value
 
@@ -29,7 +30,7 @@ lazy val `rho-core` = project
       }
     },
     libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2")
-  ): _*)
+  )
 
 lazy val `rho-hal` = project
   .in(file("hal"))
@@ -61,7 +62,7 @@ lazy val docs = project
   .enablePlugins(ScalaUnidocPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .enablePlugins(GhpagesPlugin)
-  .settings(Seq(
+  .settings(
     dontPublish,
     description := "Api Documentation",
     autoAPIMappings := true,
@@ -85,20 +86,19 @@ lazy val docs = project
         (f, d) <- (mappings in (ScalaUnidoc, packageDoc)).value
       } yield (f, s"api/$major.$minor/$d")
     }
-  ))
+  )
   .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
 
 lazy val `rho-examples` = project
   .in(file("examples"))
   .disablePlugins(MimaPlugin)
+  .settings(buildSettings)
+  .settings(Revolver.settings)
   .settings(
-    buildSettings ++
-      Revolver.settings ++
-      Seq(
-        exampleDeps,
-        libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
-        dontPublish
-      ): _*)
+    exampleDeps,
+    libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
+    dontPublish
+  )
   .dependsOn(`rho-swagger`, `rho-swagger-ui`, `rho-hal`)
 
 lazy val compilerFlags = Seq(
@@ -112,17 +112,16 @@ lazy val compilerFlags = Seq(
   "-Xfatal-warnings"
 )
 
-def versionSpecificEnabledFlags(version: String) = (CrossVersion.partialVersion(version) match {
+def versionSpecificEnabledFlags(version: String) = CrossVersion.partialVersion(version) match {
   case Some((2, 13)) => Seq.empty[String]
   case _ => Seq("-Ypartial-unification")
-})
+}
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
 
 lazy val license = licenses in ThisBuild := Seq(
-  "Apache License, Version 2.0" -> url(
-    "http://www.apache.org/licenses/LICENSE-2.0.txt")
+  "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
 )
 
 lazy val buildSettings = publishing ++
@@ -152,16 +151,12 @@ scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-wa
 
 lazy val publishing = Seq(
   extras,
-  publishArtifact in (ThisBuild, Test) := false,
   // Don't publish root pom.  It's not needed.
   packagedArtifacts in LocalRootProject := Map.empty,
   publishArtifact in Test := false,
   scmInfo in ThisBuild := {
     val base = "github.com/http4s/rho"
-    Some(
-      ScmInfo(url(s"https://$base"),
-              s"scm:git:https://$base",
-              Some(s"scm:git:git@$base")))
+    Some(ScmInfo(url(s"https://$base"), s"scm:git:https://$base", Some(s"scm:git:git@$base")))
   }
 )
 

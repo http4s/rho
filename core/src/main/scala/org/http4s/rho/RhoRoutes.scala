@@ -27,8 +27,7 @@ class RhoRoutes[F[_]: Defer: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vecto
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances[F]
     with RoutePrependable[F, RhoRoutes[F]]
-    with RhoDsl[F]
-{
+    with RhoDsl[F] {
   final private val routesBuilder = RoutesBuilder[F](routes)
 
   final protected val logger = getLogger
@@ -41,7 +40,9 @@ class RhoRoutes[F[_]: Defer: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vecto
     * @return A new [[RhoRoutes]] that contains the routes of the other service appended
     *         the the routes contained in this service.
     */
-  final def and(other: RhoRoutes[F]): RhoRoutes[F] = new RhoRoutes(this.getRoutes ++ other.getRoutes)
+  final def and(other: RhoRoutes[F]): RhoRoutes[F] = new RhoRoutes(
+    this.getRoutes ++ other.getRoutes
+  )
 
   /** Get a snapshot of the collection of [[RhoRoute]]'s accumulated so far */
   final def getRoutes: Seq[RhoRoute[F, _ <: HList]] = routesBuilder.routes()
@@ -52,7 +53,6 @@ class RhoRoutes[F[_]: Defer: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vecto
 
   final override def toString: String = s"RhoRoutes(${routesBuilder.routes().toString()})"
 
-  final override def /:(prefix: TypedPath[F, HNil]): RhoRoutes[F] = {
-    new RhoRoutes(routesBuilder.routes().map { prefix /: _ })
-  }
+  final override def /:(prefix: TypedPath[F, HNil]): RhoRoutes[F] =
+    new RhoRoutes(routesBuilder.routes().map(prefix /: _))
 }

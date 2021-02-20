@@ -9,13 +9,14 @@ import net.sf.uadetector.internal.data.domain.{
   Browser => UBrowser,
   BrowserPattern => UBrowserPattern,
   BrowserType => UBrowserType,
-  OperatingSystem => UOperatingSystem}
+  OperatingSystem => UOperatingSystem
+}
 
 import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Seq
 
 // --
-// Do not take this implementation too serious. It is only there to have some 
+// Do not take this implementation too serious. It is only there to have some
 // resources to play around through REST with JSON HAL
 // --
 
@@ -71,8 +72,8 @@ class UADetectorDatabase(val dataStore: DataStore) extends BusinessLayer {
 
   private def browserPatterns: List[BrowserPattern] =
     data.getBrowserPatterns.asScala.foldLeft(List[BrowserPattern]()) { (acc, e) =>
-      val ps = e._2.asScala.map {
-        p => toBrowserPattern(p)
+      val ps = e._2.asScala.map { p =>
+        toBrowserPattern(p)
       }.toList
       ps ::: acc
     }

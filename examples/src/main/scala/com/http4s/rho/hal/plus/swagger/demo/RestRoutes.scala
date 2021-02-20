@@ -51,19 +51,21 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
 
   val browserPatternsById = browsers / id / "patterns"
   GET / browserPatternsById |>> { (request: Request[F], id: Int) =>
-    val found = for { patterns <- businessLayer.findBrowserPatternsByBrowserId(id) }
-      yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build())
+    val found = for {
+      patterns <- businessLayer.findBrowserPatternsByBrowserId(id)
+    } yield Ok(browserPatternsAsResource(request, 0, Int.MaxValue, patterns, patterns.size).build())
 
     found.getOrElse(NotFound(warning(s"Browser $id not found")))
   }
 
   val browserPatterns = "browser-patterns"
-  GET / browserPatterns +? firstResult & maxResults |>> { (request: Request[F], first: Int, max: Int) =>
-    val patterns = businessLayer.findBrowserPatterns(first, max)
-    val total = businessLayer.countBrowsers
-    val hal = browserPatternsAsResource(request, first, max, patterns, total)
+  GET / browserPatterns +? firstResult & maxResults |>> {
+    (request: Request[F], first: Int, max: Int) =>
+      val patterns = businessLayer.findBrowserPatterns(first, max)
+      val total = businessLayer.countBrowsers
+      val hal = browserPatternsAsResource(request, first, max, patterns, total)
 
-    Ok(hal.build())
+      Ok(hal.build())
   }
 
   val browserPatternById = browserPatterns / id
@@ -104,23 +106,25 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
   }
 
   val browsersByBrowserTypeId = browserTypes / id / "browsers"
-  GET / browsersByBrowserTypeId +? firstResult & maxResults |>> { (request: Request[F], id: Int, first: Int, max: Int) =>
-    val browsers = businessLayer.findBrowsersByBrowserTypeId(id, first, max)
-    val total = businessLayer.countBrowsersByBrowserTypeId(id)
+  GET / browsersByBrowserTypeId +? firstResult & maxResults |>> {
+    (request: Request[F], id: Int, first: Int, max: Int) =>
+      val browsers = businessLayer.findBrowsersByBrowserTypeId(id, first, max)
+      val total = businessLayer.countBrowsersByBrowserTypeId(id)
 
-    if (browsers.nonEmpty)
-      Ok(browsersAsResource(request, first, max, browsers, total).build())
-    else
-      NotFound(warning(s"No browsers for type $id found"))
+      if (browsers.nonEmpty)
+        Ok(browsersAsResource(request, first, max, browsers, total).build())
+      else
+        NotFound(warning(s"No browsers for type $id found"))
   }
 
   val operatingSystems = "operating-systems"
-  GET / operatingSystems +? firstResult & maxResults |>> { (request: Request[F], first: Int, max: Int) =>
-    val configurations = businessLayer.findOperatingSystems(first, max)
-    val total = businessLayer.countOperatingSystems
-    val hal = operatingSystemsAsResource(request, first, max, configurations, total)
+  GET / operatingSystems +? firstResult & maxResults |>> {
+    (request: Request[F], first: Int, max: Int) =>
+      val configurations = businessLayer.findOperatingSystems(first, max)
+      val total = businessLayer.countOperatingSystems
+      val hal = operatingSystemsAsResource(request, first, max, configurations, total)
 
-    Ok(hal.build())
+      Ok(hal.build())
   }
 
   val operatingSystemById = operatingSystems / id
@@ -152,7 +156,15 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     val operatingSystems = businessLayer.findOperatingSystemsByBrowserId(id)
 
     if (operatingSystems.nonEmpty)
-      Ok(operatingSystemsAsResource(request, 0, Int.MaxValue, operatingSystems, operatingSystems.size).build())
+      Ok(
+        operatingSystemsAsResource(
+          request,
+          0,
+          Int.MaxValue,
+          operatingSystems,
+          operatingSystems.size
+        ).build()
+      )
     else
       NotFound(warning(s"No operating systems for browser $id found"))
   }
@@ -161,16 +173,24 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     val b = new ResObjBuilder[Nothing, Nothing]()
     b.link("self", request.uri)
     for (uri <- browsers.asUri(request)) b.link(browsers, uri.toString, "Lists browsers")
-    for (uri <- browserPatterns.asUri(request)) b.link(browserPatterns, uri.toString, "Lists browser patterns")
-    for (uri <- browserTypes.asUri(request)) b.link(browserTypes, uri.toString, "Lists browser types")
-    for (uri <- operatingSystems.asUri(request)) b.link(operatingSystems, uri.toString, "Lists operating systems")
+    for (uri <- browserPatterns.asUri(request))
+      b.link(browserPatterns, uri.toString, "Lists browser patterns")
+    for (uri <- browserTypes.asUri(request))
+      b.link(browserTypes, uri.toString, "Lists browser types")
+    for (uri <- operatingSystems.asUri(request))
+      b.link(operatingSystems, uri.toString, "Lists operating systems")
 
     Ok(b.build())
   }
 
   // # JSON HAL helpers
 
-  def browsersAsResource(request: Request[F], first: Int, max: Int, browsers: Seq[Browser], total: Int): ResObjBuilder[(String, Long), Browser] = {
+  def browsersAsResource(
+      request: Request[F],
+      first: Int,
+      max: Int,
+      browsers: Seq[Browser],
+      total: Int): ResObjBuilder[(String, Long), Browser] = {
     val self = request.uri
     val hal = new ResObjBuilder[(String, Long), Browser]()
     hal.link("self", selfWithFirstAndMax(self, first, max))
@@ -189,7 +209,9 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     hal.resources("browsers", res.toList)
   }
 
-  def browserAsResourceObject(browser: Browser, request: Request[F]): ResObjBuilder[Browser, Nothing] = {
+  def browserAsResourceObject(
+      browser: Browser,
+      request: Request[F]): ResObjBuilder[Browser, Nothing] = {
     val b = new ResObjBuilder[Browser, Nothing]()
     for (tpl <- browserById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", browser.id).toUriIfPossible.get)
@@ -201,7 +223,12 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     b.content(browser)
   }
 
-  def browserPatternsAsResource(request: Request[F], first: Int, max: Int, browserPatterns: Seq[BrowserPattern], total: Int): ResObjBuilder[(String, Long), BrowserPattern] = {
+  def browserPatternsAsResource(
+      request: Request[F],
+      first: Int,
+      max: Int,
+      browserPatterns: Seq[BrowserPattern],
+      total: Int): ResObjBuilder[(String, Long), BrowserPattern] = {
     val self = request.uri
     val hal = new ResObjBuilder[(String, Long), BrowserPattern]()
     hal.link("self", selfWithFirstAndMax(self, first, max))
@@ -219,21 +246,27 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     hal.resources("browserPatterns", res.toList)
   }
 
-  def browserPatternAsResourceObject(browserPattern: BrowserPattern, request: Request[F]): ResObjBuilder[BrowserPattern, Nothing] = {
+  def browserPatternAsResourceObject(
+      browserPattern: BrowserPattern,
+      request: Request[F]): ResObjBuilder[BrowserPattern, Nothing] = {
     val b = new ResObjBuilder[BrowserPattern, Nothing]()
     for (tpl <- browserPatternById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", browserPattern.id).toUriIfPossible.get)
     b.content(browserPattern)
   }
 
-  def browserTypeAsResourceObject(browserType: BrowserType, request: Request[F]): ResObjBuilder[BrowserType, Nothing] = {
+  def browserTypeAsResourceObject(
+      browserType: BrowserType,
+      request: Request[F]): ResObjBuilder[BrowserType, Nothing] = {
     val b = new ResObjBuilder[BrowserType, Nothing]()
     for (tpl <- browserTypeById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", browserType.id).toUriIfPossible.get)
     b.content(browserType)
   }
 
-  def browserTypesAsResource(request: Request[F], browserTypes: Seq[BrowserType]): ResObjBuilder[Nothing, BrowserType] = {
+  def browserTypesAsResource(
+      request: Request[F],
+      browserTypes: Seq[BrowserType]): ResObjBuilder[Nothing, BrowserType] = {
     val self = request.uri
     val hal = new ResObjBuilder[Nothing, BrowserType]()
     hal.link("self", self)
@@ -244,7 +277,12 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     hal.resources("browserTypes", res.toList)
   }
 
-  def operatingSystemsAsResource(request: Request[F], first: Int, max: Int, operatingSystems: Seq[OperatingSystem], total: Int): ResObjBuilder[(String, Long), OperatingSystem] = {
+  def operatingSystemsAsResource(
+      request: Request[F],
+      first: Int,
+      max: Int,
+      operatingSystems: Seq[OperatingSystem],
+      total: Int): ResObjBuilder[(String, Long), OperatingSystem] = {
     val self = request.uri
     val hal = new ResObjBuilder[(String, Long), OperatingSystem]()
     hal.link("self", selfWithFirstAndMax(self, first, max))
@@ -262,25 +300,25 @@ class RestRoutes[F[+_]: Sync](val businessLayer: BusinessLayer) extends RhoRoute
     hal.resources("operatingSystems", res.toList)
   }
 
-  def operatingSystemAsResourceObject(operatingSystem: OperatingSystem, request: Request[F]): ResObjBuilder[OperatingSystem, Nothing] = {
+  def operatingSystemAsResourceObject(
+      operatingSystem: OperatingSystem,
+      request: Request[F]): ResObjBuilder[OperatingSystem, Nothing] = {
     val b = new ResObjBuilder[OperatingSystem, Nothing]()
     for (tpl <- operatingSystemById.asUriTemplate(request))
       b.link("self", tpl.expandPath("id", operatingSystem.id).toUriIfPossible.get)
     b.content(operatingSystem)
   }
 
-  def selfWithFirstAndMax(self: Uri, first: Int, max: Int): Uri = {
+  def selfWithFirstAndMax(self: Uri, first: Int, max: Int): Uri =
     if (!self.containsQueryParam(firstResult) && !self.containsQueryParam(maxResults)) self
     else self +? (firstResult, first) +? (maxResults, max)
-  }
 
   // use JSON messages if a non-successful HTTP status must be send
 
-  def message(text: String, `type`: MessageType): Message = {
+  def message(text: String, `type`: MessageType): Message =
     Message(text, `type`)
-  }
   def error(text: String): Message = message(text, Error)
-  def info(text: String):  Message = message(text, Info)
-  def warning(text: String):  Message = message(text, Warning)
+  def info(text: String): Message = message(text, Info)
+  def warning(text: String): Message = message(text, Warning)
 
 }
