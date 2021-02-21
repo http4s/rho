@@ -18,14 +18,14 @@ See the [tutorial](https://github.com/http4s/rho/blob/master/Rho.md), [wiki](htt
 
 ### Get more from your route definitions
 The primary goal of ρ is to provide an easy to use AST with which to build HTTP services which can be inspected to extract a variety of information including:
-* [Swagger documentation](http://swagger.wordnik.com/)
+* [Swagger documentation](http://swagger.io/)
 * HAL documentation
 
 Get ρ
 -----
 Rho artifacts are available at Maven Central and snapshots are available from the Sonatype repositories.
 
-Read the [Rho Scaladocs](http://rho.http4s.org)
+Read the [Rho Scaladocs](https://www.javadoc.io/doc/org.http4s/rho-core_2.13/latest/index.html)
 
 ```scala
 resolvers += Resolver.sonatypeRepo("snapshots")  // Only if you are using a -snapshot version
