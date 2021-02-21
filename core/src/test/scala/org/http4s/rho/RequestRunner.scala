@@ -3,6 +3,7 @@ package org.http4s.rho
 import cats.effect.IO
 import org.http4s._
 import org.http4s.HttpRoutes
+import cats.effect.unsafe.implicits.global
 
 /** Helper for collecting a the body from a `RhoRoutes` */
 trait RequestRunner {

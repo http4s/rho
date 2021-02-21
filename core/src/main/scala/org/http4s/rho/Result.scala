@@ -3,7 +3,7 @@ package rho
 
 import cats._
 import org.http4s.headers.`Content-Type`
-import _root_.io.chrisdavenport.vault._
+import org.typelevel.vault._
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[

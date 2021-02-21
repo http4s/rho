@@ -1,7 +1,7 @@
 package com.http4s.rho.swagger.demo
 
 import cats.Monad
-import cats.effect.Effect
+import cats.effect._
 import cats.implicits._
 import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
 import com.http4s.rho.swagger.demo.MyRoutes._
@@ -12,7 +12,7 @@ import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
 import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, Uri, headers}
 import shapeless.HNil
 
-class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F]) extends RhoRoutes[F] {
+class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F]) extends RhoRoutes[F] {
 
   import swaggerSyntax._
 
@@ -21,12 +21,12 @@ class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F]) extends RhoRoutes
       case Some(_) => // Cookie found, good to go
         None
       case None => // Didn't find cookie
-        Some(TemporaryRedirect(Uri(path = "/addcookie")).widen)
+        Some(TemporaryRedirect(Uri(path = Uri.Path.fromString("/addcookie"))).widen)
     }
   }
 
   "We don't want to have a real 'root' route anyway... " **
-    GET |>> TemporaryRedirect(Uri(path = "/swagger-ui"))
+    GET |>> TemporaryRedirect(Uri(path = Uri.Path.fromString("/swagger-ui")))
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = "hello" @@ GET / "hello"
@@ -52,7 +52,7 @@ class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F]) extends RhoRoutes
     }
 
   // Normally this would be part of the constructor since its creation is 'unsafe'
-  private val counterRef = cats.effect.concurrent.Ref.unsafe[F, Int](0)
+  private val counterRef = cats.effect.Ref.unsafe[F, Int](0)
 
   "This uses a simple counter for the number of times this route has been requested" **
     POST / "counter" |>> { () =>

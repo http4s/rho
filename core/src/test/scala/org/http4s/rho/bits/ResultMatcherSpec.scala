@@ -13,6 +13,7 @@ import shapeless.HList
 import scala.reflect.runtime.universe._
 
 class ResultMatcherSpec extends Specification {
+  import cats.effect.unsafe.implicits.global
 
   class TRhoRoutes[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty
@@ -115,10 +116,10 @@ class ResultMatcherSpec extends Specification {
       case class ModelB(name: String, id: Long)
 
       implicit def w1[F[_]: Applicative]: EntityEncoder[F, ModelA] =
-        EntityEncoder.simple[F, ModelA]()(_ => Chunk.bytes("A".getBytes))
+        EntityEncoder.simple[F, ModelA]()(_ => Chunk.array("A".getBytes))
 
       implicit def w2[F[_]: Applicative]: EntityEncoder[F, ModelB] =
-        EntityEncoder.simple[F, ModelB]()(_ => Chunk.bytes("B".getBytes))
+        EntityEncoder.simple[F, ModelB]()(_ => Chunk.array("B".getBytes))
 
       val srvc = new TRhoRoutes[IO] {
         GET / "foo" |>> { () =>
@@ -157,8 +158,8 @@ object Foo {
   case class FooB(name: String, id: Long)
 
   implicit def w1[F[_]: Applicative]: EntityEncoder[F, FooA] =
-    EntityEncoder.simple[F, FooA]()(_ => Chunk.bytes("A".getBytes))
+    EntityEncoder.simple[F, FooA]()(_ => Chunk.array("A".getBytes))
 
   implicit def w2[F[_]: Applicative]: EntityEncoder[F, FooB] =
-    EntityEncoder.simple[F, FooB]()(_ => Chunk.bytes("B".getBytes))
+    EntityEncoder.simple[F, FooB]()(_ => Chunk.array("B".getBytes))
 }

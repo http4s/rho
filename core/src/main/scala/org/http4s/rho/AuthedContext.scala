@@ -5,8 +5,8 @@ import cats.Monad
 import cats.data.{Kleisli, OptionT}
 import shapeless.{::, HNil}
 import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
-import _root_.io.chrisdavenport.vault._
 import cats.effect._
+import org.typelevel.vault.Key
 
 /** The [[AuthedContext]] provides a convenient way to define a RhoRoutes
   * which works with http4s authentication middleware.

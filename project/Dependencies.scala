@@ -3,7 +3,7 @@ import Keys._
 
 // format: off
 object Dependencies {
-  lazy val http4sVersion = "0.21.21"
+  lazy val http4sVersion = "1.0.0-M16"
   lazy val specs2Version = "4.10.6"
 
   val scala_213 = "2.13.4"

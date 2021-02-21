@@ -1,11 +1,11 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
 import cats.data.OptionT
-import cats.effect.{Blocker, ContextShift, Sync, Timer}
+import cats.effect.{Sync}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 
-class StaticContentService[F[_]: Sync: Timer: ContextShift](dsl: Http4sDsl[F], blocker: Blocker) {
+class StaticContentService[F[_]: Sync](dsl: Http4sDsl[F]) {
   import dsl._
 
   private val halUiDir = "/hal-browser"
@@ -17,8 +17,9 @@ class StaticContentService[F[_]: Sync: Timer: ContextShift](dsl: Http4sDsl[F], b
   def routes: HttpRoutes[F] = HttpRoutes[F] {
 
     // JSON HAL User Interface
-    case req if req.uri.path.startsWith("/js/") => fetchResource(halUiDir + req.pathInfo, req)
-    case req if req.uri.path.startsWith("/vendor/") => fetchResource(halUiDir + req.pathInfo, req)
+    case req if req.uri.path.startsWithString("/js/") => fetchResource(halUiDir + req.pathInfo, req)
+    case req if req.uri.path.startsWithString("/vendor/") =>
+      fetchResource(halUiDir + req.pathInfo, req)
     case req @ GET -> Root / "hal-ui" => fetchResource(halUiDir + "/browser.html", req)
 
     // Swagger User Interface
@@ -31,5 +32,5 @@ class StaticContentService[F[_]: Sync: Timer: ContextShift](dsl: Http4sDsl[F], b
   }
 
   private def fetchResource(path: String, req: Request[F]): OptionT[F, Response[F]] =
-    StaticFile.fromResource(path, blocker, Some(req))
+    StaticFile.fromResource(path, Some(req))
 }

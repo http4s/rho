@@ -40,7 +40,7 @@ object ResourceObjectBuilderSpec extends Specification {
 
     "create LinkObject from Uri" in {
       new ResourceObjectBuilder()
-        .link("self", Uri(path = "/some/where"))
+        .link("self", Uri(path = Uri.Path.fromString("/some/where")))
         .build() must equalTo(ResourceObject(List("self" -> Left(LinkObject("/some/where")))))
     }
 

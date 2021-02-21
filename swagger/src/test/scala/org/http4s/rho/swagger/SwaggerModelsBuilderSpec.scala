@@ -891,10 +891,10 @@ class SwaggerModelsBuilderSpec extends Specification {
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[F[_]: Applicative, A]: EntityEncoder[F, List[A]] =
-    EntityEncoder.simple[F, List[A]]()(_ => Chunk.bytes("A".getBytes))
+    EntityEncoder.simple[F, List[A]]()(_ => Chunk.array("A".getBytes))
 
   implicit def mapEntityEncoder[F[_]: Applicative, A, B]: EntityEncoder[F, Map[A, B]] =
-    EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.bytes("A".getBytes))
+    EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.array("A".getBytes))
 
   case class CsvFile()
 

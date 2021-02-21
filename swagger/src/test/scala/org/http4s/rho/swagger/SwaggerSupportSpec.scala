@@ -44,7 +44,7 @@ class SwaggerSupportSpec extends Specification {
     "Expose an API listing" in {
       val service = baseRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
@@ -55,7 +55,7 @@ class SwaggerSupportSpec extends Specification {
     "Support prefixed routes" in {
       val service =
         ("foo" /: baseRoutes).toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
@@ -79,7 +79,7 @@ class SwaggerSupportSpec extends Specification {
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
       val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
 
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
         parseJson(RRunner(httpRoutes.toRoutes()).checkOk(r)) \\ "paths"
@@ -89,7 +89,7 @@ class SwaggerSupportSpec extends Specification {
 
     "Support endpoints which end in a slash" in {
       val service = trailingSlashRoutes.toRoutes(createRhoMiddleware())
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
       val JObject(List((a, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
       a should_== "/foo/"
@@ -97,7 +97,7 @@ class SwaggerSupportSpec extends Specification {
 
     "Support endpoints which end in a slash being mixed with normal endpoints" in {
       val service = mixedTrailingSlashesRoutes.toRoutes(createRhoMiddleware())
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
       val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
         parseJson(RRunner(service).checkOk(r)) \\ "paths"
 
@@ -111,7 +111,7 @@ class SwaggerSupportSpec extends Specification {
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
       val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
 
       val JObject(
         List(
@@ -140,7 +140,7 @@ class SwaggerSupportSpec extends Specification {
     "Check metadata in API listing" in {
       val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
 
       val json = parseJson(RRunner(service).checkOk(r))
 
@@ -205,7 +205,7 @@ class SwaggerSupportSpec extends Specification {
         )
       )
 
-      val r = Request[IO](GET, Uri(path = "/swagger-test.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger-test.json")))
       val json = parseJson(RRunner(service).checkOk(r))
 
       val JString(icn) = json \ "info" \ "contact" \ "name"
@@ -239,7 +239,7 @@ class SwaggerSupportSpec extends Specification {
     "Check metadata in API listing" in {
       val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.fromString("/swagger.json")))
 
       val json = parseJson(RRunner(service).checkOk(r))
 

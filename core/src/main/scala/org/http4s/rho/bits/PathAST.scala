@@ -105,7 +105,11 @@ object PathAST {
 
   case class PathOr(p1: PathRule, p2: PathRule) extends PathRoute
 
-  case class PathMatch(s: String) extends PathOperation
+  case class PathMatch(s: Uri.Path.Segment) extends PathOperation
+  object PathMatch {
+    def apply(s: String): PathMatch = PathMatch(Uri.Path.Segment(s))
+    val empty: PathMatch = PathMatch(Uri.Path.Segment.empty)
+  }
 
   case class PathCapture[F[_]](
       name: String,

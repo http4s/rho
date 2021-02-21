@@ -13,6 +13,8 @@ import org.http4s.Uri.uri
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
 import shapeless.{HList, HNil}
+import cats.effect.unsafe.implicits.global
+import scala.util.control.NoStackTrace
 
 class ApiTest extends Specification {
 
@@ -38,7 +40,9 @@ class ApiTest extends Specification {
     existsAnd(headers.`Content-Length`)(h => h.length != 0)
 
   val RequireThrowException =
-    existsAnd(headers.`Content-Length`)(_ => throw new RuntimeException("this could happen"))
+    existsAnd(headers.`Content-Length`)(_ =>
+      throw new RuntimeException("this could happen") with NoStackTrace
+    )
 
   def fetchETag(p: IO[Response[IO]]): ETag = {
     val resp = p.unsafeRunSync()
@@ -181,7 +185,7 @@ class ApiTest extends Specification {
         .resp
         .status
 
-      val c3 = captureMapR(headers.`Access-Control-Allow-Credentials`, Some(r2))(_ => ???)
+      val c3 = captureMapR(headers.Accept, Some(r2))(_ => ???)
       val v2 = ruleExecutor.runRequestRules(c3.rule, req)
       v2 must beAnInstanceOf[FailureResponse[IO]]
       v2.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2

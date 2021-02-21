@@ -1,6 +1,6 @@
 package com.http4s.rho.hal.plus.swagger.demo
 
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
+import cats.effect.{ExitCode, IO, IOApp}
 import net.sf.uadetector.service.UADetectorServiceFactory.ResourceModuleXmlDataStore
 import cats.implicits._
 import org.http4s.implicits._
@@ -18,19 +18,18 @@ object Main extends IOApp {
 
   logger.info(s"Starting Hal example on '$port'")
 
-  def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO].use { blocker =>
-      val businessLayer = new UADetectorDatabase(new ResourceModuleXmlDataStore())
+  def run(args: List[String]): IO[ExitCode] = {
+    val businessLayer = new UADetectorDatabase(new ResourceModuleXmlDataStore())
 
-      val routes =
-        new Routes(businessLayer, blocker)
+    val routes =
+      new Routes(businessLayer)
 
-      BlazeServerBuilder[IO](global)
-        .withHttpApp((routes.staticContent <+> routes.dynamicContent).orNotFound)
-        .bindLocal(port)
-        .serve
-        .compile
-        .drain
-        .as(ExitCode.Success)
-    }
+    BlazeServerBuilder[IO](global)
+      .withHttpApp((routes.staticContent <+> routes.dynamicContent).orNotFound)
+      .bindLocal(port)
+      .serve
+      .compile
+      .drain
+      .as(ExitCode.Success)
+  }
 }
