@@ -41,10 +41,10 @@ class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
   /* Attribute key to lookup authInfo in request attributeMap . */
   final private val authKey = Key.newKey[SyncIO, U].unsafeRunSync()
 
-  /** Turn the [[HttpRoutes]] into an `AuthedService`
+  /** Turn the [[HttpRoutes]] into an `AuthedRoutes`
     *
     * @param routes [[HttpRoutes]] to convert
-    * @return An `AuthedService` which can be mounted by http4s servers.
+    * @return An `AuthedRoutes` which can be mounted by http4s servers.
     */
   def toService(routes: HttpRoutes[F]): AuthedRoutes[U, F] = {
     type O[A] = OptionT[F, A]
