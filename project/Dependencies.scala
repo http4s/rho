@@ -3,20 +3,22 @@ import Keys._
 
 // format: off
 object Dependencies {
-  lazy val http4sVersion = "1.0.0-M16"
-  lazy val specs2Version = "4.10.6"
+  val http4sVersion = "0.22-88-7960f21-SNAPSHOT"
+  val specs2Version = "4.10.6"
+  val circeVersion = "0.12.3"
 
   val scala_213 = "2.13.4"
   val scala_212 = "2.12.13"
 
+
+  lazy val circeCore           = "io.circe"                   %% "circe-core"            % circeVersion
+  lazy val circeGeneric        = "io.circe"                   %% "circe-generic"         % circeVersion
+  lazy val circeParser         = "io.circe"                   %% "circe-parser"          % circeVersion
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion
-  lazy val http4sJetty         = "org.http4s"                 %% "http4s-servlet"        % http4sVersion
-  lazy val http4sJson4sJackson = "org.http4s"                 %% "http4s-json4s-jackson" % http4sVersion
+  lazy val http4sCirce         = "org.http4s"                 %% "http4s-circe"          % http4sVersion
   lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
-  lazy val json4s              = "org.json4s"                 %% "json4s-ext"            % "3.6.11"
-  lazy val json4sJackson       = "org.json4s"                 %% "json4s-jackson"        % json4s.revision
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.6.2"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.3"
@@ -33,26 +35,29 @@ object Dependencies {
   val silencerVersion = "1.7.1"
   lazy val silencerPlugin = compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full)
   lazy val silencerLib = "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+  lazy val kindProjector = compilerPlugin("org.typelevel" % "kind-projector" % "0.11.3" cross CrossVersion.full)
 
-  lazy val halDeps = libraryDependencies ++= Seq(json4sJackson)
+  lazy val halDeps = libraryDependencies ++= Seq(http4sCirce)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
     scalaXml,
     swaggerCore,
     swaggerModels,
 
-    json4s % "test",
-    json4sJackson % "test"
+    http4sCirce % "test"
   )
 
   lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi)
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
+    circeCore,
+    circeGeneric,
+    circeParser,
     http4sBlaze,
     http4sDSL,
-    json4s,
-    json4sJackson,
-    http4sJson4sJackson,
-    uadetector
+    http4sCirce,
+    http4sXmlInstances,
+    logbackClassic, 
+    uadetector,
   )
 }

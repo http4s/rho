@@ -86,7 +86,7 @@ class ApiExamples extends Specification {
 
       /// src_inlined HeaderCapture
       new RhoRoutes[IO] {
-        GET / "hello" >>> capture(ETag) |>> { tag: ETag =>
+        GET / "hello" >>> H[ETag].capture |>> { tag: ETag =>
           Ok(s"Thanks for the tag: $tag")
         }
       }
@@ -95,8 +95,8 @@ class ApiExamples extends Specification {
       /// src_inlined HeaderRuleCombine
       new RhoRoutes[IO] {
         // Header rules are composable
-        val ensureLength = existsAnd(`Content-Length`)(_.length > 0)
-        val getTag = capture(ETag)
+        val ensureLength = H[`Content-Length`].existsAnd(_.length > 0)
+        val getTag = H[ETag].capture
 
         POST / "sequential" >>> getTag >>> ensureLength |>> { tag: ETag =>
           Ok(s"Thanks for the $tag and the non-empty body!")
@@ -116,8 +116,8 @@ class ApiExamples extends Specification {
         val path1 = "one" / pathVar[Int]
         val path2 = "two" / pathVar[Int]
 
-        val getLength = captureMap(`Content-Length`)(_.length)
-        val getTag = captureMap(ETag)(_ => -1L)
+        val getLength = H[`Content-Length`].captureMap(_.length)
+        val getTag = H[ETag].captureMap(_ => -1L)
 
         GET / (path1 || path2) +? param[String]("foo") >>> (getLength || getTag) |>> {
           (i: Int, foo: String, v: Long) => Ok(s"Received $i, $foo, $v")

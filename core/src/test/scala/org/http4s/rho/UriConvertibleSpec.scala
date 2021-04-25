@@ -14,7 +14,7 @@ object UriConvertibleSpec extends Specification {
   "UriConvertible.respectPathInfo" should {
     "respect if URI template is available" in {
       val request = Request[IO](
-        uri = Uri(path = Uri.Path.fromString("/some")),
+        uri = uri"/some",
         attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 5)
       )
       val path = List(PathElm("here"))
@@ -35,7 +35,7 @@ object UriConvertibleSpec extends Specification {
 
   "UriConvertible.addPathInfo" should {
     "keep the path if PathInfoCaret is not available" in {
-      val request = Request[IO](uri = Uri(path = Uri.Path.fromString("/some")))
+      val request = Request[IO](uri = uri"/some")
       val path = List(PathElm("here"))
       val query = List(ParamVarExp("ref", "path"))
       val tpl = UriTemplate(path = path, query = query)
@@ -44,7 +44,7 @@ object UriConvertibleSpec extends Specification {
     }
     "keep the path if PathInfoCaret is 0" in {
       val request = Request[IO](
-        uri = Uri(path = Uri.Path.fromString("/some")),
+        uri = uri"/some",
         attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 0)
       )
       val path = List(PathElm("here"))
@@ -55,7 +55,7 @@ object UriConvertibleSpec extends Specification {
     }
     "keep the path if PathInfoCaret is 1" in {
       val request = Request[IO](
-        uri = Uri(path = Uri.Path.fromString("/some")),
+        uri = uri"/some",
         attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 1)
       )
       val path = List(PathElm("here"))
@@ -66,7 +66,7 @@ object UriConvertibleSpec extends Specification {
     }
     "manipulate the path if PathInfoCaret greater than 1" in {
       val request = Request[IO](
-        uri = Uri(path = Uri.Path.fromString("/some")),
+        uri = uri"/some",
         attributes = Vault.empty.insert(Request.Keys.PathInfoCaret, 5)
       )
       val path = List(PathElm("here"))

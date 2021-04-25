@@ -21,11 +21,11 @@ class ParamDefaultValueSpec extends Specification {
         .foldLeft(Array[Byte]())(_ :+ _)
     )
 
-  def requestGet(s: String, h: Header*): Request[IO] =
+  def requestGet(s: String, h: Header.ToRaw*): Request[IO] =
     Request(
       bits.MethodAliases.GET,
       Uri.fromString(s).getOrElse(sys.error("Failed.")),
-      headers = Headers.of(h: _*)
+      headers = Headers(h: _*)
     )
 
   "GET /test1" should {

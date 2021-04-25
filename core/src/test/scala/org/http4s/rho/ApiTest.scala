@@ -15,6 +15,7 @@ import org.specs2.mutable._
 import shapeless.{HList, HNil}
 import cats.effect.unsafe.implicits.global
 import scala.util.control.NoStackTrace
+import org.http4s.headers.Accept
 
 class ApiTest extends Specification {
 
@@ -34,19 +35,19 @@ class ApiTest extends Specification {
     ETag(ETag.EntityTag("foo"))
 
   val RequireETag =
-    exists(ETag)
+    H[ETag].exists
 
   val RequireNonZeroLen =
-    existsAnd(headers.`Content-Length`)(h => h.length != 0)
+    H[`Content-Length`].existsAnd(h => h.length != 0)
 
   val RequireThrowException =
-    existsAnd(headers.`Content-Length`)(_ =>
+    H[`Content-Length`].existsAnd(_ =>
       throw new RuntimeException("this could happen") with NoStackTrace
     )
 
   def fetchETag(p: IO[Response[IO]]): ETag = {
     val resp = p.unsafeRunSync()
-    resp.headers.get(ETag).getOrElse(sys.error("No ETag: " + resp))
+    resp.headers.get[ETag].getOrElse(sys.error("No ETag: " + resp))
   }
 
   def checkETag(p: OptionT[IO, Response[IO]], s: String): MatchResult[Any] =
@@ -95,12 +96,12 @@ class ApiTest extends Specification {
 
       Seq(
         {
-          val c = captureOptionally(headers.`Content-Length`)
+          val c = H[`Content-Length`].captureOptionally
           ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(
             Some(lenheader) :: HNil
           )
         }, {
-          val c = captureOptionally(ETag)
+          val c = H[ETag].captureOptionally
           ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(None :: HNil)
         }
       ).reduce(_ and _)
@@ -110,10 +111,10 @@ class ApiTest extends Specification {
       val req = Request[IO]().putHeaders(etag, lenheader)
       Seq(
         {
-          val c2 = RequireETag && capture(headers.`Content-Length`)
+          val c2 = RequireETag && H[`Content-Length`].capture
           ruleExecutor.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader :: HNil)
         }, {
-          val c3 = capture(headers.`Content-Length`) && capture(ETag)
+          val c3 = H[`Content-Length`].capture && H[ETag].capture
           ruleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(
             etag :: lenheader :: HNil
           )
@@ -123,7 +124,7 @@ class ApiTest extends Specification {
 
     "Capture params with default" in {
       val default: `Content-Length` = headers.`Content-Length`.unsafeFromLong(10)
-      val c = captureOrElse(headers.`Content-Length`)(default)
+      val c = H[`Content-Length`].captureOrElse(default)
       Seq(
         {
           val req = Request[IO]().putHeaders()
@@ -137,14 +138,14 @@ class ApiTest extends Specification {
 
     "Map header params" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
-      val c = captureMap(headers.`Content-Length`)(_.length)
+      val c = H[`Content-Length`].captureMap(_.length)
 
       ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(4 :: HNil)
     }
 
     "Map header params with exception" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
-      val c = captureMap(headers.`Content-Length`)(_.length / 0)
+      val c = H[`Content-Length`].captureMap(_.length / 0)
 
       ruleExecutor.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse[IO]]
     }
@@ -152,14 +153,14 @@ class ApiTest extends Specification {
     "map simple header params into a complex type" in {
       case class Foo(age: Long, s: HttpDate)
       val paramFoo =
-        (captureMap(headers.`Content-Length`)(_.length) && captureMap(headers.Date)(_.date))
+        (H[`Content-Length`].captureMap(_.length) && H[headers.Date].captureMap(_.date))
           .map(Foo.apply _)
 
       val path = GET / "hello" >>> paramFoo
       val testDate = HttpDate.unsafeFromInstant(java.time.Instant.now)
       val req = Request[IO](
         uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")),
-        headers = Headers.of(headers.`Content-Length`.unsafeFromLong(10), headers.Date(testDate))
+        headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(testDate))
       )
 
       val expectedFoo = Foo(10, testDate)
@@ -173,11 +174,11 @@ class ApiTest extends Specification {
     "Map with missing header result" in {
       val req = Request[IO]().putHeaders(etag, lenheader)
 
-      val c1 = captureMapR(headers.`Content-Length`)(r => Right(r.length))
+      val c1 = H[`Content-Length`].captureMapR(r => Right(r.length))
       ruleExecutor.runRequestRules(c1.rule, req) should_== SuccessResponse(4 :: HNil)
 
       val r2 = Gone("Foo")
-      val c2 = captureMapR(headers.`Content-Length`)(_ => Left(r2))
+      val c2 = H[`Content-Length`].captureMapR(_ => Left(r2))
       val v1 = ruleExecutor.runRequestRules(c2.rule, req)
       v1 must beAnInstanceOf[FailureResponse[IO]]
       v1.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2
@@ -185,7 +186,7 @@ class ApiTest extends Specification {
         .resp
         .status
 
-      val c3 = captureMapR(headers.Accept, Some(r2))(_ => ???)
+      val c3 = H[Accept].captureMapR(Some(r2))(_ => ???)
       val v2 = ruleExecutor.runRequestRules(c3.rule, req)
       v2 must beAnInstanceOf[FailureResponse[IO]]
       v2.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2
@@ -196,10 +197,10 @@ class ApiTest extends Specification {
 
     "Append headers to a Route" in {
       val path = POST / "hello" / pv"world" +? param[Int]("fav")
-      val validations = existsAnd(headers.`Content-Length`)(h => h.length != 0)
+      val validations = H[`Content-Length`].existsAnd(h => h.length != 0)
 
       val route =
-        runWith((path >>> validations >>> capture(ETag)).decoding(EntityDecoder.text[IO])) {
+        runWith((path >>> validations >>> H[ETag].capture).decoding(EntityDecoder.text[IO])) {
           (world: String, fav: Int, tag: ETag, body: String) =>
             Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
               .map(_.putHeaders(tag))
@@ -213,20 +214,20 @@ class ApiTest extends Specification {
         .withEntity("cool")
 
       val resp = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      resp.headers.get(ETag) must beSome(etag)
+      resp.headers.get[ETag] must beSome(etag)
 
     }
 
     "accept compound or sequential header rules" in {
       val path = POST / "hello" / pv"world"
-      val lplus1 = captureMap(headers.`Content-Length`)(_.length + 1)
+      val lplus1 = H[`Content-Length`].captureMap(_.length + 1)
 
-      val route1 = runWith((path >>> lplus1 >>> capture(ETag)).decoding(EntityDecoder.text)) {
+      val route1 = runWith((path >>> lplus1 >>> H[ETag].capture).decoding(EntityDecoder.text)) {
         (_: String, _: Long, _: ETag, _: String) =>
           Ok("")
       }
 
-      val route2 = runWith((path >>> (lplus1 && capture(ETag))).decoding(EntityDecoder.text)) {
+      val route2 = runWith((path >>> (lplus1 && H[ETag].capture)).decoding(EntityDecoder.text)) {
         (_: String, _: Long, _: ETag, _: String) =>
           Ok("")
       }
@@ -260,8 +261,8 @@ class ApiTest extends Specification {
     "Execute a complicated route" in {
 
       val path = POST / "hello" / pv"world" +? param[Int]("fav")
-      val validations = existsAnd(headers.`Content-Length`)(h => h.length != 0) &&
-        capture(ETag)
+      val validations = H[`Content-Length`].existsAnd(h => h.length != 0) &&
+        H[ETag].capture
 
       val route =
         runWith((path >>> validations).decoding(EntityDecoder.text)) {
@@ -285,7 +286,7 @@ class ApiTest extends Specification {
       val req = Request[IO](GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
 
       val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      result.headers.size must_== 0
+      result.headers.headers.size must_== 0
       result.status must_== Status.SwitchingProtocols
     }
   }
@@ -416,7 +417,7 @@ class ApiTest extends Specification {
 
   "Decoders" should {
     "Decode a body" in {
-      val reqHeader = existsAnd(headers.`Content-Length`)(h => h.length < 10)
+      val reqHeader = H[`Content-Length`].existsAnd(h => h.length < 10)
 
       val path = POST / "hello" >>> reqHeader
 
@@ -456,7 +457,7 @@ class ApiTest extends Specification {
       val req = Request[IO](uri = uri("/hello"))
         .putHeaders(headers.`Content-Length`.unsafeFromLong("foo".length))
 
-      val reqHeader = existsAnd(headers.`Content-Length`)(h => h.length < 2)
+      val reqHeader = H[`Content-Length`].existsAnd(h => h.length < 2)
       val route1 = runWith(path.validate(reqHeader)) { () =>
         Ok("shouldn't get here.")
       }
@@ -466,7 +467,7 @@ class ApiTest extends Specification {
         .getOrElse(Response.notFound)
         .status should_== Status.BadRequest
 
-      val reqHeaderR = existsAndR(headers.`Content-Length`)(_ => Some(Unauthorized("Foo.")))
+      val reqHeaderR = H[`Content-Length`].existsAndR(_ => Some(Unauthorized("Foo.")))
       val route2 = runWith(path.validate(reqHeaderR)) { () =>
         Ok("shouldn't get here.")
       }

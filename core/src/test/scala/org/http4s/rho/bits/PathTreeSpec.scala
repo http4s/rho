@@ -10,7 +10,6 @@ import org.http4s.Uri.uri
 import org.http4s.server.middleware.TranslateUri
 import org.http4s.server.Router
 import cats.effect.unsafe.implicits.global
-import org.http4s.Uri.Path
 
 class PathTreeSpec extends Specification {
   object pathTree extends PathTreeOps[IO]
@@ -47,7 +46,7 @@ class PathTreeSpec extends Specification {
       GET / "foo" |>> "foo"
     }.toRoutes())).orNotFound
 
-    val req = Request[IO](Method.GET, uri = Uri(path = Path.fromString("/bar/foo")))
+    val req = Request[IO](Method.GET, uri = uri"/bar/foo")
     val resp = svc(req).unsafeRunSync()
 
     resp.status must_== Status.Ok
