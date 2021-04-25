@@ -12,7 +12,7 @@ lazy val rho = project
   .in(file("."))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings: _*)
-  .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
+  .aggregate(`rho-core`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
 
 lazy val `rho-core` = project
   .in(file("core"))
@@ -31,12 +31,6 @@ lazy val `rho-core` = project
     },
     libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2")
   )
-
-lazy val `rho-hal` = project
-  .in(file("hal"))
-  .settings(buildSettings :+ halDeps: _*)
-  .settings(mimaConfiguration)
-  .dependsOn(`rho-core`)
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
@@ -74,7 +68,6 @@ lazy val docs = project
     scalacOptions in (ScalaUnidoc, unidoc) ++= versionSpecificEnabledFlags(scalaVersion.value),
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       `rho-core`,
-      `rho-hal`,
       `rho-swagger`
     ),
     git.remoteRepo := "git@github.com:http4s/rho.git",
@@ -87,7 +80,7 @@ lazy val docs = project
       } yield (f, s"api/$major.$minor/$d")
     }
   )
-  .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
+  .dependsOn(`rho-core`, `rho-swagger`)
 
 lazy val `rho-examples` = project
   .in(file("examples"))
@@ -99,7 +92,7 @@ lazy val `rho-examples` = project
     libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
     dontPublish
   )
-  .dependsOn(`rho-swagger`, `rho-swagger-ui`, `rho-hal`)
+  .dependsOn(`rho-swagger`, `rho-swagger-ui`)
 
 lazy val compilerFlags = Seq(
   "-feature",
