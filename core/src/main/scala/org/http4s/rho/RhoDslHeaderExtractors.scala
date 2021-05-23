@@ -151,7 +151,7 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
           errors: NonEmptyList[ParseFailure]
       ) = FailureResponse.result(errorParsingHeaderResponse(errors))
 
-      S.fromSafe(headers.headers) match {
+      S.from(headers.headers) match {
         case None => process(Option.empty)
         case Some(Ior.Right(value)) => process(Option(value))
         case Some(Ior.Both(errors, _)) => errorParsingHeader(errors)
@@ -174,7 +174,7 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
     ).widen
 
   protected def errorProcessingHeaderResponse[A](
-      header: Option[Header.Raw],
+      header: Option[NonEmptyList[Header.Raw]],
       nonfatal: Throwable)(implicit F: Monad[F], H: Header[A, _]): F[BaseResult[F]] = {
     logger.error(nonfatal) {
       val headerValue = header.fold(show""""${H.name}" was Undefined""")(_.show)
