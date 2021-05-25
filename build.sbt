@@ -29,7 +29,7 @@ lazy val `rho-core` = project
         case _ => Nil
       }
     },
-    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2")
+    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4")
   )
 
 lazy val `rho-hal` = project
