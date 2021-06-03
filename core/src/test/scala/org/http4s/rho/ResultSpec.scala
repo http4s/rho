@@ -17,14 +17,14 @@ class ResultSpec extends Specification {
         .unsafeRunSync()
         .resp
 
-      resp.headers.get(Date) must beSome(date)
+      resp.headers.get[Date] must beSome(date)
 
       val respNow = Ok("Foo")
         .map(_.putHeaders(date))
         .unsafeRunSync()
         .resp
 
-      respNow.headers.get(Date) must beSome(date)
+      respNow.headers.get[Date] must beSome(date)
     }
 
     "Add atributes" in {

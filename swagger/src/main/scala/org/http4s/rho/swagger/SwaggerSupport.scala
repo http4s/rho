@@ -68,7 +68,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
           .mapper()
           .writerWithDefaultPrettyPrinter()
           .writeValueAsString(swagger.toJModel),
-        Headers.of(`Content-Type`(MediaType.application.json))
+        Headers(`Content-Type`(MediaType.application.json))
       )
 
     "Swagger documentation (YAML)" ** GET / yamlApiPath |>> (() => yamlResponse)
@@ -79,7 +79,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
           .mapper()
           .writerWithDefaultPrettyPrinter()
           .writeValueAsString(swagger.toJModel),
-        Headers.of(`Content-Type`(MediaType.text.yaml))
+        Headers(`Content-Type`(MediaType.text.yaml))
       )
   }
 }

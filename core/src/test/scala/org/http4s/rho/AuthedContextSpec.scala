@@ -50,7 +50,7 @@ class AuthedContextSpec extends Specification {
   "AuthedContext execution" should {
 
     "Be able to have access to authInfo" in {
-      val request = Request[IO](Method.GET, Uri(path = Uri.Path.fromString("/")))
+      val request = Request[IO](Method.GET, uri"/")
       val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
         val body =
@@ -60,7 +60,7 @@ class AuthedContextSpec extends Specification {
     }
 
     "Does not prevent route from being executed without authentication" in {
-      val request = Request[IO](Method.GET, Uri(path = Uri.Path.fromString("/public/public")))
+      val request = Request[IO](Method.GET, uri"/public/public")
       val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
         val body =
@@ -70,7 +70,7 @@ class AuthedContextSpec extends Specification {
     }
 
     "Does not prevent route from being executed without authentication, but allows to extract it" in {
-      val request = Request[IO](Method.GET, Uri(path = Uri.Path.fromString("/private/private")))
+      val request = Request[IO](Method.GET, uri"/private/private")
       val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
       if (resp.status == Status.Ok) {
         val body =

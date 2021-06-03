@@ -89,7 +89,6 @@ lazy val `rho-examples` = project
   .settings(Revolver.settings)
   .settings(
     exampleDeps,
-    libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
     dontPublish
   )
   .dependsOn(`rho-swagger`, `rho-swagger-ui`)
@@ -132,6 +131,7 @@ lazy val buildSettings = publishing ++
       shapeless,
       silencerPlugin,
       silencerLib,
+      kindProjector,
       http4sServer % "provided",
       logbackClassic % "test"
     ),

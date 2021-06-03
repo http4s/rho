@@ -3,30 +3,32 @@ package com.http4s.rho.swagger.demo
 import cats.Monad
 import cats.effect._
 import cats.implicits._
-import com.http4s.rho.swagger.demo.JsonEncoder.{AutoSerializable, _}
 import com.http4s.rho.swagger.demo.MyRoutes._
 import fs2.Stream
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits._
 import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
-import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, Uri, headers}
+import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, headers}
 import shapeless.HNil
+import org.http4s.circe.CirceEntityEncoder
+import org.http4s.implicits._
 
-class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F]) extends RhoRoutes[F] {
-
+class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F])
+    extends RhoRoutes[F]
+    with CirceEntityEncoder {
   import swaggerSyntax._
 
-  val requireCookie: TypedHeader[F, HNil] = existsAndR(headers.Cookie) { cookie =>
+  val requireCookie: TypedHeader[F, HNil] = H[headers.Cookie].existsAndR { cookie =>
     cookie.values.toList.find(c => c.name == "Foo" && c.content == "bar") match {
       case Some(_) => // Cookie found, good to go
         None
       case None => // Didn't find cookie
-        Some(TemporaryRedirect(Uri(path = Uri.Path.fromString("/addcookie"))).widen)
+        Some(TemporaryRedirect(uri"/addcookie").widen)
     }
   }
 
   "We don't want to have a real 'root' route anyway... " **
-    GET |>> TemporaryRedirect(Uri(path = Uri.Path.fromString("/swagger-ui")))
+    GET |>> TemporaryRedirect(uri"/swagger-ui")
 
   // We want to define this chunk of the service as abstract for reuse below
   val hello = "hello" @@ GET / "hello"
@@ -85,7 +87,7 @@ class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F]) extends RhoRoutes
   "Clears the cookies" **
     "cookies" @@
     GET / "clearcookies" |>> { req: Request[F] =>
-      val hs = req.headers.get(headers.Cookie) match {
+      val hs = req.headers.get[headers.Cookie] match {
         case None => Headers.empty
         case Some(cookie) =>
           Headers(cookie.values.toList.map { c =>
@@ -149,5 +151,6 @@ object MyRoutes {
   implicit def barParser[F[_]: Monad]: StringParser[F, Bar] =
     StringParser.intParser[F].map(Bar)
 
-  case class JsonResult(name: String, number: Int) extends AutoSerializable
+  case class JsonResult(name: String, number: Int)
+  implicit val jsonResultCodec: io.circe.Codec[JsonResult] = io.circe.generic.semiauto.deriveCodec
 }

@@ -13,6 +13,7 @@ import scala.collection.immutable.ListMap
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
+import org.typelevel.ci.CIString
 
 private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(implicit
     st: ShowType,
@@ -443,8 +444,8 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
     }
   }
 
-  def mkHeaderParam(key: HeaderKey.Extractable, isRequired: Boolean): HeaderParameter =
-    HeaderParameter(`type` = "string", name = key.name.toString.some, required = isRequired)
+  def mkHeaderParam(key: CIString, isRequired: Boolean): HeaderParameter =
+    HeaderParameter(`type` = "string", name = key.toString.some, required = isRequired)
 
   def linearizeRoute(rr: RhoRoute[F, _]): List[LinearRoute] = {
 
