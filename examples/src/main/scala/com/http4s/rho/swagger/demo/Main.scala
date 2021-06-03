@@ -6,7 +6,7 @@ import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
 import org.http4s.rho.swagger.models.{Info, Tag}
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.log4s.getLogger
 
 import scala.concurrent.ExecutionContext.global

@@ -1,6 +1,6 @@
 package org.http4s.rho
 
-import _root_.io.chrisdavenport.vault._
+import org.typelevel.vault._
 import cats.effect._
 import org.http4s.headers._
 import org.http4s.rho.io._

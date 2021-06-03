@@ -3,7 +3,7 @@ import Keys._
 
 // format: off
 object Dependencies {
-  lazy val http4sVersion = "0.21.23"
+  lazy val http4sVersion = "0.22.0-RC1"
   lazy val specs2Version = "4.10.6"
 
   val scala_213 = "2.13.4"
@@ -22,7 +22,7 @@ object Dependencies {
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.3"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.3"
-  lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "1.3.0"
+  lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.0"
   lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.46.0"
 
   lazy val specs2              = Seq("org.specs2"              %% "specs2-core"          % specs2Version % "test",

@@ -9,37 +9,22 @@ import org.log4s.getLogger
 import shapeless.{HList, HNil}
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
 
 object PathTree {
 
   def apply[F[_]](): PathTreeOps[F]#PathTree = {
     val ops = new PathTreeOps[F] {}
-    new ops.PathTree(ops.MatchNode(""))
+    new ops.PathTree(ops.MatchNode(Uri.Path.Segment.empty))
   }
 
-  def splitPath(path: String): List[String] = {
-    val buff = new ListBuffer[String]
-    val len = path.length
-
-    @tailrec
-    def go(i: Int, begin: Int): Unit =
-      if (i < len) {
-        if (path.charAt(i) == '/') {
-          if (i > begin) buff += org.http4s.Uri.decode(path.substring(begin, i))
-          go(i + 1, i + 1)
-        } else go(i + 1, begin)
-      } else {
-        buff += org.http4s.Uri.decode(path.substring(begin, i))
-      }
-
-    val i = if (path.nonEmpty && path.charAt(0) == '/') 1 else 0
-    go(i, i)
-
-    buff.result()
+  def splitPath(path: Uri.Path): List[Uri.Path.Segment] = {
+    val fixEmpty =
+      if (path.isEmpty) List(Uri.Path.Segment.empty)
+      else path.segments.filterNot(_.isEmpty).toList
+    if (path.endsWithSlash) fixEmpty :+ Uri.Path.Segment.empty
+    else fixEmpty
   }
-
 }
 
 private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
@@ -79,9 +64,6 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   private val logger = getLogger
 
   type Action = ResultResponse[F, F[Response[F]]]
-
-  /** Generates a list of tokens that represent the path */
-  private def keyToPath(key: Request[F]): List[String] = PathTree.splitPath(key.pathInfo)
 
   def makeLeaf[T <: HList](route: RhoRoute[F, T])(implicit F: Monad[F]): Leaf =
     route.router match {
@@ -154,7 +136,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
   sealed trait Node[Self <: Node[Self]] extends ResponseGeneratorInstances[F] {
 
-    def matches: Map[String, MatchNode]
+    def matches: Map[Uri.Path.Segment, MatchNode]
 
     def captures: List[CaptureNode]
 
@@ -163,7 +145,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     def end: Map[Method, Leaf]
 
     def clone(
-        matches: Map[String, MatchNode],
+        matches: Map[Uri.Path.Segment, MatchNode],
         captures: List[CaptureNode],
         variadic: Map[Method, Leaf],
         end: Map[Method, Leaf]): Self
@@ -184,7 +166,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
             case MetaCons(r, _) => append(r :: t, method, action) // discard metadata
 
-            case PathMatch("") if !t.isEmpty =>
+            case PathMatch.empty if !t.isEmpty =>
               append(t, method, action) // "" is a NOOP in the middle of a path
 
             // the rest of the types need to rewrite a node
@@ -222,20 +204,25 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
       */
     final def walkTree(method: Method, req: Request[F])(implicit
         F: Monad[F]): RouteResult[F, F[Response[F]]] = {
-      val path = keyToPath(req)
+      val path = PathTree.splitPath(req.pathInfo)
       walk(method, req, path, HNil)
     }
 
     // This should scan all forward paths.
-    final protected def walk(method: Method, req: Request[F], path: List[String], stack: HList)(
-        implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = {
+    final protected def walk(
+        method: Method,
+        req: Request[F],
+        path: List[Uri.Path.Segment],
+        stack: HList)(implicit F: Monad[F]): RouteResult[F, F[Response[F]]] = {
       def tryVariadic(result: RouteResult[F, F[Response[F]]]): RouteResult[F, F[Response[F]]] =
         variadic.get(method) match {
           case None => result
           case Some(l) => l.attempt(req, path :: stack)
         }
 
-      def walkHeadTail(h: String, t: List[String]): RouteResult[F, F[Response[F]]] = {
+      def walkHeadTail(
+          h: Uri.Path.Segment,
+          t: List[Uri.Path.Segment]): RouteResult[F, F[Response[F]]] = {
         val exact: RouteResult[F, F[Response[F]]] = matches.get(h) match {
           case Some(n) => n.walk(method, req, t, stack)
           case None => noMatch
@@ -247,7 +234,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
             error: RouteResult[F, F[Response[F]]]): RouteResult[F, F[Response[F]]] =
           children match {
             case (c @ CaptureNode(p, _, _, _, _)) :: ns =>
-              p.parse(h) match {
+              p.parse(h.decoded()) match { //TODO: Figure out how to inject char sets etc...
                 case SuccessResponse(r) =>
                   val n = c.walk(method, req, t, r :: stack)
                   if (n.isSuccess) n
@@ -290,15 +277,15 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   }
 
   case class MatchNode(
-      name: String,
-      matches: Map[String, MatchNode] = Map.empty[String, MatchNode],
+      name: Uri.Path.Segment,
+      matches: Map[Uri.Path.Segment, MatchNode] = Map.empty[Uri.Path.Segment, MatchNode],
       captures: List[CaptureNode] = Nil,
       variadic: Map[Method, Leaf] = Map.empty[Method, Leaf],
       end: Map[Method, Leaf] = Map.empty[Method, Leaf])
       extends Node[MatchNode] {
 
     override def clone(
-        matches: Map[String, MatchNode],
+        matches: Map[Uri.Path.Segment, MatchNode],
         captures: List[CaptureNode],
         variadic: Map[Method, Leaf],
         end: Map[Method, Leaf]): MatchNode =
@@ -321,14 +308,14 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
   case class CaptureNode(
       parser: StringParser[F, _],
-      matches: Map[String, MatchNode] = Map.empty[String, MatchNode],
+      matches: Map[Uri.Path.Segment, MatchNode] = Map.empty[Uri.Path.Segment, MatchNode],
       captures: List[CaptureNode] = List.empty[CaptureNode],
       variadic: Map[Method, Leaf] = Map.empty[Method, Leaf],
       end: Map[Method, Leaf] = Map.empty[Method, Leaf])
       extends Node[CaptureNode] {
 
     override def clone(
-        matches: Map[String, MatchNode],
+        matches: Map[Uri.Path.Segment, MatchNode],
         captures: List[CaptureNode],
         variadic: Map[Method, Leaf],
         end: Map[Method, Leaf]): CaptureNode =
@@ -359,8 +346,8 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
   }
 
   private def mergeMatches(
-      m1: Map[String, MatchNode],
-      m2: Map[String, MatchNode]): Map[String, MatchNode] =
+      m1: Map[Uri.Path.Segment, MatchNode],
+      m2: Map[Uri.Path.Segment, MatchNode]): Map[Uri.Path.Segment, MatchNode] =
     mergeMaps(m1, m2)(_ merge _)
 
   private def mergeLeaves(l1: Map[Method, Leaf], l2: Map[Method, Leaf]): Map[Method, Leaf] =

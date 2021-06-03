@@ -38,12 +38,8 @@ object UriConvertible {
   private[rho] def addPathInfo[F[_]](request: Request[F], tpl: UriTemplate): UriTemplate = {
     val caret = request.attributes.lookup(Request.Keys.PathInfoCaret).getOrElse(0)
     if (caret == 0) tpl
-    else if (caret == 1 && request.scriptName == "/") tpl
-    else tpl.copy(path = UriTemplate.PathElm(removeSlash(request.scriptName)) :: tpl.path)
+    else if (caret == 1 && request.scriptName.absolute) tpl
+    else
+      tpl.copy(path = UriTemplate.PathElm(request.scriptName.toRelative.renderString) :: tpl.path)
   }
-
-  private[rho] def removeSlash(path: String): String =
-    if (path.startsWith("/")) path.substring(1)
-    else path
-
 }
