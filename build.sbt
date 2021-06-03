@@ -66,13 +66,13 @@ lazy val docs = project
     dontPublish,
     description := "Api Documentation",
     autoAPIMappings := true,
-    scalacOptions in Compile := scaladocOptions(
-      (baseDirectory in ThisBuild).value,
+    (Compile / scalacOptions) := scaladocOptions(
+      (ThisBuild / baseDirectory).value,
       version.value,
       apiVersion.value
     ),
-    scalacOptions in (ScalaUnidoc, unidoc) ++= versionSpecificEnabledFlags(scalaVersion.value),
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
+    (ScalaUnidoc / unidoc / scalacOptions) ++= versionSpecificEnabledFlags(scalaVersion.value),
+    (ScalaUnidoc / unidoc / unidocProjectFilter) := inProjects(
       `rho-core`,
       `rho-hal`,
       `rho-swagger`
@@ -80,10 +80,10 @@ lazy val docs = project
     git.remoteRepo := "git@github.com:http4s/rho.git",
     ghpagesCleanSite := VersionedGhPages.cleanSite0.value,
     ghpagesSynchLocal := VersionedGhPages.synchLocal0.value,
-    mappings in makeSite := {
+    (makeSite / mappings) := {
       val (major, minor) = apiVersion.value
       for {
-        (f, d) <- (mappings in (ScalaUnidoc, packageDoc)).value
+        (f, d) <- (ScalaUnidoc / packageDoc / mappings).value
       } yield (f, s"api/$major.$minor/$d")
     }
   )
@@ -120,7 +120,7 @@ def versionSpecificEnabledFlags(version: String) = CrossVersion.partialVersion(v
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
 
-lazy val license = licenses in ThisBuild := Seq(
+lazy val license = (ThisBuild / licenses) := Seq(
   "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
 )
 
@@ -130,9 +130,9 @@ lazy val buildSettings = publishing ++
     crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
     resolvers += Resolver.sonatypeRepo("snapshots"),
-    fork in run := true,
-    organization in ThisBuild := "org.http4s",
-    homepage in ThisBuild := Some(url(homepageUrl)),
+    (run / fork) := true,
+    (ThisBuild / organization) := "org.http4s",
+    (ThisBuild / homepage) := Some(url(homepageUrl)),
     description := "A self documenting DSL build upon the http4s framework",
     license,
     libraryDependencies ++= Seq(
@@ -147,20 +147,20 @@ lazy val buildSettings = publishing ++
   )
 
 // to keep REPL usable
-scalacOptions in (Compile, console) --= Seq("-Ywarn-unused:imports", "-Xfatal-warnings")
+(Compile / console / scalacOptions) --= Seq("-Ywarn-unused:imports", "-Xfatal-warnings")
 
 lazy val publishing = Seq(
   extras,
   // Don't publish root pom.  It's not needed.
-  packagedArtifacts in LocalRootProject := Map.empty,
-  publishArtifact in Test := false,
-  scmInfo in ThisBuild := {
+  (LocalRootProject / packagedArtifacts) := Map.empty,
+  (Test / publishArtifact) := false,
+  (ThisBuild / scmInfo) := {
     val base = "github.com/http4s/rho"
     Some(ScmInfo(url(s"https://$base"), s"scm:git:https://$base", Some(s"scm:git:git@$base")))
   }
 )
 
-lazy val extras = pomExtra in ThisBuild := (
+lazy val extras = (ThisBuild / pomExtra) := (
   <developers>
     <developer>
       <id>brycelane</id>
