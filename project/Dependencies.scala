@@ -5,7 +5,7 @@ import Keys._
 object Dependencies {
   val http4sVersion = "0.22.0-RC1"
   val specs2Version = "4.10.6"
-  val circeVersion = "0.12.3"
+  val circeVersion = "0.14.1"
 
   val scala_213 = "2.13.4"
   val scala_212 = "2.12.13"
@@ -44,7 +44,9 @@ object Dependencies {
     swaggerCore,
     swaggerModels,
 
-    http4sCirce % "test"
+    http4sCirce % "test",
+    circeParser % "test",
+    circeGeneric % "test",
   )
 
   lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi)
