@@ -2,9 +2,9 @@ name: Binary Compatibility
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main, series/* ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, main, series/* ]
 
 jobs:
   build:
