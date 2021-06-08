@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.demo
 
-import cats.Monad
+import cats._
 import cats.effect._
 import cats.implicits._
 import com.http4s.rho.swagger.demo.MyRoutes._
@@ -13,9 +13,10 @@ import shapeless.HNil
 import org.http4s.circe.CirceEntityEncoder
 import org.http4s.implicits._
 
-class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F])
+class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F])
     extends RhoRoutes[F]
     with CirceEntityEncoder {
+
   import swaggerSyntax._
 
   val requireCookie: TypedHeader[F, HNil] = H[headers.Cookie].existsAndR { cookie =>
@@ -54,7 +55,7 @@ class MyRoutes[F[+_]: Effect](swaggerSyntax: SwaggerSyntax[F])
     }
 
   // Normally this would be part of the constructor since its creation is 'unsafe'
-  private val counterRef = cats.effect.concurrent.Ref.unsafe[F, Int](0)
+  private val counterRef = cats.effect.Ref.unsafe[F, Int](0)
 
   "This uses a simple counter for the number of times this route has been requested" **
     POST / "counter" |>> { () =>

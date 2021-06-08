@@ -11,6 +11,7 @@ import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.http4s.rho.io._
 import org.http4s.Uri.uri
 import org.specs2.mutable.Specification
+import cats.effect.unsafe.implicits.global
 import org.http4s.Uri.Path
 import org.typelevel.ci.CIString
 import scala.util.control.NoStackTrace

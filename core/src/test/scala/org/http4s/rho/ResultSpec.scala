@@ -6,6 +6,7 @@ import org.http4s.headers._
 import org.http4s.rho.io._
 import org.http4s.HttpDate
 import org.specs2.mutable.Specification
+import cats.effect.unsafe.implicits.global
 
 class ResultSpec extends Specification {
 

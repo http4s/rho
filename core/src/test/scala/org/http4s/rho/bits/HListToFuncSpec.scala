@@ -4,6 +4,7 @@ package bits
 
 import cats.effect.IO
 import org.specs2.mutable.Specification
+import cats.effect.unsafe.implicits.global
 
 class HListToFuncSpec extends Specification {
   def getBody(b: EntityBody[IO]): String =

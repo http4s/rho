@@ -8,6 +8,7 @@ import org.specs2.mutable.Specification
 import scala.collection.compat.immutable.ArraySeq
 
 class CodecRouterSpec extends Specification {
+  import cats.effect.unsafe.implicits.global
 
   def bodyAndStatus(resp: Response[IO]): (String, Status) = {
     val rbody = new String(

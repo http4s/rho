@@ -44,6 +44,7 @@ object MyRoutes extends RhoRoutes[IO] {
 }
 
 class AuthedContextSpec extends Specification {
+  import cats.effect.unsafe.implicits.global
 
   val routes = Auth.authenticated(MyAuth.toService(MyRoutes.toRoutes()))
 

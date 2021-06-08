@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.demo
 
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
+import cats.effect.{ExitCode, IO, IOApp}
 import com.http4s.rho.swagger.ui.SwaggerUi
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -20,23 +20,22 @@ object Main extends IOApp {
 
   logger.info(s"Starting Swagger example on '$port'")
 
-  def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO].use { blocker =>
-      val metadata = SwaggerMetadata(
-        apiInfo = Info(title = "Rho demo", version = "1.2.3"),
-        tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
-      )
+  def run(args: List[String]): IO[ExitCode] = {
+    val metadata = SwaggerMetadata(
+      apiInfo = Info(title = "Rho demo", version = "1.2.3"),
+      tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
+    )
 
-      val swaggerUiRhoMiddleware =
-        SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
-      val myRoutes = new MyRoutes[IO](ioSwagger).toRoutes(swaggerUiRhoMiddleware)
+    val swaggerUiRhoMiddleware =
+      SwaggerUi[IO].createRhoMiddleware(swaggerMetadata = metadata)
+    val myRoutes = new MyRoutes[IO](ioSwagger).toRoutes(swaggerUiRhoMiddleware)
 
-      BlazeServerBuilder[IO](global)
-        .withHttpApp(myRoutes.orNotFound)
-        .bindLocal(port)
-        .serve
-        .compile
-        .drain
-        .as(ExitCode.Success)
-    }
+    BlazeServerBuilder[IO](global)
+      .withHttpApp(myRoutes.orNotFound)
+      .bindLocal(port)
+      .serve
+      .compile
+      .drain
+      .as(ExitCode.Success)
+  }
 }

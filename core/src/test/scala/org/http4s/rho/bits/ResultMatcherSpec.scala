@@ -13,6 +13,7 @@ import shapeless.HList
 import scala.reflect.runtime.universe._
 
 class ResultMatcherSpec extends Specification {
+  import cats.effect.unsafe.implicits.global
 
   class TRhoRoutes[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty

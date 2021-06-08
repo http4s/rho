@@ -7,6 +7,8 @@ import org.http4s.rho.io._
 import org.specs2.mutable.Specification
 
 class ResponseGeneratorSpec extends Specification {
+  import cats.effect.unsafe.implicits.global
+
   "ResponseGenerator" should {
     "Build a response with a body" in {
       val result = Ok("Foo").unsafeRunSync()

@@ -13,6 +13,7 @@ import org.http4s.Uri.uri
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable._
 import shapeless.{HList, HNil}
+import cats.effect.unsafe.implicits.global
 import scala.util.control.NoStackTrace
 import org.http4s.headers.Accept
 

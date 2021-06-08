@@ -6,9 +6,10 @@ import java.nio.charset.StandardCharsets
 
 import cats.effect.IO
 import org.specs2.mutable.Specification
-import org.http4s.Uri._
+import org.http4s.Uri.uri
 import org.http4s.server.middleware.TranslateUri
 import org.http4s.server.Router
+import cats.effect.unsafe.implicits.global
 
 class PathTreeSpec extends Specification {
   object pathTree extends PathTreeOps[IO]

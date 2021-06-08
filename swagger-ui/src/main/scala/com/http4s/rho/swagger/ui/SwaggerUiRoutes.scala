@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.ui
 
-import cats.effect.{Blocker, ContextShift, Sync}
+import cats.effect.{Sync}
 import cats.implicits._
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes
@@ -8,11 +8,10 @@ import org.http4s.rho.bits.PathAST.CaptureTail
 import org.http4s.rho.swagger.ui.BuildInfo
 import org.http4s._
 
-class SwaggerUiRoutes[F[_]: Sync: ContextShift](
+class SwaggerUiRoutes[F[_]: Sync](
     swaggerUiPath: String,
     swaggerUiResourcesPath: String,
-    indexHtml: String,
-    blocker: Blocker)
+    indexHtml: String)
     extends RhoRoutes[F] {
 
   private val htmlEncoder: EntityEncoder[F, String] =
@@ -35,20 +34,19 @@ class SwaggerUiRoutes[F[_]: Sync: ContextShift](
   }
 
   private def fetchResource(path: String, req: Request[F]): F[Response[F]] =
-    StaticFile.fromResource[F](path, blocker, Some(req)).getOrElseF(NotFound(()).map(_.resp))
+    StaticFile.fromResource[F](path, Some(req)).getOrElseF(NotFound(()).map(_.resp))
 
 }
 
 object SwaggerUiRoutes {
 
-  def apply[F[_]: Sync: ContextShift](
+  def apply[F[_]: Sync](
       swaggerUiPath: String,
-      swaggerSpecRelativePath: String,
-      blocker: Blocker): SwaggerUiRoutes[F] = {
+      swaggerSpecRelativePath: String): SwaggerUiRoutes[F] = {
     val swaggerUiResourcesPath =
       s"/META-INF/resources/webjars/swagger-ui/${BuildInfo.swaggerUiVersion}/"
     val indexHtml = defaultIndexHtml(swaggerSpecRelativePath)
-    new SwaggerUiRoutes[F](swaggerUiPath, swaggerUiResourcesPath, indexHtml, blocker)
+    new SwaggerUiRoutes[F](swaggerUiPath, swaggerUiResourcesPath, indexHtml)
   }
 
   def defaultIndexHtml(swaggerUrl: String): String =
