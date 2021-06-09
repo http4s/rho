@@ -41,7 +41,7 @@ case class QueryBuilder[F[_], T <: HList](method: Method, path: PathRule, rules:
   override def /:(prefix: TypedPath[F, HNil]): QueryBuilder[F, T] =
     new QueryBuilder[F, T](method, PathAnd(prefix.rule, path), rules)
 
-  override type HeaderAppendResult[T <: HList] = Router[F, T]
+  override type HeaderAppendResult[T0 <: HList] = Router[F, T0]
 
   override def makeRoute(action: Action[F, T]): RhoRoute[F, T] =
     RhoRoute(Router(method, path, rules), action)

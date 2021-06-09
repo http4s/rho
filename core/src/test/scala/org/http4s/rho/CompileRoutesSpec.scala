@@ -8,10 +8,10 @@ import org.specs2.mutable.Specification
 
 class CompileRoutesSpec extends Specification {
 
-  def getFoo(implicit c: CompileRoutes[IO, _]): Unit =
+  def getFoo(implicit c: CompileRoutes[IO, _]) =
     GET / "hello" |>> "GetFoo"
 
-  def putFoo(implicit c: CompileRoutes[IO, _]): Unit =
+  def putFoo(implicit c: CompileRoutes[IO, _]) =
     PUT / "hello" |>> "PutFoo"
 
   "CompileService" should {

@@ -8,7 +8,7 @@ import shapeless.ops.hlist.Prepend
   * @tparam T The `HList` representation of the values to be extracted from the `Request`.
   */
 trait HeaderAppendable[F[_], T <: HList] {
-  type HeaderAppendResult[T <: HList] <: HeaderAppendable[F, T]
+  type HeaderAppendResult[T0 <: HList] <: HeaderAppendable[F, T0]
 
   /** Append the header to the builder, generating a new typed representation of the route */
   def >>>[T1 <: HList](header: TypedHeader[F, T1])(implicit

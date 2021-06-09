@@ -65,7 +65,6 @@ lazy val docs = project
       version.value,
       apiVersion.value
     ),
-    (ScalaUnidoc / unidoc / scalacOptions) ++= versionSpecificEnabledFlags(scalaVersion.value),
     (ScalaUnidoc / unidoc / unidocProjectFilter) := inProjects(
       `rho-core`,
       `rho-swagger`
@@ -93,21 +92,15 @@ lazy val `rho-examples` = project
   )
   .dependsOn(`rho-swagger`, `rho-swagger-ui`)
 
-lazy val compilerFlags = Seq(
-  "-feature",
-  "-deprecation",
-  "-unchecked",
-  "-language:higherKinds",
-  "-language:existentials",
-  "-language:implicitConversions",
-  "-Ywarn-unused",
-  "-Xfatal-warnings"
+lazy val disabledCompilerFlags = Seq( // TODO: Fix code and re-enable these.
+  "-Xlint:package-object-classes",
+  "-Ywarn-numeric-widen",
+  "-Wnumeric-widen",
+  "-Xlint:adapted-args",
+  "-Yno-adapted-args",
+  "-Wdead-code",
+  "-Ywarn-dead-code"
 )
-
-def versionSpecificEnabledFlags(version: String) = CrossVersion.partialVersion(version) match {
-  case Some((2, 13)) => Seq.empty[String]
-  case _ => Seq("-Ypartial-unification")
-}
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -120,7 +113,7 @@ lazy val buildSettings = publishing ++
   Seq(
     scalaVersion := scala_213,
     crossScalaVersions := Seq(scala_213, scala_212),
-    scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
+    scalacOptions --= disabledCompilerFlags,
     resolvers += Resolver.sonatypeRepo("snapshots"),
     (run / fork) := true,
     (ThisBuild / organization) := "org.http4s",
@@ -128,15 +121,19 @@ lazy val buildSettings = publishing ++
     description := "A self documenting DSL build upon the http4s framework",
     license,
     libraryDependencies ++= Seq(
-      shapeless,
-      silencerPlugin,
-      silencerLib,
-      kindProjector,
       http4sServer % "provided",
       logbackClassic % "test"
     ),
-    libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value
+    libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
+                               Seq(
+                                 shapeless,
+                                 silencerPlugin,
+                                 silencerLib,
+                                 kindProjector,
+                                 `scala-reflect` % scalaVersion.value
+                               )
+                             else Seq.empty),
+    libraryDependencies ++= specs2
   )
 
 // to keep REPL usable
