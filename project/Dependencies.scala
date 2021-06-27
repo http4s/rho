@@ -32,7 +32,7 @@ object Dependencies {
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
-  val silencerVersion = "1.7.4"
+  val silencerVersion = "1.7.5"
   lazy val silencerPlugin = compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full)
   lazy val silencerLib = "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
   lazy val kindProjector = compilerPlugin("org.typelevel" % "kind-projector" % "0.11.3" cross CrossVersion.full)
