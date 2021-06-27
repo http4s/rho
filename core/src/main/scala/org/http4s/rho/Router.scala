@@ -36,7 +36,7 @@ case class Router[F[_], T <: HList](method: Method, path: PathRule, rules: Reque
     with RoutePrependable[F, Router[F, T]] {
   type Self = Router[F, T]
 
-  override type HeaderAppendResult[T <: HList] = Router[F, T]
+  override type HeaderAppendResult[T0 <: HList] = Router[F, T0]
 
   override def /:(prefix: TypedPath[F, HNil]): Self =
     copy(path = PathAnd(prefix.rule, path))

@@ -13,6 +13,7 @@ import scala.collection.immutable.ListMap
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
+import org.typelevel.ci.CIString
 
 private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(implicit
     st: ShowType,
@@ -99,7 +100,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
     def go(stack: List[PathOperation], pps: List[PathParameter]): List[PathParameter] =
       stack match {
         case Nil => pps
-        case PathMatch("") :: xs => go(xs, pps)
+        case PathMatch.empty :: xs => go(xs, pps)
         case PathMatch(_) :: xs => go(xs, pps)
         case MetaCons(_, _) :: xs => go(xs, pps)
         case PathCapture(id, desc, p, _) :: xs =>
@@ -124,7 +125,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
 
     def go(stack: List[PathOperation], summary: Option[String]): Option[String] =
       stack match {
-        case PathMatch("") :: Nil => go(Nil, summary)
+        case PathMatch.empty :: Nil => go(Nil, summary)
         case PathMatch(_) :: xs => go(xs, summary)
         case PathCapture(_, _, _, _) :: xs => go(xs, summary)
         case CaptureTail :: _ => summary
@@ -145,10 +146,10 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
 
     def go(stack: List[PathOperation], tags: List[String]): List[String] =
       stack match {
-        case PathMatch("") :: xs => go(xs, tags)
+        case PathMatch.empty :: xs => go(xs, tags)
         case PathMatch(segment) :: xs =>
           tags match {
-            case Nil => go(xs, segment :: Nil)
+            case Nil => go(xs, segment.decoded() :: Nil)
             case ts => go(xs, ts)
           }
         case PathCapture(id, _, _, _) :: xs =>
@@ -443,8 +444,8 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
     }
   }
 
-  def mkHeaderParam(key: HeaderKey.Extractable, isRequired: Boolean): HeaderParameter =
-    HeaderParameter(`type` = "string", name = key.name.toString.some, required = isRequired)
+  def mkHeaderParam(key: CIString, isRequired: Boolean): HeaderParameter =
+    HeaderParameter(`type` = "string", name = key.toString.some, required = isRequired)
 
   def linearizeRoute(rr: RhoRoute[F, _]): List[LinearRoute] = {
 
@@ -495,8 +496,8 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
       def go(stack: List[PathOperation], pathStr: String): String =
         stack match {
           case Nil => if (pathStr.isEmpty) "/" else pathStr
-          case PathMatch("") :: Nil => pathStr + "/"
-          case PathMatch("") :: xs => go(xs, pathStr)
+          case PathMatch.empty :: Nil => pathStr + "/"
+          case PathMatch.empty :: xs => go(xs, pathStr)
           case PathMatch(s) :: xs => go(xs, pathStr + "/" + s)
           case MetaCons(_, _) :: xs => go(xs, pathStr)
           case PathCapture(id, _, _, _) :: xs => go(xs, s"$pathStr/{$id}")

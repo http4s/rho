@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.ui
 
-import cats.effect.{Blocker, ContextShift, Sync}
+import cats.effect.{Sync}
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.{
@@ -18,15 +18,12 @@ import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe.WeakTypeTag
 
 object SwaggerUi {
-  def apply[F[_]: Sync: ContextShift](implicit etag: WeakTypeTag[F[_]]): SwaggerUi[F] =
-    new SwaggerUi[F]()
+  def apply[F[_]: Sync](implicit etag: WeakTypeTag[F[_]]): SwaggerUi[F] = new SwaggerUi[F]()
 }
 
-class SwaggerUi[F[_]: Sync: ContextShift](implicit etag: WeakTypeTag[F[_]])
-    extends SwaggerSyntax[F] {
+class SwaggerUi[F[_]: Sync](implicit etag: WeakTypeTag[F[_]]) extends SwaggerSyntax[F] {
 
   def createRhoMiddleware(
-      blocker: Blocker,
       swaggerFormats: SwaggerFormats = swagger.DefaultSwaggerFormats,
       swaggerSpecJsonPath: String = "swagger.json",
       swaggerSpecYamlPath: String = "swagger.yaml",
@@ -56,8 +53,7 @@ class SwaggerUi[F[_]: Sync: ContextShift](implicit etag: WeakTypeTag[F[_]])
       val relativeSwaggerSpecPath =
         ("../" * s"$cleanSwaggerUiPath/".count(_ == '/')) + cleanSwaggerSpecPath
 
-      val swaggerUiRoutes =
-        SwaggerUiRoutes[F](swaggerUiPath, relativeSwaggerSpecPath, blocker).getRoutes
+      val swaggerUiRoutes = SwaggerUiRoutes[F](swaggerUiPath, relativeSwaggerSpecPath).getRoutes
 
       routes ++ swaggerSpecRoute ++ swaggerUiRoutes
   }

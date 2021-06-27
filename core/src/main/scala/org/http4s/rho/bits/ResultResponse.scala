@@ -2,7 +2,7 @@ package org.http4s.rho.bits
 
 import cats.data.OptionT
 import cats.{Applicative, Functor, Monad}
-import cats.syntax.functor._
+import cats.implicits._
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
 
@@ -47,6 +47,11 @@ sealed trait ResultResponse[F[_], +T] extends RouteResult[F, T] {
     case s @ SuccessResponse(_) => s
     case _ => other
   }
+}
+
+object ResultResponse {
+  def fromEither[F[_]: Functor, R](e: Either[F[BaseResult[F]], R]): ResultResponse[F, R] =
+    e.fold(FailureResponse.result[F](_), SuccessResponse.apply _)
 }
 
 /** Successful response */

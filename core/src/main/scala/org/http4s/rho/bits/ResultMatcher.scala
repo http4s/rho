@@ -463,7 +463,7 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
     override def conv(req: Request[F], r: Option[R])(implicit F: Monad[F]): F[Response[F]] =
       r match {
         case Some(res) => Ok.pure(res)
-        case None => NotFound.pure(req.uri.path)
+        case None => NotFound.pure(req.uri.path.renderString)
       }
   }
 
