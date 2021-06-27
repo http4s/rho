@@ -4,6 +4,8 @@ package swagger
 import cats.effect.IO
 import cats.syntax.all._
 import cats.{Applicative, Monad}
+import _root_.io.circe._, _root_.io.circe.parser._, _root_.io.circe.generic.auto._
+
 import fs2.{Chunk, Stream}
 import org.http4s.Method._
 import org.http4s._
@@ -16,7 +18,6 @@ import org.specs2.mutable.Specification
 
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
-import scala.reflect._
 import scala.reflect.runtime.universe._
 
 object SwaggerModelsBuilderSpec {
@@ -24,19 +25,13 @@ object SwaggerModelsBuilderSpec {
   case class Bar(c: Long, d: List[Foo])
   case class FooVal(str: String) extends AnyVal
 
-  import org.json4s._
-  import org.json4s.jackson.JsonMethods
-
-  private implicit val format: DefaultFormats =
-    DefaultFormats
-
-  implicit def jsonParser[A: TypeTag: ClassTag]: StringParser[IO, A] = new StringParser[IO, A]
+  implicit def jsonParser[A: Decoder: TypeTag]: StringParser[IO, A] = new StringParser[IO, A]
     with FailureResponseOps[IO] {
     override val typeTag: Option[TypeTag[A]] =
       implicitly[TypeTag[A]].some
 
     override def parse(s: String)(implicit F: Monad[IO]): ResultResponse[IO, A] =
-      Either.catchNonFatal(JsonMethods.parse(s).extract[A]) match {
+      decode[A](s) match {
         case Left(t) => badRequest[String](t.getMessage)
         case Right(t) => SuccessResponse(t)
       }
@@ -239,12 +234,11 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "handle an action with query parameters of empty data types" in {
-      val ra = fooPath +? param[Unit]("unit") & param[Void]("void") |>> { (_: Unit, _: Void) => "" }
+      val ra = fooPath +? param[Unit]("unit") |>> { (_: Unit) => "" }
 
       sb.collectQueryParams(singleLinearRoute(ra)) must_==
         List(
-          QueryParameter(`type` = "string".some, name = "unit".some, required = true),
-          QueryParameter(`type` = "string".some, name = "void".some, required = true)
+          QueryParameter(`type` = "string".some, name = "unit".some, required = true)
         )
     }
   }
@@ -252,38 +246,38 @@ class SwaggerModelsBuilderSpec extends Specification {
   "SwaggerModelsBuilder.collectHeaderParams" should {
 
     "handle an action with single header rule" in {
-      val ra = fooPath >>> exists(`Content-Length`) |>> { () => "" }
+      val ra = fooPath >>> H[`Content-Length`].exists |>> { () => "" }
 
       sb.collectHeaderParams(singleLinearRoute(ra)) must_==
         List(HeaderParameter(`type` = "string", name = "Content-Length".some, required = true))
     }
 
     "handle an action with two header rules" in {
-      val ra = fooPath >>> (exists(`Content-Length`) && exists(`Content-MD5`)) |>> { () => "" }
+      val ra = fooPath >>> (H[`Content-Length`].exists && H[`Content-Type`].exists) |>> { () => "" }
 
       sb.collectHeaderParams(singleLinearRoute(ra)) must_==
         List(
           HeaderParameter(`type` = "string", name = "Content-Length".some, required = true),
-          HeaderParameter(`type` = "string", name = "Content-MD5".some, required = true)
+          HeaderParameter(`type` = "string", name = "Content-Type".some, required = true)
         )
     }
 
     "handle an action with or-structure header rules" in {
       def orStr(str: String) = s"Optional if the following headers are satisfied: [$str]".some
 
-      val ra = fooPath >>> (exists(`Content-Length`) || exists(`Content-MD5`)) |>> { () => "" }
+      val ra = fooPath >>> (H[`Content-Length`].exists || H[`Content-Type`].exists) |>> { () => "" }
 
       sb.collectHeaderParams(singleLinearRoute(ra)) must_==
         List(
           HeaderParameter(
             `type` = "string",
             name = "Content-Length".some,
-            description = orStr("Content-MD5"),
+            description = orStr("Content-Type"),
             required = true
           ),
           HeaderParameter(
             `type` = "string",
-            name = "Content-MD5".some,
+            name = "Content-Type".some,
             description = orStr("Content-Length"),
             required = true
           )
@@ -292,7 +286,7 @@ class SwaggerModelsBuilderSpec extends Specification {
 
     "set required = false if there is a default value for the header" in {
       val ra =
-        fooPath >>> captureOrElse(`Content-Length`)(`Content-Length`.unsafeFromLong(20)) |>> {
+        fooPath >>> H[`Content-Length`].captureOrElse(`Content-Length`.unsafeFromLong(20)) |>> {
           (_: `Content-Length`) => ""
         }
 
@@ -301,7 +295,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "set required = false if the header is optional" in {
-      val ra = fooPath >>> captureOptionally(`Content-Length`) |>> {
+      val ra = fooPath >>> H[`Content-Length`].captureOptionally |>> {
         (_: Option[`Content-Length`]) => ""
       }
 
@@ -310,7 +304,7 @@ class SwaggerModelsBuilderSpec extends Specification {
     }
 
     "set required = false by default if there is a missingHeaderResult for the header" in {
-      val ra = fooPath >>> captureMapR(`Content-Length`, Option(Ok("5")))(Right(_)) |>> {
+      val ra = fooPath >>> H[`Content-Length`].captureMapR(Option(Ok("5")))(Right(_)) |>> {
         (_: `Content-Length`) => ""
       }
 
@@ -891,10 +885,10 @@ class SwaggerModelsBuilderSpec extends Specification {
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[F[_]: Applicative, A]: EntityEncoder[F, List[A]] =
-    EntityEncoder.simple[F, List[A]]()(_ => Chunk.bytes("A".getBytes))
+    EntityEncoder.simple[F, List[A]]()(_ => Chunk.array("A".getBytes))
 
   implicit def mapEntityEncoder[F[_]: Applicative, A, B]: EntityEncoder[F, Map[A, B]] =
-    EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.bytes("A".getBytes))
+    EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.array("A".getBytes))
 
   case class CsvFile()
 

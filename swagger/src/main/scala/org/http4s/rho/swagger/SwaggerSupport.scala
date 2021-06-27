@@ -3,7 +3,7 @@ package rho
 package swagger
 
 import _root_.io.swagger.util.{Json, Yaml}
-import cats.effect.Sync
+import cats._
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
@@ -13,11 +13,11 @@ import scala.reflect.runtime.universe._
 import scala.collection.immutable.Seq
 
 object SwaggerSupport {
-  def apply[F[_]: Sync](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] =
+  def apply[F[_]: Monad](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] =
     new SwaggerSupport[F] {}
 }
 
-abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]])
+abstract class SwaggerSupport[F[_]: Monad](implicit etag: WeakTypeTag[F[_]])
     extends SwaggerSyntax[F] {
 
   /** Create a RhoMiddleware adding a route to get the Swagger JSON/YAML files
@@ -68,7 +68,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
           .mapper()
           .writerWithDefaultPrettyPrinter()
           .writeValueAsString(swagger.toJModel),
-        Headers.of(`Content-Type`(MediaType.application.json))
+        Headers(`Content-Type`(MediaType.application.json))
       )
 
     "Swagger documentation (YAML)" ** GET / yamlApiPath |>> (() => yamlResponse)
@@ -79,7 +79,7 @@ abstract class SwaggerSupport[F[_]](implicit F: Sync[F], etag: WeakTypeTag[F[_]]
           .mapper()
           .writerWithDefaultPrettyPrinter()
           .writeValueAsString(swagger.toJModel),
-        Headers.of(`Content-Type`(MediaType.text.yaml))
+        Headers(`Content-Type`(MediaType.text.yaml))
       )
   }
 }

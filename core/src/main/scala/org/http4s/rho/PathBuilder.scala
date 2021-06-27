@@ -21,7 +21,7 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
     with HeaderAppendable[F, T]
     with RoutePrependable[F, PathBuilder[F, T]]
     with UriConvertible[F] {
-  type HeaderAppendResult[T <: HList] = Router[F, T]
+  type HeaderAppendResult[T0 <: HList] = Router[F, T0]
 
   override val rules: RequestRule[F] = EmptyRule[F]()
 

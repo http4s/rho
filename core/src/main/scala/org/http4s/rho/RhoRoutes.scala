@@ -23,7 +23,7 @@ import shapeless.{HList, HNil}
   *
   * @param routes Routes to prepend before elements in the constructor.
   */
-class RhoRoutes[F[_]: Defer: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
+class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
     extends bits.MethodAliases
     with bits.ResponseGeneratorInstances[F]
     with RoutePrependable[F, RhoRoutes[F]]

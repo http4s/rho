@@ -2,8 +2,11 @@ package org.http4s
 package rho
 package swagger
 
-import cats.data.NonEmptyList
+import cats.data._
 import cats.effect.IO
+import _root_.io.circe.parser._
+import _root_.io.circe._
+import _root_.io.circe.syntax._
 import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
@@ -11,8 +14,6 @@ import org.http4s.rho.swagger.syntax.io._
 import org.specs2.mutable.Specification
 
 class SwaggerSupportSpec extends Specification {
-  import org.json4s.JsonAST._
-  import org.json4s.jackson._
 
   val baseRoutes = new RhoRoutes[IO] {
     GET / "hello" |>> { () => Ok("hello world") }
@@ -41,26 +42,41 @@ class SwaggerSupportSpec extends Specification {
   }
 
   "SwaggerSupport" should {
+    case class SwaggerRoot(
+        paths: Map[String, Json] = Map.empty
+    )
+    implicit lazy val swaggerRootDecoder: Decoder[SwaggerRoot] =
+      _root_.io.circe.generic.semiauto.deriveDecoder
+
     "Expose an API listing" in {
       val service = baseRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
-        parseJson(RRunner(service).checkOk(r)) \\ "paths"
+      val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
 
-      Set(a, b, c, d) should_== Set("/swagger.json", "/swagger.yaml", "/hello", "/hello/{string}")
+      json should beRight
+      val swaggerRoot = json.getOrElse(???)
+
+      swaggerRoot.paths.keySet should_== Set(
+        "/swagger.json",
+        "/swagger.yaml",
+        "/hello",
+        "/hello/{string}"
+      )
     }
 
     "Support prefixed routes" in {
       val service =
         ("foo" /: baseRoutes).toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
-        parseJson(RRunner(service).checkOk(r)) \\ "paths"
+      val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
 
-      Set(a, b, c, d) should_== Set(
+      json should beRight
+      val swaggerRoot = json.getOrElse(???)
+
+      swaggerRoot.paths.keySet should_== Set(
         "/swagger.json",
         "/swagger.yaml",
         "/foo/hello",
@@ -79,29 +95,42 @@ class SwaggerSupportSpec extends Specification {
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
       val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)), (d, JObject(_)))) =
-        parseJson(RRunner(httpRoutes.toRoutes()).checkOk(r)) \\ "paths"
+      val json = decode[SwaggerRoot](RRunner(httpRoutes.toRoutes()).checkOk(r))
 
-      Set(a, b, c, d) should_== Set("/hello", "/hello/{string}", "/goodbye", "/goodbye/{string}")
+      json should beRight
+      val swaggerRoot = json.getOrElse(???)
+
+      swaggerRoot.paths.keySet should_== Set(
+        "/hello",
+        "/hello/{string}",
+        "/goodbye",
+        "/goodbye/{string}"
+      )
     }
 
     "Support endpoints which end in a slash" in {
       val service = trailingSlashRoutes.toRoutes(createRhoMiddleware())
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
-      val JObject(List((a, JObject(_)))) = parseJson(RRunner(service).checkOk(r)) \\ "paths"
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-      a should_== "/foo/"
+      val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
+
+      json should beRight
+      val swaggerRoot = json.getOrElse(???)
+
+      swaggerRoot.paths.keys.head should_== "/foo/"
     }
 
     "Support endpoints which end in a slash being mixed with normal endpoints" in {
       val service = mixedTrailingSlashesRoutes.toRoutes(createRhoMiddleware())
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
-      val JObject(List((a, JObject(_)), (b, JObject(_)), (c, JObject(_)))) =
-        parseJson(RRunner(service).checkOk(r)) \\ "paths"
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+      val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
 
-      Set(a, b, c) should_== Set("/foo/", "/foo", "/bar")
+      json should beRight
+      val swaggerRoot = json.getOrElse(???)
+
+      swaggerRoot.paths.keySet should_== Set("/foo/", "/foo", "/bar")
     }
 
     "Provide a way to agregate routes from multiple RhoRoutes, with mixed trailing slashes and non-trailing slashes" in {
@@ -111,22 +140,14 @@ class SwaggerSupportSpec extends Specification {
       val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
       val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-      val JObject(
-        List(
-          (a, JObject(_)),
-          (b, JObject(_)),
-          (c, JObject(_)),
-          (d, JObject(_)),
-          (e, JObject(_)),
-          (f, JObject(_)),
-          (g, JObject(_))
-        )
-      ) =
-        parseJson(RRunner(httpRoutes.toRoutes()).checkOk(r)) \\ "paths"
+      val json = decode[SwaggerRoot](RRunner(httpRoutes.toRoutes()).checkOk(r))
 
-      Set(a, b, c, d, e, f, g) should_== Set(
+      json should beRight
+      val swaggerRoot = json.getOrElse(???)
+
+      swaggerRoot.paths.keySet should_== Set(
         "/hello",
         "/hello/{string}",
         "/goodbye",
@@ -140,23 +161,22 @@ class SwaggerSupportSpec extends Specification {
     "Check metadata in API listing" in {
       val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-      val json = parseJson(RRunner(service).checkOk(r))
+      val json = parse(RRunner(service).checkOk(r)).getOrElse(???)
 
-      val JObject(
-        List(
-          (a, JArray(List(JObject(List((e, JArray(List(JString(f))))))))),
-          (b, JArray(List(JObject(List((g, JArray(List(JString(h)))))))))
+      val security: List[Json] = (json \\ "security").flatMap(_.asArray).flatten
+      security should contain(
+        Json.obj(
+          "bye" := List("hello")
+        ),
+        Json.obj(
+          "hello" := List("bye")
         )
-      ) = json \\ "security"
-      val JObject(List(_, (c, JString(i)), _, (d, JString(j)))) = json \\ "summary"
+      )
 
-      Set(a, b) should_== Set("security", "security")
-      Set(c, d) should_== Set("summary", "summary")
-      Set(e, f) should_== Set("hello", "bye")
-      Set(g, h) should_== Set("bye", "hello")
-      Set(i, j) should_== Set("Hello", "Bye")
+      val summary = (json \\ "summary").flatMap(_.asString)
+      summary should contain("Bye", "Hello")
     }
 
     "Swagger support for complex meta data" in {
@@ -205,57 +225,37 @@ class SwaggerSupportSpec extends Specification {
         )
       )
 
-      val r = Request[IO](GET, Uri(path = "/swagger-test.json"))
-      val json = parseJson(RRunner(service).checkOk(r))
+      val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger-test.json")))
+      val json = parse(RRunner(service).checkOk(r)).getOrElse(???)
+      val cursor = json.hcursor
 
-      val JString(icn) = json \ "info" \ "contact" \ "name"
-      val JString(h) = json \ "host"
-      val JArray(List(JString(s1), JString(s2))) = json \ "schemes"
-      val JString(bp) = json \ "basePath"
-      val JArray(List(JString(c))) = json \ "consumes"
-      val JArray(List(JString(p))) = json \ "produces"
-      val JArray(List(JArray(sec1))) = json \ "security" \ "apiKey"
-      val JArray(List(JArray(List(JString(sec2))))) = json \ "security" \ "vendor_jwk"
-      val JString(t) = json \ "securityDefinitions" \ "api_key" \ "type"
-      val JString(vi) = json \ "securityDefinitions" \ "vendor_jwk" \ "x-vendor-issuer"
-      val JString(ve) = json \ "x-vendor-endpoints" \ "target"
+      val icn = cursor.downField("info").downField("contact").get[String]("name")
+      val h = cursor.get[String]("host")
+      val s = cursor.downField("schemes").as[List[String]]
+      val bp = cursor.get[String]("basePath")
+      val c = cursor.downField("consumes").downArray.as[String]
+      val p = cursor.downField("produces").downArray.as[String]
+      val sec1 = cursor.downField("security").downArray.downField("apiKey").as[List[String]]
+      val sec2 =
+        cursor.downField("security").downArray.right.downField("vendor_jwk").downArray.as[String]
+      val t = cursor.downField("securityDefinitions").downField("api_key").get[String]("type")
+      val vi = cursor
+        .downField("securityDefinitions")
+        .downField("vendor_jwk")
+        .get[String]("x-vendor-issuer")
+      val ve = cursor.downField("x-vendor-endpoints").get[String]("target")
 
-      Set(icn, h, s1, s2, bp, c, p, sec2, t, vi, ve) should_== Set(
-        "Name",
-        "www.test.com",
-        "http",
-        "https",
-        "/v1",
-        "application/json",
-        "application/json",
-        "admin",
-        "apiKey",
-        "https://www.test.com/",
-        "298.0.0.1"
-      )
-      sec1 should_== Nil
-    }
-
-    "Check metadata in API listing" in {
-      val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
-
-      val r = Request[IO](GET, Uri(path = "/swagger.json"))
-
-      val json = parseJson(RRunner(service).checkOk(r))
-
-      val JObject(
-        List(
-          (a, JArray(List(JObject(List((e, JArray(List(JString(f))))))))),
-          (b, JArray(List(JObject(List((g, JArray(List(JString(h)))))))))
-        )
-      ) = json \\ "security"
-      val JObject(List(_, (c, JString(i)), _, (d, JString(j)))) = json \\ "summary"
-
-      Set(a, b) should_== Set("security", "security")
-      Set(c, d) should_== Set("summary", "summary")
-      Set(e, f) should_== Set("hello", "bye")
-      Set(g, h) should_== Set("bye", "hello")
-      Set(i, j) should_== Set("Hello", "Bye")
+      icn should beRight("Name")
+      h should beRight("www.test.com")
+      s should beRight(List("http", "https"))
+      bp should beRight("/v1")
+      c should beRight("application/json")
+      p should beRight("application/json")
+      sec2 should beRight("admin")
+      t should beRight("apiKey")
+      vi should beRight("https://www.test.com/")
+      ve should beRight("298.0.0.1")
+      sec1 should beRight(List.empty[String])
     }
   }
 }

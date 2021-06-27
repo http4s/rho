@@ -12,7 +12,7 @@ lazy val rho = project
   .in(file("."))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings: _*)
-  .aggregate(`rho-core`, `rho-hal`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
+  .aggregate(`rho-core`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
 
 lazy val `rho-core` = project
   .in(file("core"))
@@ -31,12 +31,6 @@ lazy val `rho-core` = project
     },
     libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4")
   )
-
-lazy val `rho-hal` = project
-  .in(file("hal"))
-  .settings(buildSettings :+ halDeps: _*)
-  .settings(mimaConfiguration)
-  .dependsOn(`rho-core`)
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
@@ -71,10 +65,8 @@ lazy val docs = project
       version.value,
       apiVersion.value
     ),
-    (ScalaUnidoc / unidoc / scalacOptions) ++= versionSpecificEnabledFlags(scalaVersion.value),
     (ScalaUnidoc / unidoc / unidocProjectFilter) := inProjects(
       `rho-core`,
-      `rho-hal`,
       `rho-swagger`
     ),
     git.remoteRepo := "git@github.com:http4s/rho.git",
@@ -87,7 +79,7 @@ lazy val docs = project
       } yield (f, s"api/$major.$minor/$d")
     }
   )
-  .dependsOn(`rho-core`, `rho-hal`, `rho-swagger`)
+  .dependsOn(`rho-core`, `rho-swagger`)
 
 lazy val `rho-examples` = project
   .in(file("examples"))
@@ -96,26 +88,19 @@ lazy val `rho-examples` = project
   .settings(Revolver.settings)
   .settings(
     exampleDeps,
-    libraryDependencies ++= Seq(logbackClassic, http4sXmlInstances),
     dontPublish
   )
-  .dependsOn(`rho-swagger`, `rho-swagger-ui`, `rho-hal`)
+  .dependsOn(`rho-swagger`, `rho-swagger-ui`)
 
-lazy val compilerFlags = Seq(
-  "-feature",
-  "-deprecation",
-  "-unchecked",
-  "-language:higherKinds",
-  "-language:existentials",
-  "-language:implicitConversions",
-  "-Ywarn-unused",
-  "-Xfatal-warnings"
+lazy val disabledCompilerFlags = Seq( // TODO: Fix code and re-enable these.
+  "-Xlint:package-object-classes",
+  "-Ywarn-numeric-widen",
+  "-Wnumeric-widen",
+  "-Xlint:adapted-args",
+  "-Yno-adapted-args",
+  "-Wdead-code",
+  "-Ywarn-dead-code"
 )
-
-def versionSpecificEnabledFlags(version: String) = CrossVersion.partialVersion(version) match {
-  case Some((2, 13)) => Seq.empty[String]
-  case _ => Seq("-Ypartial-unification")
-}
 
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
@@ -128,7 +113,7 @@ lazy val buildSettings = publishing ++
   Seq(
     scalaVersion := scala_213,
     crossScalaVersions := Seq(scala_213, scala_212),
-    scalacOptions := compilerFlags ++ versionSpecificEnabledFlags(scalaVersion.value),
+    scalacOptions --= disabledCompilerFlags,
     resolvers += Resolver.sonatypeRepo("snapshots"),
     (run / fork) := true,
     (ThisBuild / organization) := "org.http4s",
@@ -136,14 +121,19 @@ lazy val buildSettings = publishing ++
     description := "A self documenting DSL build upon the http4s framework",
     license,
     libraryDependencies ++= Seq(
-      shapeless,
-      silencerPlugin,
-      silencerLib,
       http4sServer % "provided",
       logbackClassic % "test"
     ),
-    libraryDependencies ++= specs2,
-    libraryDependencies += `scala-reflect` % scalaVersion.value
+    libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
+                               Seq(
+                                 shapeless,
+                                 silencerPlugin,
+                                 silencerLib,
+                                 kindProjector,
+                                 `scala-reflect` % scalaVersion.value
+                               )
+                             else Seq.empty),
+    libraryDependencies ++= specs2
   )
 
 // to keep REPL usable

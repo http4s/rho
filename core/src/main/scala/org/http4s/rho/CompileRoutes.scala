@@ -40,7 +40,7 @@ object CompileRoutes {
     * @param routes `Seq` of routes to bundle into a service.
     * @return An `HttpRoutes`
     */
-  def foldRoutes[F[_]: Defer: Monad](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
+  def foldRoutes[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
     val tree = routes.foldLeft(PathTree[F]())((t, r) => t.appendRoute(r))
     HttpRoutes((req: Request[F]) => tree.getResult(req).toResponse)
   }

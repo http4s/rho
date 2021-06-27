@@ -3,7 +3,8 @@ package rho
 
 import cats._
 import org.http4s.headers.`Content-Type`
-import _root_.io.chrisdavenport.vault._
+import org.typelevel.vault._
+import org.typelevel.ci.CIString
 
 /** A helper for capturing the result types and status codes from routes */
 sealed case class Result[
@@ -102,23 +103,19 @@ trait ResultSyntaxInstances[F[_]] {
 
     def withHeaders(headers: Headers): Self = Result(resp.withHeaders(headers))
 
-    def withHeaders(headers: Header*): Self = Result(resp.withHeaders(headers: _*))
+    def withHeaders(headers: Header.ToRaw*): Self = Result(resp.withHeaders(headers: _*))
 
     def withAttributes(attributes: Vault): Self = Result(resp.withAttributes(attributes))
 
     def transformHeaders(f: Headers => Headers): Self = Result(resp.transformHeaders(f))
 
-    def filterHeaders(f: Header => Boolean): Self = Result(resp.filterHeaders(f))
+    def filterHeaders(f: Header.Raw => Boolean): Self = Result(resp.filterHeaders(f))
 
-    def removeHeader(key: HeaderKey): Self = Result(resp.removeHeader(key))
+    def removeHeader(key: CIString): Self = Result(resp.removeHeader(key))
 
-    def putHeaders(headers: Header*): Self = Result(resp.putHeaders(headers: _*))
+    def removeHeader[A](implicit h: Header[A, _]): Self = Result(resp.removeHeader(h))
 
-    @scala.deprecated("Use withHeaders instead", "0.20.0-M2")
-    def replaceAllHeaders(headers: Headers): Self = Result(resp.replaceAllHeaders(headers))
-
-    @scala.deprecated("Use withHeaders instead", "0.20.0-M2")
-    def replaceAllHeaders(headers: Header*): Self = Result(resp.replaceAllHeaders(headers: _*))
+    def putHeaders(headers: Header.ToRaw*): Self = Result(resp.putHeaders(headers: _*))
 
     def withTrailerHeaders(trailerHeaders: F[Headers]): Self = Result(
       resp.withTrailerHeaders(trailerHeaders)
@@ -127,9 +124,6 @@ trait ResultSyntaxInstances[F[_]] {
     def withoutTrailerHeaders: Self = Result(resp.withoutTrailerHeaders)
 
     def trailerHeaders(implicit F: Applicative[F]): F[Headers] = resp.trailerHeaders(F)
-
-    @scala.deprecated("Use withContentType(`Content-Type`(t)) instead", "0.20.0-M2")
-    def withType(t: MediaType)(implicit F: Functor[F]): Self = Result(resp.withType(t)(F))
 
     def withContentType(contentType: `Content-Type`): Self = Result(
       resp.withContentType(contentType)
