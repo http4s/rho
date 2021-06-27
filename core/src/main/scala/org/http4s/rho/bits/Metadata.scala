@@ -2,6 +2,7 @@ package org.http4s
 package rho.bits
 
 import scala.reflect.runtime.universe.TypeTag
+import org.typelevel.ci.CIString
 
 /** Base type for data that can be used to decorate the rules trees
   *
@@ -31,4 +32,4 @@ case class QueryMetaData[F[_], T](
     extends Metadata
 
 /** Metadata about a header rule */
-case class HeaderMetaData[T <: HeaderKey.Extractable](key: T, isRequired: Boolean) extends Metadata
+case class HeaderMetaData[T](key: CIString, isRequired: Boolean) extends Metadata

@@ -16,12 +16,12 @@ class ResponseGeneratorSpec extends Specification {
         new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
       str must_== "Foo"
 
-      resp.headers.get(`Content-Length`) must beSome(
+      resp.headers.get[`Content-Length`] must beSome(
         `Content-Length`.unsafeFromLong("Foo".getBytes.length)
       )
-      resp.headers
-        .filterNot(_.is(`Content-Length`))
-        .toList must_== EntityEncoder.stringEncoder.headers.toList
+      resp.headers.headers
+        .filterNot(_.name == `Content-Length`.name)
+        .toList must_== EntityEncoder.stringEncoder.headers.headers.toList
     }
 
     "Build a response without a body" in {
@@ -30,8 +30,8 @@ class ResponseGeneratorSpec extends Specification {
 
       resp.body.compile.toVector.unsafeRunSync().length must_== 0
       resp.status must_== Status.SwitchingProtocols
-      resp.headers.get(`Content-Length`) must beNone
-      resp.headers.get(`Transfer-Encoding`) must beNone
+      resp.headers.get[`Content-Length`] must beNone
+      resp.headers.get[`Transfer-Encoding`] must beNone
     }
 
     "Build a redirect response" in {
@@ -41,9 +41,9 @@ class ResponseGeneratorSpec extends Specification {
 
       resp.body.compile.toVector.unsafeRunSync().length must_== 0
       resp.status must_== Status.MovedPermanently
-      resp.headers.get(`Content-Length`) must beNone
-      resp.headers.get(`Transfer-Encoding`) must beNone
-      resp.headers.get(Location) must beSome(Location(location))
+      resp.headers.get[`Content-Length`] must beNone
+      resp.headers.get[`Transfer-Encoding`] must beNone
+      resp.headers.get[Location] must beSome(Location(location))
     }
 
     "Build a redirect response with a body" in {
@@ -54,11 +54,11 @@ class ResponseGeneratorSpec extends Specification {
 
       EntityDecoder[IO, String].decode(resp, false).value.unsafeRunSync() must beRight(testBody)
       resp.status must_== Status.MovedPermanently
-      resp.headers.get(`Content-Length`) must beSome(
+      resp.headers.get[`Content-Length`] must beSome(
         `Content-Length`.unsafeFromLong(testBody.length)
       )
-      resp.headers.get(`Transfer-Encoding`) must beNone
-      resp.headers.get(Location) must beSome(Location(location))
+      resp.headers.get[`Transfer-Encoding`] must beNone
+      resp.headers.get[Location] must beSome(Location(location))
     }
 
     "Explicitly added headers have priority" in {
@@ -67,11 +67,11 @@ class ResponseGeneratorSpec extends Specification {
           EntityEncoder.stringEncoder[IO].toEntity(_)
         )
 
-      Ok("some content", Headers.of(`Content-Type`(MediaType.application.json)))
+      Ok("some content", Headers(`Content-Type`(MediaType.application.json)))
         .unsafeRunSync()
         .resp
         .headers
-        .get(`Content-Type`)
+        .get[`Content-Type`]
         .get must_== `Content-Type`(MediaType.application.json)
     }
   }

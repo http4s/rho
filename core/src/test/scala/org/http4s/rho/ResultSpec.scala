@@ -1,6 +1,6 @@
 package org.http4s.rho
 
-import _root_.io.chrisdavenport.vault._
+import org.typelevel.vault._
 import cats.effect._
 import org.http4s.headers._
 import org.http4s.rho.io._
@@ -17,14 +17,14 @@ class ResultSpec extends Specification {
         .unsafeRunSync()
         .resp
 
-      resp.headers.get(Date) must beSome(date)
+      resp.headers.get[Date] must beSome(date)
 
       val respNow = Ok("Foo")
         .map(_.putHeaders(date))
         .unsafeRunSync()
         .resp
 
-      respNow.headers.get(Date) must beSome(date)
+      respNow.headers.get[Date] must beSome(date)
     }
 
     "Add atributes" in {
