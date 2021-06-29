@@ -650,7 +650,7 @@ class SwaggerModelsBuilderSuite extends FunSuite {
     assertEquals(op.consumes, List("application/json"))
   }
 
-  private val prefix = "org.http4s.rho.swagger.SwaggerModelsBuilderSpec."
+  private val prefix = "org.http4s.rho.swagger.SwaggerModelsBuilderSuite."
   private val modelAFullName = prefix + "ModelA"
   private val modelBFullName = prefix + "ModelB"
   private val modelCFullName = prefix + "ModelC"
