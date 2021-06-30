@@ -33,7 +33,7 @@ class SwaggerFormatsSuite extends FunSuite {
     assert(modelOf(typeTag[FruitBox]).nonEmpty)
     assertEquals(modelOf(typeTag[FruitBox]).head.id, "fruit-box")
     assertEquals(modelOf(typeTag[FruitBox]).head.description, "model.FruitBox".some)
-    assert(modelOf(typeTag[FruitBox]).head.properties.isEmpty)
+    assertEquals(modelOf(typeTag[FruitBox]).head.properties, Map.empty[String, Property])
   }
 
   test("SwaggerFormats.withFieldSerializers") {

@@ -112,7 +112,7 @@ class TypeBuilderSuite extends FunSuite {
       TypeBuilder.collectModels(t.tpe, s, DefaultSwaggerFormats, typeOf[IO[_]])
     }
 
-    assert(ms.isEmpty)
+    assertEquals(ms, Set.empty[Model])
   }
 
   test("A TypeBuilder should identify types") {
