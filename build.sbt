@@ -134,7 +134,7 @@ lazy val buildSettings = publishing ++
                                )
                              else Seq.empty),
     libraryDependencies ++= specs2,
-    libraryDependencies ++= Seq(munit, scalacheckMunit).map(_ % "test")
+    libraryDependencies ++= Seq(munit, scalacheckMunit)
   )
 
 // to keep REPL usable
