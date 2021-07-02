@@ -328,7 +328,7 @@ class ApiTest extends FunSuite {
     val path = pathMatch("foo")
     val q = param[Int]("bar")
 
-    assertEquals(path +? q, RequestLineBuilder[IO, shapeless.::[Int,HNil]](path.rule, q.rule))
+    assertEquals(path +? q, RequestLineBuilder[IO, shapeless.::[Int, HNil]](path.rule, q.rule))
   }
 
   test("A RequestLineBuilder should append to a TypedPath") {
