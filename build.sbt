@@ -133,7 +133,8 @@ lazy val buildSettings = publishing ++
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
-    libraryDependencies ++= specs2
+    libraryDependencies ++= specs2,
+    libraryDependencies ++= Seq(munit, scalacheckMunit)
   )
 
 // to keep REPL usable
