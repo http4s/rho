@@ -4,8 +4,6 @@ import spray.revolver.RevolverPlugin._
 
 import com.typesafe.sbt.SbtGit.git
 
-import scala.util.Properties.envOrNone
-
 import Dependencies._, RhoPlugin._
 
 lazy val rho = project
@@ -133,7 +131,6 @@ lazy val buildSettings = publishing ++
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
-    libraryDependencies ++= specs2,
     libraryDependencies ++= Seq(munit, scalacheckMunit)
   )
 

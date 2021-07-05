@@ -29,9 +29,6 @@ object Dependencies {
   lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.26"         % "test"
   lazy val scalacheckMunit     = "org.scalameta"              %% "munit-scalacheck"      % munit.revision   % "test"
 
-  lazy val specs2              = Seq("org.specs2"              %% "specs2-core"          % specs2Version % "test",
-                                     "org.specs2"              %% "specs2-scalacheck"    % specs2Version % "test" )
-
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
   val silencerVersion = "1.7.4"
