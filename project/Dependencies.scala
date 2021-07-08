@@ -25,7 +25,7 @@ object Dependencies {
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.3"
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.0"
-  lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.46.0"
+  lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.51.1"
   lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.26"         % "test"
   lazy val scalacheckMunit     = "org.scalameta"              %% "munit-scalacheck"      % munit.revision   % "test"
 
