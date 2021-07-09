@@ -2,24 +2,18 @@ package org.http4s
 package rho
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global
-import munit.FunSuite
+import munit.CatsEffectSuite
+
 import scala.collection.immutable.Seq
 
-class ParamDefaultValueSuite extends FunSuite {
-  def body(routes: HttpRoutes[IO], r: Request[IO]): String =
-    new String(
-      routes(r).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .body
-        .compile
-        .toVector
-        .unsafeRunSync()
-        .foldLeft(Array[Byte]())(_ :+ _)
-    )
+class ParamDefaultValueSuite extends CatsEffectSuite {
+  private def body(routes: HttpRoutes[IO], r: Request[IO]): IO[String] =
+    routes(r).value
+      .flatMap(_.getOrElse(Response.notFound).body.compile.toVector)
+      .map(_.foldLeft(Array[Byte]())(_ :+ _))
+      .map(new String(_))
 
-  def requestGet(s: String, h: Header.ToRaw*): Request[IO] =
+  private def requestGet(s: String, h: Header.ToRaw*): Request[IO] =
     Request(
       bits.MethodAliases.GET,
       Uri.fromString(s).getOrElse(sys.error("Failed.")),
@@ -31,19 +25,19 @@ class ParamDefaultValueSuite extends FunSuite {
   }.toRoutes()
 
   test("GET /test1 should map parameter with default value") {
-    assertEquals(body(routes1, requestGet("/test1")), "Missing query param: param1")
+    assertIO(body(routes1, requestGet("/test1")), "Missing query param: param1")
   }
 
   test("GET /test1 should map parameter with empty value") {
-    assertEquals(body(routes1, requestGet("/test1?param1=")), "test1:")
+    assertIO(body(routes1, requestGet("/test1?param1=")), "test1:")
   }
 
   test("GET /test1 should map parameter with value") {
-    assertEquals(body(routes1, requestGet("/test1?param1=value1")), "test1:value1")
+    assertIO(body(routes1, requestGet("/test1?param1=value1")), "test1:value1")
   }
 
   test("GET /test1 should map parameter without value") {
-    assertEquals(
+    assertIO(
       body(
         routes1,
         requestGet("/test1?param1")
@@ -61,19 +55,19 @@ class ParamDefaultValueSuite extends FunSuite {
   val default2 = "test2:default1"
 
   test("GET /test2 should map parameter with default value") {
-    assertEquals(body(routes2, requestGet("/test2")), default2)
+    assertIO(body(routes2, requestGet("/test2")), default2)
   }
 
   test("GET /test2 should map parameter with empty value") {
-    assertEquals(body(routes2, requestGet("/test2?param1=")), "test2:")
+    assertIO(body(routes2, requestGet("/test2?param1=")), "test2:")
   }
 
   test("GET /test2 should map parameter with value") {
-    assertEquals(body(routes2, requestGet("/test2?param1=value1")), "test2:value1")
+    assertIO(body(routes2, requestGet("/test2?param1=value1")), "test2:value1")
   }
 
   test("GET /test2 should map parameter without value") {
-    assertEquals(body(routes2, requestGet("/test2?param1")), default2)
+    assertIO(body(routes2, requestGet("/test2?param1")), default2)
   }
 
   val routes3 = new RhoRoutes[IO] {
@@ -83,19 +77,19 @@ class ParamDefaultValueSuite extends FunSuite {
   val default3 = "test3:1"
 
   test("GET /test3 should map parameter with default value") {
-    assertEquals(body(routes3, requestGet("/test3")), default3)
+    assertIO(body(routes3, requestGet("/test3")), default3)
   }
 
   test("GET /test3 should fail to map parameter with empty value") {
-    assertEquals(body(routes3, requestGet("/test3?param1=")), "Invalid number format: ''")
+    assertIO(body(routes3, requestGet("/test3?param1=")), "Invalid number format: ''")
   }
 
   test("GET /test3 should map parameter with numeric value") {
-    assertEquals(body(routes3, requestGet("/test3?param1=12345")), "test3:12345")
+    assertIO(body(routes3, requestGet("/test3?param1=12345")), "test3:12345")
   }
 
   test("GET /test3 should fail to map parameter with non-numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes3,
         requestGet("/test3?param1=value1")
@@ -105,7 +99,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test3 should map parameter without value") {
-    assertEquals(body(routes3, requestGet("/test3?param1")), default3)
+    assertIO(body(routes3, requestGet("/test3?param1")), default3)
   }
 
   val routes4 = new RhoRoutes[IO] {
@@ -117,19 +111,19 @@ class ParamDefaultValueSuite extends FunSuite {
   val default4 = "test4:"
 
   test("GET /test4 should map parameter with default value") {
-    assertEquals(body(routes4, requestGet("/test4")), default4)
+    assertIO(body(routes4, requestGet("/test4")), default4)
   }
 
   test("GET /test4 should map parameter with empty value") {
-    assertEquals(body(routes4, requestGet("/test4?param1=")), "test4:")
+    assertIO(body(routes4, requestGet("/test4?param1=")), "test4:")
   }
 
   test("GET /test4 should map parameter with value") {
-    assertEquals(body(routes4, requestGet("/test4?param1=value1")), "test4:value1")
+    assertIO(body(routes4, requestGet("/test4?param1=value1")), "test4:value1")
   }
 
   test("GET /test4 should map parameter without value") {
-    assertEquals(body(routes4, requestGet("/test4?param1")), "test4:")
+    assertIO(body(routes4, requestGet("/test4?param1")), "test4:")
   }
 
   val routes5 = new RhoRoutes[IO] {
@@ -141,19 +135,19 @@ class ParamDefaultValueSuite extends FunSuite {
   val default5 = "test5:100"
 
   test("GET /test5 should map parameter with default value") {
-    assertEquals(body(routes5, requestGet("/test5")), default5)
+    assertIO(body(routes5, requestGet("/test5")), default5)
   }
 
   test("GET /test5 should fail on parameter with empty value") {
-    assertEquals(body(routes5, requestGet("/test5?param1=")), "Invalid number format: ''")
+    assertIO(body(routes5, requestGet("/test5?param1=")), "Invalid number format: ''")
   }
 
   test("GET /test5 should map parameter with numeric value") {
-    assertEquals(body(routes5, requestGet("/test5?param1=12345")), "test5:12345")
+    assertIO(body(routes5, requestGet("/test5?param1=12345")), "test5:12345")
   }
 
   test("GET /test5 should fail on parameter with non-numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes5,
         requestGet("/test5?param1=value1")
@@ -163,7 +157,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test5 should map parameter without value") {
-    assertEquals(body(routes5, requestGet("/test5?param1")), default5)
+    assertIO(body(routes5, requestGet("/test5?param1")), default5)
   }
 
   val routes6 = new RhoRoutes[IO] {
@@ -175,19 +169,19 @@ class ParamDefaultValueSuite extends FunSuite {
   val default6 = "test6:default1"
 
   test("GET /test6 should map parameter with default value") {
-    assertEquals(body(routes6, requestGet("/test6")), default6)
+    assertIO(body(routes6, requestGet("/test6")), default6)
   }
 
   test("GET /test6 should map parameter with empty value") {
-    assertEquals(body(routes6, requestGet("/test6?param1=")), "test6:")
+    assertIO(body(routes6, requestGet("/test6?param1=")), "test6:")
   }
 
   test("GET /test6 should map parameter with value") {
-    assertEquals(body(routes6, requestGet("/test6?param1=test12345")), "test6:test12345")
+    assertIO(body(routes6, requestGet("/test6?param1=test12345")), "test6:test12345")
   }
 
   test("GET /test6 should map parameter without value") {
-    assertEquals(body(routes6, requestGet("/test6?param1")), default6)
+    assertIO(body(routes6, requestGet("/test6?param1")), default6)
   }
 
   val routes7 = new RhoRoutes[IO] {
@@ -199,19 +193,19 @@ class ParamDefaultValueSuite extends FunSuite {
   val default7 = "test7:a,b"
 
   test("GET /test7 should map parameter with default value") {
-    assertEquals(body(routes7, requestGet("/test7")), default7)
+    assertIO(body(routes7, requestGet("/test7")), default7)
   }
 
   test("GET /test7 should map parameter with empty value") {
-    assertEquals(body(routes7, requestGet("/test7?param1=")), "test7:")
+    assertIO(body(routes7, requestGet("/test7?param1=")), "test7:")
   }
 
   test("GET /test7 should map parameter with one value") {
-    assertEquals(body(routes7, requestGet("/test7?param1=test12345")), "test7:test12345")
+    assertIO(body(routes7, requestGet("/test7?param1=test12345")), "test7:test12345")
   }
 
   test("GET /test7 should map parameter with many values") {
-    assertEquals(
+    assertIO(
       body(
         routes7,
         requestGet("/test7?param1=test123&param1=test456&param1=test889")
@@ -221,7 +215,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test7 should map parameter without value") {
-    assertEquals(body(routes7, requestGet("/test7?param1")), default7)
+    assertIO(body(routes7, requestGet("/test7?param1")), default7)
   }
 
   val routes8 = new RhoRoutes[IO] {
@@ -233,23 +227,23 @@ class ParamDefaultValueSuite extends FunSuite {
   val default8 = "test8:3,5,8"
 
   test("GET /test8 should map parameter with default value") {
-    assertEquals(body(routes8, requestGet("/test8")), default8)
+    assertIO(body(routes8, requestGet("/test8")), default8)
   }
 
   test("GET /test8 should fail to map parameter with empty value") {
-    assertEquals(body(routes8, requestGet("/test8?param1=")), "Invalid number format: ''")
+    assertIO(body(routes8, requestGet("/test8?param1=")), "Invalid number format: ''")
   }
 
   test("GET /test8 should map parameter with one numeric value") {
-    assertEquals(body(routes8, requestGet("/test8?param1=12345")), "test8:12345")
+    assertIO(body(routes8, requestGet("/test8?param1=12345")), "test8:12345")
   }
 
   test("GET /test8 should fail to map parameter with one non-numeric value") {
-    assertEquals(body(routes8, requestGet("/test8?param1=test")), "Invalid number format: 'test'")
+    assertIO(body(routes8, requestGet("/test8?param1=test")), "Invalid number format: 'test'")
   }
 
   test("GET /test8 should map parameter with many numeric values") {
-    assertEquals(
+    assertIO(
       body(
         routes8,
         requestGet("/test8?param1=123&param1=456&param1=789")
@@ -259,7 +253,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test8 should fail to map parameter with many non-numeric values") {
-    assertEquals(
+    assertIO(
       body(
         routes8,
         requestGet("/test8?param1=abc&param1=def")
@@ -269,7 +263,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test8 should map parameter without value") {
-    assertEquals(body(routes8, requestGet("/test8?param1")), default8)
+    assertIO(body(routes8, requestGet("/test8?param1")), default8)
   }
 
   val routes9 = new RhoRoutes[IO] {
@@ -281,11 +275,11 @@ class ParamDefaultValueSuite extends FunSuite {
   val default9 = "test9:default1"
 
   test("GET /test9 should map parameter with default value") {
-    assertEquals(body(routes9, requestGet("/test9")), default9)
+    assertIO(body(routes9, requestGet("/test9")), default9)
   }
 
   test("GET /test9 should fail to map parameter with empty value") {
-    assertEquals(
+    assertIO(
       body(
         routes9,
         requestGet("/test9?param1=")
@@ -295,7 +289,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test9 should fail to map parameter with invalid value") {
-    assertEquals(
+    assertIO(
       body(
         routes9,
         requestGet("/test9?param1=fail")
@@ -305,11 +299,11 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test9 should map parameter with valid value") {
-    assertEquals(body(routes9, requestGet("/test9?param1=pass")), "test9:pass")
+    assertIO(body(routes9, requestGet("/test9?param1=pass")), "test9:pass")
   }
 
   test("GET /test9 should map parameter without value") {
-    assertEquals(body(routes9, requestGet("/test9?param1")), default9)
+    assertIO(body(routes9, requestGet("/test9?param1")), default9)
   }
 
   val routes10 = new RhoRoutes[IO] {
@@ -321,15 +315,15 @@ class ParamDefaultValueSuite extends FunSuite {
   val default10 = "test10:1"
 
   test("GET /test10 should map parameter with default value") {
-    assertEquals(body(routes10, requestGet("/test10")), default10)
+    assertIO(body(routes10, requestGet("/test10")), default10)
   }
 
   test("GET /test10 should fail to map parameter with empty value") {
-    assertEquals(body(routes10, requestGet("/test10?param1=")), "Invalid number format: ''")
+    assertIO(body(routes10, requestGet("/test10?param1=")), "Invalid number format: ''")
   }
 
   test("GET /test10 should fail to map parameter with invalid numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes10,
         requestGet("/test10?param1=-4")
@@ -339,7 +333,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test10 should fail to map parameter with non-numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes10,
         requestGet("/test10?param1=value1")
@@ -349,11 +343,11 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test10 should map parameter with valid numeric value") {
-    assertEquals(body(routes10, requestGet("/test10?param1=10")), "test10:10")
+    assertIO(body(routes10, requestGet("/test10?param1=10")), "test10:10")
   }
 
   test("GET /test10 should map parameter without value") {
-    assertEquals(body(routes10, requestGet("/test10?param1")), default10)
+    assertIO(body(routes10, requestGet("/test10?param1")), default10)
   }
 
   val routes11 = new RhoRoutes[IO] {
@@ -369,15 +363,15 @@ class ParamDefaultValueSuite extends FunSuite {
   val default11 = "test11:100"
 
   test("GET /test11 should map parameter with default value") {
-    assertEquals(body(routes11, requestGet("/test11")), default11)
+    assertIO(body(routes11, requestGet("/test11")), default11)
   }
 
   test("GET /test11 should fail to map parameter with empty value") {
-    assertEquals(body(routes11, requestGet("/test11?param1=")), "Invalid number format: ''")
+    assertIO(body(routes11, requestGet("/test11?param1=")), "Invalid number format: ''")
   }
 
   test("GET /test11 should fail to map parameter with invalid numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes11,
         requestGet("/test11?param1=0")
@@ -387,7 +381,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test11 should fail to map parameter with non-numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes11,
         requestGet("/test11?param1=value1")
@@ -397,11 +391,11 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test11 should map parameter with valid numeric value") {
-    assertEquals(body(routes11, requestGet("/test11?param1=1")), "test11:1")
+    assertIO(body(routes11, requestGet("/test11?param1=1")), "test11:1")
   }
 
   test("GET /test11 should map parameter without value") {
-    assertEquals(body(routes11, requestGet("/test11?param1")), default11)
+    assertIO(body(routes11, requestGet("/test11?param1")), default11)
   }
 
   val routes12 = new RhoRoutes[IO] {
@@ -417,11 +411,11 @@ class ParamDefaultValueSuite extends FunSuite {
   val default12 = "test12:default1"
 
   test("GET /test12 should map parameter with default value") {
-    assertEquals(body(routes12, requestGet("/test12")), default12)
+    assertIO(body(routes12, requestGet("/test12")), default12)
   }
 
   test("GET /test12 should fail to map parameter with empty value") {
-    assertEquals(
+    assertIO(
       body(
         routes12,
         requestGet("/test12?param1=")
@@ -431,7 +425,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test12 should fail to map parameter with invalid value") {
-    assertEquals(
+    assertIO(
       body(
         routes12,
         requestGet("/test12?param1=fail")
@@ -441,11 +435,11 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test12 should map parameter with valid value") {
-    assertEquals(body(routes12, requestGet("/test12?param1=pass")), "test12:pass")
+    assertIO(body(routes12, requestGet("/test12?param1=pass")), "test12:pass")
   }
 
   test("GET /test12 should map parameter without value") {
-    assertEquals(body(routes12, requestGet("/test12?param1")), default12)
+    assertIO(body(routes12, requestGet("/test12?param1")), default12)
   }
 
   val routes13 = new RhoRoutes[IO] {
@@ -461,39 +455,51 @@ class ParamDefaultValueSuite extends FunSuite {
   val default13 = "test13:a,b"
 
   test("GET /test13 should map parameter with default value") {
-    assertEquals(body(routes13, requestGet("/test13")), default13)
+    assertIO(body(routes13, requestGet("/test13")), default13)
   }
 
   test("GET /test13 should fail to map parameter with empty value") {
-    assert(
-      body(routes13, requestGet("/test13?param1=")).matches(
-        """Invalid query parameter: "param1" = "(List|Vector)\(\)""""
+    assertIO_(
+      body(routes13, requestGet("/test13?param1=")).map(x =>
+        assert(
+          x.matches(
+            """Invalid query parameter: "param1" = "(List|Vector)\(\)""""
+          )
+        )
       )
     )
   }
 
   test("GET /test13 should fail to map parameter with one invalid value") {
-    assert(
-      body(routes13, requestGet("/test13?param1=z")).matches(
-        """Invalid query parameter: "param1" = "(List|Vector)\(z\)""""
+    assertIO_(
+      body(routes13, requestGet("/test13?param1=z")).map(x =>
+        assert(
+          x.matches(
+            """Invalid query parameter: "param1" = "(List|Vector)\(z\)""""
+          )
+        )
       )
     )
   }
 
   test("GET /test13 should map parameter with many values and one invalid") {
-    assert(
-      body(routes13, requestGet("/test13?param1=z&param1=aa&param1=bb")).matches(
-        """Invalid query parameter: "param1" = "(List|Vector)\(z, aa, bb\)""""
+    assertIO_(
+      body(routes13, requestGet("/test13?param1=z&param1=aa&param1=bb")).map(x =>
+        assert(
+          x.matches(
+            """Invalid query parameter: "param1" = "(List|Vector)\(z, aa, bb\)""""
+          )
+        )
       )
     )
   }
 
   test("GET /test13 should map parameter with many valid values") {
-    assertEquals(body(routes13, requestGet("/test13?param1=c&param1=d")), "test13:c,d")
+    assertIO(body(routes13, requestGet("/test13?param1=c&param1=d")), "test13:c,d")
   }
 
   test("GET /test13 should map parameter without value") {
-    assertEquals(body(routes13, requestGet("/test13?param1")), default13)
+    assertIO(body(routes13, requestGet("/test13?param1")), default13)
   }
 
   val routes14 = new RhoRoutes[IO] {
@@ -507,23 +513,27 @@ class ParamDefaultValueSuite extends FunSuite {
   val default14 = "test14:3,5,8"
 
   test("GET /test14 should map parameter with default value") {
-    assertEquals(body(routes14, requestGet("/test14")), default14)
+    assertIO(body(routes14, requestGet("/test14")), default14)
   }
 
   test("GET /test14 should fail to map parameter with empty value") {
-    assertEquals(body(routes14, requestGet("/test14?param1=")), "Invalid number format: ''")
+    assertIO(body(routes14, requestGet("/test14?param1=")), "Invalid number format: ''")
   }
 
   test("GET /test14 should fail to map parameter with one invalid numeric value") {
-    assert(
-      body(routes14, requestGet("/test14?param1=8&param1=5&param1=3")).matches(
-        """Invalid query parameter: "param1" = "(List|Vector)\(8, 5, 3\)""""
+    assertIO_(
+      body(routes14, requestGet("/test14?param1=8&param1=5&param1=3")).map(x =>
+        assert(
+          x.matches(
+            """Invalid query parameter: "param1" = "(List|Vector)\(8, 5, 3\)""""
+          )
+        )
       )
     )
   }
 
   test("GET /test14 should fail to map parameter with one non-numeric value") {
-    assertEquals(
+    assertIO(
       body(
         routes14,
         requestGet("/test14?param1=test")
@@ -533,7 +543,7 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test14 should fail to map parameter with many non-numeric values") {
-    assertEquals(
+    assertIO(
       body(
         routes14,
         requestGet("/test14?param1=abc&param1=def")
@@ -543,10 +553,10 @@ class ParamDefaultValueSuite extends FunSuite {
   }
 
   test("GET /test14 should map parameter with many valid numeric values") {
-    assertEquals(body(routes14, requestGet("/test14?param1=1&param1=2&param1=3")), "test14:1,2,3")
+    assertIO(body(routes14, requestGet("/test14?param1=1&param1=2&param1=3")), "test14:1,2,3")
   }
 
   test("GET /test14 should map parameter without value") {
-    assertEquals(body(routes14, requestGet("/test14?param1")), default14)
+    assertIO(body(routes14, requestGet("/test14?param1")), default14)
   }
 }
