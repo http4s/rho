@@ -181,7 +181,7 @@ class ApiTest extends CatsEffectSuite {
     for {
       result <- route(req).value.map(_.getOrElse(Response.notFound))
       _ = assertEquals(result.status, Status.Ok)
-      _ = assertEquals(RequestRunner.getBody(result.body), s"stuff $expectedFoo")
+      _ <- assertIO(RequestRunner.getBody(result.body), s"stuff $expectedFoo")
     } yield ()
   }
 
@@ -431,7 +431,7 @@ class ApiTest extends CatsEffectSuite {
     for {
       result <- route(req).value.map(_.getOrElse(Response.notFound))
       _ = assertEquals(result.status, Status.Ok)
-      _ = assertEquals(RequestRunner.getBody(result.body), "stuff Foo(32,3.2,Asdf)")
+      _ <- assertIO(RequestRunner.getBody(result.body), "stuff Foo(32,3.2,Asdf)")
     } yield ()
   }
 
