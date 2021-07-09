@@ -5,16 +5,15 @@ package bits
 import java.nio.charset.StandardCharsets
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global
-import munit.FunSuite
+import munit.CatsEffectSuite
 import org.http4s.server.middleware.TranslateUri
 import org.http4s.server.Router
 
-class PathTreeSuite extends FunSuite {
+class PathTreeSuite extends CatsEffectSuite {
   object pathTree extends PathTreeOps[IO]
   import pathTree._
 
-  def matchNodeFromString(
+  private def matchNodeFromString(
       name: String,
       matches: Map[String, MatchNode] = Map.empty[String, MatchNode],
       captures: List[CaptureNode] = Nil,
@@ -26,7 +25,8 @@ class PathTreeSuite extends FunSuite {
     variadic,
     end
   )
-  def captureNodeFromString(
+
+  private def captureNodeFromString(
       parser: StringParser[IO, _],
       matches: Map[String, MatchNode] = Map.empty[String, MatchNode],
       captures: List[CaptureNode] = List.empty[CaptureNode],
@@ -46,17 +46,16 @@ class PathTreeSuite extends FunSuite {
     }.toRoutes())).orNotFound
 
     val req = Request[IO](Method.GET, uri = uri"/bar/foo")
-    val resp = svc(req).unsafeRunSync()
 
-    assertEquals(resp.status, Status.Ok)
-    val b = new String(
-      resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _),
-      StandardCharsets.UTF_8
-    )
-    assertEquals(b, "foo")
+    for {
+      resp <- svc(req)
+      _ = assertEquals(resp.status, Status.Ok)
+      b <- resp.body.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _))
+      _ = assertEquals(new String(b, StandardCharsets.UTF_8), "foo")
+    } yield ()
   }
 
-  val svc = new RhoRoutes[IO] {
+  private val svc = new RhoRoutes[IO] {
     GET / "foo" |>> "foo"
 
     OPTIONS / "bar" |>> "foo"
@@ -64,18 +63,16 @@ class PathTreeSuite extends FunSuite {
 
   test("PathTree OPTIONS should handle a valid OPTIONS request") {
     val req = Request[IO](Method.OPTIONS, uri = uri"/bar")
-    assertEquals(svc(req).value.unsafeRunSync().getOrElse(Response.notFound).status, Status.Ok)
+    assertIO(svc(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
   }
 
   test(
     "PathTree OPTIONS should provide a 405 MethodNotAllowed when an incorrect method is used for a resource"
   ) {
     val req = Request[IO](Method.POST, uri = uri"/foo")
-    assertEquals(
+    assertIO(
       svc(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status,
+        .map(_.getOrElse(Response.notFound).status),
       Status.MethodNotAllowed
     )
   }
@@ -84,13 +81,13 @@ class PathTreeSuite extends FunSuite {
     "PathTree OPTIONS should provide a 404 NotFound when the OPTIONS method is used for a resource without an OPTIONS"
   ) {
     val req = Request[IO](Method.OPTIONS, uri = uri"/foo")
-    assertEquals(
-      svc(req).value.unsafeRunSync().getOrElse(Response.notFound).status,
+    assertIO(
+      svc(req).value.map(_.getOrElse(Response.notFound).status),
       Status.NotFound
     )
   }
 
-  val l = Leaf((_, _) => null)
+  private val l = Leaf((_, _) => null)
 
   test("PathTree mergers. MatchNodes should merge empty nodes") {
     val n = matchNodeFromString("")
@@ -165,7 +162,7 @@ class PathTreeSuite extends FunSuite {
     )
   }
 
-  val p = StringParser.booleanParser[IO]
+  private val p = StringParser.booleanParser[IO]
 
   test("PathTree mergers. CapturesNodes should merge empty CaptureNodes") {
     val n = captureNodeFromString(p)
