@@ -5,7 +5,7 @@ import java.util.UUID
 
 import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
-import munit.FunSuite
+import munit.CatsEffectSuite
 import org.http4s.server.AuthMiddleware
 
 case class User(name: String, id: UUID)
@@ -43,31 +43,37 @@ object MyRoutes extends RhoRoutes[IO] {
   }
 }
 
-class AuthedContextSuite extends FunSuite {
-  import cats.effect.unsafe.implicits.global
-
+class AuthedContextSuite extends CatsEffectSuite {
   val routes = Auth.authenticated(MyAuth.toService(MyRoutes.toRoutes()))
 
   test("An AuthedContext execution should be able to have access to authInfo") {
     val request = Request[IO](Method.GET, uri"/")
-    val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
-    if (resp.status == Status.Ok) {
-      val body =
-        new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
-      assertEquals(body, "just root with parameter 'foo=bar'")
-    } else fail(s"Invalid response code: ${resp.status}")
+
+    for {
+      resp <- routes.run(request).value.map(_.getOrElse(Response.notFound))
+      _ <-
+        if (resp.status == Status.Ok) {
+          val body =
+            resp.body.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _)).map(new String(_))
+          assertIO(body, "just root with parameter 'foo=bar'")
+        } else IO.raiseError[Unit](new Throwable(s"Invalid response code: ${resp.status}"))
+    } yield ()
   }
 
   test(
     "An AuthedContext execution does not prevent route from being executed without authentication"
   ) {
     val request = Request[IO](Method.GET, uri"/public/public")
-    val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
-    if (resp.status == Status.Ok) {
-      val body =
-        new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
-      assertEquals(body, "not authenticated at public")
-    } else fail(s"Invalid response code: ${resp.status}")
+
+    for {
+      resp <- routes.run(request).value.map(_.getOrElse(Response.notFound))
+      _ <-
+        if (resp.status == Status.Ok) {
+          val body =
+            resp.body.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _)).map(new String(_))
+          assertIO(body, "not authenticated at public")
+        } else IO.raiseError(new Throwable(s"Invalid response code: ${resp.status}"))
+    } yield ()
   }
 
   test(
@@ -75,11 +81,15 @@ class AuthedContextSuite extends FunSuite {
       "but allows to extract it"
   ) {
     val request = Request[IO](Method.GET, uri"/private/private")
-    val resp = routes.run(request).value.unsafeRunSync().getOrElse(Response.notFound)
-    if (resp.status == Status.Ok) {
-      val body =
-        new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
-      assertEquals(body, "Test User at private")
-    } else fail(s"Invalid response code: ${resp.status}")
+
+    for {
+      resp <- routes.run(request).value.map(_.getOrElse(Response.notFound))
+      _ <-
+        if (resp.status == Status.Ok) {
+          val body =
+            resp.body.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _)).map(new String(_))
+          assertIO(body, "Test User at private")
+        } else IO.raiseError(new Throwable(s"Invalid response code: ${resp.status}"))
+    } yield ()
   }
 }
