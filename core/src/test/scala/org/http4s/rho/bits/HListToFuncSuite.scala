@@ -3,16 +3,14 @@ package rho
 package bits
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global
-import munit.FunSuite
+import munit.CatsEffectSuite
 
-class HListToFuncSuite extends FunSuite {
-  private def getBody(b: EntityBody[IO]): String =
-    new String(b.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
+class HListToFuncSuite extends CatsEffectSuite {
+  private def getBody(b: EntityBody[IO]): IO[String] =
+    b.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _)).map(new String(_))
 
-  private def checkOk(r: Request[IO]): String = getBody(
-    service(r).value.unsafeRunSync().getOrElse(Response.notFound).body
-  )
+  private def checkOk(r: Request[IO]): IO[String] =
+    service(r).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody)
 
   private def Get(s: String, h: Header.ToRaw*): Request[IO] =
     Request(
@@ -27,7 +25,7 @@ class HListToFuncSuite extends FunSuite {
 
   test("An HListToFunc should work for methods of type _ => Task[Response]") {
     val req = Get("/route1")
-    assertEquals(checkOk(req), "foo")
+    assertIO(checkOk(req), "foo")
   }
 
   // Tests issue 218 https://github.com/http4s/rho/issues/218
