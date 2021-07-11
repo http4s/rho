@@ -13,8 +13,6 @@ import shapeless.HList
 import scala.reflect.runtime.universe._
 
 class ResultMatcherSuite extends FunSuite {
-  import cats.effect.unsafe.implicits.global
-
   class TRhoRoutes[F[_]] extends bits.MethodAliases {
     var statuses: Set[(Status, Type)] = Set.empty
 
@@ -28,11 +26,14 @@ class ResultMatcherSuite extends FunSuite {
   }
 
   test("A ResponseGenerator should match a single result type") {
-    val srvc = new TRhoRoutes[IO] {
-      PUT / "foo" |>> { () => Ok("updated").unsafeRunSync() }
-    }
-
-    assertEquals(srvc.statuses.map(_._1), Set(Ok.status))
+    for {
+      srvc <- Ok("updated").map(r =>
+        new TRhoRoutes[IO] {
+          PUT / "foo" |>> { () => r }
+        }
+      )
+      _ = assertEquals(srvc.statuses.map(_._1), Set(Ok.status))
+    } yield ()
   }
 
   test(

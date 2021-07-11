@@ -131,7 +131,7 @@ lazy val buildSettings = publishing ++
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
-    libraryDependencies ++= Seq(munit, scalacheckMunit)
+    libraryDependencies ++= Seq(munit, munitCatsEffect, scalacheckMunit)
   )
 
 // to keep REPL usable

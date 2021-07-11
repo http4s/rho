@@ -4,16 +4,17 @@ package swagger
 
 import cats.data._
 import cats.effect.IO
+import cats.syntax.applicative._
 import _root_.io.circe.parser._
 import _root_.io.circe._
 import _root_.io.circe.syntax._
-import munit.FunSuite
+import munit.CatsEffectSuite
 import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.syntax.io._
 
-class SwaggerSupportSuite extends FunSuite {
+class SwaggerSupportSuite extends CatsEffectSuite {
 
   val baseRoutes = new RhoRoutes[IO] {
     GET / "hello" |>> { () => Ok("hello world") }
@@ -51,13 +52,17 @@ class SwaggerSupportSuite extends FunSuite {
 
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-    val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
+    val swaggerRoot =
+      RRunner(service)
+        .checkOk(r)
+        .map(decode[SwaggerRoot])
+        .flatMap(
+          _.map(_.paths.keySet.pure[IO])
+            .getOrElse(IO.raiseError(new Throwable("Expected Right value")))
+        )
 
-    assert(json.isRight)
-    val swaggerRoot = json.getOrElse(???)
-
-    assertEquals(
-      swaggerRoot.paths.keySet,
+    assertIO(
+      swaggerRoot,
       Set(
         "/swagger.json",
         "/swagger.yaml",
@@ -72,13 +77,17 @@ class SwaggerSupportSuite extends FunSuite {
       ("foo" /: baseRoutes).toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-    val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
+    val swaggerRoot =
+      RRunner(service)
+        .checkOk(r)
+        .map(decode[SwaggerRoot])
+        .flatMap(
+          _.map(_.paths.keySet.pure[IO])
+            .getOrElse(IO.raiseError(new Throwable("Expected Right value")))
+        )
 
-    assert(json.isRight)
-    val swaggerRoot = json.getOrElse(???)
-
-    assertEquals(
-      swaggerRoot.paths.keySet,
+    assertIO(
+      swaggerRoot,
       Set(
         "/swagger.json",
         "/swagger.yaml",
@@ -101,13 +110,16 @@ class SwaggerSupportSuite extends FunSuite {
 
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-    val json = decode[SwaggerRoot](RRunner(httpRoutes.toRoutes()).checkOk(r))
+    val swaggerRoot = RRunner(httpRoutes.toRoutes())
+      .checkOk(r)
+      .map(decode[SwaggerRoot])
+      .flatMap(
+        _.map(_.paths.keySet.pure[IO])
+          .getOrElse(IO.raiseError(new Throwable("Expected Right value")))
+      )
 
-    assert(json.isRight)
-    val swaggerRoot = json.getOrElse(???)
-
-    assertEquals(
-      swaggerRoot.paths.keySet,
+    assertIO(
+      swaggerRoot,
       Set(
         "/hello",
         "/hello/{string}",
@@ -121,12 +133,15 @@ class SwaggerSupportSuite extends FunSuite {
     val service = trailingSlashRoutes.toRoutes(createRhoMiddleware())
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-    val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
+    val swaggerRoot = RRunner(service)
+      .checkOk(r)
+      .map(decode[SwaggerRoot])
+      .flatMap(
+        _.map(_.paths.keySet.pure[IO])
+          .getOrElse(IO.raiseError(new Throwable("Expected Right value")))
+      )
 
-    assert(json.isRight)
-    val swaggerRoot = json.getOrElse(???)
-
-    assertEquals(swaggerRoot.paths.keys.head, "/foo/")
+    assertIO(swaggerRoot.map(_.head), "/foo/")
   }
 
   test(
@@ -134,12 +149,15 @@ class SwaggerSupportSuite extends FunSuite {
   ) {
     val service = mixedTrailingSlashesRoutes.toRoutes(createRhoMiddleware())
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
-    val json = decode[SwaggerRoot](RRunner(service).checkOk(r))
+    val swaggerRoot = RRunner(service)
+      .checkOk(r)
+      .map(decode[SwaggerRoot])
+      .flatMap(
+        _.map(_.paths.keySet.pure[IO])
+          .getOrElse(IO.raiseError(new Throwable("Expected Right value")))
+      )
 
-    assert(json.isRight)
-    val swaggerRoot = json.getOrElse(???)
-
-    assertEquals(swaggerRoot.paths.keySet, Set("/foo/", "/foo", "/bar"))
+    assertIO(swaggerRoot, Set("/foo/", "/foo", "/bar"))
   }
 
   test(
@@ -153,13 +171,16 @@ class SwaggerSupportSuite extends FunSuite {
 
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-    val json = decode[SwaggerRoot](RRunner(httpRoutes.toRoutes()).checkOk(r))
+    val swaggerRoot = RRunner(httpRoutes.toRoutes())
+      .checkOk(r)
+      .map(decode[SwaggerRoot])
+      .flatMap(
+        _.map(_.paths.keySet.pure[IO])
+          .getOrElse(IO.raiseError(new Throwable("Expected Right value")))
+      )
 
-    assert(json.isRight)
-    val swaggerRoot = json.getOrElse(???)
-
-    assertEquals(
-      swaggerRoot.paths.keySet,
+    assertIO(
+      swaggerRoot,
       Set(
         "/hello",
         "/hello/{string}",
@@ -177,30 +198,38 @@ class SwaggerSupportSuite extends FunSuite {
 
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
 
-    val json = parse(RRunner(service).checkOk(r)).getOrElse(???)
+    val jsonF = RRunner(service)
+      .checkOk(r)
+      .map(parse)
+      .flatMap(_.map(_.pure[IO]).getOrElse(IO.raiseError(new Throwable("Expected Right value"))))
 
-    val security: List[Json] = (json \\ "security").flatMap(_.asArray).flatten
+    val securityF = jsonF.map(json => (json \\ "security").flatMap(_.asArray).flatten)
 
-    assert(
-      security.contains(
-        Json.obj(
-          "bye" := List("hello")
+    for {
+      _ <- assertIOBoolean(
+        securityF.map(
+          _.contains(
+            Json.obj(
+              "bye" := List("hello")
+            )
+          )
         )
       )
-    )
 
-    assert(
-      security.contains(
-        Json.obj(
-          "hello" := List("bye")
+      _ <- assertIOBoolean(
+        securityF.map(
+          _.contains(
+            Json.obj(
+              "hello" := List("bye")
+            )
+          )
         )
       )
-    )
 
-    val summary = (json \\ "summary").flatMap(_.asString)
-
-    assert(summary.contains("Bye"))
-    assert(summary.contains("Hello"))
+      summaryF = jsonF.map(json => (json \\ "summary").flatMap(_.asString))
+      _ <- assertIOBoolean(summaryF.map(_.contains("Bye")))
+      _ <- assertIOBoolean(summaryF.map(_.contains("Hello")))
+    } yield ()
   }
 
   test("SwaggerSupport should support for complex meta data") {
@@ -250,35 +279,40 @@ class SwaggerSupportSuite extends FunSuite {
     )
 
     val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger-test.json")))
-    val json = parse(RRunner(service).checkOk(r)).getOrElse(???)
-    val cursor = json.hcursor
+    val jsonF = RRunner(service)
+      .checkOk(r)
+      .map(parse)
+      .flatMap(_.map(_.pure[IO]).getOrElse(IO.raiseError(new Throwable("Expected Right value"))))
 
-    val icn = cursor.downField("info").downField("contact").get[String]("name")
-    val h = cursor.get[String]("host")
-    val s = cursor.downField("schemes").as[List[String]]
-    val bp = cursor.get[String]("basePath")
-    val c = cursor.downField("consumes").downArray.as[String]
-    val p = cursor.downField("produces").downArray.as[String]
-    val sec1 = cursor.downField("security").downArray.downField("apiKey").as[List[String]]
-    val sec2 =
-      cursor.downField("security").downArray.right.downField("vendor_jwk").downArray.as[String]
-    val t = cursor.downField("securityDefinitions").downField("api_key").get[String]("type")
-    val vi = cursor
-      .downField("securityDefinitions")
-      .downField("vendor_jwk")
-      .get[String]("x-vendor-issuer")
-    val ve = cursor.downField("x-vendor-endpoints").get[String]("target")
+    for {
+      cursor <- jsonF.map(_.hcursor)
+      icn = cursor.downField("info").downField("contact").get[String]("name")
+      h = cursor.get[String]("host")
+      s = cursor.downField("schemes").as[List[String]]
+      bp = cursor.get[String]("basePath")
+      c = cursor.downField("consumes").downArray.as[String]
+      p = cursor.downField("produces").downArray.as[String]
+      sec1 = cursor.downField("security").downArray.downField("apiKey").as[List[String]]
+      sec2 =
+        cursor.downField("security").downArray.right.downField("vendor_jwk").downArray.as[String]
+      t = cursor.downField("securityDefinitions").downField("api_key").get[String]("type")
+      vi = cursor
+        .downField("securityDefinitions")
+        .downField("vendor_jwk")
+        .get[String]("x-vendor-issuer")
+      ve = cursor.downField("x-vendor-endpoints").get[String]("target")
 
-    assert(icn.fold(_ => false, _ == "Name"))
-    assert(h.fold(_ => false, _ == "www.test.com"))
-    assert(s.fold(_ => false, _ == List("http", "https")))
-    assert(bp.fold(_ => false, _ == "/v1"))
-    assert(c.fold(_ => false, _ == "application/json"))
-    assert(p.fold(_ => false, _ == "application/json"))
-    assert(sec2.fold(_ => false, _ == "admin"))
-    assert(t.fold(_ => false, _ == "apiKey"))
-    assert(vi.fold(_ => false, _ == "https://www.test.com/"))
-    assert(ve.fold(_ => false, _ == "298.0.0.1"))
-    assert(sec1.fold(_ => false, _ == List.empty[String]))
+      _ = assert(icn.fold(_ => false, _ == "Name"))
+      _ = assert(h.fold(_ => false, _ == "www.test.com"))
+      _ = assert(s.fold(_ => false, _ == List("http", "https")))
+      _ = assert(bp.fold(_ => false, _ == "/v1"))
+      _ = assert(c.fold(_ => false, _ == "application/json"))
+      _ = assert(p.fold(_ => false, _ == "application/json"))
+      _ = assert(sec2.fold(_ => false, _ == "admin"))
+      _ = assert(t.fold(_ => false, _ == "apiKey"))
+      _ = assert(vi.fold(_ => false, _ == "https://www.test.com/"))
+      _ = assert(ve.fold(_ => false, _ == "298.0.0.1"))
+      _ = assert(sec1.fold(_ => false, _ == List.empty[String]))
+    } yield ()
   }
 }

@@ -1,76 +1,81 @@
 package org.http4s.rho.bits
 
 import cats.effect.IO
-import munit.FunSuite
+import munit.CatsEffectSuite
 import org.http4s._
 import org.http4s.headers.{Location, `Content-Length`, `Content-Type`, `Transfer-Encoding`}
 import org.http4s.rho.io._
 
-class ResponseGeneratorSuite extends FunSuite {
-  import cats.effect.unsafe.implicits.global
-
+class ResponseGeneratorSuite extends CatsEffectSuite {
   test("A ResponseGenerator should build a response with a body") {
-    val result = Ok("Foo").unsafeRunSync()
-    val resp = result.resp
+    for {
+      resp <- Ok("Foo").map(_.resp)
+      strData <- resp.body.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _))
 
-    val str =
-      new String(resp.body.compile.toVector.unsafeRunSync().foldLeft(Array[Byte]())(_ :+ _))
-    assertEquals(str, "Foo")
+      _ = assertEquals(new String(strData), "Foo")
 
-    assertEquals(
-      resp.headers.get[`Content-Length`],
-      Some(
-        `Content-Length`.unsafeFromLong("Foo".getBytes.length)
+      _ = assertEquals(
+        resp.headers.get[`Content-Length`],
+        Some(
+          `Content-Length`.unsafeFromLong("Foo".getBytes.length)
+        )
       )
-    )
-    assertEquals(
-      resp.headers.headers
-        .filterNot(_.name == `Content-Length`.name),
-      EntityEncoder.stringEncoder.headers.headers
-    )
+
+      _ = assertEquals(
+        resp.headers.headers
+          .filterNot(_.name == `Content-Length`.name),
+        EntityEncoder.stringEncoder.headers.headers
+      )
+    } yield ()
   }
 
   test("A ResponseGenerator should build a response without a body") {
-    val result = SwitchingProtocols.apply.unsafeRunSync()
-    val resp = result.resp
-
-    assertEquals(resp.body.compile.toVector.unsafeRunSync().length, 0)
-    assertEquals(resp.status, Status.SwitchingProtocols)
-    assertEquals(resp.headers.get[`Content-Length`], None)
-    assertEquals(resp.headers.get[`Transfer-Encoding`], None)
+    for {
+      resp <- SwitchingProtocols.apply.map(_.resp)
+      _ <- assertIO(resp.body.compile.toVector.map(_.length), 0)
+      _ = assertEquals(resp.status, Status.SwitchingProtocols)
+      _ = assertEquals(resp.headers.get[`Content-Length`], None)
+      _ = assertEquals(resp.headers.get[`Transfer-Encoding`], None)
+    } yield ()
   }
 
   test("A ResponseGenerator should build a redirect response") {
     val location = Uri.fromString("/foo").getOrElse(sys.error("Fail."))
-    val result = MovedPermanently(location).unsafeRunSync()
-    val resp = result.resp
 
-    assertEquals(resp.body.compile.toVector.unsafeRunSync().length, 0)
-    assertEquals(resp.status, Status.MovedPermanently)
-    assertEquals(resp.headers.get[`Content-Length`], None)
-    assertEquals(resp.headers.get[`Transfer-Encoding`], None)
-    assertEquals(resp.headers.get[Location], Some(Location(location)))
+    for {
+      resp <- MovedPermanently(location).map(_.resp)
+      _ <- assertIO(resp.body.compile.toVector.map(_.length), 0)
+      _ = assertEquals(resp.status, Status.MovedPermanently)
+      _ = assertEquals(resp.headers.get[`Content-Length`], None)
+      _ = assertEquals(resp.headers.get[`Transfer-Encoding`], None)
+      _ = assertEquals(resp.headers.get[Location], Some(Location(location)))
+    } yield ()
   }
 
   test("A ResponseGenerator should build a redirect response with a body") {
     val testBody = "Moved!!!"
     val location = Uri.fromString("/foo").getOrElse(sys.error("Fail."))
-    val result = MovedPermanently(location, testBody).unsafeRunSync()
-    val resp = result.resp
 
-    assertEquals(
-      EntityDecoder[IO, String].decode(resp, false).value.unsafeRunSync(),
-      Right(testBody)
-    )
-    assertEquals(resp.status, Status.MovedPermanently)
-    assertEquals(
-      resp.headers.get[`Content-Length`],
-      Some(
-        `Content-Length`.unsafeFromLong(testBody.length)
+    for {
+      resp <- MovedPermanently(location, testBody).map(_.resp)
+
+      _ <- assertIO(
+        EntityDecoder[IO, String].decode(resp, false).value,
+        Right(testBody)
       )
-    )
-    assertEquals(resp.headers.get[`Transfer-Encoding`], None)
-    assertEquals(resp.headers.get[Location], Some(Location(location)))
+
+      _ = assertEquals(resp.status, Status.MovedPermanently)
+
+      _ = assertEquals(
+        resp.headers.get[`Content-Length`],
+        Some(
+          `Content-Length`.unsafeFromLong(testBody.length)
+        )
+      )
+
+      _ = assertEquals(resp.headers.get[`Transfer-Encoding`], None)
+      _ = assertEquals(resp.headers.get[Location], Some(Location(location)))
+    } yield ()
   }
 
   test("A ResponseGenerator should explicitly added headers have priority") {
@@ -79,13 +84,9 @@ class ResponseGeneratorSuite extends FunSuite {
         EntityEncoder.stringEncoder[IO].toEntity(_)
       )
 
-    assertEquals(
+    assertIO(
       Ok("some content", Headers(`Content-Type`(MediaType.application.json)))
-        .unsafeRunSync()
-        .resp
-        .headers
-        .get[`Content-Type`]
-        .get,
+        .map(_.resp.headers.get[`Content-Type`].get),
       `Content-Type`(MediaType.application.json)
     )
   }

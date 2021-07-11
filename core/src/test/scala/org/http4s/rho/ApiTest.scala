@@ -2,9 +2,9 @@ package org.http4s
 package rho
 
 import cats.data.OptionT
-import cats.effect.unsafe.implicits.global
 import cats.effect.{IO, Sync}
-import munit.FunSuite
+import cats.syntax.parallel._
+import munit.CatsEffectSuite
 import org.http4s.headers.Accept
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits._
@@ -15,8 +15,7 @@ import shapeless.{HList, HNil}
 
 import scala.util.control.NoStackTrace
 
-class ApiTest extends FunSuite {
-
+class ApiTest extends CatsEffectSuite {
   private object ruleExecutor extends RuleExecutor[IO]
 
   private def runWith[F[_]: Sync, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit
@@ -43,13 +42,11 @@ class ApiTest extends FunSuite {
       throw new RuntimeException("this could happen") with NoStackTrace
     )
 
-  private def fetchETag(p: IO[Response[IO]]): ETag = {
-    val resp = p.unsafeRunSync()
-    resp.headers.get[ETag].getOrElse(sys.error("No ETag: " + resp))
-  }
+  private def fetchETag(p: IO[Response[IO]]): IO[ETag] =
+    p.map(r => r.headers.get[ETag].getOrElse(sys.error("No ETag: " + r)))
 
-  private def checkETag(p: OptionT[IO, Response[IO]], s: String) =
-    assertEquals(fetchETag(p.value.map(_.getOrElse(Response.notFound))), ETag(ETag.EntityTag(s)))
+  private def checkETag(p: OptionT[IO, Response[IO]], s: String): IO[Unit] =
+    assertIO(fetchETag(p.value.map(_.getOrElse(Response.notFound))), ETag(ETag.EntityTag(s)))
 
   test("A RhoDsl bits should combine validators") {
     assertEquals(
@@ -66,7 +63,7 @@ class ApiTest extends FunSuite {
 
     res match {
       case resp: FailureResponse[IO] =>
-        assertEquals(resp.toResponse.unsafeRunSync().status, Status.BadRequest)
+        assertIO(resp.toResponse.map(_.status), Status.BadRequest)
 
       case _ =>
         fail("Unexpected putHeaders result found")
@@ -79,7 +76,7 @@ class ApiTest extends FunSuite {
 
     res match {
       case resp: FailureResponse[IO] =>
-        assertEquals(resp.toResponse.unsafeRunSync().status, Status.InternalServerError)
+        assertIO(resp.toResponse.map(_.status), Status.InternalServerError)
 
       case _ =>
         fail("Unexpected putHeaders result found")
@@ -181,9 +178,11 @@ class ApiTest extends FunSuite {
     val expectedFoo = Foo(10, testDate)
     val route = runWith(path)((f: Foo) => Ok(s"stuff $f"))
 
-    val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-    assertEquals(result.status, Status.Ok)
-    assertEquals(RequestRunner.getBody(result.body), s"stuff $expectedFoo")
+    for {
+      result <- route(req).value.map(_.getOrElse(Response.notFound))
+      _ = assertEquals(result.status, Status.Ok)
+      _ <- assertIO(RequestRunner.getBody(result.body), s"stuff $expectedFoo")
+    } yield ()
   }
 
   test("A RhoDsl bits should map with missing header result") {
@@ -195,37 +194,32 @@ class ApiTest extends FunSuite {
     val r2 = Gone("Foo")
     val c2 = H[`Content-Length`].captureMapR(_ => Left(r2))
     val v1 = ruleExecutor.runRequestRules(c2.rule, req)
-
-    v1 match {
-      case r: FailureResponse[IO] =>
-        assertEquals(
-          r.toResponse.unsafeRunSync().status,
-          r2
-            .unsafeRunSync()
-            .resp
-            .status
-        )
-
-      case _ =>
-        fail("Unexpected runRequestRules result found")
-    }
-
     val c3 = H[Accept].captureMapR(Some(r2))(_ => ???)
     val v2 = ruleExecutor.runRequestRules(c3.rule, req)
 
-    v2 match {
-      case r: FailureResponse[IO] =>
-        assertEquals(
-          r.toResponse.unsafeRunSync().status,
-          r2
-            .unsafeRunSync()
-            .resp
-            .status
-        )
+    for {
+      _ <- v1 match {
+        case r: FailureResponse[IO] =>
+          (
+            r.toResponse.map(_.status),
+            r2.map(_.resp.status)
+          ).parTupled.map(x => assertEquals(x._1, x._2))
 
-      case _ =>
-        fail("Unexpected runRequestRules result found")
-    }
+        case _ =>
+          fail("Unexpected runRequestRules result found")
+      }
+
+      _ <- v2 match {
+        case r: FailureResponse[IO] =>
+          (
+            r.toResponse.map(_.status),
+            r2.map(_.resp.status)
+          ).parTupled.map(x => assertEquals(x._1, x._2))
+
+        case _ =>
+          fail("Unexpected runRequestRules result found")
+      }
+    } yield ()
   }
 
   test("A RhoDsl bits should append headers to a Route") {
@@ -246,9 +240,9 @@ class ApiTest extends FunSuite {
       .putHeaders(etag)
       .withEntity("cool")
 
-    val resp = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
+    val resp = route(req).value.map(_.getOrElse(Response.notFound))
 
-    assertEquals(resp.headers.get[ETag], Some(etag))
+    assertIO(resp.map(_.headers.get[ETag]), Some(etag))
   }
 
   test("A RhoDsl bits should accept compound or sequential header rules") {
@@ -272,8 +266,8 @@ class ApiTest extends FunSuite {
       .putHeaders(ETag(ETag.EntityTag("foo")))
       .withEntity("cool")
 
-    assertEquals(route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status, Status.Ok)
-    assertEquals(route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status, Status.Ok)
+    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok) *>
+      assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
   }
 
   test("A RhoDsl bits should run || routes") {
@@ -285,10 +279,9 @@ class ApiTest extends FunSuite {
     }
 
     val req1 = Request[IO](uri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
-    checkETag(f(req1), "two")
-
     val req2 = Request[IO](uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
-    checkETag(f(req2), "four")
+
+    checkETag(f(req1), "two") *> checkETag(f(req2), "four")
   }
 
   test("A RhoDsl bits should execute a complicated route") {
@@ -317,11 +310,11 @@ class ApiTest extends FunSuite {
     val route = runWith(GET / "foo")(() => SwitchingProtocols.apply)
     val req = Request[IO](GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
 
-    val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-
-    assertEquals(result.headers.headers.size, 0)
-
-    assertEquals(result.status, Status.SwitchingProtocols)
+    for {
+      result <- route(req).value.map(_.getOrElse(Response.notFound))
+      _ = assertEquals(result.headers.headers.size, 0)
+      _ = assertEquals(result.status, Status.SwitchingProtocols)
+    } yield ()
   }
 
   test("A RequestLineBuilder should be made from TypedPath and TypedQuery") {
@@ -349,8 +342,8 @@ class ApiTest extends FunSuite {
     val req = Request[IO](uri = uri"/hello/world")
 
     val f = runWith(stuff)(() => Ok("Shouldn't get here."))
-    val r = f(req).value.unsafeRunSync().getOrElse(Response.notFound)
-    assertEquals(r.status, Status.NotFound)
+    val r = f(req).value.map(_.getOrElse(Response.notFound))
+    assertIO(r.map(_.status), Status.NotFound)
   }
 
   test("A PathValidator should capture a variable") {
@@ -415,14 +408,13 @@ class ApiTest extends FunSuite {
       Ok("")
     }
 
-    assertEquals(route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status, Status.Ok)
-
     val route2 = runWith(path +? (param[String]("foo") and param[Int]("baz"))) {
       (_: String, _: Int) =>
         Ok("")
     }
 
-    assertEquals(route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status, Status.Ok)
+    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok) *>
+      assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
   }
 
   test("A query validators should map simple query rules into a complex type") {
@@ -435,9 +427,11 @@ class ApiTest extends FunSuite {
 
     val route = runWith(path)((f: Foo) => Ok(s"stuff $f"))
 
-    val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-    assertEquals(result.status, Status.Ok)
-    assertEquals(RequestRunner.getBody(result.body), "stuff Foo(32,3.2,Asdf)")
+    for {
+      result <- route(req).value.map(_.getOrElse(Response.notFound))
+      _ = assertEquals(result.status, Status.Ok)
+      _ <- assertIO(RequestRunner.getBody(result.body), "stuff Foo(32,3.2,Asdf)")
+    } yield ()
   }
 
   test("Decoders should decode a body") {
@@ -455,14 +449,11 @@ class ApiTest extends FunSuite {
       Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
     }
 
-    checkETag(route(req1), "foo")
-    assertEquals(
-      route(req2).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status,
-      Status.BadRequest
-    )
+    checkETag(route(req1), "foo") *>
+      assertIO(
+        route(req2).value.map(_.getOrElse(Response.notFound).status),
+        Status.BadRequest
+      )
   }
 
   test("Decoders should allow the infix operator syntax") {
@@ -489,26 +480,19 @@ class ApiTest extends FunSuite {
       Ok("shouldn't get here.")
     }
 
-    assertEquals(
-      route1(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status,
-      Status.BadRequest
-    )
-
     val reqHeaderR = H[`Content-Length`].existsAndR(_ => Some(Unauthorized("Foo.")))
     val route2 = runWith(path.validate(reqHeaderR)) { () =>
       Ok("shouldn't get here.")
     }
 
-    assertEquals(
-      route2(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status,
-      Status.Unauthorized
-    )
+    assertIO(
+      route1(req).value.map(_.getOrElse(Response.notFound).status),
+      Status.BadRequest
+    ) *>
+      assertIO(
+        route2(req).value.map(_.getOrElse(Response.notFound).status),
+        Status.Unauthorized
+      )
   }
 
   test("Decoders should fail on a query") {
@@ -521,27 +505,20 @@ class ApiTest extends FunSuite {
       Ok("shouldn't get here.")
     }
 
-    assertEquals(
-      route1(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status,
-      Status.BadRequest
-    )
-
     val route2 =
       runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) {
         _: String =>
           Ok("shouldn't get here.")
       }
 
-    assertEquals(
-      route2(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status,
-      Status.Unauthorized
-    )
+    assertIO(
+      route1(req).value.map(_.getOrElse(Response.notFound).status),
+      Status.BadRequest
+    ) *>
+      assertIO(
+        route2(req).value.map(_.getOrElse(Response.notFound).status),
+        Status.Unauthorized
+      )
   }
 
   val req = Request[IO](uri = uri"/foo/bar")
@@ -551,14 +528,11 @@ class ApiTest extends FunSuite {
     val tail = GET / "bar"
     val all = "foo" /: tail
 
-    assertEquals(
+    assertIO(
       runWith(all)(respMsg)
         .apply(req)
         .value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .as[String]
-        .unsafeRunSync(),
+        .flatMap(_.getOrElse(Response.notFound).as[String]),
       respMsg
     )
   }
@@ -567,14 +541,11 @@ class ApiTest extends FunSuite {
     val tail = GET / "bar" +? param[String]("str")
     val all = "foo" /: tail
 
-    assertEquals(
+    assertIO(
       runWith(all) { q: String => respMsg + q }
         .apply(req.withUri(uri"/foo/bar?str=answer"))
         .value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .as[String]
-        .unsafeRunSync(),
+        .flatMap(_.getOrElse(Response.notFound).as[String]),
       respMsg + "answer"
     )
   }
@@ -583,14 +554,11 @@ class ApiTest extends FunSuite {
     val tail = GET / "bar" >>> RequireETag
     val all = "foo" /: tail
 
-    assertEquals(
+    assertIO(
       runWith(all)(respMsg)
         .apply(req.withUri(uri"/foo/bar").putHeaders(etag))
         .value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .as[String]
-        .unsafeRunSync(),
+        .flatMap(_.getOrElse(Response.notFound).as[String]),
       respMsg
     )
   }
