@@ -200,7 +200,6 @@ class ApiTest extends CatsEffectSuite {
     for {
       _ <- v1 match {
         case r: FailureResponse[IO] =>
-          IO.raiseError(new Throwable("hui"))
           (
             r.toResponse.map(_.status),
             r2.map(_.resp.status)
