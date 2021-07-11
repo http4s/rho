@@ -140,16 +140,16 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     }.toRoutes()
 
     val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
+    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("//foo")))
+
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
       "bar"
-    )
-
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("//foo")))
-    assertIO(
-      service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
-      "bar"
-    )
+    ) *>
+      assertIO(
+        service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
+        "bar"
+      )
   }
 
   test("A RhoRoutes execution should execute a route with no params") {
@@ -234,9 +234,9 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     val req2 = Get("/hello/compete?foo=bar")
     val req3 = Get("/hello/compete")
 
-    assertIO(checkOk(req1), "route5")
-    assertIO(checkOk(req2), "route6_bar")
-    assertIO(checkOk(req3), "route7")
+    assertIO(checkOk(req1), "route5") *>
+      assertIO(checkOk(req2), "route6_bar") *>
+      assertIO(checkOk(req3), "route7")
   }
 
   test("A RhoRoutes execution should execute a variadic route") {
@@ -244,32 +244,35 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     val req2 = Get("/variadic/one")
     val req3 = Get("/variadic/one/two")
 
-    assertIO(checkOk(req1), "route8_")
-    assertIO(checkOk(req2), "route8_one")
-    assertIO(checkOk(req3), "route8_one/two")
+    assertIO(checkOk(req1), "route8_") *>
+      assertIO(checkOk(req2), "route8_one") *>
+      assertIO(checkOk(req3), "route8_one/two")
   }
 
   test("A RhoRoutes execution should perform path 'or' logic") {
     val req1 = Get("/or1")
     val req2 = Get("/or2")
-    assertIO(checkOk(req1), "route9")
-    assertIO(checkOk(req2), "route9")
+
+    assertIO(checkOk(req1), "route9") *>
+      assertIO(checkOk(req2), "route9")
   }
 
   test("A RhoRoutes execution should work with options") {
     val req1 = Get("/options")
     val req2 = Get("/options?foo=bar")
-    assertIO(checkOk(req1), "None")
-    assertIO(checkOk(req2), "bar")
+
+    assertIO(checkOk(req1), "None") *>
+      assertIO(checkOk(req2), "bar")
   }
 
   test("A RhoRoutes execution should work with collections") {
     val req1 = Get("/seq")
     val req2 = Get("/seq?foo=bar")
     val req3 = Get("/seq?foo=1&foo=2")
-    assertIO(checkOk(req1), "")
-    assertIO(checkOk(req2), "bar")
-    assertIO(checkOk(req3), "1 2")
+
+    assertIO(checkOk(req1), "") *>
+      assertIO(checkOk(req2), "bar") *>
+      assertIO(checkOk(req3), "1 2")
   }
 
   test("A RhoRoutes execution should provide the request if desired") {
@@ -289,10 +292,10 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
 
   test("A RhoRoutes execution should interpret uris ending in '/' differently than those without") {
     val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("terminal/")))
-    assertIO(checkOk(req1), "terminal/")
-
     val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("terminal")))
-    assertIO(checkOk(req2), "terminal")
+
+    assertIO(checkOk(req1), "terminal/") *>
+      assertIO(checkOk(req2), "terminal")
   }
 
   ///// Order of execution tests /////////////////////
@@ -304,22 +307,21 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     }.toRoutes()
 
     val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "0"))
+    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
+    val req3 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
+
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
       "Int: 0"
-    )
-
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
-    assertIO(
-      service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
-      "String: s"
-    )
-
-    val req3 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
-    assertIO(
-      service(req3).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
-      "none"
-    )
+    ) *>
+      assertIO(
+        service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
+        "String: s"
+      ) *>
+      assertIO(
+        service(req3).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
+        "none"
+      )
   }
 
   test(
@@ -331,16 +333,16 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     }.toRoutes()
 
     val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "0"))
+    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
+
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
       "String: 0"
-    )
-
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
-    assertIO(
-      service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
-      "String: s"
-    )
+    ) *>
+      assertIO(
+        service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
+        "String: s"
+      )
   }
 
   test("A RhoRoutes execution should match an empty Option over a bare route") {
@@ -353,16 +355,16 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     }.toRoutes()
 
     val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
+    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
+
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
       "String: s"
-    )
-
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
-    assertIO(
-      service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
-      "none"
-    )
+    ) *>
+      assertIO(
+        service(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
+        "none"
+      )
   }
 
   test("A RhoRoutes execution should work with all syntax elements") {
@@ -424,16 +426,16 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     assertEquals(both.getRoutes, routes1.getRoutes ++ routes2.getRoutes)
 
     val req1 = Request[IO](uri = uri"foo1")
+    val req2 = Request[IO](uri = uri"foo2")
+
     assertIO(
       bothRoutes(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
       "Foo1"
-    )
-
-    val req2 = Request[IO](uri = uri"foo2")
-    assertIO(
-      bothRoutes(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
-      "Foo2"
-    )
+    ) *>
+      assertIO(
+        bothRoutes(req2).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
+        "Foo2"
+      )
   }
 
   test("A RhoRoutes prefix operator should prefix a RhoRoutes") {

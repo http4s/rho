@@ -25,11 +25,11 @@ class CompileRoutesSuite extends CatsEffectSuite {
     getFoo(c)
     putFoo(c)
 
-    assertIO(RRunner(c.toRoutes()).checkOk(Request(uri = uri"/hello")), "GetFoo")
-    assertIO(
-      RRunner(c.toRoutes()).checkOk(Request(method = Method.PUT, uri = uri"/hello")),
-      "PutFoo"
-    )
+    assertIO(RRunner(c.toRoutes()).checkOk(Request(uri = uri"/hello")), "GetFoo") *>
+      assertIO(
+        RRunner(c.toRoutes()).checkOk(Request(method = Method.PUT, uri = uri"/hello")),
+        "PutFoo"
+      )
   }
 
   test("A CompileService should make routes from a collection of RhoRoutes") {
@@ -39,8 +39,8 @@ class CompileRoutesSuite extends CatsEffectSuite {
         (PUT / "hello" |>> "PutFoo") :: Nil
 
     val srvc = CompileRoutes.foldRoutes[IO](routes)
-    assertIO(RRunner(srvc).checkOk(Request(uri = uri"/hello")), "GetFoo")
-    assertIO(RRunner(srvc).checkOk(Request(method = Method.PUT, uri = uri"/hello")), "PutFoo")
+    assertIO(RRunner(srvc).checkOk(Request(uri = uri"/hello")), "GetFoo") *>
+      assertIO(RRunner(srvc).checkOk(Request(method = Method.PUT, uri = uri"/hello")), "PutFoo")
   }
 
   test("A CompileService should concatenate correctly") {
@@ -48,7 +48,8 @@ class CompileRoutesSuite extends CatsEffectSuite {
     val c2 = RoutesBuilder[IO](); putFoo(c2)
 
     val srvc = c1.append(c2.routes()).toRoutes()
-    assertIO(RRunner(srvc).checkOk(Request(uri = uri"/hello")), "GetFoo")
-    assertIO(RRunner(srvc).checkOk(Request(method = Method.PUT, uri = uri"/hello")), "PutFoo")
+
+    assertIO(RRunner(srvc).checkOk(Request(uri = uri"/hello")), "GetFoo") *>
+      assertIO(RRunner(srvc).checkOk(Request(method = Method.PUT, uri = uri"/hello")), "PutFoo")
   }
 }

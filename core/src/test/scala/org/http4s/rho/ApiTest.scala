@@ -194,31 +194,33 @@ class ApiTest extends CatsEffectSuite {
     val r2 = Gone("Foo")
     val c2 = H[`Content-Length`].captureMapR(_ => Left(r2))
     val v1 = ruleExecutor.runRequestRules(c2.rule, req)
-
-    v1 match {
-      case r: FailureResponse[IO] =>
-        (
-          r.toResponse.map(_.status),
-          r2.map(_.resp.status)
-        ).parTupled.map(x => assertEquals(x._1, x._2))
-
-      case _ =>
-        fail("Unexpected runRequestRules result found")
-    }
-
     val c3 = H[Accept].captureMapR(Some(r2))(_ => ???)
     val v2 = ruleExecutor.runRequestRules(c3.rule, req)
 
-    v2 match {
-      case r: FailureResponse[IO] =>
-        (
-          r.toResponse.map(_.status),
-          r2.map(_.resp.status)
-        ).parTupled.map(x => assertEquals(x._1, x._2))
+    for {
+      _ <- v1 match {
+        case r: FailureResponse[IO] =>
+          IO.raiseError(new Throwable("hui"))
+          (
+            r.toResponse.map(_.status),
+            r2.map(_.resp.status)
+          ).parTupled.map(x => assertEquals(x._1, x._2))
 
-      case _ =>
-        fail("Unexpected runRequestRules result found")
-    }
+        case _ =>
+          fail("Unexpected runRequestRules result found")
+      }
+
+      _ <- v2 match {
+        case r: FailureResponse[IO] =>
+          (
+            r.toResponse.map(_.status),
+            r2.map(_.resp.status)
+          ).parTupled.map(x => assertEquals(x._1, x._2))
+
+        case _ =>
+          fail("Unexpected runRequestRules result found")
+      }
+    } yield ()
   }
 
   test("A RhoDsl bits should append headers to a Route") {
@@ -265,8 +267,8 @@ class ApiTest extends CatsEffectSuite {
       .putHeaders(ETag(ETag.EntityTag("foo")))
       .withEntity("cool")
 
-    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
-    assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
+    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok) *>
+      assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
   }
 
   test("A RhoDsl bits should run || routes") {
@@ -278,10 +280,9 @@ class ApiTest extends CatsEffectSuite {
     }
 
     val req1 = Request[IO](uri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
-    checkETag(f(req1), "two")
-
     val req2 = Request[IO](uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
-    checkETag(f(req2), "four")
+
+    checkETag(f(req1), "two") *> checkETag(f(req2), "four")
   }
 
   test("A RhoDsl bits should execute a complicated route") {
@@ -408,14 +409,13 @@ class ApiTest extends CatsEffectSuite {
       Ok("")
     }
 
-    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
-
     val route2 = runWith(path +? (param[String]("foo") and param[Int]("baz"))) {
       (_: String, _: Int) =>
         Ok("")
     }
 
-    assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
+    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok) *>
+      assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
   }
 
   test("A query validators should map simple query rules into a complex type") {
@@ -450,11 +450,11 @@ class ApiTest extends CatsEffectSuite {
       Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
     }
 
-    checkETag(route(req1), "foo")
-    assertIO(
-      route(req2).value.map(_.getOrElse(Response.notFound).status),
-      Status.BadRequest
-    )
+    checkETag(route(req1), "foo") *>
+      assertIO(
+        route(req2).value.map(_.getOrElse(Response.notFound).status),
+        Status.BadRequest
+      )
   }
 
   test("Decoders should allow the infix operator syntax") {
@@ -481,20 +481,19 @@ class ApiTest extends CatsEffectSuite {
       Ok("shouldn't get here.")
     }
 
-    assertIO(
-      route1(req).value.map(_.getOrElse(Response.notFound).status),
-      Status.BadRequest
-    )
-
     val reqHeaderR = H[`Content-Length`].existsAndR(_ => Some(Unauthorized("Foo.")))
     val route2 = runWith(path.validate(reqHeaderR)) { () =>
       Ok("shouldn't get here.")
     }
 
     assertIO(
-      route2(req).value.map(_.getOrElse(Response.notFound).status),
-      Status.Unauthorized
-    )
+      route1(req).value.map(_.getOrElse(Response.notFound).status),
+      Status.BadRequest
+    ) *>
+      assertIO(
+        route2(req).value.map(_.getOrElse(Response.notFound).status),
+        Status.Unauthorized
+      )
   }
 
   test("Decoders should fail on a query") {
@@ -507,11 +506,6 @@ class ApiTest extends CatsEffectSuite {
       Ok("shouldn't get here.")
     }
 
-    assertIO(
-      route1(req).value.map(_.getOrElse(Response.notFound).status),
-      Status.BadRequest
-    )
-
     val route2 =
       runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) {
         _: String =>
@@ -519,9 +513,13 @@ class ApiTest extends CatsEffectSuite {
       }
 
     assertIO(
-      route2(req).value.map(_.getOrElse(Response.notFound).status),
-      Status.Unauthorized
-    )
+      route1(req).value.map(_.getOrElse(Response.notFound).status),
+      Status.BadRequest
+    ) *>
+      assertIO(
+        route2(req).value.map(_.getOrElse(Response.notFound).status),
+        Status.Unauthorized
+      )
   }
 
   val req = Request[IO](uri = uri"/foo/bar")

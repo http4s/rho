@@ -205,30 +205,31 @@ class SwaggerSupportSuite extends CatsEffectSuite {
 
     val securityF = jsonF.map(json => (json \\ "security").flatMap(_.asArray).flatten)
 
-    assertIOBoolean(
-      securityF.map(
-        _.contains(
-          Json.obj(
-            "bye" := List("hello")
+    for {
+      _ <- assertIOBoolean(
+        securityF.map(
+          _.contains(
+            Json.obj(
+              "bye" := List("hello")
+            )
           )
         )
       )
-    )
 
-    assertIOBoolean(
-      securityF.map(
-        _.contains(
-          Json.obj(
-            "hello" := List("bye")
+      _ <- assertIOBoolean(
+        securityF.map(
+          _.contains(
+            Json.obj(
+              "hello" := List("bye")
+            )
           )
         )
       )
-    )
 
-    val summaryF = jsonF.map(json => (json \\ "summary").flatMap(_.asString))
-
-    assertIOBoolean(summaryF.map(_.contains("Bye")))
-    assertIOBoolean(summaryF.map(_.contains("Hello")))
+      summaryF = jsonF.map(json => (json \\ "summary").flatMap(_.asString))
+      _ <- assertIOBoolean(summaryF.map(_.contains("Bye")))
+      _ <- assertIOBoolean(summaryF.map(_.contains("Hello")))
+    } yield ()
   }
 
   test("SwaggerSupport should support for complex meta data") {

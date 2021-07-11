@@ -14,13 +14,12 @@ class ResultSuite extends CatsEffectSuite {
       .map(_.putHeaders(date))
       .map(_.resp)
 
-    assertIO(resp.map(_.headers.get[Date]), Some(date))
-
     val respNow = Ok("Foo")
       .map(_.putHeaders(date))
       .map(_.resp)
 
-    assertIO(respNow.map(_.headers.get[Date]), Some(date))
+    assertIO(resp.map(_.headers.get[Date]), Some(date)) *>
+      assertIO(respNow.map(_.headers.get[Date]), Some(date))
   }
 
   test("A ResultSyntax should add attributes") {
@@ -29,12 +28,11 @@ class ResultSuite extends CatsEffectSuite {
       .map(_.withAttribute(attrKey, "foo"))
       .map(_.resp)
 
-    assertIO(resp.map(_.attributes.lookup(attrKey)), Some("foo"))
-
     val resp2 = Ok("Foo")
       .map(_.withAttribute(attrKey, "foo"))
       .map(_.resp)
 
-    assertIO(resp2.map(_.attributes.lookup(attrKey)), Some("foo"))
+    assertIO(resp.map(_.attributes.lookup(attrKey)), Some("foo")) *>
+      assertIO(resp2.map(_.attributes.lookup(attrKey)), Some("foo"))
   }
 }
