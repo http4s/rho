@@ -26,11 +26,9 @@ object Dependencies {
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.3"
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.0"
   lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.46.0"
-  lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.27"         % "test"
+  lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.26"         % "test"
+  lazy val munitCatsEffect     = "org.typelevel"              %% "munit-cats-effect-3"   % "1.0.5"          % "test"
   lazy val scalacheckMunit     = "org.scalameta"              %% "munit-scalacheck"      % munit.revision   % "test"
-
-  lazy val specs2              = Seq("org.specs2"              %% "specs2-core"          % specs2Version % "test",
-                                     "org.specs2"              %% "specs2-scalacheck"    % specs2Version % "test" )
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
