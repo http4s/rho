@@ -8,7 +8,7 @@ object Dependencies {
   val circeVersion = "0.14.1"
 
   val scala_213 = "2.13.4"
-  val scala_212 = "2.12.13"
+  val scala_212 = "2.12.14"
 
 
   lazy val circeCore           = "io.circe"                   %% "circe-core"            % circeVersion
