@@ -2,7 +2,6 @@ package org.http4s.rho.swagger
 
 import java.sql.Timestamp
 import java.util.Date
-
 import cats.effect.IO
 import cats.syntax.all._
 import fs2.Stream
@@ -29,13 +28,15 @@ package object model {
   case class FooWithMap(l: Map[String, Int])
   case class FooVal(foo: Foo) extends AnyVal
   case class BarWithFooVal(fooVal: FooVal)
+  case class AnyValClass(anyVal: AnyVal)
+  type AnyValType = AnyVal
+  case class ClassWithAnyValType(anyVal: AnyValType)
   @DiscriminatorField("foobar")
   sealed trait Sealed {
     def foo: String
   }
   case class FooSealed(a: Int, foo: String, foo2: Foo) extends Sealed
   case class BarSealed(str: String, foo: String) extends Sealed
-
   sealed trait SealedEnum
   case object FooEnum extends SealedEnum
   case object BarEnum extends SealedEnum
@@ -71,7 +72,7 @@ package object model {
     modelOfWithFormats(DefaultSwaggerFormats)
 
   def modelOfWithFormats[T](
-      formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
+                             formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 }
 
@@ -411,6 +412,16 @@ class TypeBuilderSuite extends FunSuite {
       typeOf[IO[_]]
     )
     assertEquals(model, modelOf[Sealed])
+  }
+
+  test("A TypeBuilder should fall back to the class name for a class containing an AnyVal") {
+    val m = modelOf[AnyValClass].head
+    assertEquals(m.description, "AnyValClass".some)
+  }
+
+  test("A TypeBuilder should fall back to the class name for a custom type containing an AnyVal") {
+    val m = modelOf[ClassWithAnyValType].head
+    assertEquals(m.description, "ClassWithAnyValType".some)
   }
 
   test("A TypeBuilder should build a model for two-level sealed trait hierarchy") {
