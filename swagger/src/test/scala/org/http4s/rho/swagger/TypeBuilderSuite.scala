@@ -72,7 +72,7 @@ package object model {
     modelOfWithFormats(DefaultSwaggerFormats)
 
   def modelOfWithFormats[T](
-                             formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
+      formats: SwaggerFormats)(implicit t: TypeTag[T], st: ShowType): Set[Model] =
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 }
 

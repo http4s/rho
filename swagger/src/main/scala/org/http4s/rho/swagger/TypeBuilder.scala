@@ -19,16 +19,16 @@ object TypeBuilder {
   private[this] val logger = getLogger
 
   def collectModels(t: Type, alreadyKnown: Set[Model], sfs: SwaggerFormats, et: Type)(implicit
-                                                                                      st: ShowType): Set[Model] =
+      st: ShowType): Set[Model] =
     try collectModels(t.dealias, alreadyKnown, ListSet.empty, sfs, et)
     catch { case NonFatal(_) => Set.empty }
 
   private def collectModels(
-                             t: Type,
-                             alreadyKnown: Set[Model],
-                             known: TypeSet,
-                             sfs: SwaggerFormats,
-                             et: Type)(implicit st: ShowType): Set[Model] = {
+      t: Type,
+      alreadyKnown: Set[Model],
+      known: TypeSet,
+      sfs: SwaggerFormats,
+      et: Type)(implicit st: ShowType): Set[Model] = {
 
     def go(t: Type, alreadyKnown: Set[Model], known: TypeSet): Set[Model] =
       t.dealias match {
@@ -50,7 +50,7 @@ object TypeBuilder {
             go(tpe.typeArgs.last, alreadyKnown, known + tpe)
 
         case tpe
-          if (tpe.isCollection || tpe.isOption || tpe.isEffect(et)) && tpe.typeArgs.nonEmpty =>
+            if (tpe.isCollection || tpe.isOption || tpe.isEffect(et)) && tpe.typeArgs.nonEmpty =>
           go(tpe.typeArgs.head, alreadyKnown, known + tpe)
 
         case tpe if tpe.isStream =>
@@ -75,7 +75,7 @@ object TypeBuilder {
           }.toSet
 
         case tpe @ TypeRef(_, sym: Symbol, tpeArgs: List[Type])
-          if isCaseClass(sym) || isSumType(sym) =>
+            if isCaseClass(sym) || isSumType(sym) =>
           val symIsSumType = isSumType(sym)
           val maybeParentSumType = sym.asClass.baseClasses.drop(1).find(isSumType)
 
@@ -157,7 +157,7 @@ object TypeBuilder {
     }
 
   private def modelToSwagger(tpe: Type, sfs: SwaggerFormats)(implicit
-                                                             st: ShowType): Option[ModelImpl] =
+      st: ShowType): Option[ModelImpl] =
     try {
       val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
       val constructor = tpe.member(termNames.CONSTRUCTOR)
@@ -185,7 +185,7 @@ object TypeBuilder {
     }
 
   private def paramSymToProp(sym: Symbol, tpeArgs: List[Type], sfs: SwaggerFormats)(pSym: Symbol)(
-    implicit st: ShowType): (String, Property) = {
+      implicit st: ShowType): (String, Property) = {
     val pType = pSym.typeSignature.substituteTypes(sym.asClass.typeParams, tpeArgs)
     val required = !(pSym.asTerm.isParamWithDefault || pType.isOption)
     val prop = typeToProperty(pType, sfs)
@@ -245,15 +245,15 @@ object TypeBuilder {
   object DataType {
 
     case class ValueDataType(
-                              name: String,
-                              format: Option[String] = None,
-                              qualifiedName: Option[String] = None)
-      extends DataType
+        name: String,
+        format: Option[String] = None,
+        qualifiedName: Option[String] = None)
+        extends DataType
     case class ContainerDataType(
-                                  name: String,
-                                  typeArg: Option[DataType] = None,
-                                  uniqueItems: Boolean = false)
-      extends DataType
+        name: String,
+        typeArg: Option[DataType] = None,
+        uniqueItems: Boolean = false)
+        extends DataType
     case class ComplexDataType(name: String, qualifiedName: Option[String] = None) extends DataType
     case class EnumDataType(enums: Set[String]) extends DataType { val name = "string" }
 
