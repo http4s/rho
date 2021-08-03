@@ -2,7 +2,6 @@ package org.http4s
 package rho
 package bits
 
-import cats.Applicative
 import cats.effect.IO
 import fs2.Chunk
 import munit.FunSuite
@@ -122,10 +121,10 @@ class ResultMatcherSuite extends FunSuite {
     case class ModelA(name: String, color: Int)
     case class ModelB(name: String, id: Long)
 
-    implicit def w1[F[_]: Applicative]: EntityEncoder[F, ModelA] =
+    implicit def w1[F[_]]: EntityEncoder[F, ModelA] =
       EntityEncoder.simple[F, ModelA]()(_ => Chunk.array("A".getBytes))
 
-    implicit def w2[F[_]: Applicative]: EntityEncoder[F, ModelB] =
+    implicit def w2[F[_]]: EntityEncoder[F, ModelB] =
       EntityEncoder.simple[F, ModelB]()(_ => Chunk.array("B".getBytes))
 
     val srvc = new TRhoRoutes[IO] {
@@ -165,9 +164,9 @@ object Foo {
   case class FooA(name: String, color: Int)
   case class FooB(name: String, id: Long)
 
-  implicit def w1[F[_]: Applicative]: EntityEncoder[F, FooA] =
+  implicit def w1[F[_]]: EntityEncoder[F, FooA] =
     EntityEncoder.simple[F, FooA]()(_ => Chunk.array("A".getBytes))
 
-  implicit def w2[F[_]: Applicative]: EntityEncoder[F, FooB] =
+  implicit def w2[F[_]]: EntityEncoder[F, FooB] =
     EntityEncoder.simple[F, FooB]()(_ => Chunk.array("B".getBytes))
 }

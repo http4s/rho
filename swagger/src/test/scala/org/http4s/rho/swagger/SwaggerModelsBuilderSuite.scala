@@ -3,7 +3,7 @@ package swagger
 
 import cats.effect.IO
 import cats.syntax.all._
-import cats.{Applicative, Monad}
+import cats._
 import _root_.io.circe._
 import _root_.io.circe.parser._
 import _root_.io.circe.generic.auto._
@@ -1074,10 +1074,10 @@ class SwaggerModelsBuilderSuite extends FunSuite {
       .contramap { _: (Int, T) => "" }
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
-  implicit def listEntityEncoder[F[_]: Applicative, A]: EntityEncoder[F, List[A]] =
+  implicit def listEntityEncoder[F[_], A]: EntityEncoder[F, List[A]] =
     EntityEncoder.simple[F, List[A]]()(_ => Chunk.array("A".getBytes))
 
-  implicit def mapEntityEncoder[F[_]: Applicative, A, B]: EntityEncoder[F, Map[A, B]] =
+  implicit def mapEntityEncoder[F[_], A, B]: EntityEncoder[F, Map[A, B]] =
     EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.array("A".getBytes))
 
   case class CsvFile()
