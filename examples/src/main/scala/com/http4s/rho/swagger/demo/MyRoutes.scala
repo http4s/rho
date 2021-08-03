@@ -148,7 +148,7 @@ object MyRoutes {
 
   case class Bar(i: Int) extends AnyVal
 
-  implicit def barParser[F[_]: Monad]: StringParser[F, Bar] =
+  implicit def barParser[F[_]]: StringParser[F, Bar] =
     StringParser.intParser[F].map(Bar)
 
   case class JsonResult(name: String, number: Int)

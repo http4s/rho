@@ -1,18 +1,18 @@
 package org.http4s.rho.swagger
 
-import org.specs2.mutable._
-import org.specs2.ScalaCheck
 import Arbitraries._
-import io.swagger.models.{Response => jResponse}
+import munit.ScalaCheckSuite
 import org.http4s.rho.swagger.models.Swagger
+import org.scalacheck.Prop._
 
 import scala.jdk.CollectionConverters._
 
-class SwaggerSpec extends Specification with ScalaCheck {
-  "The Swagger model can be translated to a 'Java' Swagger model".p
-
-  "If there are no examples in the path responses then the corresponding field in the Java model must be null" >> prop {
-    swagger: Swagger =>
+class SwaggerSuite extends ScalaCheckSuite {
+  property(
+    "The Swagger model can be translated to a 'Java' Swagger model. " +
+      "If there are no examples in the path responses then the corresponding field in the Java model must be null"
+  ) {
+    forAll { swagger: Swagger =>
       val paths = swagger.paths.values.toList
       val operations = paths.flatMap(_.operations)
       val responses = operations.flatMap(_.responses.values.toList)
@@ -22,9 +22,12 @@ class SwaggerSpec extends Specification with ScalaCheck {
       val joperations = jpaths.flatMap(_.getOperations.asScala)
       val jresponses = joperations.flatMap(_.getResponses.asScala.values.toList)
 
-      jresponses must contain { response: jResponse =>
-        response.getExamples must beNull.iff(examples.isEmpty)
-      }.forall
+      assert(
+        jresponses.forall(response =>
+          if (examples.isEmpty) response.getExamples == null
+          else true
+        )
+      )
+    }
   }
-
 }

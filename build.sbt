@@ -4,8 +4,6 @@ import spray.revolver.RevolverPlugin._
 
 import com.typesafe.sbt.SbtGit.git
 
-import scala.util.Properties.envOrNone
-
 import Dependencies._, RhoPlugin._
 
 lazy val rho = project
@@ -29,7 +27,7 @@ lazy val `rho-core` = project
         case _ => Nil
       }
     },
-    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4")
+    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0")
   )
 
 lazy val `rho-swagger` = project
@@ -133,7 +131,7 @@ lazy val buildSettings = publishing ++
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
-    libraryDependencies ++= specs2
+    libraryDependencies ++= Seq(munit, munitCatsEffect, scalacheckMunit)
   )
 
 // to keep REPL usable
