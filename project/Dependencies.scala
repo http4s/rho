@@ -3,12 +3,11 @@ import Keys._
 
 // format: off
 object Dependencies {
-  val http4sVersion = "0.22.0-RC1"
-  val specs2Version = "4.10.6"
+  val http4sVersion = "0.22.0"
   val circeVersion = "0.14.1"
 
-  val scala_213 = "2.13.4"
-  val scala_212 = "2.12.13"
+  val scala_213 = "2.13.6"
+  val scala_212 = "2.12.14"
 
 
   lazy val circeCore           = "io.circe"                   %% "circe-core"            % circeVersion
@@ -21,21 +20,21 @@ object Dependencies {
   lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.6.2"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
-  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.3"
+  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.5"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
-  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.3"
-  lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.0"
-  lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.46.0"
-
-  lazy val specs2              = Seq("org.specs2"              %% "specs2-core"          % specs2Version % "test",
-                                     "org.specs2"              %% "specs2-scalacheck"    % specs2Version % "test" )
+  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.7"
+  lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.1"
+  lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.51.2"
+  lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.27"         % "test"
+  lazy val munitCatsEffect     = "org.typelevel"              %% "munit-cats-effect-2"   % "1.0.5"          % "test"
+  lazy val scalacheckMunit     = "org.scalameta"              %% "munit-scalacheck"      % munit.revision   % "test"
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
-  val silencerVersion = "1.7.4"
+  val silencerVersion = "1.7.5"
   lazy val silencerPlugin = compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full)
   lazy val silencerLib = "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-  lazy val kindProjector = compilerPlugin("org.typelevel" % "kind-projector" % "0.11.3" cross CrossVersion.full)
+  lazy val kindProjector = compilerPlugin("org.typelevel" % "kind-projector" % "0.13.0" cross CrossVersion.full)
 
   lazy val halDeps = libraryDependencies ++= Seq(http4sCirce)
 
@@ -46,7 +45,7 @@ object Dependencies {
 
     http4sCirce % "test",
     circeParser % "test",
-    circeGeneric % "test",
+    circeGeneric % "test"
   )
 
   lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi)
@@ -60,6 +59,6 @@ object Dependencies {
     http4sCirce,
     http4sXmlInstances,
     logbackClassic, 
-    uadetector,
+    uadetector
   )
 }

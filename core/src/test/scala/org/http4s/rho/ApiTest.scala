@@ -1,551 +1,565 @@
 package org.http4s
 package rho
 
-import scala.collection.immutable.Seq
 import cats.data.OptionT
 import cats.effect.{IO, Sync}
+import cats.syntax.parallel._
+import munit.CatsEffectSuite
+import org.http4s.headers.Accept
 import org.http4s.headers.{ETag, `Content-Length`}
+import org.http4s.rho.bits._
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
-import org.http4s.rho.bits._
 import org.http4s.rho.io._
-import org.http4s.Uri.uri
-import org.specs2.matcher.MatchResult
-import org.specs2.mutable._
 import shapeless.{HList, HNil}
+
 import scala.util.control.NoStackTrace
-import org.http4s.headers.Accept
 
-class ApiTest extends Specification {
+class ApiTest extends CatsEffectSuite {
+  private object ruleExecutor extends RuleExecutor[IO]
 
-  object ruleExecutor extends RuleExecutor[IO]
-
-  def runWith[F[_]: Sync, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit
+  private def runWith[F[_]: Sync, T <: HList, FU](exec: RouteExecutable[F, T])(f: FU)(implicit
       fpm: FuncParamsMatch[F, T, FU],
       hltf: HListToFunc[F, T, FU]): Request[F] => OptionT[F, Response[F]] = {
     val srvc = new RhoRoutes[F] { exec |>> f }.toRoutes()
     srvc.apply(_: Request[F])
   }
 
-  val lenheader: `Content-Length` =
+  private val lenheader: `Content-Length` =
     headers.`Content-Length`.unsafeFromLong(4)
 
-  val etag: ETag =
+  private val etag: ETag =
     ETag(ETag.EntityTag("foo"))
 
-  val RequireETag =
+  private val RequireETag =
     H[ETag].exists
 
-  val RequireNonZeroLen =
+  private val RequireNonZeroLen =
     H[`Content-Length`].existsAnd(h => h.length != 0)
 
-  val RequireThrowException =
+  private val RequireThrowException =
     H[`Content-Length`].existsAnd(_ =>
       throw new RuntimeException("this could happen") with NoStackTrace
     )
 
-  def fetchETag(p: IO[Response[IO]]): ETag = {
-    val resp = p.unsafeRunSync()
-    resp.headers.get[ETag].getOrElse(sys.error("No ETag: " + resp))
-  }
+  private def fetchETag(p: IO[Response[IO]]): IO[ETag] =
+    p.map(r => r.headers.get[ETag].getOrElse(sys.error("No ETag: " + r)))
 
-  def checkETag(p: OptionT[IO, Response[IO]], s: String): MatchResult[Any] =
-    fetchETag(p.value.map(_.getOrElse(Response.notFound))) must_== ETag(ETag.EntityTag(s))
+  private def checkETag(p: OptionT[IO, Response[IO]], s: String): IO[Unit] =
+    assertIO(fetchETag(p.value.map(_.getOrElse(Response.notFound))), ETag(ETag.EntityTag(s)))
 
-  "RhoDsl bits" should {
-    "Combine validators" in {
-      (RequireETag && RequireNonZeroLen) should_== TypedHeader(
+  test("A RhoDsl bits should combine validators") {
+    assertEquals(
+      RequireETag && RequireNonZeroLen,
+      TypedHeader[IO, HNil](
         AndRule(RequireETag.rule, RequireNonZeroLen.rule)
       )
-    }
+    )
+  }
 
-    "Fail on a bad request" in {
-      val badreq = Request[IO]().putHeaders(lenheader)
-      val res = ruleExecutor.runRequestRules((RequireETag && RequireNonZeroLen).rule, badreq)
+  test("A RhoDsl bits should fail on a bad request") {
+    val badreq = Request[IO]().putHeaders(lenheader)
+    val res = ruleExecutor.runRequestRules((RequireETag && RequireNonZeroLen).rule, badreq)
 
-      res must beAnInstanceOf[FailureResponse[IO]]
-      res
-        .asInstanceOf[FailureResponse[IO]]
-        .toResponse
-        .unsafeRunSync()
-        .status must_== Status.BadRequest
-    }
+    res match {
+      case resp: FailureResponse[IO] =>
+        assertIO(resp.toResponse.map(_.status), Status.BadRequest)
 
-    "Fail on a bad request 2" in {
-      val req = Request[IO]().putHeaders(lenheader)
-      val res = ruleExecutor.runRequestRules(RequireThrowException.rule, req)
-
-      res must beAnInstanceOf[FailureResponse[IO]]
-      res
-        .asInstanceOf[FailureResponse[IO]]
-        .toResponse
-        .unsafeRunSync()
-        .status must_== Status.InternalServerError
-    }
-
-    "Match captureless route" in {
-      val c = RequireETag && RequireNonZeroLen
-
-      val req = Request[IO]().putHeaders(etag, lenheader)
-      ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(HNil)
-    }
-
-    "optionally capture header params" in {
-      val req = Request[IO]().putHeaders(lenheader)
-
-      Seq(
-        {
-          val c = H[`Content-Length`].captureOptionally
-          ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(
-            Some(lenheader) :: HNil
-          )
-        }, {
-          val c = H[ETag].captureOptionally
-          ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(None :: HNil)
-        }
-      ).reduce(_ and _)
-    }
-
-    "Capture params" in {
-      val req = Request[IO]().putHeaders(etag, lenheader)
-      Seq(
-        {
-          val c2 = RequireETag && H[`Content-Length`].capture
-          ruleExecutor.runRequestRules(c2.rule, req) should_== SuccessResponse(lenheader :: HNil)
-        }, {
-          val c3 = H[`Content-Length`].capture && H[ETag].capture
-          ruleExecutor.runRequestRules(c3.rule, req) should_== SuccessResponse(
-            etag :: lenheader :: HNil
-          )
-        }
-      ).reduce(_ and _)
-    }
-
-    "Capture params with default" in {
-      val default: `Content-Length` = headers.`Content-Length`.unsafeFromLong(10)
-      val c = H[`Content-Length`].captureOrElse(default)
-      Seq(
-        {
-          val req = Request[IO]().putHeaders()
-          ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(default :: HNil)
-        }, {
-          val req = Request[IO]().putHeaders(lenheader)
-          ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(lenheader :: HNil)
-        }
-      ).reduce(_ and _)
-    }
-
-    "Map header params" in {
-      val req = Request[IO]().putHeaders(etag, lenheader)
-      val c = H[`Content-Length`].captureMap(_.length)
-
-      ruleExecutor.runRequestRules(c.rule, req) should_== SuccessResponse(4 :: HNil)
-    }
-
-    "Map header params with exception" in {
-      val req = Request[IO]().putHeaders(etag, lenheader)
-      val c = H[`Content-Length`].captureMap(_.length / 0)
-
-      ruleExecutor.runRequestRules(c.rule, req) must beAnInstanceOf[FailureResponse[IO]]
-    }
-
-    "map simple header params into a complex type" in {
-      case class Foo(age: Long, s: HttpDate)
-      val paramFoo =
-        (H[`Content-Length`].captureMap(_.length) && H[headers.Date].captureMap(_.date))
-          .map(Foo.apply _)
-
-      val path = GET / "hello" >>> paramFoo
-      val testDate = HttpDate.unsafeFromInstant(java.time.Instant.now)
-      val req = Request[IO](
-        uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")),
-        headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(testDate))
-      )
-
-      val expectedFoo = Foo(10, testDate)
-      val route = runWith(path)((f: Foo) => Ok(s"stuff $f"))
-
-      val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      result.status should_== Status.Ok
-      RequestRunner.getBody(result.body) should_== s"stuff $expectedFoo"
-    }
-
-    "Map with missing header result" in {
-      val req = Request[IO]().putHeaders(etag, lenheader)
-
-      val c1 = H[`Content-Length`].captureMapR(r => Right(r.length))
-      ruleExecutor.runRequestRules(c1.rule, req) should_== SuccessResponse(4 :: HNil)
-
-      val r2 = Gone("Foo")
-      val c2 = H[`Content-Length`].captureMapR(_ => Left(r2))
-      val v1 = ruleExecutor.runRequestRules(c2.rule, req)
-      v1 must beAnInstanceOf[FailureResponse[IO]]
-      v1.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2
-        .unsafeRunSync()
-        .resp
-        .status
-
-      val c3 = H[Accept].captureMapR(Some(r2))(_ => ???)
-      val v2 = ruleExecutor.runRequestRules(c3.rule, req)
-      v2 must beAnInstanceOf[FailureResponse[IO]]
-      v2.asInstanceOf[FailureResponse[IO]].toResponse.unsafeRunSync().status must_== r2
-        .unsafeRunSync()
-        .resp
-        .status
-    }
-
-    "Append headers to a Route" in {
-      val path = POST / "hello" / pv"world" +? param[Int]("fav")
-      val validations = H[`Content-Length`].existsAnd(h => h.length != 0)
-
-      val route =
-        runWith((path >>> validations >>> H[ETag].capture).decoding(EntityDecoder.text[IO])) {
-          (world: String, fav: Int, tag: ETag, body: String) =>
-            Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-              .map(_.putHeaders(tag))
-        }
-
-      val req = Request[IO](
-        POST,
-        uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail"))
-      )
-        .putHeaders(etag)
-        .withEntity("cool")
-
-      val resp = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      resp.headers.get[ETag] must beSome(etag)
-
-    }
-
-    "accept compound or sequential header rules" in {
-      val path = POST / "hello" / pv"world"
-      val lplus1 = H[`Content-Length`].captureMap(_.length + 1)
-
-      val route1 = runWith((path >>> lplus1 >>> H[ETag].capture).decoding(EntityDecoder.text)) {
-        (_: String, _: Long, _: ETag, _: String) =>
-          Ok("")
-      }
-
-      val route2 = runWith((path >>> (lplus1 && H[ETag].capture)).decoding(EntityDecoder.text)) {
-        (_: String, _: Long, _: ETag, _: String) =>
-          Ok("")
-      }
-
-      val req = Request[IO](
-        POST,
-        uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail"))
-      )
-        .putHeaders(ETag(ETag.EntityTag("foo")))
-        .withEntity("cool")
-
-      route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
-      route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
-    }
-
-    "Run || routes" in {
-      val p1 = "one" / pv"two"
-      val p2 = "three" / pv"four"
-
-      val f = runWith(GET / (p1 || p2)) { (s: String) =>
-        Ok("").map(_.putHeaders(ETag(ETag.EntityTag(s))))
-      }
-
-      val req1 = Request[IO](uri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
-      checkETag(f(req1), "two")
-
-      val req2 = Request[IO](uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
-      checkETag(f(req2), "four")
-    }
-
-    "Execute a complicated route" in {
-
-      val path = POST / "hello" / pv"world" +? param[Int]("fav")
-      val validations = H[`Content-Length`].existsAnd(h => h.length != 0) &&
-        H[ETag].capture
-
-      val route =
-        runWith((path >>> validations).decoding(EntityDecoder.text)) {
-          (world: String, fav: Int, _: ETag, body: String) =>
-            Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
-              .map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
-        }
-
-      val req = Request[IO](
-        POST,
-        uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail"))
-      )
-        .putHeaders(ETag(ETag.EntityTag("foo")))
-        .withEntity("cool")
-
-      checkETag(route(req), "foo")
-    }
-
-    "Deal with 'no entity' responses" in {
-      val route = runWith(GET / "foo")(() => SwitchingProtocols.apply)
-      val req = Request[IO](GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
-
-      val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      result.headers.headers.size must_== 0
-      result.status must_== Status.SwitchingProtocols
+      case _ =>
+        fail("Unexpected putHeaders result found")
     }
   }
 
-  "RequestLineBuilder" should {
-    "be made from TypedPath and TypedQuery" in {
-      val path = pathMatch("foo")
-      val q = param[Int]("bar")
-      path +? q should_== RequestLineBuilder(path.rule, q.rule)
-    }
+  test("A RhoDsl bits should fail on a bad request 2") {
+    val req = Request[IO]().putHeaders(lenheader)
+    val res = ruleExecutor.runRequestRules(RequireThrowException.rule, req)
 
-    "append to a TypedPath" in {
-      val requestLine = pathMatch("foo") +? param[Int]("bar")
-      (pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[IO, _]] should_== true
-    }
-  }
+    res match {
+      case resp: FailureResponse[IO] =>
+        assertIO(resp.toResponse.map(_.status), Status.InternalServerError)
 
-  "PathValidator" should {
-
-    "traverse a captureless path" in {
-      val stuff = GET / "hello"
-      val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
-
-      val f = runWith(stuff)(() => Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo")))))
-      checkETag(f(req), "foo")
-    }
-
-    "Not match a path to long" in {
-      val stuff = GET / "hello"
-      val req = Request[IO](uri = uri("/hello/world"))
-
-      val f = runWith(stuff)(() => Ok("Shouldn't get here."))
-      val r = f(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      r.status should_== Status.NotFound
-    }
-
-    "capture a variable" in {
-      val stuff = GET / pv"hello"
-      val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
-
-      val f = runWith(stuff) { str: String =>
-        Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(str))))
-      }
-      checkETag(f(req), "hello")
-    }
-
-    "work directly" in {
-      val stuff = GET / "hello"
-      val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
-
-      val f = runWith(stuff) { () =>
-        Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
-      }
-
-      checkETag(f(req), "foo")
-    }
-
-    "capture end with nothing" in {
-      val stuff = GET / "hello" / *
-      val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
-      val f = runWith(stuff) { path: List[String] =>
-        Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))))
-      }
-
-      checkETag(f(req), "go")
-    }
-
-    "capture remaining" in {
-      val stuff = GET / "hello" / *
-      val req =
-        Request[IO](uri = Uri.fromString("/hello/world/foo").getOrElse(sys.error("Failed.")))
-      val f = runWith(stuff) { path: List[String] =>
-        Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(path.mkString))))
-      }
-
-      checkETag(f(req), "worldfoo")
+      case _ =>
+        fail("Unexpected putHeaders result found")
     }
   }
 
-  "Query validators" should {
-    "get a query string" in {
-      val path = GET / "hello" +? param[Int]("jimbo")
-      val req = Request[IO](uri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
+  test("A RhoDsl bits should match captureless route") {
+    val c = RequireETag && RequireNonZeroLen
 
-      val route = runWith(path) { i: Int =>
-        Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag((i + 1).toString))))
-      }
+    val req = Request[IO]().putHeaders(etag, lenheader)
+    assertEquals(ruleExecutor.runRequestRules(c.rule, req), SuccessResponse[IO, HNil](HNil))
+  }
 
-      checkETag(route(req), "33")
-    }
+  test("A RhoDsl bits should optionally capture header params") {
+    val req = Request[IO]().putHeaders(lenheader)
 
-    "accept compound or sequential query rules" in {
-      val path = GET / "hello"
+    val c = H[`Content-Length`].captureOptionally
 
-      val req = Request[IO](uri = uri("/hello?foo=bar&baz=1"))
-
-      val route1 = runWith(path +? param[String]("foo") & param[Int]("baz")) {
-        (_: String, _: Int) =>
-          Ok("")
-      }
-
-      route1(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
-
-      val route2 = runWith(path +? (param[String]("foo") and param[Int]("baz"))) {
-        (_: String, _: Int) =>
-          Ok("")
-      }
-
-      route2(req).value.unsafeRunSync().getOrElse(Response.notFound).status should_== Status.Ok
-    }
-
-    "map simple query rules into a complex type" in {
-      case class Foo(i: Int, f: Double, s: String)
-      val paramFoo = (param[Int]("i") & param[Double]("f") & param[String]("s")).map(Foo.apply _)
-
-      val path = GET / "hello" +? paramFoo
-      val req = Request[IO](uri =
-        Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed."))
+    assertEquals(
+      ruleExecutor.runRequestRules(c.rule, req),
+      SuccessResponse[IO, HList](
+        Some(lenheader) :: HNil
       )
+    )
 
-      val route = runWith(path)((f: Foo) => Ok(s"stuff $f"))
+    val cETag = H[ETag].captureOptionally
 
-      val result = route(req).value.unsafeRunSync().getOrElse(Response.notFound)
-      result.status should_== Status.Ok
-      RequestRunner.getBody(result.body) should_== "stuff Foo(32,3.2,Asdf)"
+    assertEquals(
+      ruleExecutor.runRequestRules(cETag.rule, req),
+      SuccessResponse[IO, HList](None :: HNil)
+    )
+  }
+
+  test("A RhoDsl bits should capture params") {
+    val req = Request[IO]().putHeaders(etag, lenheader)
+
+    val c2 = RequireETag && H[`Content-Length`].capture
+    assertEquals(
+      ruleExecutor.runRequestRules(c2.rule, req),
+      SuccessResponse[IO, HList](lenheader :: HNil)
+    )
+
+    val c3 = H[`Content-Length`].capture && H[ETag].capture
+    assertEquals(
+      ruleExecutor.runRequestRules(c3.rule, req),
+      SuccessResponse[IO, HList](
+        etag :: lenheader :: HNil
+      )
+    )
+  }
+
+  test("A RhoDsl bits should capture params with default") {
+    val default: `Content-Length` = headers.`Content-Length`.unsafeFromLong(10)
+    val c = H[`Content-Length`].captureOrElse(default)
+
+    val req1 = Request[IO]().putHeaders()
+    assertEquals(
+      ruleExecutor.runRequestRules(c.rule, req1),
+      SuccessResponse[IO, HList](default :: HNil)
+    )
+
+    val req2 = Request[IO]().putHeaders(lenheader)
+    assertEquals(
+      ruleExecutor.runRequestRules(c.rule, req2),
+      SuccessResponse[IO, HList](lenheader :: HNil)
+    )
+  }
+
+  test("A RhoDsl bits should map header params") {
+    val req = Request[IO]().putHeaders(etag, lenheader)
+    val c = H[`Content-Length`].captureMap(_.length)
+
+    assertEquals(ruleExecutor.runRequestRules(c.rule, req), SuccessResponse[IO, HList](4 :: HNil))
+  }
+
+  test("A RhoDsl bits should map header params with exception") {
+    val req = Request[IO]().putHeaders(etag, lenheader)
+    val c = H[`Content-Length`].captureMap(_.length / 0)
+
+    ruleExecutor.runRequestRules(c.rule, req) match {
+      case _: FailureResponse[IO] => ()
+      case _ => fail("Unexpected putHeaders result found")
     }
   }
 
-  "Decoders" should {
-    "Decode a body" in {
-      val reqHeader = H[`Content-Length`].existsAnd(h => h.length < 10)
+  test("A RhoDsl bits should map simple header params into a complex type") {
+    case class Foo(age: Long, s: HttpDate)
+    val paramFoo =
+      (H[`Content-Length`].captureMap(_.length) && H[headers.Date].captureMap(_.date))
+        .map(Foo.apply _)
 
-      val path = POST / "hello" >>> reqHeader
+    val path = GET / "hello" >>> paramFoo
+    val testDate = HttpDate.unsafeFromInstant(java.time.Instant.now)
+    val req = Request[IO](
+      uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")),
+      headers = Headers(headers.`Content-Length`.unsafeFromLong(10), headers.Date(testDate))
+    )
 
-      val req1 = Request[IO](POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
-        .withEntity("foo")
+    val expectedFoo = Foo(10, testDate)
+    val route = runWith(path)((f: Foo) => Ok(s"stuff $f"))
 
-      val req2 = Request[IO](POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
-        .withEntity("0123456789") // length 10
-
-      val route = runWith(path.decoding(EntityDecoder.text)) { str: String =>
-        Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
-      }
-
-      checkETag(route(req1), "foo")
-      route(req2).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status should_== Status.BadRequest
-    }
-
-    "Allow the infix operator syntax" in {
-      val path = POST / "hello"
-
-      val req = Request[IO](POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
-        .withEntity("foo")
-
-      val route = runWith(path ^ EntityDecoder.text) { str: String =>
-        Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
-      }
-
-      checkETag(route(req), "foo")
-    }
-
-    "Fail on a header" in {
-      val path = GET / "hello"
-
-      val req = Request[IO](uri = uri("/hello"))
-        .putHeaders(headers.`Content-Length`.unsafeFromLong("foo".length))
-
-      val reqHeader = H[`Content-Length`].existsAnd(h => h.length < 2)
-      val route1 = runWith(path.validate(reqHeader)) { () =>
-        Ok("shouldn't get here.")
-      }
-
-      route1(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status should_== Status.BadRequest
-
-      val reqHeaderR = H[`Content-Length`].existsAndR(_ => Some(Unauthorized("Foo.")))
-      val route2 = runWith(path.validate(reqHeaderR)) { () =>
-        Ok("shouldn't get here.")
-      }
-
-      route2(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status should_== Status.Unauthorized
-    }
-
-    "Fail on a query" in {
-      val path = GET / "hello"
-
-      val req = Request[IO](uri = uri("/hello?foo=bar"))
-        .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
-
-      val route1 = runWith(path +? param[Int]("foo")) { _: Int =>
-        Ok("shouldn't get here.")
-      }
-
-      route1(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status should_== Status.BadRequest
-
-      val route2 =
-        runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) {
-          _: String =>
-            Ok("shouldn't get here.")
-        }
-
-      route2(req).value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .status should_== Status.Unauthorized
-    }
+    for {
+      result <- route(req).value.map(_.getOrElse(Response.notFound))
+      _ = assertEquals(result.status, Status.Ok)
+      _ <- assertIO(RequestRunner.getBody(result.body), s"stuff $expectedFoo")
+    } yield ()
   }
 
-  "Path prepending" should {
-    val req = Request[IO](uri = uri("/foo/bar"))
-    val respMsg = "Result"
+  test("A RhoDsl bits should map with missing header result") {
+    val req = Request[IO]().putHeaders(etag, lenheader)
 
-    "Work for a PathBuilder" in {
-      val tail = GET / "bar"
-      val all = "foo" /: tail
+    val c1 = H[`Content-Length`].captureMapR(r => Right(r.length))
+    assertEquals(ruleExecutor.runRequestRules(c1.rule, req), SuccessResponse[IO, HList](4 :: HNil))
 
+    val r2 = Gone("Foo")
+    val c2 = H[`Content-Length`].captureMapR(_ => Left(r2))
+    val v1 = ruleExecutor.runRequestRules(c2.rule, req)
+    val c3 = H[Accept].captureMapR(Some(r2))(_ => ???)
+    val v2 = ruleExecutor.runRequestRules(c3.rule, req)
+
+    for {
+      _ <- v1 match {
+        case r: FailureResponse[IO] =>
+          (
+            r.toResponse.map(_.status),
+            r2.map(_.resp.status)
+          ).parTupled.map(x => assertEquals(x._1, x._2))
+
+        case _ =>
+          fail("Unexpected runRequestRules result found")
+      }
+
+      _ <- v2 match {
+        case r: FailureResponse[IO] =>
+          (
+            r.toResponse.map(_.status),
+            r2.map(_.resp.status)
+          ).parTupled.map(x => assertEquals(x._1, x._2))
+
+        case _ =>
+          fail("Unexpected runRequestRules result found")
+      }
+    } yield ()
+  }
+
+  test("A RhoDsl bits should append headers to a Route") {
+    val path = POST / "hello" / pv"world" +? param[Int]("fav")
+    val validations = H[`Content-Length`].existsAnd(h => h.length != 0)
+
+    val route =
+      runWith((path >>> validations >>> H[ETag].capture).decoding(EntityDecoder.text[IO])) {
+        (world: String, fav: Int, tag: ETag, body: String) =>
+          Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+            .map(_.putHeaders(tag))
+      }
+
+    val req = Request[IO](
+      POST,
+      uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail"))
+    )
+      .putHeaders(etag)
+      .withEntity("cool")
+
+    val resp = route(req).value.map(_.getOrElse(Response.notFound))
+
+    assertIO(resp.map(_.headers.get[ETag]), Some(etag))
+  }
+
+  test("A RhoDsl bits should accept compound or sequential header rules") {
+    val path = POST / "hello" / pv"world"
+    val lplus1 = H[`Content-Length`].captureMap(_.length + 1)
+
+    val route1 = runWith((path >>> lplus1 >>> H[ETag].capture).decoding(EntityDecoder.text)) {
+      (_: String, _: Long, _: ETag, _: String) =>
+        Ok("")
+    }
+
+    val route2 = runWith((path >>> (lplus1 && H[ETag].capture)).decoding(EntityDecoder.text)) {
+      (_: String, _: Long, _: ETag, _: String) =>
+        Ok("")
+    }
+
+    val req = Request[IO](
+      POST,
+      uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail"))
+    )
+      .putHeaders(ETag(ETag.EntityTag("foo")))
+      .withEntity("cool")
+
+    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok) *>
+      assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
+  }
+
+  test("A RhoDsl bits should run || routes") {
+    val p1 = "one" / pv"two"
+    val p2 = "three" / pv"four"
+
+    val f = runWith(GET / (p1 || p2)) { (s: String) =>
+      Ok("").map(_.putHeaders(ETag(ETag.EntityTag(s))))
+    }
+
+    val req1 = Request[IO](uri = Uri.fromString("/one/two").getOrElse(sys.error("Failed.")))
+    val req2 = Request[IO](uri = Uri.fromString("/three/four").getOrElse(sys.error("Failed.")))
+
+    checkETag(f(req1), "two") *> checkETag(f(req2), "four")
+  }
+
+  test("A RhoDsl bits should execute a complicated route") {
+    val path = POST / "hello" / pv"world" +? param[Int]("fav")
+    val validations = H[`Content-Length`].existsAnd(h => h.length != 0) &&
+      H[ETag].capture
+
+    val route =
+      runWith((path >>> validations).decoding(EntityDecoder.text)) {
+        (world: String, fav: Int, _: ETag, body: String) =>
+          Ok(s"Hello to you too, $world. Your Fav number is $fav. You sent me $body")
+            .map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
+      }
+
+    val req = Request[IO](
+      POST,
+      uri = Uri.fromString("/hello/neptune?fav=23").getOrElse(sys.error("Fail"))
+    )
+      .putHeaders(ETag(ETag.EntityTag("foo")))
+      .withEntity("cool")
+
+    checkETag(route(req), "foo")
+  }
+
+  test("A RhoDsl bits should deal with 'no entity' responses") {
+    val route = runWith(GET / "foo")(() => SwitchingProtocols.apply)
+    val req = Request[IO](GET, uri = Uri.fromString("/foo").getOrElse(sys.error("Fail")))
+
+    for {
+      result <- route(req).value.map(_.getOrElse(Response.notFound))
+      _ = assertEquals(result.headers.headers.size, 0)
+      _ = assertEquals(result.status, Status.SwitchingProtocols)
+    } yield ()
+  }
+
+  test("A RequestLineBuilder should be made from TypedPath and TypedQuery") {
+    val path = pathMatch("foo")
+    val q = param[Int]("bar")
+
+    assertEquals(path +? q, RequestLineBuilder[IO, shapeless.::[Int, HNil]](path.rule, q.rule))
+  }
+
+  test("A RequestLineBuilder should append to a TypedPath") {
+    val requestLine = pathMatch("foo") +? param[Int]("bar")
+    assert((pathMatch("hello") / requestLine).isInstanceOf[RequestLineBuilder[IO, _]])
+  }
+
+  test("A PathValidator should traverse a captureless path") {
+    val stuff = GET / "hello"
+    val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+
+    val f = runWith(stuff)(() => Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo")))))
+    checkETag(f(req), "foo")
+  }
+
+  test("A PathValidator should not match a path to long") {
+    val stuff = GET / "hello"
+    val req = Request[IO](uri = uri"/hello/world")
+
+    val f = runWith(stuff)(() => Ok("Shouldn't get here."))
+    val r = f(req).value.map(_.getOrElse(Response.notFound))
+    assertIO(r.map(_.status), Status.NotFound)
+  }
+
+  test("A PathValidator should capture a variable") {
+    val stuff = GET / pv"hello"
+    val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+
+    val f = runWith(stuff) { str: String =>
+      Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(str))))
+    }
+    checkETag(f(req), "hello")
+  }
+
+  test("A PathValidator should work directly") {
+    val stuff = GET / "hello"
+    val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+
+    val f = runWith(stuff) { () =>
+      Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag("foo"))))
+    }
+
+    checkETag(f(req), "foo")
+  }
+
+  test("A PathValidator should capture end with nothing") {
+    val stuff = GET / "hello" / *
+    val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
+    val f = runWith(stuff) { path: List[String] =>
+      Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))))
+    }
+
+    checkETag(f(req), "go")
+  }
+
+  test("A PathValidator should capture remaining") {
+    val stuff = GET / "hello" / *
+    val req =
+      Request[IO](uri = Uri.fromString("/hello/world/foo").getOrElse(sys.error("Failed.")))
+    val f = runWith(stuff) { path: List[String] =>
+      Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(path.mkString))))
+    }
+
+    checkETag(f(req), "worldfoo")
+  }
+
+  test("A query validators should get a query string") {
+    val path = GET / "hello" +? param[Int]("jimbo")
+    val req = Request[IO](uri = Uri.fromString("/hello?jimbo=32").getOrElse(sys.error("Failed.")))
+
+    val route = runWith(path) { i: Int =>
+      Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag((i + 1).toString))))
+    }
+
+    checkETag(route(req), "33")
+  }
+
+  test("A query validators should accept compound or sequential query rules") {
+    val path = GET / "hello"
+
+    val req = Request[IO](uri = uri"/hello?foo=bar&baz=1")
+
+    val route1 = runWith(path +? param[String]("foo") & param[Int]("baz")) { (_: String, _: Int) =>
+      Ok("")
+    }
+
+    val route2 = runWith(path +? (param[String]("foo") and param[Int]("baz"))) {
+      (_: String, _: Int) =>
+        Ok("")
+    }
+
+    assertIO(route1(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok) *>
+      assertIO(route2(req).value.map(_.getOrElse(Response.notFound).status), Status.Ok)
+  }
+
+  test("A query validators should map simple query rules into a complex type") {
+    case class Foo(i: Int, f: Double, s: String)
+    val paramFoo = (param[Int]("i") & param[Double]("f") & param[String]("s")).map(Foo.apply _)
+
+    val path = GET / "hello" +? paramFoo
+    val req =
+      Request[IO](uri = Uri.fromString("/hello?i=32&f=3.2&s=Asdf").getOrElse(sys.error("Failed.")))
+
+    val route = runWith(path)((f: Foo) => Ok(s"stuff $f"))
+
+    for {
+      result <- route(req).value.map(_.getOrElse(Response.notFound))
+      _ = assertEquals(result.status, Status.Ok)
+      _ <- assertIO(RequestRunner.getBody(result.body), "stuff Foo(32,3.2,Asdf)")
+    } yield ()
+  }
+
+  test("Decoders should decode a body") {
+    val reqHeader = H[`Content-Length`].existsAnd(h => h.length < 10)
+
+    val path = POST / "hello" >>> reqHeader
+
+    val req1 = Request[IO](POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
+      .withEntity("foo")
+
+    val req2 = Request[IO](POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
+      .withEntity("0123456789") // length 10
+
+    val route = runWith(path.decoding(EntityDecoder.text)) { str: String =>
+      Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
+    }
+
+    checkETag(route(req1), "foo") *>
+      assertIO(
+        route(req2).value.map(_.getOrElse(Response.notFound).status),
+        Status.BadRequest
+      )
+  }
+
+  test("Decoders should allow the infix operator syntax") {
+    val path = POST / "hello"
+
+    val req = Request[IO](POST, uri = Uri.fromString("/hello").getOrElse(sys.error("Fail")))
+      .withEntity("foo")
+
+    val route = runWith(path ^ EntityDecoder.text) { str: String =>
+      Ok("stuff").map(_.putHeaders(ETag(ETag.EntityTag(str))))
+    }
+
+    checkETag(route(req), "foo")
+  }
+
+  test("Decoders should fail on a header") {
+    val path = GET / "hello"
+
+    val req = Request[IO](uri = uri"/hello")
+      .putHeaders(headers.`Content-Length`.unsafeFromLong("foo".length))
+
+    val reqHeader = H[`Content-Length`].existsAnd(h => h.length < 2)
+    val route1 = runWith(path.validate(reqHeader)) { () =>
+      Ok("shouldn't get here.")
+    }
+
+    val reqHeaderR = H[`Content-Length`].existsAndR(_ => Some(Unauthorized("Foo.")))
+    val route2 = runWith(path.validate(reqHeaderR)) { () =>
+      Ok("shouldn't get here.")
+    }
+
+    assertIO(
+      route1(req).value.map(_.getOrElse(Response.notFound).status),
+      Status.BadRequest
+    ) *>
+      assertIO(
+        route2(req).value.map(_.getOrElse(Response.notFound).status),
+        Status.Unauthorized
+      )
+  }
+
+  test("Decoders should fail on a query") {
+    val path = GET / "hello"
+
+    val req = Request[IO](uri = uri"/hello?foo=bar")
+      .putHeaders(`Content-Length`.unsafeFromLong("foo".length))
+
+    val route1 = runWith(path +? param[Int]("foo")) { _: Int =>
+      Ok("shouldn't get here.")
+    }
+
+    val route2 =
+      runWith(path +? paramR[String]("foo", (_: String) => Some(Unauthorized("foo")))) {
+        _: String =>
+          Ok("shouldn't get here.")
+      }
+
+    assertIO(
+      route1(req).value.map(_.getOrElse(Response.notFound).status),
+      Status.BadRequest
+    ) *>
+      assertIO(
+        route2(req).value.map(_.getOrElse(Response.notFound).status),
+        Status.Unauthorized
+      )
+  }
+
+  val req = Request[IO](uri = uri"/foo/bar")
+  val respMsg = "Result"
+
+  test("Path prepending should work for a PathBuilder") {
+    val tail = GET / "bar"
+    val all = "foo" /: tail
+
+    assertIO(
       runWith(all)(respMsg)
         .apply(req)
         .value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .as[String]
-        .unsafeRunSync() === respMsg
-    }
+        .flatMap(_.getOrElse(Response.notFound).as[String]),
+      respMsg
+    )
+  }
 
-    "Work for a QueryBuilder" in {
-      val tail = GET / "bar" +? param[String]("str")
-      val all = "foo" /: tail
+  test("Path prepending should work for a QueryBuilder") {
+    val tail = GET / "bar" +? param[String]("str")
+    val all = "foo" /: tail
 
+    assertIO(
       runWith(all) { q: String => respMsg + q }
-        .apply(req.withUri(uri("/foo/bar?str=answer")))
+        .apply(req.withUri(uri"/foo/bar?str=answer"))
         .value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .as[String]
-        .unsafeRunSync() === respMsg + "answer"
-    }
+        .flatMap(_.getOrElse(Response.notFound).as[String]),
+      respMsg + "answer"
+    )
+  }
 
-    "Work for a Router" in {
-      val tail = GET / "bar" >>> RequireETag
-      val all = "foo" /: tail
+  test("Path prepending should work for a Router") {
+    val tail = GET / "bar" >>> RequireETag
+    val all = "foo" /: tail
 
+    assertIO(
       runWith(all)(respMsg)
-        .apply(req.withUri(uri("/foo/bar")).putHeaders(etag))
+        .apply(req.withUri(uri"/foo/bar").putHeaders(etag))
         .value
-        .unsafeRunSync()
-        .getOrElse(Response.notFound)
-        .as[String]
-        .unsafeRunSync() === respMsg
-    }
+        .flatMap(_.getOrElse(Response.notFound).as[String]),
+      respMsg
+    )
   }
 }

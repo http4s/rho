@@ -7,6 +7,7 @@ target/
 /.ensime
 /.idea/
 /.idea_modules/
+/.bsp
 
 .cache
 .classpath
