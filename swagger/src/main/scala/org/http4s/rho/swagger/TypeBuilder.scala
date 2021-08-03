@@ -210,26 +210,33 @@ object TypeBuilder {
           ArrayProperty(items = itemProperty)
         } else if (tpe.isOption)
           typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-        else if (tpe.isAnyVal && !tpe.isPrimitive)
-          typeToProperty(
-            ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.head.typeSignature,
-            sfs
-          )
-        else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
-          RefProperty(tpe.simpleName)
-        else
-          DataType.fromType(tpe) match {
-            case DataType.ValueDataType(name, format, qName) =>
-              AbstractProperty(`type` = name, description = qName, format = format)
-            case DataType.ComplexDataType(name, qName) =>
-              AbstractProperty(`type` = name, description = qName)
-            case DataType.ContainerDataType(name, _, _) =>
-              AbstractProperty(`type` = name)
-            case DataType.EnumDataType(enums) =>
-              StringProperty(enums = enums)
+        else if (tpe.isAnyVal && !tpe.isPrimitive && ptSym.isClass) {
+          val symbolOption = ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.headOption
+          symbolOption match {
+            case Some(symbol) =>
+              typeToProperty(
+                symbol.typeSignature,
+                sfs
+              )
+            case None => dataTypeFromType(tpe)
           }
+        } else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
+          RefProperty(tpe.simpleName)
+        else dataTypeFromType(tpe)
       }
     )
+
+  private def dataTypeFromType(tpe: Type)(implicit showType: ShowType): Property =
+    DataType.fromType(tpe) match {
+      case DataType.ValueDataType(name, format, qName) =>
+        AbstractProperty(`type` = name, description = qName, format = format)
+      case DataType.ComplexDataType(name, qName) =>
+        AbstractProperty(`type` = name, description = qName)
+      case DataType.ContainerDataType(name, _, _) =>
+        AbstractProperty(`type` = name)
+      case DataType.EnumDataType(enums) =>
+        StringProperty(enums = enums)
+    }
 
   sealed trait DataType {
     def name: String
@@ -288,7 +295,6 @@ object TypeBuilder {
 
     private[swagger] def fromType(t: Type)(implicit st: ShowType): DataType = {
       val klass = if (t.isOption && t.typeArgs.nonEmpty) t.typeArgs.head else t
-
       if (klass.isNothingOrNull || klass.isUnitOrVoid)
         ComplexDataType("string", qualifiedName = Option(klass.fullName))
       else if (isString(klass)) this.String
@@ -312,19 +318,24 @@ object TypeBuilder {
         if (t.typeArgs.nonEmpty) GenArray(fromType(t.typeArgs(1)))
         else GenArray()
       } else if (klass <:< typeOf[AnyVal]) {
-        fromType(
-          klass.members
-            .filter(_.isConstructor)
-            .flatMap(_.asMethod.paramLists.flatten)
-            .head
-            .typeSignature
-        )
+        val klassSymbolOption = klass.members
+          .filter(_.isConstructor)
+          .flatMap(_.asMethod.paramLists.flatten)
+          .headOption
+        klassSymbolOption match {
+          case Some(symbol) => fromType(symbol.typeSignature)
+          case None => fallBackDataTypeFromName(t)
+        }
       } else if (isObjectEnum(klass.typeSymbol)) {
         EnumDataType(klass.typeSymbol.asClass.knownDirectSubclasses.map(_.name.toString))
       } else {
-        val stt = if (t.isOption) t.typeArgs.head else t
-        ComplexDataType("string", qualifiedName = Option(stt.fullName))
+        fallBackDataTypeFromName(t)
       }
+    }
+
+    private def fallBackDataTypeFromName(t: Type)(implicit st: ShowType): DataType = {
+      val stt = if (t.isOption) t.typeArgs.head else t
+      ComplexDataType("string", qualifiedName = Option(stt.fullName))
     }
 
     private[this] val IntTypes =
