@@ -6,10 +6,14 @@ import shapeless.HList
 
 /** Encapsulation of metadata and a result generator
   *
-  * @param resultInfo Information about the status and type the Action will produce.
-  * @param responseEncodings Encodings that the response supports.
-  * @param act Function of `Request` and the `HList` to a `Task[Response]`
-  * @tparam T The type of `HList` required to execute the [[Action]].
+  * @param resultInfo
+  *   Information about the status and type the Action will produce.
+  * @param responseEncodings
+  *   Encodings that the response supports.
+  * @param act
+  *   Function of `Request` and the `HList` to a `Task[Response]`
+  * @tparam T
+  *   The type of `HList` required to execute the [[Action]].
   */
 case class Action[F[_], T <: HList](
     resultInfo: Set[ResultInfo],

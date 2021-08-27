@@ -290,9 +290,9 @@ class TypeBuilderSuite extends FunSuite {
   }
 
   test("A TypeBuilder should build a model from an Option with overridden formats") {
-    val formats = DefaultSwaggerFormats.withFieldSerializers({
+    val formats = DefaultSwaggerFormats.withFieldSerializers {
       case x if x =:= typeOf[String] => AbstractProperty(`type` = "a_string")
-    })
+    }
 
     val ms = modelOfWithFormats[FooWithOption](formats)
     assertEquals(ms.size, 1)

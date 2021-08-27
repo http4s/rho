@@ -33,7 +33,8 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Defines a parameter in query string that should be bound to a route definition.
     *
-    * @param name name of the parameter in query
+    * @param name
+    *   name of the parameter in query
     */
   def param[T](name: String)(implicit
       F: FlatMap[F],
@@ -43,8 +44,10 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Defines a parameter in query string that should be bound to a route definition.
     *
-    * @param name        name of the parameter in query
-    * @param description description of the parameter
+    * @param name
+    *   name of the parameter in query
+    * @param description
+    *   description of the parameter
     */
   def paramD[T](name: String, description: String)(implicit
       F: FlatMap[F],
@@ -139,7 +142,9 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     _paramR(name, None, None, validate)
 
-  /** Defines a parameter in query string with description that should be bound to a route definition. */
+  /** Defines a parameter in query string with description that should be bound to a route
+    * definition.
+    */
   def paramRDescr[T](name: String, description: String, validate: T => Option[F[BaseResult[F]]])(
       implicit
       F: FlatMap[F],
@@ -154,7 +159,9 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     _paramR(name, None, Some(default), validate)
 
-  /** Defines a parameter in query string with description that should be bound to a route definition. */
+  /** Defines a parameter in query string with description that should be bound to a route
+    * definition.
+    */
   def paramR[T](
       name: String,
       description: String,
@@ -167,17 +174,19 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Create a query capture rule using the `Request`'s `Uri`
     *
-    * @param f function generating the result or failure
+    * @param f
+    *   function generating the result or failure
     */
   def genericQueryCapture[R](f: Query => ResultResponse[F, R]): TypedQuery[F, R :: HNil] =
     genericRequestQueryCapture[R](req => f(req.uri.query))
 
   /** Create a query capture rule using the `Request`
     *
-    * In general, this function should be avoided for most cases because it has access to the entire `Request`
-    * which allows it to modify the `Request` body which should be avoided.
+    * In general, this function should be avoided for most cases because it has access to the entire
+    * `Request` which allows it to modify the `Request` body which should be avoided.
     *
-    * @param f function generating the result or failure
+    * @param f
+    *   function generating the result or failure
     */
   def genericRequestQueryCapture[R](
       f: Request[F] => ResultResponse[F, R]): TypedQuery[F, R :: HNil] =

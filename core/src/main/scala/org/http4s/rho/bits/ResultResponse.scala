@@ -59,7 +59,8 @@ final case class SuccessResponse[F[_], +T](result: T) extends ResultResponse[F, 
 
 /** Response that signifies an error
   *
-  * @param reason The reason for failure which can be turned into a `F[Response[F]]`.
+  * @param reason
+  *   The reason for failure which can be turned into a `F[Response[F]]`.
   */
 final case class FailureResponse[F[_]](reason: ResponseReason[F])
     extends ResultResponse[F, Nothing] {
@@ -83,14 +84,16 @@ trait FailureResponseOps[F[_]] extends ResponseGeneratorInstances[F] {
 
   /** Construct a `400 BadRequest` FailureResponse
     *
-    * @param reason Description of the failure
+    * @param reason
+    *   Description of the failure
     */
   def badRequest[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
     FailureResponse[F](new ResponseReason(BadRequest.pure(reason)))
 
   /** Construct a `500 InternalServerError` FailureResponse
     *
-    * @param reason Description of the failure
+    * @param reason
+    *   Description of the failure
     */
   def error[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
     FailureResponse[F](new ResponseReason(InternalServerError.pure(reason)))

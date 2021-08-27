@@ -65,7 +65,7 @@ class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F])
           (inc, inc)
         }
         .map { counter =>
-          s"The number is ${counter}"
+          s"The number is $counter"
         }
     }
 
