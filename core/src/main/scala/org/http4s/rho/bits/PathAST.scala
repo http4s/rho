@@ -42,15 +42,19 @@ object PathAST {
 
     /** Match against a `String`
       *
-      * @param segment `String` to match against.
-      * @return a new [[TypedPath]] that will match against the provided `String`.
+      * @param segment
+      *   `String` to match against.
+      * @return
+      *   a new [[TypedPath]] that will match against the provided `String`.
       */
     def /(segment: String): TypedPath[F, T] = TypedPath(PathAnd(this.rule, PathMatch(segment)))
 
     /** Capture a `String` from the path
       *
-      * @param symbol `Symbol` representing the name of the segment to capture.
-      * @return a new [[TypedPath]] that will capture a uri segment.
+      * @param symbol
+      *   `Symbol` representing the name of the segment to capture.
+      * @return
+      *   a new [[TypedPath]] that will capture a uri segment.
       */
     def /(symbol: Symbol): TypedPath[F, String :: T] = {
       val capture =
@@ -60,8 +64,10 @@ object PathAST {
 
     /** Append the path rules to the [[TypedPath]]
       *
-      * @param rules [[TypedPath]] rules to append to the path capture rules.
-      * @return a new [[TypedPath]] that will execute the appended rules.
+      * @param rules
+      *   [[TypedPath]] rules to append to the path capture rules.
+      * @return
+      *   a new [[TypedPath]] that will execute the appended rules.
       */
     def /[T2 <: HList](rules: TypedPath[F, T2])(implicit
         prep: Prepend[T2, T]): TypedPath[F, prep.Out] =
@@ -69,8 +75,10 @@ object PathAST {
 
     /** Prepend this path rule to the [[RequestLineBuilder]]
       *
-      * @param builder [[RequestLineBuilder]] rules to append to the path capture rules.
-      * @return a new [[RequestLineBuilder]] with this rule prepended.
+      * @param builder
+      *   [[RequestLineBuilder]] rules to append to the path capture rules.
+      * @return
+      *   a new [[RequestLineBuilder]] with this rule prepended.
       */
     def /[T2 <: HList](builder: RequestLineBuilder[F, T2])(implicit
         prep: Prepend[T, T2]): RequestLineBuilder[F, prep.Out] =
@@ -78,9 +86,12 @@ object PathAST {
 
     /** Capture a query rule
       *
-      * @param query Query capture rule
-      * @tparam T1 The types of elements captured by query.
-      * @return A [[QueryBuilder]] with which to continue building the route.
+      * @param query
+      *   Query capture rule
+      * @tparam T1
+      *   The types of elements captured by query.
+      * @return
+      *   A [[QueryBuilder]] with which to continue building the route.
       */
     def +?[T1 <: HList](query: TypedQuery[F, T1])(implicit
         prep: Prepend[T1, T]): RequestLineBuilder[F, prep.Out] =

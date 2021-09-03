@@ -23,10 +23,14 @@ sealed trait RoutingEntity[F[_], T <: HList] {
 
 /** Provides the operations for generating a router
   *
-  * @param method request methods to match
-  * @param path path matching stack
-  * @param rules header validation stack
-  * @tparam T cumulative type of the required method for executing the router
+  * @param method
+  *   request methods to match
+  * @param path
+  *   path matching stack
+  * @param rules
+  *   header validation stack
+  * @tparam T
+  *   cumulative type of the required method for executing the router
   */
 case class Router[F[_], T <: HList](method: Method, path: PathRule, rules: RequestRule[F])
     extends RouteExecutable[F, T]

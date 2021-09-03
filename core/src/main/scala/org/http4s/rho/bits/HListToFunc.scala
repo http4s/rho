@@ -9,8 +9,10 @@ import scala.annotation.implicitNotFound
 
 /** Converter of an value of type F to the HList of type T
   *
-  * @tparam T HList type of the incoming values
-  * @tparam U type of element onto which T will be mapped
+  * @tparam T
+  *   HList type of the incoming values
+  * @tparam U
+  *   type of element onto which T will be mapped
   */
 @implicitNotFound("""Could not bind route to action;
 No HListToFunc instance found. 
@@ -29,7 +31,8 @@ trait MatchersHListToFunc[F[_]] {
 
   /** Converter of any type with a result matcher when there are no values on the stack
     *
-    * @tparam R type of result
+    * @tparam R
+    *   type of result
     */
   implicit def const0[R](implicit F: Monad[F], m: ResultMatcher[F, R]): HListToFunc[F, HNil, R] =
     new MatcherHListToFunc[HNil, R] {
@@ -44,9 +47,8 @@ trait MatchersHListToFunc[F[_]] {
       rev: Reverse.Aux[T, TR],
       m: ResultMatcher[F, R]): HListToFunc[F, T, FU] = new MatcherHListToFunc[T, FU] {
     override def matcher: ResultMatcher[F, R] = m
-    override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) => {
+    override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) =>
       matcher.conv(req, f.toProduct(rev(h)))
-    }
   }
 
   /** Converter for types `FunctionN` where the first element is a `Request` to an `HList` */
@@ -56,9 +58,8 @@ trait MatchersHListToFunc[F[_]] {
       rev: Reverse.Aux[T, TR],
       m: ResultMatcher[F, R]): HListToFunc[F, T, FU] = new MatcherHListToFunc[T, FU] {
     override def matcher: ResultMatcher[F, R] = m
-    override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) => {
+    override def conv(f: FU): (Request[F], T) => F[Response[F]] = (req: Request[F], h: T) =>
       matcher.conv(req, f.toProduct(req :: rev(h)))
-    }
   }
 
   // for convenience
