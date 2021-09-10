@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.ui
 
-import cats.effect.{Sync}
+import cats.effect.Sync
 import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.{

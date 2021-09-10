@@ -5,11 +5,11 @@ import scala.annotation.nowarn
 import org.http4s.rho.bits.{FuncParamsMatch, HListToFunc}
 import shapeless.HList
 
-/** Object which can be compiled into a complete route
-  * The [[RouteExecutable]] is a complete set of HTTP method, path, query, and headers
-  * needed for a compiler to generate a complete route description.
-  * @tparam T The `HList` representation of the types the route expects to extract
-  *           from a `Request`.
+/** Object which can be compiled into a complete route The [[RouteExecutable]] is a complete set of
+  * HTTP method, path, query, and headers needed for a compiler to generate a complete route
+  * description.
+  * @tparam T
+  *   The `HList` representation of the types the route expects to extract from a `Request`.
   */
 trait RouteExecutable[F[_], T <: HList] extends TypedBuilder[F, T] { exec =>
 

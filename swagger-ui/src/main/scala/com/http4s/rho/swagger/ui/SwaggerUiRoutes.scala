@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.ui
 
-import cats.effect.{Sync}
+import cats.effect.Sync
 import cats.implicits._
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes

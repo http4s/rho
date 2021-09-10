@@ -16,7 +16,8 @@ trait RhoDslPathExtractors[F[_]] {
   implicit def pathCapture(s: Symbol): TypedPath[F, String :: HNil] =
     TypedPath(PathCapture(s.name, None, StringParser.strParser, stringTag))
 
-  /** Provides pv"pathVarName" syntax for String path variables as an alternative for 'pathVar (Symbol) syntax which was removed in Scala 2.13.
+  /** Provides pv"pathVarName" syntax for String path variables as an alternative for 'pathVar
+    * (Symbol) syntax which was removed in Scala 2.13.
     */
   implicit def pathCapture(sc: StringContext): PathCaptureStringContext[F] =
     new PathCaptureStringContext[F](sc)
