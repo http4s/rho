@@ -626,7 +626,7 @@ class SwaggerModelsBuilderSuite extends FunSuite {
     def route(prefix: String) =
       GET / prefix / pathVar[Int]("number", "int pathVar") |>> { (_: Int) => "" }
     def result(prefix: String) =
-      s"/${prefix}/{number}" -> Path(get = sb.mkOperation(singleLinearRoute(route(prefix))).some)
+      s"/$prefix/{number}" -> Path(get = sb.mkOperation(singleLinearRoute(route(prefix))).some)
 
     def build(s: Swagger, r2: RhoRoute[IO, _]) =
       Swagger(paths = sb.collectPaths(r2)(s))
