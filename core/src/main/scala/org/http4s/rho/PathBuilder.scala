@@ -2,6 +2,7 @@ package org.http4s
 package rho
 
 import cats.Functor
+import org.http4s.Uri.Path.Segment
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST.{EmptyRule, RequestRule}
 import org.http4s.rho.bits._
@@ -40,7 +41,7 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
     * @param tail
     * @return a [[Router]]
     */
-  def /(tail: CaptureTail.type): Router[F, List[String] :: T] =
+  def /(tail: CaptureTail.type): Router[F, List[Segment] :: T] =
     new Router(method, PathAnd(path, tail), EmptyRule[F]())
 
   /** Match against a `String`
