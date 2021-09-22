@@ -5,6 +5,7 @@ import cats.data.OptionT
 import cats.effect.{IO, Sync}
 import cats.syntax.parallel._
 import munit.CatsEffectSuite
+import org.http4s.Uri.Path.Segment
 import org.http4s.headers.Accept
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits._
@@ -370,7 +371,7 @@ class ApiTest extends CatsEffectSuite {
   test("A PathValidator should capture end with nothing") {
     val stuff = GET / "hello" / *
     val req = Request[IO](uri = Uri.fromString("/hello").getOrElse(sys.error("Failed.")))
-    val f = runWith(stuff) { path: List[String] =>
+    val f = runWith(stuff) { path: List[Segment] =>
       Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(if (path.isEmpty) "go" else "nogo"))))
     }
 
@@ -381,7 +382,7 @@ class ApiTest extends CatsEffectSuite {
     val stuff = GET / "hello" / *
     val req =
       Request[IO](uri = Uri.fromString("/hello/world/foo").getOrElse(sys.error("Failed.")))
-    val f = runWith(stuff) { path: List[String] =>
+    val f = runWith(stuff) { path: List[Segment] =>
       Ok("Cool.").map(_.putHeaders(ETag(ETag.EntityTag(path.mkString))))
     }
 
