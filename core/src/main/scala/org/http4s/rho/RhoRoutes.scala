@@ -9,9 +9,8 @@ import shapeless.{HList, HNil}
 
 /** Constructor class for defining routes
   *
-  * The [[RhoRoutes]] provides a convenient way to define routes in a style
-  * similar to scalatra etc by providing implicit conversions and an implicit
-  * [[CompileRoutes]] inside the constructor.
+  * The [[RhoRoutes]] provides a convenient way to define routes in a style similar to scalatra etc
+  * by providing implicit conversions and an implicit [[CompileRoutes]] inside the constructor.
   *
   * {{{
   *   new RhoRoutes[IO] {
@@ -21,7 +20,8 @@ import shapeless.{HList, HNil}
   *   }
   * }}}
   *
-  * @param routes Routes to prepend before elements in the constructor.
+  * @param routes
+  *   Routes to prepend before elements in the constructor.
   */
 class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty)
     extends bits.MethodAliases
@@ -36,9 +36,11 @@ class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty
 
   /** Create a new [[RhoRoutes]] by appending the routes of the passed [[RhoRoutes]]
     *
-    * @param other [[RhoRoutes]] whos routes are to be appended.
-    * @return A new [[RhoRoutes]] that contains the routes of the other service appended
-    *         the the routes contained in this service.
+    * @param other
+    *   [[RhoRoutes]] whos routes are to be appended.
+    * @return
+    *   A new [[RhoRoutes]] that contains the routes of the other service appended the the routes
+    *   contained in this service.
     */
   final def and(other: RhoRoutes[F]): RhoRoutes[F] = new RhoRoutes(
     this.getRoutes ++ other.getRoutes

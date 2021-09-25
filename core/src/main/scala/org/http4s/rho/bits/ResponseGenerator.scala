@@ -7,8 +7,8 @@ import org.http4s.headers.{Location, `Content-Length`}
 
 /** Helpers to aid in the construction of a response function
   *
-  * These helpers provide the foundation for the response generation in the rho DSL.
-  * They require the needed codecs and generate a response with the correct meta data.
+  * These helpers provide the foundation for the response generation in the rho DSL. They require
+  * the needed codecs and generate a response with the correct meta data.
   *
   * {{{
   *   { req => Ok("foo!") }

@@ -5,7 +5,8 @@ import shapeless.HList
 import shapeless.ops.hlist.Prepend
 
 /** Base trait which is capable of appending header rules
-  * @tparam T The `HList` representation of the values to be extracted from the `Request`.
+  * @tparam T
+  *   The `HList` representation of the values to be extracted from the `Request`.
   */
 trait HeaderAppendable[F[_], T <: HList] {
   type HeaderAppendResult[T0 <: HList] <: HeaderAppendable[F, T0]
