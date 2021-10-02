@@ -8,9 +8,9 @@ trait UriConvertible[F[_]] {
 
   /** Converts a route into an `Uri`.
     *
-    * If the conversion fails `None` is returned. In case your route has
-    * multiple paths only one way will be resolved as instance of `Uri`.
-    * If the route is a URI Template but not an URI `None` will be returned.
+    * If the conversion fails `None` is returned. In case your route has multiple paths only one way
+    * will be resolved as instance of `Uri`. If the route is a URI Template but not an URI `None`
+    * will be returned.
     */
   def asUri(request: Request[F]): Try[Uri] =
     for {
@@ -20,8 +20,8 @@ trait UriConvertible[F[_]] {
 
   /** Converts a route into an `UriTemplate`.
     *
-    * If the conversion fails `None` is returned. In case your route has
-    * multiple paths only one way will be resolved as instance of `UriTemplate`.
+    * If the conversion fails `None` is returned. In case your route has multiple paths only one way
+    * will be resolved as instance of `UriTemplate`.
     */
   def asUriTemplate(request: Request[F]): Try[UriTemplate]
 

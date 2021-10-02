@@ -33,8 +33,8 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
   /** Data structure for route execution
     *
-    * A [[PathTree]] contains a map of the known route paths. The values of the
-    * tree are [[RhoRoute]]'s that can generate a reply to a `Request`.
+    * A [[PathTree]] contains a map of the known route paths. The values of the tree are
+    * [[RhoRoute]]'s that can generate a reply to a `Request`.
     */
   final class PathTree(private val paths: MatchNode) {
 
@@ -42,9 +42,12 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
     /** Create a new [[PathTree]] with the [[RhoRoute]] appended
       *
-      * @param route [[RhoRoute]] to append to the new tree.
-      * @tparam T Result type of the [[RhoRoute]].
-      * @return A new [[PathTree]] containing the provided route.
+      * @param route
+      *   [[RhoRoute]] to append to the new tree.
+      * @tparam T
+      *   Result type of the [[RhoRoute]].
+      * @return
+      *   A new [[PathTree]] containing the provided route.
       */
     def appendRoute[T <: HList](route: RhoRoute[F, T])(implicit F: Monad[F]): PathTree = {
       val m = route.method
@@ -198,9 +201,9 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
           clone(matches, captures, variadic, e)
       }
 
-    /** This function traverses the tree, matching paths in order of priority, provided they path the matches function:
-      * 1: exact matches are given priority to wild cards node at a time
-      *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
+    /** This function traverses the tree, matching paths in order of priority, provided they path
+      * the matches function: 1: exact matches are given priority to wild cards node at a time This
+      * means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
     final def walkTree(method: Method, req: Request[F])(implicit
         F: Monad[F]): RouteResult[F, F[Response[F]]] = {
