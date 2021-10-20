@@ -6,9 +6,8 @@ import org.typelevel.ci.CIString
 
 /** Base type for data that can be used to decorate the rules trees
   *
-  * Metadata is not directly useful for evaluating a request or for generating
-  * HTTP responses; it is primarily used for storing data to auto generate information
-  * about a route or service.
+  * Metadata is not directly useful for evaluating a request or for generating HTTP responses; it is
+  * primarily used for storing data to auto generate information about a route or service.
   */
 trait Metadata
 

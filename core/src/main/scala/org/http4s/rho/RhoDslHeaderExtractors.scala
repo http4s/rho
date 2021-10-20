@@ -18,20 +18,22 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Create a header capture rule using the `Request`'s `Headers`
     *
-    * In general, this function should be avoided because no metadata will be captured and
-    * added to the swagger documention
+    * In general, this function should be avoided because no metadata will be captured and added to
+    * the swagger documention
     *
-    * @param f function generating the result or failure
+    * @param f
+    *   function generating the result or failure
     */
   def genericHeaderCapture[R](f: Headers => ResultResponse[F, R]): TypedHeader[F, R :: HNil] =
     genericRequestHeaderCapture[R](req => f(req.headers))
 
   /** Create a header capture rule using the `Request`
     *
-    * In general, this function should be avoided for most cases because it has access to the entire `Request`
-    * which allows it to modify the `Request` body which should be avoided.
+    * In general, this function should be avoided for most cases because it has access to the entire
+    * `Request` which allows it to modify the `Request` body which should be avoided.
     *
-    * @param f function generating the result or failure
+    * @param f
+    *   function generating the result or failure
     */
   def genericRequestHeaderCapture[R](
       f: Request[F] => ResultResponse[F, R]): TypedHeader[F, R :: HNil] =
@@ -50,8 +52,9 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
 
     /** Requires that the header exists and satisfies the condition
       *
-      * @param f predicate function where a return value of `false` signals an invalid
-      *          header and aborts evaluation with a _BadRequest_ response.
+      * @param f
+      *   predicate function where a return value of `false` signals an invalid header and aborts
+      *   evaluation with a _BadRequest_ response.
       */
     def existsAnd(f: HR => Boolean): TypedHeader[F, HNil] =
       existsAndR { (h: HR) =>
@@ -61,8 +64,9 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
 
     /** Check that the header exists and satisfies the condition
       *
-      * @param f function that evaluates the header and returns a Some(Response) to
-      *          immediately send back to the user or None to continue evaluation.
+      * @param f
+      *   function that evaluates the header and returns a Some(Response) to immediately send back
+      *   to the user or None to continue evaluation.
       */
     def existsAndR(f: HR => Option[F[BaseResult[F]]]): TypedHeader[F, HNil] =
       captureMapR(None) { h =>
@@ -77,14 +81,17 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
     def captureOptionally: TypedHeader[F, Option[HR] :: HNil] =
       _captureMapR(isRequired = false)(SuccessResponse[F, Option[HR]](_))
 
-    /** requires the header and will pull this header from the pile and put it into the function args stack
+    /** requires the header and will pull this header from the pile and put it into the function
+      * args stack
       */
     def capture: TypedHeader[F, HR :: HNil] =
       captureMap(identity)
 
-    /** Capture the header and put it into the function args stack, if it exists otherwise put the default in the args stack
+    /** Capture the header and put it into the function args stack, if it exists otherwise put the
+      * default in the args stack
       *
-      * @param default The default to be used if the header was not present
+      * @param default
+      *   The default to be used if the header was not present
       */
     def captureOrElse(default: HR): TypedHeader[F, HR :: HNil] =
       captureOptionally.map { header: Option[HR] =>
@@ -93,16 +100,22 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
 
     /** Capture a specific header and map its value
       *
-      * @param f mapping function
+      * @param f
+      *   mapping function
       */
     def captureMap[R](f: HR => R): TypedHeader[F, R :: HNil] =
       captureMapR[R](None, isRequired = true)(f.andThen(Right(_)))
 
-    /** Capture a specific header and map its value with an optional override of the missing header response
+    /** Capture a specific header and map its value with an optional override of the missing header
+      * response
       *
-      * @param missingHeaderResult optional override result for the case of a missing header
-      * @param isRequired indicates for metadata purposes that the header is required, always true if `missingHeaderResult` is unset
-      * @param f mapping function
+      * @param missingHeaderResult
+      *   optional override result for the case of a missing header
+      * @param isRequired
+      *   indicates for metadata purposes that the header is required, always true if
+      *   `missingHeaderResult` is unset
+      * @param f
+      *   mapping function
       */
     def captureMapR[R](
         missingHeaderResult: Option[F[BaseResult[F]]] = None,
@@ -115,7 +128,8 @@ trait RhoDslHeaderExtractors[F[_]] extends FailureResponseOps[F] {
 
     /** Capture a specific header and map its value
       *
-      * @param f mapping function
+      * @param f
+      *   mapping function
       */
     def captureMapR[R](f: HR => Either[F[BaseResult[F]], R]): TypedHeader[F, R :: HNil] =
       captureMapR()(f)

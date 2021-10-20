@@ -13,16 +13,21 @@ final case class RhoRoute[F[_], T <: HList](router: RoutingEntity[F, T], action:
 
   /** Execute the [[RhoRoute]]
     *
-    * @param req The `Request` to be served.
-    * @param hlist Parameters obtained by executing the rules.
-    * @return A `Response` to the `Request`.
+    * @param req
+    *   The `Request` to be served.
+    * @param hlist
+    *   Parameters obtained by executing the rules.
+    * @return
+    *   A `Response` to the `Request`.
     */
   def apply(req: Request[F], hlist: T): F[Response[F]] = action.act(req, hlist)
 
   /** Prefix the [[RhoRoute]] with non-capturing path rules
     *
-    * @param prefix non-capturing prefix to prepend
-    * @return builder with the prefix prepended to the path rules
+    * @param prefix
+    *   non-capturing prefix to prepend
+    * @return
+    *   builder with the prefix prepended to the path rules
     */
   override def /:(prefix: TypedPath[F, HNil]): RhoRoute[F, T] =
     copy(router = prefix /: router)

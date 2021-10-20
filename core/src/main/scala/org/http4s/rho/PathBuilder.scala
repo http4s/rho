@@ -10,8 +10,8 @@ import shapeless.{::, HList, HNil}
 
 import scala.reflect.runtime.universe.TypeTag
 
-/** The goal of a PathBuilder is to allow the composition of what is typically on the status
-  * line of a HTTP request. That includes the request method, path, and query params.
+/** The goal of a PathBuilder is to allow the composition of what is typically on the status line of
+  * a HTTP request. That includes the request method, path, and query params.
   */
 
 /** Fully functional path building */
@@ -27,9 +27,12 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
 
   /** Capture a query rule
     *
-    * @param query Query capture rule
-    * @tparam T1 types of elements captured by query
-    * @return a [[QueryBuilder]] with which to continue building the route
+    * @param query
+    *   Query capture rule
+    * @tparam T1
+    *   types of elements captured by query
+    * @return
+    *   a [[QueryBuilder]] with which to continue building the route
     */
   def +?[T1 <: HList](query: TypedQuery[F, T1])(implicit
       prep: Prepend[T1, T]): QueryBuilder[F, prep.Out] =
@@ -38,15 +41,18 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
   /** Capture the remaining elements in the path
     *
     * @param tail
-    * @return a [[Router]]
+    * @return
+    *   a [[Router]]
     */
   def /(tail: CaptureTail.type): Router[F, List[String] :: T] =
     new Router(method, PathAnd(path, tail), EmptyRule[F]())
 
   /** Match against a `String`
     *
-    * @param segment `String` to match against.
-    * @return a new [[PathBuilder]] that will match against the provided `String`.
+    * @param segment
+    *   `String` to match against.
+    * @return
+    *   a new [[PathBuilder]] that will match against the provided `String`.
     */
   def /(segment: String): PathBuilder[F, T] = {
     val newPath = segment.split("/").foldLeft(path)((p, s) => PathAnd(p, PathMatch(s)))
@@ -55,8 +61,10 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
 
   /** Capture a `String` from the path
     *
-    * @param symbol `Symbol` representing the name of the segment to capture.
-    * @return a new [[PathBuilder]] that will capture a uri segment.
+    * @param symbol
+    *   `Symbol` representing the name of the segment to capture.
+    * @return
+    *   a new [[PathBuilder]] that will capture a uri segment.
     */
   def /(symbol: Symbol): PathBuilder[F, String :: T] = {
     val capture =
@@ -66,8 +74,10 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
 
   /** Append the path rules to the PathBuilder
     *
-    * @param rules TypedPath rules to append to the path capture rules.
-    * @return a new [[PathBuilder]] that will execute the appended rules.
+    * @param rules
+    *   TypedPath rules to append to the path capture rules.
+    * @return
+    *   a new [[PathBuilder]] that will execute the appended rules.
     */
   def /[T2 <: HList](rules: TypedPath[F, T2])(implicit
       prep: Prepend[T2, T]): PathBuilder[F, prep.Out] =
@@ -75,8 +85,10 @@ final class PathBuilder[F[_], T <: HList](val method: Method, val path: PathRule
 
   /** Append the path and rules
     *
-    * @param builder [[RequestLineBuilder]] rules to append to the path capture rules.
-    * @return a new [[QueryBuilder]] that will execute the appended rules.
+    * @param builder
+    *   [[RequestLineBuilder]] rules to append to the path capture rules.
+    * @return
+    *   a new [[QueryBuilder]] that will execute the appended rules.
     */
   def /[T2 <: HList](builder: RequestLineBuilder[F, T2])(implicit
       prep: Prepend[T2, T]): QueryBuilder[F, prep.Out] =

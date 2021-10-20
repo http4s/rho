@@ -10,7 +10,8 @@ import scala.collection.compat._
 
 /** Extract a value from the `Request` `Query`
   *
-  * @tparam A Type of value produced by the parser.
+  * @tparam A
+  *   Type of value produced by the parser.
   */
 trait QueryParser[F[_], A] {
 

@@ -8,7 +8,8 @@ import org.http4s.rho.bits.UriConverter
 import shapeless.HList
 
 /** A typed shell which represents the requirements of the route
-  * @tparam T The `HList` representation of the values to be extracted from the `Request`.
+  * @tparam T
+  *   The `HList` representation of the values to be extracted from the `Request`.
   */
 trait TypedBuilder[F[_], T <: HList] extends UriConvertible[F] {
 

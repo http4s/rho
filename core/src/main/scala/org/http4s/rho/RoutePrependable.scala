@@ -8,8 +8,10 @@ trait RoutePrependable[F[_], T <: RoutePrependable[F, T]] {
 
   /** Prepend the prefix to the path rules
     *
-    * @param prefix non-capturing prefix to prepend
-    * @return builder with the prefix prepended to the path rules
+    * @param prefix
+    *   non-capturing prefix to prepend
+    * @return
+    *   builder with the prefix prepended to the path rules
     */
   def /:(prefix: TypedPath[F, HNil]): T
 }

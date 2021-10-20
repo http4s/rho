@@ -170,9 +170,75 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
       /* 508 */ mLOOPDETECTED: MaybeWritable[LOOPDETECTED],
       /* 510 */ mNOTEXTENDED: MaybeWritable[NOTEXTENDED],
       /* 511 */ mNETWORKAUTHENTICATIONREQUIRED: MaybeWritable[NETWORKAUTHENTICATIONREQUIRED]
-  ): ResultMatcher[
+  ): ResultMatcher[F, Result[
     F,
-    Result[
+    // Informational
+    /* 100 */ CONTINUE,
+    /* 101 */ SWITCHINGPROTOCOLS,
+    /* 102 */ PROCESSING,
+    /* 103 */ EARLYHINTS,
+    // Successful
+    /* 200 */ OK,
+    /* 201 */ CREATED,
+    /* 202 */ ACCEPTED,
+    /* 203 */ NONAUTHORITATIVEINFORMATION,
+    /* 204 */ NOCONTENT,
+    /* 205 */ RESETCONTENT,
+    /* 206 */ PARTIALCONTENT,
+    /* 207 */ MULTISTATUS,
+    /* 208 */ ALREADYREPORTED,
+    /* 226 */ IMUSED,
+    // Redirects
+    /* 300 */ MULTIPLECHOICES,
+    /* 301 */ MOVEDPERMANENTLY,
+    /* 302 */ FOUND,
+    /* 303 */ SEEOTHER,
+    /* 304 */ NOTMODIFIED,
+    /* 307 */ TEMPORARYREDIRECT,
+    /* 308 */ PERMANENTREDIRECT,
+    // Client errors
+    /* 400 */ BADREQUEST,
+    /* 401 */ UNAUTHORIZED,
+    /* 402 */ PAYMENTREQUIRED,
+    /* 403 */ FORBIDDEN,
+    /* 404 */ NOTFOUND,
+    /* 405 */ METHODNOTALLOWED,
+    /* 406 */ NOTACCEPTABLE,
+    /* 407 */ PROXYAUTHENTICATIONREQUIRED,
+    /* 408 */ REQUESTTIMEOUT,
+    /* 409 */ CONFLICT,
+    /* 410 */ GONE,
+    /* 411 */ LENGTHREQUIRED,
+    /* 412 */ PRECONDITIONFAILED,
+    /* 413 */ PAYLOADTOOLARGE,
+    /* 414 */ URITOOLONG,
+    /* 415 */ UNSUPPORTEDMEDIATYPE,
+    /* 416 */ RANGENOTSATISFIABLE,
+    /* 417 */ EXPECTATIONFAILED,
+    /* 421 */ MISDIRECTEDREQUEST,
+    /* 422 */ UNPROCESSABLEENTITY,
+    /* 423 */ LOCKED,
+    /* 424 */ FAILEDDEPENDENCY,
+    /* 424 */ TOOEARLY,
+    /* 426 */ UPGRADEREQUIRED,
+    /* 428 */ PRECONDITIONREQUIRED,
+    /* 429 */ TOOMANYREQUESTS,
+    /* 431 */ REQUESTHEADERFIELDSTOOLARGE,
+    /* 451 */ UNAVAILABLEFORLEGALREASONS,
+    // Server errors
+    /* 500 */ INTERNALSERVERERROR,
+    /* 501 */ NOTIMPLEMENTED,
+    /* 502 */ BADGATEWAY,
+    /* 503 */ SERVICEUNAVAILABLE,
+    /* 504 */ GATEWAYTIMEOUT,
+    /* 505 */ HTTPVERSIONNOTSUPPORTED,
+    /* 506 */ VARIANTALSONEGOTIATES,
+    /* 507 */ INSUFFICIENTSTORAGE,
+    /* 508 */ LOOPDETECTED,
+    /* 510 */ NOTEXTENDED,
+    /* 511 */ NETWORKAUTHENTICATIONREQUIRED
+  ]] =
+    new ResultMatcher[F, Result[
       F,
       // Informational
       /* 100 */ CONTINUE,
@@ -238,76 +304,8 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
       /* 507 */ INSUFFICIENTSTORAGE,
       /* 508 */ LOOPDETECTED,
       /* 510 */ NOTEXTENDED,
-      /* 511 */ NETWORKAUTHENTICATIONREQUIRED]] =
-    new ResultMatcher[
-      F,
-      Result[
-        F,
-        // Informational
-        /* 100 */ CONTINUE,
-        /* 101 */ SWITCHINGPROTOCOLS,
-        /* 102 */ PROCESSING,
-        /* 103 */ EARLYHINTS,
-        // Successful
-        /* 200 */ OK,
-        /* 201 */ CREATED,
-        /* 202 */ ACCEPTED,
-        /* 203 */ NONAUTHORITATIVEINFORMATION,
-        /* 204 */ NOCONTENT,
-        /* 205 */ RESETCONTENT,
-        /* 206 */ PARTIALCONTENT,
-        /* 207 */ MULTISTATUS,
-        /* 208 */ ALREADYREPORTED,
-        /* 226 */ IMUSED,
-        // Redirects
-        /* 300 */ MULTIPLECHOICES,
-        /* 301 */ MOVEDPERMANENTLY,
-        /* 302 */ FOUND,
-        /* 303 */ SEEOTHER,
-        /* 304 */ NOTMODIFIED,
-        /* 307 */ TEMPORARYREDIRECT,
-        /* 308 */ PERMANENTREDIRECT,
-        // Client errors
-        /* 400 */ BADREQUEST,
-        /* 401 */ UNAUTHORIZED,
-        /* 402 */ PAYMENTREQUIRED,
-        /* 403 */ FORBIDDEN,
-        /* 404 */ NOTFOUND,
-        /* 405 */ METHODNOTALLOWED,
-        /* 406 */ NOTACCEPTABLE,
-        /* 407 */ PROXYAUTHENTICATIONREQUIRED,
-        /* 408 */ REQUESTTIMEOUT,
-        /* 409 */ CONFLICT,
-        /* 410 */ GONE,
-        /* 411 */ LENGTHREQUIRED,
-        /* 412 */ PRECONDITIONFAILED,
-        /* 413 */ PAYLOADTOOLARGE,
-        /* 414 */ URITOOLONG,
-        /* 415 */ UNSUPPORTEDMEDIATYPE,
-        /* 416 */ RANGENOTSATISFIABLE,
-        /* 417 */ EXPECTATIONFAILED,
-        /* 421 */ MISDIRECTEDREQUEST,
-        /* 422 */ UNPROCESSABLEENTITY,
-        /* 423 */ LOCKED,
-        /* 424 */ FAILEDDEPENDENCY,
-        /* 424 */ TOOEARLY,
-        /* 426 */ UPGRADEREQUIRED,
-        /* 428 */ PRECONDITIONREQUIRED,
-        /* 429 */ TOOMANYREQUESTS,
-        /* 431 */ REQUESTHEADERFIELDSTOOLARGE,
-        /* 451 */ UNAVAILABLEFORLEGALREASONS,
-        // Server errors
-        /* 500 */ INTERNALSERVERERROR,
-        /* 501 */ NOTIMPLEMENTED,
-        /* 502 */ BADGATEWAY,
-        /* 503 */ SERVICEUNAVAILABLE,
-        /* 504 */ GATEWAYTIMEOUT,
-        /* 505 */ HTTPVERSIONNOTSUPPORTED,
-        /* 506 */ VARIANTALSONEGOTIATES,
-        /* 507 */ INSUFFICIENTSTORAGE,
-        /* 508 */ LOOPDETECTED,
-        /* 510 */ NOTEXTENDED,
-        /* 511 */ NETWORKAUTHENTICATIONREQUIRED]] {
+      /* 511 */ NETWORKAUTHENTICATIONREQUIRED
+    ]] {
       override lazy val encodings: Set[MediaType] =
         allTpes.flatMap { case (_, m) => m.encodings }.toSet
 
@@ -379,7 +377,8 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
             /* 507 */ INSUFFICIENTSTORAGE,
             /* 508 */ LOOPDETECTED,
             /* 510 */ NOTEXTENDED,
-            /* 511 */ NETWORKAUTHENTICATIONREQUIRED])(implicit F: Monad[F]): F[Response[F]] =
+            /* 511 */ NETWORKAUTHENTICATIONREQUIRED
+          ])(implicit F: Monad[F]): F[Response[F]] =
         F.pure(r.resp)
 
       override def resultInfo: Set[ResultInfo] =
