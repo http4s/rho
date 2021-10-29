@@ -14,13 +14,13 @@ import org.http4s.{Request, UrlForm}
 
 class ApiExamples extends FunSuite {
   test("A mock API should make it ease to compose routes") {
-    /// src_inlined SimplePath
+    // / src_inlined SimplePath
     new RhoRoutes[IO] {
       GET / "hello" |>> { () => Ok("Hello, world!") }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined ReusePath
+    // / src_inlined ReusePath
     new RhoRoutes[IO] {
       // A path can be built up in multiple steps and the parts reused
       val pathPart1 = GET / "hello"
@@ -28,9 +28,9 @@ class ApiExamples extends FunSuite {
       pathPart1 / "world" |>> { () => Ok("Hello, world!") }
       pathPart1 / "you" |>> { () => Ok("Hello, you!") }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined PathCapture
+    // / src_inlined PathCapture
     new RhoRoutes[IO] {
       // Use combinators to parse and capture path parameters
       GET / "helloworldnumber" / pathVar[Int] / "foo" |>> { i: Int =>
@@ -53,44 +53,44 @@ class ApiExamples extends FunSuite {
         Ok(s"Received $u")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined CaptureTail
+    // / src_inlined CaptureTail
     new RhoRoutes[IO] {
       // You can capture the entire rest of the tail using *
       GET / "hello" / * |>> { r: List[String] =>
         Ok(s"Got the rest: ${r.mkString}")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined QueryCapture
+    // / src_inlined QueryCapture
     new RhoRoutes[IO] {
       // Query parameters can be captured in a similar manner as path fragments
       GET / "hello" +? param[Int]("fav") |>> { i: Int =>
         Ok(s"Query 'fav' had Int value $i")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined MultiCapture
+    // / src_inlined MultiCapture
     new RhoRoutes[IO] {
       // A Path can be made all at once
       POST / pathVar[Int] +? param[Int]("fav") |>> { (i1: Int, i2: Int) =>
         Ok(s"Sum of the number is ${i1 + i2}")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined HeaderCapture
+    // / src_inlined HeaderCapture
     new RhoRoutes[IO] {
       GET / "hello" >>> H[ETag].capture |>> { tag: ETag =>
         Ok(s"Thanks for the tag: $tag")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined HeaderRuleCombine
+    // / src_inlined HeaderRuleCombine
     new RhoRoutes[IO] {
       // Header rules are composable
       val ensureLength = H[`Content-Length`].existsAnd(_.length > 0)
@@ -100,9 +100,9 @@ class ApiExamples extends FunSuite {
         Ok(s"Thanks for the $tag and the non-empty body!")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined BooleanOperators
+    // / src_inlined BooleanOperators
     new RhoRoutes[IO] {
       /*
        * Boolean logic
@@ -121,9 +121,9 @@ class ApiExamples extends FunSuite {
         (i: Int, foo: String, v: Long) => Ok(s"Received $i, $foo, $v")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined RequestAccess
+    // / src_inlined RequestAccess
     new RhoRoutes[IO] {
       /* Access the `Request` by making it the first param of the
          handler function.
@@ -135,9 +135,9 @@ class ApiExamples extends FunSuite {
         Ok("I wanted a request")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined ResultTypes
+    // / src_inlined ResultTypes
     new RhoRoutes[IO] {
       private val counter = new AtomicInteger(0)
       private def getCount(): String = counter.incrementAndGet().toString
@@ -156,18 +156,18 @@ class ApiExamples extends FunSuite {
         WebSocketBuilder[IO].build(???, ???)
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined StatusCodes
+    // / src_inlined StatusCodes
     new RhoRoutes[IO] {
       GET / "twoResults" |>> { () =>
         if (true) Ok("bytes result".getBytes())
         else NotFound("Boo... Not found...")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined Decoders
+    // / src_inlined Decoders
     new RhoRoutes[IO] {
       // Using decoders you can parse the body as well
       POST / "postSomething" ^ UrlForm.entityDecoder[IO] |>> { m: UrlForm =>
@@ -180,9 +180,9 @@ class ApiExamples extends FunSuite {
           Ok(s"You posted these things ($foo): $m")
       }
     }
-    /// end_src_inlined
+    // / end_src_inlined
 
-    /// src_inlined Composed parameters
+    // / src_inlined Composed parameters
 
     new RhoRoutes[IO] {
       import shapeless.{::, HNil}
@@ -199,6 +199,6 @@ class ApiExamples extends FunSuite {
       }
     }
 
-    /// end_src_inlined
+    // / end_src_inlined
   }
 }

@@ -20,8 +20,8 @@ object SwaggerSupport {
 abstract class SwaggerSupport[F[_]: Monad](implicit etag: WeakTypeTag[F[_]])
     extends SwaggerSyntax[F] {
 
-  /** Create a RhoMiddleware adding a route to get the Swagger JSON/YAML files
-    * representing the full API
+  /** Create a RhoMiddleware adding a route to get the Swagger JSON/YAML files representing the full
+    * API
     */
   def createRhoMiddleware(
       swaggerFormats: SwaggerFormats = DefaultSwaggerFormats,

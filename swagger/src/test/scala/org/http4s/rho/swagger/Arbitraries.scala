@@ -13,8 +13,9 @@ import scala.collection.immutable.ListMap
 /** Arbitraries for the creation of Swagger models
   *
   * They can be improved by
-  *  - generating more data where Gen.const or Map.empty is used
-  *  - making sure the models are coherent in terms of parameters / properties / responses / definitions
+  *   - generating more data where Gen.const or Map.empty is used
+  *   - making sure the models are coherent in terms of parameters / properties / responses /
+  *     definitions
   */
 object Arbitraries {
 

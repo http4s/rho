@@ -298,7 +298,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       assertIO(checkOk(req2), "terminal")
   }
 
-  ///// Order of execution tests /////////////////////
+  // /// Order of execution tests /////////////////////
   test("A RhoRoutes execution should attempt to evaluate params in order") {
     val service = new RhoRoutes[IO] {
       GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
@@ -389,7 +389,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     assertIO(r.value.map(_.getOrElse(Response.notFound).body).flatMap(getBody), "success")
   }
 
-  ////////////////////////////////////////////////////
+  // //////////////////////////////////////////////////
   test("A RhoRoutes execution should handle errors in the route actions") {
     val service = new RhoRoutes[IO] {
       GET / "error" |>> { () =>

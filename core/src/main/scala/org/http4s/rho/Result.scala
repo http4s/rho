@@ -97,7 +97,7 @@ trait ResultSyntaxInstances[F[_]] {
 
     private val resp: Response[F] = r.resp
 
-    //def mapK[G[_]](f: ~>[F, G]): R[G] = Result(resp.mapK(f)).asInstanceOf[R[G]]
+    // def mapK[G[_]](f: ~>[F, G]): R[G] = Result(resp.mapK(f)).asInstanceOf[R[G]]
 
     def withHttpVersion(httpVersion: HttpVersion): Self = Result(resp.withHttpVersion(httpVersion))
 

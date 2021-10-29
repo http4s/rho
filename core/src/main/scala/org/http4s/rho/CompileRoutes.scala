@@ -9,16 +9,19 @@ import org.http4s.rho.bits.PathTree
 
 /** Transforms a [[RhoRoute]] into an `RouteType`.
   *
-  * This can be a stateful operation, storing the action for later execution
-  * or any other type of compilation phase.
+  * This can be a stateful operation, storing the action for later execution or any other type of
+  * compilation phase.
   */
 trait CompileRoutes[F[_], RouteType] {
 
   /** Transform the [[RhoRoute]] into a `RouteType` possibly mutating this compilers state.
     *
-    * @param route [[RhoRoute]] to compile.
-    * @tparam T `HList` representation of the result of the route
-    * @return The result of the compilation process.
+    * @param route
+    *   [[RhoRoute]] to compile.
+    * @tparam T
+    *   `HList` representation of the result of the route
+    * @return
+    *   The result of the compilation process.
     */
   def compile[T <: HList](route: RhoRoute[F, T]): RouteType
 }
@@ -37,8 +40,10 @@ object CompileRoutes {
 
   /** Convert the `Seq` of [[RhoRoute]]'s into a `HttpRoutes`
     *
-    * @param routes `Seq` of routes to bundle into a service.
-    * @return An `HttpRoutes`
+    * @param routes
+    *   `Seq` of routes to bundle into a service.
+    * @return
+    *   An `HttpRoutes`
     */
   def foldRoutes[F[_]: Monad](routes: Seq[RhoRoute.Tpe[F]]): HttpRoutes[F] = {
     val tree = routes.foldLeft(PathTree[F]())((t, r) => t.appendRoute(r))

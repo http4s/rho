@@ -7,7 +7,7 @@ import org.http4s.rho.bits.{ResultResponse, SuccessResponse}
 import shapeless.{HList, HNil}
 
 private[rho] trait RuleExecutor[F[_]] {
-  //////////////////////// Stuff for executing the route //////////////////////////////////////
+  // ////////////////////// Stuff for executing the route //////////////////////////////////////
 
   /** Execute the rule tree */
   def runRequestRules(v: RequestRule[F], req: Request[F]): ResultResponse[F, HList] =
