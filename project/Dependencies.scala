@@ -20,7 +20,7 @@ object Dependencies {
   lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.6.3"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
-  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.7"
+  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.8"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.7"
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.1"
