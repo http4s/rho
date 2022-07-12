@@ -1,6 +1,6 @@
 package com.http4s.rho.swagger.ui
 
-import cats.effect.{Sync}
+import cats.effect.Sync
 import cats.implicits._
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes
@@ -16,7 +16,7 @@ class SwaggerUiRoutes[F[_]: Sync](
 
   private val htmlEncoder: EntityEncoder[F, String] =
     EntityEncoder
-      .stringEncoder[F]
+      .stringEncoder()
       .withContentType(`Content-Type`(MediaType.text.html).withCharset(org.http4s.Charset.`UTF-8`))
 
   // Serving the html directly here would break all relative paths, so we redirect.

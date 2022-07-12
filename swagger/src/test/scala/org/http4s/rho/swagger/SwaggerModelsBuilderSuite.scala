@@ -1064,21 +1064,21 @@ class SwaggerModelsBuilderSuite extends FunSuite {
 
   implicit def renderableEncoder[F[_], T <: Renderable]: EntityEncoder[F, T] =
     EntityEncoder
-      .stringEncoder[F](Charset.`UTF-8`)
+      .stringEncoder(Charset.`UTF-8`)
       .contramap { _: T => "" }
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def tuple2Encoder[F[_], T <: Renderable]: EntityEncoder[F, (Int, T)] =
     EntityEncoder
-      .stringEncoder[F](Charset.`UTF-8`)
+      .stringEncoder(Charset.`UTF-8`)
       .contramap { _: (Int, T) => "" }
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[F[_], A]: EntityEncoder[F, List[A]] =
-    EntityEncoder.simple[F, List[A]]()(_ => Chunk.array("A".getBytes))
+    EntityEncoder.simple[List[A]]()(_ => Chunk.array("A".getBytes))
 
   implicit def mapEntityEncoder[F[_], A, B]: EntityEncoder[F, Map[A, B]] =
-    EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.array("A".getBytes))
+    EntityEncoder.simple[Map[A, B]]()(_ => Chunk.array("A".getBytes))
 
   case class CsvFile()
 
