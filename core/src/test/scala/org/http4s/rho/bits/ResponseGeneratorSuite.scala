@@ -81,7 +81,7 @@ class ResponseGeneratorSuite extends CatsEffectSuite {
   test("A ResponseGenerator should explicitly added headers have priority") {
     implicit val w: EntityEncoder[IO, String] =
       EntityEncoder.encodeBy[IO, String](`Content-Type`(MediaType.text.html))(
-        EntityEncoder.stringEncoder[IO].toEntity(_)
+        EntityEncoder.stringEncoder.toEntity(_)
       )
 
     assertIO(
