@@ -1,16 +1,14 @@
-import java.util.Date
-import java.util.UUID
-import java.time.Instant
-import java.util.concurrent.atomic.AtomicInteger
-
 import cats.effect.IO
 import cats.syntax.all._
 import munit.FunSuite
 import org.http4s.headers.{ETag, `Content-Length`}
-import org.http4s.rho.bits.TypedQuery
 import org.http4s.rho.RhoRoutes
-import org.http4s.server.websocket.WebSocketBuilder
+import org.http4s.rho.bits.TypedQuery
 import org.http4s.{Request, UrlForm}
+
+import java.time.Instant
+import java.util.{Date, UUID}
+import java.util.concurrent.atomic.AtomicInteger
 
 class ApiExamples extends FunSuite {
   test("A mock API should make it ease to compose routes") {
@@ -152,9 +150,10 @@ class ApiExamples extends FunSuite {
 
       /* We can use a standard http4s.Response, but we don't get any metadata
          with it. Useful for things like Websocket support. */
-      GET / "websockets" |>> { () =>
-        WebSocketBuilder[IO].build(???, ???)
-      }
+//      TODO, how are websockets supported after the changes?
+//      GET / "websockets" |>> { () =>
+//        WebSocketBuilder[IO].build(???, ???)
+//      }
     }
     /// end_src_inlined
 

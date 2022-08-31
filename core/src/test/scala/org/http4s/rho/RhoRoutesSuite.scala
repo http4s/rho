@@ -379,7 +379,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
 
     val body = Stream.emits(ArraySeq.unsafeWrapArray("foo".getBytes()))
     val uri = Uri.fromString("/foo/1?param=myparam").getOrElse(sys.error("Failed."))
-    val req = Request[IO](method = Method.POST, uri = uri, body = body)
+    val req = Request[IO](method = Method.POST, uri = uri, entity = Entity(body))
       .putHeaders(
         `Content-Type`(MediaType.text.plain),
         `Content-Length`.unsafeFromLong("foo".length)

@@ -39,15 +39,14 @@ abstract class EntityResponseGenerator[F[_]](val status: Status) extends Respons
     apply(body, Headers.empty)
 
   /** Generate a [[Result]] that carries the type information */
-  def apply[A](body: A, headers: Headers)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[T[A]] =
-    w.toEntity(body) match {
-      case Entity(proc, len) =>
-        val hs = len match {
-          case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
-          case None => w.headers ++ headers
-        }
-        F.pure(Result(Response[F](status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
+  def apply[A](body: A, headers: Headers)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[T[A]] = {
+    val entity = w.toEntity(body)
+    val hs = entity.length match {
+      case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
+      case None => w.headers ++ headers
     }
+    F.pure(Result(Response[F](status = status, headers = hs, entity = entity)).asInstanceOf[T[A]])
+  }
 
   /** Generate wrapper free `Response` */
   def pure[A](body: A)(implicit F: Monad[F], w: EntityEncoder[F, A]): F[Response[F]] =
@@ -56,15 +55,14 @@ abstract class EntityResponseGenerator[F[_]](val status: Status) extends Respons
   /** Generate wrapper free `Response` */
   def pure[A](body: A, headers: Headers)(implicit
       F: Monad[F],
-      w: EntityEncoder[F, A]): F[Response[F]] =
-    w.toEntity(body) match {
-      case Entity(proc, len) =>
-        val hs = len match {
-          case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
-          case None => w.headers ++ headers
-        }
-        F.pure(Response(status = status, headers = hs, body = proc))
+      w: EntityEncoder[F, A]): F[Response[F]] = {
+    val entity = w.toEntity(body)
+    val hs = entity.length match {
+      case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
+      case None => w.headers ++ headers
     }
+    F.pure(Response(status = status, headers = hs, entity = entity))
+  }
 
 }
 
@@ -76,15 +74,14 @@ abstract class LocationResponseGenerator[F[_]](val status: Status) extends Respo
 
   def apply[A](location: Uri, body: A, headers: Headers = Headers.empty)(implicit
       F: Monad[F],
-      w: EntityEncoder[F, A]): F[T[A]] =
-    w.toEntity(body) match {
-      case Entity(proc, len) =>
-        val hs = (len match {
-          case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
-          case None => w.headers ++ headers
-        }).put(Location(location))
-        F.pure(Result(Response[F](status = status, headers = hs, body = proc)).asInstanceOf[T[A]])
-    }
+      w: EntityEncoder[F, A]): F[T[A]] = {
+    val entity = w.toEntity(body)
+    val hs = (entity.length match {
+      case Some(l) => (w.headers ++ headers).put(`Content-Length`.unsafeFromLong(l))
+      case None => w.headers ++ headers
+    }).put(Location(location))
+    F.pure(Result(Response[F](status = status, headers = hs, entity = entity)).asInstanceOf[T[A]])
+  }
 }
 
 trait ResponseGeneratorInstances[F[_]] {

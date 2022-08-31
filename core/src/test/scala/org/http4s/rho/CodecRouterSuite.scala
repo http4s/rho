@@ -21,7 +21,7 @@ class CodecRouterSuite extends CatsEffectSuite {
   test("A CodecRouter in a RhoRoutes should decode a valid body") {
     val b = Stream.emits(ArraySeq.unsafeWrapArray("hello".getBytes))
     val h = Headers(headers.`Content-Type`(MediaType.text.plain))
-    val req = Request[IO](Method.POST, uri"/foo", headers = h, body = b)
+    val req = Request[IO](Method.POST, uri"/foo", headers = h, entity = Entity(b))
 
     for {
       result <- routes(req).value.map(_.getOrElse(Response.notFound))
@@ -33,7 +33,7 @@ class CodecRouterSuite extends CatsEffectSuite {
     val b = Stream.emits(ArraySeq.unsafeWrapArray("hello =".getBytes))
     val h = Headers(headers.`Content-Type`(MediaType.application.`x-www-form-urlencoded`))
     val req =
-      Request[IO](Method.POST, uri"/form", headers = h, body = b)
+      Request[IO](Method.POST, uri"/form", headers = h, entity = Entity(b))
 
     assertIO(routes(req).value.map(_.map(_.status)), Some(Status.BadRequest))
   }

@@ -122,10 +122,10 @@ class ResultMatcherSuite extends FunSuite {
     case class ModelB(name: String, id: Long)
 
     implicit def w1[F[_]]: EntityEncoder[F, ModelA] =
-      EntityEncoder.simple[F, ModelA]()(_ => Chunk.array("A".getBytes))
+      EntityEncoder.simple[ModelA]()(_ => Chunk.array("A".getBytes))
 
     implicit def w2[F[_]]: EntityEncoder[F, ModelB] =
-      EntityEncoder.simple[F, ModelB]()(_ => Chunk.array("B".getBytes))
+      EntityEncoder.simple[ModelB]()(_ => Chunk.array("B".getBytes))
 
     val srvc = new TRhoRoutes[IO] {
       GET / "foo" |>> { () =>
@@ -165,8 +165,8 @@ object Foo {
   case class FooB(name: String, id: Long)
 
   implicit def w1[F[_]]: EntityEncoder[F, FooA] =
-    EntityEncoder.simple[F, FooA]()(_ => Chunk.array("A".getBytes))
+    EntityEncoder.simple[FooA]()(_ => Chunk.array("A".getBytes))
 
   implicit def w2[F[_]]: EntityEncoder[F, FooB] =
-    EntityEncoder.simple[F, FooB]()(_ => Chunk.array("B".getBytes))
+    EntityEncoder.simple[FooB]()(_ => Chunk.array("B".getBytes))
 }
