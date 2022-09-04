@@ -45,7 +45,7 @@ val api = new RhoRoutes[IO] {
     import org.http4s.rho.swagger.syntax.io._
     
     "Description of api endpoint" **      // Description is optional and specific to Swagger
-    POST / "somePath" / pathVar[Int]("someInt", "parameter description") >>> Auth.auth() ^ jsonOf[IO, T] |>> {
+    POST / "somePath" / pathVar[Int]("someInt", "parameter description") >>> Auth.auth ^ jsonOf[IO, T] |>> {
       (someInt: Int, au: AuthInfo, body: T) => Ok("result")
     }
 }
