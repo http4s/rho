@@ -6,7 +6,7 @@ object Dependencies {
   val http4sVersion = "0.23.0"
   val circeVersion = "0.14.1"
 
-  val scala_213 = "2.13.6"
+  val scala_213 = "2.13.8"
   val scala_212 = "2.12.14"
 
 
