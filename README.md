@@ -8,7 +8,7 @@
 
 ```scala
 val httpService = new RhoRoutes[IO] {
-   GET / "hello" / 'world +? param[Int]("fav") |>> { (world: String, fav: Int) => 
+   GET / "hello" / pv"world" +? param[Int]("fav") |>> { (world: String, fav: Int) => 
      Ok(s"Received $fav, $world") 
    }
 }
