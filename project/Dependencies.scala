@@ -26,7 +26,7 @@ object Dependencies {
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.1"
   lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.51.2"
   lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.27"         % "test"
-  lazy val munitCatsEffect     = "org.typelevel"              %% "munit-cats-effect-3"   % "1.0.7"          % "test"
+  lazy val munitCatsEffect     = "org.typelevel"              %% "munit-cats-effect-3"   % "1.0.5"          % "test"
   lazy val scalacheckMunit     = "org.scalameta"              %% "munit-scalacheck"      % munit.revision   % "test"
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
