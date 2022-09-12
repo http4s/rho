@@ -1,6 +1,7 @@
 package com.http4s.rho.swagger.demo
 
 import cats.effect.{Blocker, ContextShift, IO}
+import org.http4s.Uri.Path.Segment
 import org.http4s.dsl.io._
 import org.http4s.rho.RhoRoutes
 import org.http4s.{HttpRoutes, Request, Response, StaticFile}
@@ -13,13 +14,13 @@ object StaticContentService {
     */
   def routes(blocker: Blocker)(implicit cs: ContextShift[IO]): HttpRoutes[IO] = new RhoRoutes[IO] {
     // Swagger User Interface
-    GET / "css" / * |>> { (req: Request[IO], _: List[String]) =>
+    GET / "css" / * |>> { (req: Request[IO], _: List[Segment]) =>
       fetchResource(swaggerUiDir + req.pathInfo, req, blocker)
     }
-    GET / "images" / * |>> { (req: Request[IO], _: List[String]) =>
+    GET / "images" / * |>> { (req: Request[IO], _: List[Segment]) =>
       fetchResource(swaggerUiDir + req.pathInfo, req, blocker)
     }
-    GET / "lib" / * |>> { (req: Request[IO], _: List[String]) =>
+    GET / "lib" / * |>> { (req: Request[IO], _: List[Segment]) =>
       fetchResource(swaggerUiDir + req.pathInfo, req, blocker)
     }
     GET / "swagger-ui" |>> { req: Request[IO] =>

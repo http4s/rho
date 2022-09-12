@@ -2,13 +2,13 @@ package org.http4s
 package rho
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import cats.effect.IO
 import fs2.Stream
 import munit.CatsEffectSuite
 import org.http4s.headers.{`Content-Length`, `Content-Type`}
 import org.http4s.rho.io._
 import org.http4s.Uri.Path
+import org.http4s.Uri.Path.Segment
 import org.typelevel.ci.CIString
 
 import scala.collection.compat.immutable.ArraySeq
@@ -63,7 +63,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
         Ok("twoparams2_" + foo + bar.getOrElse("cat"))
     }
 
-    GET / "variadic" / * |>> { tail: List[String] => Ok("route8_" + tail.mkString("/")) }
+    GET / "variadic" / * |>> { tail: List[Segment] =>
+      Ok("route8_" + tail.map(_.encoded).mkString("/")) }
 
     val or = "or1" || "or2"
     GET / or |>> { () => Ok("route9") }
