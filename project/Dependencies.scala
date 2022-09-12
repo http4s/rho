@@ -19,10 +19,10 @@ object Dependencies {
   lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.6.6"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
-  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.6"
+  lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.11"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
-  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.7"
-  lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.0.1"
+  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.9"
+  lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.1.0"
   lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.52.5"
   lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.29"         % "test"
   lazy val munitCatsEffect     = "org.typelevel"              %% "munit-cats-effect-3"   % "1.0.7"          % "test"

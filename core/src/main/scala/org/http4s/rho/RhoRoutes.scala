@@ -4,7 +4,6 @@ package rho
 import scala.collection.immutable.Seq
 import cats._
 import org.http4s.rho.bits.PathAST.TypedPath
-import org.log4s.getLogger
 import shapeless.{HList, HNil}
 
 /** Constructor class for defining routes
@@ -29,9 +28,7 @@ class RhoRoutes[F[_]: Monad](routes: Seq[RhoRoute[F, _ <: HList]] = Vector.empty
     with RoutePrependable[F, RhoRoutes[F]]
     with RhoDsl[F] {
   final private val routesBuilder = RoutesBuilder[F](routes)
-
-  final protected val logger = getLogger
-
+  
   final implicit protected def compileRoutes: CompileRoutes[F, RhoRoute.Tpe[F]] = routesBuilder
 
   /** Create a new [[RhoRoutes]] by appending the routes of the passed [[RhoRoutes]]
