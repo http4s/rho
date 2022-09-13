@@ -21,7 +21,7 @@ object Dependencies {
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.11"
   lazy val uadetector          = "net.sf.uadetector"           % "uadetector-resources"  % "2014.10"
-  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.9"
+  lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.10"
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.1.0"
   lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.52.5"
   lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.29"         % "test"
