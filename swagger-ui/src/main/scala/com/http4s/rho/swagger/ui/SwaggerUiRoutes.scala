@@ -2,6 +2,7 @@ package com.http4s.rho.swagger.ui
 
 import cats.effect.{Sync}
 import cats.implicits._
+import org.http4s.Uri.Path.Segment
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits.PathAST.CaptureTail
@@ -29,7 +30,7 @@ class SwaggerUiRoutes[F[_]: Sync](
     Ok(indexHtml)(implicitly, htmlEncoder)
   }
 
-  GET / swaggerUiPath / CaptureTail |>> { (req: Request[F], path: List[String]) =>
+  GET / swaggerUiPath / CaptureTail |>> { (req: Request[F], path: List[Segment]) =>
     fetchResource(swaggerUiResourcesPath + path.mkString("/", "/", ""), req)
   }
 

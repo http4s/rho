@@ -2,10 +2,10 @@ import java.util.Date
 import java.util.UUID
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
-
 import cats.effect.IO
 import cats.syntax.all._
 import munit.FunSuite
+import org.http4s.Uri.Path.Segment
 import org.http4s.headers.{ETag, `Content-Length`}
 import org.http4s.rho.bits.TypedQuery
 import org.http4s.rho.RhoRoutes
@@ -58,8 +58,8 @@ class ApiExamples extends FunSuite {
     /// src_inlined CaptureTail
     new RhoRoutes[IO] {
       // You can capture the entire rest of the tail using *
-      GET / "hello" / * |>> { r: List[String] =>
-        Ok(s"Got the rest: ${r.mkString}")
+      GET / "hello" / * |>> { r: List[Segment] =>
+        Ok(s"Got the rest: ${r.map(_.encoded).mkString}")
       }
     }
     /// end_src_inlined
