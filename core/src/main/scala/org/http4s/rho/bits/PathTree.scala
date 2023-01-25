@@ -18,13 +18,17 @@ object PathTree {
     new ops.PathTree(ops.MatchNode(Uri.Path.Segment.empty))
   }
 
-  def splitPath(path: Uri.Path): List[Uri.Path.Segment] = {
-    val fixEmpty =
-      if (path.isEmpty) List(Uri.Path.Segment.empty)
-      else path.segments.filterNot(_.isEmpty).toList
-    if (path.endsWithSlash) fixEmpty :+ Uri.Path.Segment.empty
-    else fixEmpty
-  }
+  def splitPath(path: Uri.Path): List[Uri.Path.Segment] =
+    if (path.isEmpty) {
+      List(Uri.Path.Segment.empty)
+    } else {
+      val noEmptySegments = path.segments.filterNot(_.isEmpty).toList
+      if (path.endsWithSlash) {
+        noEmptySegments :+ Uri.Path.Segment.empty
+      } else {
+        noEmptySegments
+      }
+    }
 }
 
 private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
