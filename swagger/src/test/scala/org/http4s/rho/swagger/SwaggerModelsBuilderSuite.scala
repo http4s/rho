@@ -1075,10 +1075,10 @@ class SwaggerModelsBuilderSuite extends FunSuite {
       .withContentType(`Content-Type`(MediaType.application.json, Charset.`UTF-8`))
 
   implicit def listEntityEncoder[F[_], A]: EntityEncoder[F, List[A]] =
-    EntityEncoder.simple[List[A]]()(_ => Chunk.array("A".getBytes))
+    EntityEncoder.simple[List[A]]()(_ => Chunk.array("A".getBytes).toByteVector)
 
   implicit def mapEntityEncoder[F[_], A, B]: EntityEncoder[F, Map[A, B]] =
-    EntityEncoder.simple[Map[A, B]]()(_ => Chunk.array("A".getBytes))
+    EntityEncoder.simple[Map[A, B]]()(_ => Chunk.array("A".getBytes).toByteVector)
 
   case class CsvFile()
 

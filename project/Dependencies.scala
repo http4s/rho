@@ -3,7 +3,7 @@ import Keys._
 
 // format: off
 object Dependencies {
-  val http4sVersion = "1.0.0-M35"
+  val http4sVersion = "1.0.0-M38"
   val circeVersion = "0.14.2"
 
   val scala_213 = "2.13.8"
@@ -16,7 +16,7 @@ object Dependencies {
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion
   lazy val http4sCirce         = "org.http4s"                 %% "http4s-circe"          % http4sVersion
-  lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % http4sVersion
+  lazy val http4sXmlInstances  = "org.http4s"                 %% "http4s-scala-xml"      % s"$http4sVersion.1"
   lazy val swaggerModels       = "io.swagger"                  % "swagger-models"        % "1.6.6"
   lazy val swaggerCore         = "io.swagger"                  % "swagger-core"          % swaggerModels.revision
   lazy val logbackClassic      = "ch.qos.logback"              % "logback-classic"       % "1.2.11"
