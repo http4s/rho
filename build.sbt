@@ -42,6 +42,7 @@ lazy val `rho-swagger-ui` = project
   .settings(mimaConfiguration)
   .enablePlugins(BuildInfoPlugin)
   .settings(
+    dontPublish,
     buildInfoKeys := Seq[BuildInfoKey]("swaggerUiVersion" -> Dependencies.swaggerUi.revision),
     buildInfoPackage := "org.http4s.rho.swagger.ui"
   )
@@ -112,9 +113,12 @@ lazy val buildSettings = publishing ++
     scalaVersion := scala_213,
     crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions --= disabledCompilerFlags,
-    resolvers += Resolver.sonatypeRepo("snapshots"),
+    resolvers ++= Seq(
+      Resolver.sonatypeRepo("snapshots"),
+      "Residenthome Private" at "https://resident.jfrog.io/artifactory/private/"
+    ),
     (run / fork) := true,
-    (ThisBuild / organization) := "org.http4s",
+    (ThisBuild / organization) := "com.inspiredme",
     (ThisBuild / homepage) := Some(url(homepageUrl)),
     description := "A self documenting DSL build upon the http4s framework",
     license,
@@ -131,7 +135,15 @@ lazy val buildSettings = publishing ++
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
-    libraryDependencies ++= Seq(munit, munitCatsEffect, scalacheckMunit)
+    libraryDependencies ++= Seq(munit, munitCatsEffect, scalacheckMunit),
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+    publishTo := {
+      val artifactory = "https://resident.jfrog.io/artifactory/"
+        Some("Residenthome Releases" at artifactory + "releases;build.commit_number=" +
+          sys.env.getOrElse("CIRCLE_SHA1", "unknown") +
+          ";build.username=" +
+          sys.env.getOrElse("CIRCLE_USERNAME", "unknown") + ";")
+    }
   )
 
 // to keep REPL usable
@@ -145,7 +157,9 @@ lazy val publishing = Seq(
   (ThisBuild / scmInfo) := {
     val base = "github.com/http4s/rho"
     Some(ScmInfo(url(s"https://$base"), s"scm:git:https://$base", Some(s"scm:git:git@$base")))
-  }
+  },
+  packageDoc / publishArtifact := false,
+  packageSrc / publishArtifact := false
 )
 
 lazy val extras = (ThisBuild / pomExtra) := (
