@@ -4,7 +4,7 @@ import Keys._
 // format: off
 object Dependencies {
   val http4sVersion = "1.0.0-M35"
-  val circeVersion = "0.14.2"
+  val circeVersion = "0.14.4"
 
   val scala_213 = "2.13.8"
 
