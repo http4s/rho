@@ -4,7 +4,7 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.4.1")
 
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 
-addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
+addSbtPlugin("io.spray" % "sbt-revolver" % "0.10.0")
 
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.0.1")
 
