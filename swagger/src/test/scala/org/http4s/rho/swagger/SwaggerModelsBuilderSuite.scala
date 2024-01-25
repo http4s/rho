@@ -13,13 +13,14 @@ import org.http4s.Method._
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.rho.bits.PathAST.{PathAnd, PathCapture}
+import org.http4s.rho.bits.QueryParser.Params
 import org.http4s.rho.bits._
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
 
 import scala.collection.compat.immutable.ArraySeq
-import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
+import scala.util.Try
 
 object SwaggerModelsBuilderSuite {
   case class Foo(a: String, b: Int)
@@ -36,6 +37,26 @@ object SwaggerModelsBuilderSuite {
         case Left(t) => badRequest[String](t.getMessage)
         case Right(t) => SuccessResponse(t)
       }
+  }
+
+  sealed class SealedEnum
+  object SealedEnum {
+    case object first extends SealedEnum
+    case object second extends SealedEnum
+
+    def fromInt(str: String): SealedEnum = str match {
+      case "1" => first
+      case "2" => second
+    }
+  }
+
+  implicit val paramQueryParser: QueryParser[IO, SealedEnum] = {
+    (name: String, params: Params, _: Option[SealedEnum]) => params.get(name) match {
+      case Some(Seq(value, _*)) =>
+        Try(SuccessResponse[IO, SealedEnum](SealedEnum.fromInt(value))).getOrElse(badRequest("error"))
+      case _ =>
+        badRequest("")
+    }
   }
 }
 
@@ -295,6 +316,45 @@ class SwaggerModelsBuilderSuite extends FunSuite {
       sb.collectQueryParams(singleLinearRoute(ra)),
       List(
         QueryParameter(`type` = "string".some, name = "unit".some, required = true)
+      )
+    )
+  }
+
+  test(
+    "SwaggerModelsBuilder.collectQueryParams should handle an action with one enum query parameter"
+  ) {
+    val ra = fooPath +? param[SealedEnum]("param") |>> { (_: SealedEnum) => "" }
+
+    assertEquals(
+      sb.collectQueryParams(singleLinearRoute(ra)),
+      List(
+        QueryParameter(`type` = "string".some, name = "param".some, required = true, enums = List("first", "second"))
+      )
+    )
+  }
+
+  test(
+    "SwaggerModelsBuilder.collectQueryParams should handle an action with one enum query parameter with allowed values"
+  ) {
+    val ra = fooPath +? paramE[SealedEnum]("param", List("1", "2")) |>> { (_: SealedEnum) => "" }
+
+    assertEquals(
+      sb.collectQueryParams(singleLinearRoute(ra)),
+      List(
+        QueryParameter(`type` = "string".some, name = "param".some, required = true, enums = List("1", "2"))
+      )
+    )
+  }
+
+  test(
+    "SwaggerModelsBuilder.collectQueryParams should handle an action with one enum query parameter with allowed values and default value"
+  ) {
+    val ra = fooPath +? paramE[SealedEnum]("param", SealedEnum.first, List("1", "2")) |>> { (_: SealedEnum) => "" }
+
+    assertEquals(
+      sb.collectQueryParams(singleLinearRoute(ra)),
+      List(
+        QueryParameter(`type` = "string".some, name = "param".some, enums = List("1", "2"), defaultValue = Some("first"))
       )
     )
   }
