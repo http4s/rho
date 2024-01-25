@@ -28,8 +28,9 @@ case class QueryMetaData[F[_], T](
     description: Option[String],
     p: QueryParser[F, T],
     default: Option[T],
-    m: TypeTag[T])
-    extends Metadata
+    m: TypeTag[T],
+    enums: Seq[String] = Nil
+) extends Metadata
 
 /** Metadata about a header rule */
 case class HeaderMetaData[T](key: CIString, isRequired: Boolean) extends Metadata

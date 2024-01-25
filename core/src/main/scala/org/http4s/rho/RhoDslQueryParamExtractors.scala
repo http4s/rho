@@ -17,10 +17,12 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       name: String,
       description: Option[String],
       default: Option[T],
-      validate: T => Option[F[BaseResult[F]]])(implicit
+      validate: T => Option[F[BaseResult[F]]],
+      enums: Seq[String])(implicit
       F: Functor[F],
       parser: QueryParser[F, T],
-      m: TypeTag[T]): TypedQuery[F, T :: HNil] =
+      m: TypeTag[T]
+  ): TypedQuery[F, T :: HNil] =
     genericRequestQueryCapture[T] { req =>
       val result = parser.collect(name, req.uri.multiParams, default)
       result.flatMap { r =>
@@ -29,7 +31,7 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
           case Some(resp) => FailureResponse.pure(F.map(resp)(_.resp))
         }
       }
-    }.withMetadata(QueryMetaData(name, description, parser, default = default, m))
+    }.withMetadata(QueryMetaData(name, description, parser, default = default, m, enums))
 
   /** Defines a parameter in query string that should be bound to a route definition.
     *
@@ -39,7 +41,7 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, None, None, _ => None)
+    _paramR(name, None, None, _ => None, Nil)
 
   /** Defines a parameter in query string that should be bound to a route definition.
     *
@@ -50,21 +52,21 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, Some(description), None, _ => None)
+    _paramR(name, Some(description), None, _ => None, Nil)
 
   /** Define a query parameter with a default value */
   def param[T](name: String, default: T)(implicit
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, None, Some(default), _ => None)
+    _paramR(name, None, Some(default), _ => None, Nil)
 
   /** Define a query parameter with description and a default value */
   def paramD[T](name: String, default: T, description: String)(implicit
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, Some(description), Some(default), _ => None)
+    _paramR(name, Some(description), Some(default), _ => None, Nil)
 
   /** Define a query parameter that will be validated with the predicate
     *
@@ -137,7 +139,7 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, None, None, validate)
+    _paramR(name, None, None, validate, Nil)
 
   /** Defines a parameter in query string with description that should be bound to a route definition. */
   def paramRDescr[T](name: String, description: String, validate: T => Option[F[BaseResult[F]]])(
@@ -145,14 +147,14 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, Some(description), None, validate)
+    _paramR(name, Some(description), None, validate, Nil)
 
   /** Defines a parameter in query string that should be bound to a route definition. */
   def paramR[T](name: String, default: T, validate: T => Option[F[BaseResult[F]]])(implicit
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, None, Some(default), validate)
+    _paramR(name, None, Some(default), validate, Nil)
 
   /** Defines a parameter in query string with description that should be bound to a route definition. */
   def paramR[T](
@@ -163,7 +165,31 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       F: FlatMap[F],
       parser: QueryParser[F, T],
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
-    _paramR(name, Some(description), Some(default), validate)
+    _paramR(name, Some(description), Some(default), validate, Nil)
+
+  /** Defines an enum parameter in query string that should be bound to a route definition.
+    *
+    * @param name name of the parameter in query
+    * @param default default value
+    * @param enums list of allowed values
+    */
+  def paramE[T](name: String, default: T, enums: Seq[String])(implicit
+    F: FlatMap[F],
+    parser: QueryParser[F, T],
+    m: TypeTag[T]): TypedQuery[F, T :: HNil] =
+    _paramR(name, None, Some(default), _ => None, enums)
+
+
+  /** Defines an enum parameter in query string that should be bound to a route definition.
+    *
+    * @param name name of the parameter in query
+    * @param enums list of allowed values
+    */
+  def paramE[T](name: String, enums: Seq[String])(implicit
+    F: FlatMap[F],
+    parser: QueryParser[F, T],
+    m: TypeTag[T]): TypedQuery[F, T :: HNil] =
+    _paramR(name, None, None, _ => None, enums)
 
   /** Create a query capture rule using the `Request`'s `Uri`
     *

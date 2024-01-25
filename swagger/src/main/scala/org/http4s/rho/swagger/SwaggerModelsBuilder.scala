@@ -75,7 +75,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
         case (EmptyRule() | CaptureRule(_)) :: xs => go(xs)
         case MapRule(r, _) :: xs => go(r :: xs)
         case IgnoreRule(r) :: xs => go(r :: xs)
-        case MetaRule(x, q @ QueryMetaData(_, _, _, _, _)) :: xs =>
+        case MetaRule(x, q @ QueryMetaData(_, _, _, _, _, _)) :: xs =>
           val tpe = q.m.tpe
           TypeBuilder.DataType.fromType(tpe) match {
             case _: TypeBuilder.DataType.ComplexDataType =>
@@ -205,7 +205,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
           addOrDescriptions(set)(as, bs, "params") :::
             addOrDescriptions(set)(bs, as, "params")
 
-        case MetaRule(rs, q @ QueryMetaData(_, _, _, _, _)) :: xs =>
+        case MetaRule(rs, q @ QueryMetaData(_, _, _, _, _, _)) :: xs =>
           mkQueryParam(q.asInstanceOf[QueryMetaData[F, _]]) :: go(rs :: xs)
 
         case MetaRule(rs, m: TextMetaData) :: xs =>
@@ -439,7 +439,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
           description = rule.description,
           required = required,
           defaultValue = rule.default.map(_.toString),
-          enums = enums.toList
+          enums = if (rule.enums.nonEmpty) rule.enums.toList else enums.toList
         )
     }
   }

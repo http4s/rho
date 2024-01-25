@@ -131,7 +131,7 @@ final case class TypedQuery[F[_], T <: HList](rule: RequestRule[F]) extends UriC
     @scala.annotation.tailrec
     def go(rule: List[RequestRule[F]], acc: List[String]): List[String] = rule match {
       case Nil => acc
-      case MetaRule(q, QueryMetaData(n, _, _, _, _)) :: rs => go(q :: rs, n :: acc)
+      case MetaRule(q, QueryMetaData(n, _, _, _, _, _)) :: rs => go(q :: rs, n :: acc)
       case MetaRule(q, _) :: rs => go(q :: rs, acc)
       case AndRule(a, b) :: rs => go(a :: b :: rs, acc)
       case OrRule(a, _) :: rs => go(a :: rs, acc)
@@ -159,7 +159,7 @@ object TypedQuery {
         getKey(t.rule).getOrElse(sys.error("Empty Query doesn't have a key name"))
 
       private def getKey(rule: RequestRule[F]): Option[QueryParameterKey] = rule match {
-        case MetaRule(_, QueryMetaData(n, _, _, _, _)) => Some(QueryParameterKey(n))
+        case MetaRule(_, QueryMetaData(n, _, _, _, _, _)) => Some(QueryParameterKey(n))
         case MetaRule(r, _) => getKey(r)
         case OrRule(a, b) => getKey(a).orElse(getKey(b))
         case IgnoreRule(r) => getKey(r)

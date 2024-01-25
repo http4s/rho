@@ -34,7 +34,7 @@ object UriConverter {
     @scala.annotation.tailrec
     def go(rule: List[RequestRule[F]], acc: Query): Try[Query] = rule match {
       case Nil => Success(acc.reverse)
-      case MetaRule(r, QueryMetaData(n, _, _, _, _)) :: rs => go(r :: rs, ParamExp(n) :: acc)
+      case MetaRule(r, QueryMetaData(n, _, _, _, _, _)) :: rs => go(r :: rs, ParamExp(n) :: acc)
       case MetaRule(r, _) :: rs => go(r :: rs, acc)
       case AndRule(a, b) :: rs => go(a :: b :: rs, acc)
       case (EmptyRule() | CaptureRule(_)) :: rs => go(rs, acc)
