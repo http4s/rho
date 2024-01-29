@@ -159,7 +159,7 @@ lazy val publishing = Seq(
     Some(ScmInfo(url(s"https://$base"), s"scm:git:https://$base", Some(s"scm:git:git@$base")))
   },
   packageDoc / publishArtifact := false,
-  packageSrc / publishArtifact := false
+  packageSrc / publishArtifact := true
 )
 
 lazy val extras = (ThisBuild / pomExtra) := (
