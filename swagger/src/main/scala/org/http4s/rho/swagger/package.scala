@@ -24,7 +24,7 @@ import shapeless.{HList, HNil}
 
 import scala.reflect.runtime.universe._
 
-package object swagger {
+package swagger {
 
   /** Metadata carrier for specific routes */
   case class RouteDesc(msg: String) extends TextMetaData
@@ -34,6 +34,22 @@ package object swagger {
   /** Scopes carrier for specific routes */
   case class RouteSecurityScope(definitions: Map[String, List[String]])
       extends SecurityScopesMetaData
+
+  trait ShowType {
+    def showType(typeName: String, typeArgumentNames: Seq[String]): String
+  }
+
+  class ShowTypeWithBrackets(openingBracket: String, separator: String, closingBracket: String)
+      extends ShowType {
+    override def showType(typeName: String, typeArgumentNames: Seq[String]): String =
+      typeName + {
+        if (typeArgumentNames.isEmpty) ""
+        else typeArgumentNames.mkString(openingBracket, separator, closingBracket)
+      }
+  }
+}
+
+package object swagger {
 
   /** Add support for adding security scopes before a route using the ^^ operator */
   implicit class SecOps[F[_]](definitions: Map[String, List[String]]) {
@@ -94,19 +110,6 @@ package object swagger {
 
     def isAnyVal: Boolean =
       t <:< typeOf[AnyVal]
-  }
-
-  trait ShowType {
-    def showType(typeName: String, typeArgumentNames: Seq[String]): String
-  }
-
-  class ShowTypeWithBrackets(openingBracket: String, separator: String, closingBracket: String)
-      extends ShowType {
-    override def showType(typeName: String, typeArgumentNames: Seq[String]): String =
-      typeName + {
-        if (typeArgumentNames.isEmpty) ""
-        else typeArgumentNames.mkString(openingBracket, separator, closingBracket)
-      }
   }
 
   val DefaultShowType = new ShowTypeWithBrackets("«", ",", "»")

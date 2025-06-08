@@ -174,27 +174,32 @@ object TypeBuilder {
 
   private def modelToSwagger(tpe: Type, sfs: SwaggerFormats)(implicit
       st: ShowType): Option[ModelImpl] =
-    try {
-      val TypeRef(_, sym: Symbol, tpeArgs: List[Type]) = tpe
-      val constructor = tpe.member(termNames.CONSTRUCTOR)
-      val typeSignature = if (constructor.owner == tpe.termSymbol) {
-        constructor.typeSignature
-      } else {
-        constructor.typeSignatureIn(tpe)
-      }
-      val props: Map[String, Property] =
-        typeSignature.paramLists.flatten
-          .map(paramSymToProp(sym, tpeArgs, sfs))
-          .toMap
+    try
+      tpe match {
+        case TypeRef(_, sym: Symbol, tpeArgs: List[_]) =>
+          val constructor = tpe.member(termNames.CONSTRUCTOR)
+          val typeSignature = if (constructor.owner == tpe.termSymbol) {
+            constructor.typeSignature
+          } else {
+            constructor.typeSignatureIn(tpe)
+          }
+          val props: Map[String, Property] =
+            typeSignature.paramLists.flatten
+              .map(paramSymToProp(sym, tpeArgs, sfs))
+              .toMap
 
-      ModelImpl(
-        id = tpe.fullName,
-        id2 = tpe.simpleName,
-        description = tpe.simpleName.some,
-        `type` = "object".some,
-        properties = props
-      ).some
-    } catch {
+          ModelImpl(
+            id = tpe.fullName,
+            id2 = tpe.simpleName,
+            description = tpe.simpleName.some,
+            `type` = "object".some,
+            properties = props
+          ).some
+        case _ =>
+          logger.info(s"Failed to build model for type $tpe")
+          None
+      }
+    catch {
       case NonFatal(t) =>
         logger.info(t)(s"Failed to build model for type $tpe")
         None
@@ -213,32 +218,38 @@ object TypeBuilder {
     sfs.customFieldSerializers.applyOrElse(
       tpe,
       { _: Type =>
-        val TypeRef(_, ptSym: Symbol, _) = tpe
-        if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
-          RefProperty(tpe.simpleName)
-        } else if (tpe.isMap) {
-          val pType = tpe.dealias.typeArgs.last
-          val itemProperty = typeToProperty(pType, sfs).withRequired(false)
-          MapProperty(additionalProperties = itemProperty)
-        } else if (tpe.isCollection) {
-          val pType = tpe.dealias.typeArgs.head
-          val itemProperty = typeToProperty(pType, sfs).withRequired(false)
-          ArrayProperty(items = itemProperty)
-        } else if (tpe.isOption)
-          typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
-        else if (tpe.isAnyVal && !tpe.isPrimitive && ptSym.isClass) {
-          val symbolOption = ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.headOption
-          symbolOption match {
-            case Some(symbol) =>
-              typeToProperty(
-                symbol.typeSignature,
-                sfs
-              )
-            case None => dataTypeFromType(tpe)
-          }
-        } else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
-          RefProperty(tpe.simpleName)
-        else dataTypeFromType(tpe)
+        tpe match {
+          case TypeRef(_, ptSym: Symbol, _) =>
+            if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
+              RefProperty(tpe.simpleName)
+            } else if (tpe.isMap) {
+              val pType = tpe.dealias.typeArgs.last
+              val itemProperty = typeToProperty(pType, sfs).withRequired(false)
+              MapProperty(additionalProperties = itemProperty)
+            } else if (tpe.isCollection) {
+              val pType = tpe.dealias.typeArgs.head
+              val itemProperty = typeToProperty(pType, sfs).withRequired(false)
+              ArrayProperty(items = itemProperty)
+            } else if (tpe.isOption)
+              typeToProperty(tpe.typeArgs.head, sfs).withRequired(false)
+            else if (tpe.isAnyVal && !tpe.isPrimitive && ptSym.isClass) {
+              val symbolOption =
+                ptSym.asClass.primaryConstructor.asMethod.paramLists.flatten.headOption
+              symbolOption match {
+                case Some(symbol) =>
+                  typeToProperty(
+                    symbol.typeSignature,
+                    sfs
+                  )
+                case None => dataTypeFromType(tpe)
+              }
+            } else if (isCaseClass(ptSym) || (isSumType(ptSym) && !isObjectEnum(ptSym)))
+              RefProperty(tpe.simpleName)
+            else dataTypeFromType(tpe)
+          case _ =>
+            dataTypeFromType(tpe)
+        }
+
       }
     )
 
