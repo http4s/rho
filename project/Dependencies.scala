@@ -53,7 +53,7 @@ object Dependencies {
     http4sDSL,
     http4sCirce,
     http4sXmlInstances,
-    logbackClassic, 
+    logbackClassic,
     uadetector
   )
 }

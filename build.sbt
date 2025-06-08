@@ -51,7 +51,7 @@ lazy val docs = project
   .settings(
     dontPublish,
     description := "Api Documentation",
-    autoAPIMappings := true,
+    autoAPIMappings := true
   )
   .dependsOn(`rho-core`, `rho-swagger`)
 

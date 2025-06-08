@@ -254,7 +254,9 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
       /* 507 */ INSUFFICIENTSTORAGE,
       /* 508 */ LOOPDETECTED,
       /* 510 */ NOTEXTENDED,
-      /* 511 */ NETWORKAUTHENTICATIONREQUIRED]] =
+      /* 511 */ NETWORKAUTHENTICATIONREQUIRED
+    ]
+  ] =
     new ResultMatcher[
       F,
       Result[
@@ -323,7 +325,9 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
         /* 507 */ INSUFFICIENTSTORAGE,
         /* 508 */ LOOPDETECTED,
         /* 510 */ NOTEXTENDED,
-        /* 511 */ NETWORKAUTHENTICATIONREQUIRED]] {
+        /* 511 */ NETWORKAUTHENTICATIONREQUIRED
+      ]
+    ] {
       override lazy val encodings: Set[MediaType] =
         allTpes.flatMap { case (_, m) => m.encodings }.toSet
 
@@ -395,7 +399,8 @@ trait ResultMatchers[F[_]] extends ResultMatcherMidPrioInstances[F] {
             /* 507 */ INSUFFICIENTSTORAGE,
             /* 508 */ LOOPDETECTED,
             /* 510 */ NOTEXTENDED,
-            /* 511 */ NETWORKAUTHENTICATIONREQUIRED])(implicit F: Monad[F]): F[Response[F]] =
+            /* 511 */ NETWORKAUTHENTICATIONREQUIRED
+          ])(implicit F: Monad[F]): F[Response[F]] =
         F.pure(r.resp)
 
       override def resultInfo: Set[ResultInfo] =

@@ -390,14 +390,13 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
       prop.map(p => MapProperty(additionalProperties = p))
     }
 
-    val schema = {
+    val schema =
       try otpe.flatMap(typeToProp)
       catch {
         case NonFatal(t) =>
           logger.warn(t)(s"Failed to build model for type ${otpe.get}")
           None
       }
-    }
     code -> Response(description = descr, schema = schema)
   }
 

@@ -26,7 +26,8 @@ import scala.collection.compat._
 
 /** Extract a value from the `Request` `Query`
   *
-  * @tparam A Type of value produced by the parser.
+  * @tparam A
+  *   Type of value produced by the parser.
   */
 trait QueryParser[F[_], A] {
 
@@ -84,7 +85,8 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
 
                 case other => other.asInstanceOf[ResultResponse[F, B[A]]]
               }
-            } else SuccessResponse(b.result()); go()
+            } else SuccessResponse(b.result());
+          go()
       }
     }
   }
