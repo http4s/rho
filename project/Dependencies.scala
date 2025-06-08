@@ -31,8 +31,6 @@ object Dependencies {
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
-  lazy val kindProjector = compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
-
   lazy val halDeps = libraryDependencies ++= Seq(http4sCirce)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(

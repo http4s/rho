@@ -93,7 +93,6 @@ lazy val buildSettings = publishing ++
     libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
                                Seq(
                                  shapeless,
-                                 kindProjector,
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
