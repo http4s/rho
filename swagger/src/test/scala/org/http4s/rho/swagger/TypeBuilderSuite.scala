@@ -10,6 +10,7 @@ import org.http4s.rho.swagger.TypeBuilder.DataType
 import org.http4s.rho.swagger.models.{AbstractProperty, Model, StringProperty}
 import shapeless.{:+:, CNil}
 
+import scala.annotation.nowarn
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
 import scala.collection.immutable.Seq
 
@@ -76,6 +77,7 @@ package object model {
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 }
 
+@nowarn("msg=not.*?exhaustive")
 class TypeBuilderSuite extends FunSuite {
   import model._
   import models.{ArrayProperty, Model, RefProperty}

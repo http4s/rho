@@ -408,8 +408,8 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
           case Some(TypeBuilder.DataType.ComplexDataType(nm, _)) =>
             models.AbstractProperty(`type` = nm).some
           // XXX need to revisit to take care of recursive array type
-          case Some(tpe: TypeBuilder.DataType) =>
-            models.AbstractProperty(tpe.name).some
+          case Some(tpe0: TypeBuilder.DataType) =>
+            models.AbstractProperty(tpe0.name).some
           case None => None
         }
 

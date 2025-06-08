@@ -9,6 +9,7 @@ import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 import cats.syntax.all._
 
+import scala.annotation.nowarn
 import scala.collection.immutable.ListSet
 
 case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
@@ -156,6 +157,7 @@ object TypeBuilder {
       symbol.isModuleClass && symbol.asClass.isCaseClass
     }
 
+  @nowarn("msg=not.*?exhaustive")
   private def modelToSwagger(tpe: Type, sfs: SwaggerFormats)(implicit
       st: ShowType): Option[ModelImpl] =
     try {
@@ -197,7 +199,7 @@ object TypeBuilder {
     sfs.customFieldSerializers.applyOrElse(
       tpe,
       { _: Type =>
-        val TypeRef(_, ptSym: Symbol, _) = tpe
+        @nowarn("msg=not.*?exhaustive") val TypeRef(_, ptSym: Symbol, _) = tpe
         if (tpe.isNothingOrNull || tpe.isUnitOrVoid) {
           RefProperty(tpe.simpleName)
         } else if (tpe.isMap) {

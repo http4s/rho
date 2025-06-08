@@ -67,10 +67,9 @@ lazy val `rho-examples` = project
   .dependsOn(`rho-swagger`, `rho-swagger-ui`)
 
 lazy val disabledCompilerFlags = Seq( // TODO: Fix code and re-enable these.
-  "-Xlint:package-object-classes",
+  "-Xlint:_,-implicit-recursion,-recurse-with-default,-unused,-byname-implicit",
   "-Ywarn-numeric-widen",
   "-Wnumeric-widen",
-  "-Xlint:adapted-args",
   "-Yno-adapted-args",
   "-Wdead-code",
   "-Ywarn-dead-code"
@@ -86,6 +85,7 @@ lazy val license = (ThisBuild / licenses) := Seq(
 lazy val buildSettings = publishing ++
   Seq(
     scalacOptions --= disabledCompilerFlags,
+    scalacOptions ++= Seq("-Xlint:_,-unused,-byname-implicit,-adapted-args,-package-object-classes"),
     (run / fork) := true,
     description := "A self documenting DSL build upon the http4s framework",
     license,
