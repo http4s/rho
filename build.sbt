@@ -44,10 +44,11 @@ lazy val `rho-swagger-ui` = project
   )
   .dependsOn(`rho-swagger`)
 
+// TODO no site is published as of 2025-06-07
 lazy val docs = project
   .in(file("docs"))
   .settings(buildSettings)
-  .enablePlugins(Http4sOrgSitePlugin)
+  // .enablePlugins(Http4sOrgSitePlugin)
   .settings(
     dontPublish,
     description := "Api Documentation",
