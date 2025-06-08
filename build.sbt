@@ -17,6 +17,7 @@ lazy val rho = project
   .in(file("."))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings: _*)
+  .settings(libraryDependencies := Seq.empty)
   .aggregate(`rho-core`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
 
 lazy val `rho-core` = project
@@ -33,7 +34,11 @@ lazy val `rho-core` = project
         case _ => Nil
       }
     },
-    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1")
+    libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1",
+      http4sCore,
+      http4sServer % Test
+    )
   )
 
 lazy val `rho-swagger` = project
@@ -69,7 +74,8 @@ lazy val `rho-examples` = project
   .settings(buildSettings)
   .settings(
     exampleDeps,
-    dontPublish
+    dontPublish,
+    unusedCompileDependenciesFilter -= moduleFilter("org.typelevel", "scalac-compat-annotation")
   )
   .dependsOn(`rho-swagger`, `rho-swagger-ui`)
 
@@ -95,7 +101,6 @@ lazy val buildSettings = publishing ++
     description := "A self documenting DSL build upon the http4s framework",
     (ThisBuild / licenses) := Seq(License.Apache2),
     libraryDependencies ++= Seq(
-      http4sServer % "provided",
       logbackClassic % "test"
     ),
     libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))

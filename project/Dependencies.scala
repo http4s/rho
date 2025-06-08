@@ -12,6 +12,7 @@ object Dependencies {
   lazy val circeCore           = "io.circe"                   %% "circe-core"            % circeVersion
   lazy val circeGeneric        = "io.circe"                   %% "circe-generic"         % circeVersion
   lazy val circeParser         = "io.circe"                   %% "circe-parser"          % circeVersion
+  lazy val http4sCore          = "org.http4s"                 %% "http4s-core"           % http4sVersion
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion
@@ -42,17 +43,15 @@ object Dependencies {
     circeGeneric % "test"
   )
 
-  lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi)
+  lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi % Runtime)
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
     circeCore,
     circeGeneric,
-    circeParser,
     http4sBlaze,
     http4sDSL,
     http4sCirce,
-    http4sXmlInstances,
-    logbackClassic, 
-    uadetector
+    logbackClassic % Runtime,
+    uadetector % Runtime,
   )
 }
