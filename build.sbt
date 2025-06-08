@@ -4,6 +4,7 @@ import Keys._
 import Dependencies._
 
 ThisBuild / tlBaseVersion := "0.23"
+ThisBuild / startYear := Some(2014)
 
 lazy val rho = project
   .in(file("."))
@@ -77,10 +78,6 @@ lazy val disabledCompilerFlags = Seq( // TODO: Fix code and re-enable these.
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
 
-lazy val license = (ThisBuild / licenses) := Seq(
-  "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
-)
-
 lazy val buildSettings = publishing ++
   Seq(
     scalaVersion := scala_213,
@@ -88,7 +85,7 @@ lazy val buildSettings = publishing ++
     scalacOptions --= disabledCompilerFlags,
     (run / fork) := true,
     description := "A self documenting DSL build upon the http4s framework",
-    license,
+    (ThisBuild / licenses) := Seq(License.Apache2),
     libraryDependencies ++= Seq(
       http4sServer % "provided",
       logbackClassic % "test"
