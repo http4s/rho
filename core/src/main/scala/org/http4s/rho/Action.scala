@@ -16,8 +16,10 @@
 
 package org.http4s.rho
 
+import org.http4s.MediaType
+import org.http4s.Request
+import org.http4s.Response
 import org.http4s.rho.bits.ResultInfo
-import org.http4s.{MediaType, Request, Response}
 import shapeless.HList
 
 /** Encapsulation of metadata and a result generator
@@ -31,7 +33,7 @@ import shapeless.HList
   * @tparam T
   *   The type of `HList` required to execute the [[Action]].
   */
-case class Action[F[_], T <: HList](
+final case class Action[F[_], T <: HList](
     resultInfo: Set[ResultInfo],
     responseEncodings: Set[MediaType],
     act: (Request[F], T) => F[Response[F]])

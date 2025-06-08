@@ -17,12 +17,12 @@
 package org.http4s
 package rho.bits
 
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.util.{Date, UUID}
-
 import cats.Monad
 
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.util.Date
+import java.util.UUID
 import scala.reflect.runtime.universe.TypeTag
 import scala.util.control.NonFatal
 
@@ -102,7 +102,7 @@ class ShortParser[F[_]] extends StringParser[F, Short] {
 }
 
 class DateParser[F[_]] extends StringParser[F, Date] {
-  override val typeTag = Some(implicitly[TypeTag[Date]])
+  override val typeTag: Some[TypeTag[Date]] = Some(implicitly[TypeTag[Date]])
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Date] =
     try {
@@ -117,7 +117,7 @@ class DateParser[F[_]] extends StringParser[F, Date] {
 }
 
 class InstantParser[F[_]] extends StringParser[F, Instant] {
-  override val typeTag = Some(implicitly[TypeTag[Instant]])
+  override val typeTag: Some[TypeTag[Instant]] = Some(implicitly[TypeTag[Instant]])
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, Instant] =
     try SuccessResponse(Instant.parse(s))
@@ -130,7 +130,7 @@ class InstantParser[F[_]] extends StringParser[F, Instant] {
 }
 
 class UUIDParser[F[_]] extends StringParser[F, UUID] {
-  override val typeTag = Some(implicitly[TypeTag[UUID]])
+  override val typeTag: Some[TypeTag[UUID]] = Some(implicitly[TypeTag[UUID]])
 
   override def parse(s: String)(implicit F: Monad[F]): ResultResponse[F, UUID] =
     try SuccessResponse(UUID.fromString(s))

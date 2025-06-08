@@ -19,7 +19,10 @@ package org.http4s.rho.bits
 import cats.effect.IO
 import munit.CatsEffectSuite
 import org.http4s._
-import org.http4s.headers.{Location, `Content-Length`, `Content-Type`, `Transfer-Encoding`}
+import org.http4s.headers.Location
+import org.http4s.headers.`Content-Length`
+import org.http4s.headers.`Content-Type`
+import org.http4s.headers.`Transfer-Encoding`
 import org.http4s.rho.io._
 
 class ResponseGeneratorSuite extends CatsEffectSuite {

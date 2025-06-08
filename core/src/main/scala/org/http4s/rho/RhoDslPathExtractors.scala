@@ -16,10 +16,11 @@
 
 package org.http4s.rho
 
+import org.http4s.rho.RhoDslPathExtractors._
 import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits._
-import org.http4s.rho.RhoDslPathExtractors._
-import shapeless.{::, HNil}
+import shapeless.::
+import shapeless.HNil
 
 import scala.reflect.runtime.universe.TypeTag
 

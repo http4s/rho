@@ -18,9 +18,9 @@ package org.http4s
 package rho
 
 import cats.Functor
+import shapeless.HList
 
 import scala.reflect.runtime.universe.TypeTag
-import shapeless.HList
 
 /** Type that can accept a decoder.
   *

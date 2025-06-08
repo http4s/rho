@@ -16,20 +16,19 @@
 
 package org.http4s.rho.swagger
 
-import java.util.ArrayList
-
-import io.swagger.{models => jm}
 import io.swagger.models.utils.PropertyModelConverter
+import io.swagger.{models => jm}
 
+import java.util.ArrayList
 import scala.collection.compat.view._
+import scala.collection.immutable.ListMap
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters._
-import scala.collection.immutable.ListMap
 
 object models {
   import JValue._
 
-  case class Swagger(
+  final case class Swagger(
       swagger: String = "2.0",
       info: Option[Info] = None,
       host: Option[String] = None,
@@ -73,7 +72,7 @@ object models {
     }
   }
 
-  case class Info(
+  final case class Info(
       title: String,
       version: String,
       description: Option[String] = None,
@@ -96,7 +95,7 @@ object models {
     }
   }
 
-  case class Contact(
+  final case class Contact(
       name: String,
       url: Option[String] = None,
       email: Option[String] = None
@@ -106,7 +105,7 @@ object models {
       (new jm.Contact).name(name).url(fromOption(url)).email(fromOption(email))
   }
 
-  case class License(
+  final case class License(
       name: String,
       url: String
   ) {
@@ -131,7 +130,7 @@ object models {
     def toJModel: jm.auth.SecuritySchemeDefinition
   }
 
-  case class OAuth2Definition(
+  final case class OAuth2Definition(
       authorizationUrl: String,
       tokenUrl: String,
       flow: String,
@@ -150,7 +149,7 @@ object models {
     }
   }
 
-  case class OAuth2VendorExtensionsDefinition(
+  final case class OAuth2VendorExtensionsDefinition(
       authorizationUrl: String,
       vendorExtensions: Map[String, AnyRef],
       flow: String,
@@ -174,7 +173,7 @@ object models {
     }
   }
 
-  case class ApiKeyAuthDefinition(
+  final case class ApiKeyAuthDefinition(
       name: String,
       in: In,
       description: Option[String] = None
@@ -205,7 +204,7 @@ object models {
     case object QUERY extends In { def toJModel: jm.auth.In = jm.auth.In.QUERY }
   }
 
-  case class SecurityRequirement(
+  final case class SecurityRequirement(
       name: String,
       scopes: List[String]
   ) {
@@ -217,7 +216,7 @@ object models {
     }
   }
 
-  case class SecurityScope(
+  final case class SecurityScope(
       name: String,
       description: String
   ) {
@@ -226,7 +225,7 @@ object models {
       new jm.SecurityScope(name, description)
   }
 
-  case class Path(
+  final case class Path(
       get: Option[Operation] = None,
       put: Option[Operation] = None,
       post: Option[Operation] = None,
@@ -273,7 +272,7 @@ object models {
       )
   }
 
-  case class Operation(
+  final case class Operation(
       tags: List[String] = Nil,
       summary: Option[String] = None,
       description: Option[String] = None,
@@ -310,7 +309,7 @@ object models {
     }
   }
 
-  case class Response(
+  final case class Response(
       description: String,
       schema: Option[Property] = None,
       examples: Map[String, String] = Map.empty,
@@ -340,7 +339,7 @@ object models {
     def toJModel: jm.Model
   }
 
-  case class ModelImpl(
+  final case class ModelImpl(
       id: String,
       id2: String,
       description: Option[String] = None,
@@ -371,7 +370,7 @@ object models {
     }
   }
 
-  case class ArrayModel(
+  final case class ArrayModel(
       id: String,
       id2: String,
       description: Option[String] = None,
@@ -394,7 +393,7 @@ object models {
     }
   }
 
-  case class ComposedModel(
+  final case class ComposedModel(
       id: String,
       id2: String,
       description: Option[String] = None,
@@ -421,7 +420,7 @@ object models {
     }
   }
 
-  case class RefModel(
+  final case class RefModel(
       id: String,
       id2: String,
       ref: String,
@@ -453,7 +452,7 @@ object models {
   }
 
   object Parameter {
-    implicit class Ops(val parameter: Parameter) extends AnyVal {
+    implicit class Ops(private val parameter: Parameter) extends AnyVal {
       def withDesc(desc: Option[String]): Parameter =
         parameter match {
           case p: BodyParameter => p.copy(description = desc)
@@ -467,7 +466,7 @@ object models {
     }
   }
 
-  case class BodyParameter(
+  final case class BodyParameter(
       schema: Option[Model] = None,
       name: Option[String] = None,
       description: Option[String] = None,
@@ -476,7 +475,7 @@ object models {
       vendorExtensions: Map[String, Any] = Map.empty
   ) extends Parameter {
 
-    override val in = Some("body")
+    override val in: Some[String] = Some("body")
 
     def toJModel: jm.parameters.Parameter = {
       val bp = new jm.parameters.BodyParameter
@@ -490,7 +489,7 @@ object models {
     }
   }
 
-  case class CookieParameter(
+  final case class CookieParameter(
       `type`: String,
       format: Option[String] = None,
       collectionFormat: Option[String] = None,
@@ -503,7 +502,7 @@ object models {
       vendorExtensions: Map[String, Any] = Map.empty
   ) extends Parameter {
 
-    override val in = Some("cookie")
+    override val in: Some[String] = Some("cookie")
 
     def toJModel: jm.parameters.Parameter = {
       val cp = new jm.parameters.CookieParameter
@@ -520,7 +519,7 @@ object models {
     }
   }
 
-  case class FormParameter(
+  final case class FormParameter(
       `type`: String,
       format: Option[String] = None,
       collectionFormat: Option[String] = None,
@@ -533,7 +532,7 @@ object models {
       vendorExtensions: Map[String, Any] = Map.empty
   ) extends Parameter {
 
-    override val in = Some("formData")
+    override val in: Some[String] = Some("formData")
 
     def toJModel: jm.parameters.Parameter = {
       val fp = new jm.parameters.FormParameter
@@ -551,7 +550,7 @@ object models {
     }
   }
 
-  case class HeaderParameter(
+  final case class HeaderParameter(
       `type`: String,
       format: Option[String] = None,
       collectionFormat: Option[String] = None,
@@ -564,7 +563,7 @@ object models {
       vendorExtensions: Map[String, Any] = Map.empty
   ) extends Parameter {
 
-    override val in = Some("header")
+    override val in: Some[String] = Some("header")
 
     def toJModel: jm.parameters.Parameter = {
       val hp = new jm.parameters.HeaderParameter
@@ -582,7 +581,7 @@ object models {
     }
   }
 
-  case class PathParameter(
+  final case class PathParameter(
       `type`: String,
       format: Option[String] = None,
       collectionFormat: Option[String] = None,
@@ -595,7 +594,7 @@ object models {
       vendorExtensions: Map[String, Any] = Map.empty
   ) extends Parameter {
 
-    override val in = Some("path")
+    override val in: Some[String] = Some("path")
 
     def toJModel: jm.parameters.Parameter = {
       val pp = new jm.parameters.PathParameter
@@ -614,7 +613,7 @@ object models {
 
   }
 
-  case class QueryParameter(
+  final case class QueryParameter(
       `type`: Option[String] = None,
       $ref: Option[String] = None,
       format: Option[String] = None,
@@ -630,7 +629,7 @@ object models {
       enums: List[String] = List.empty
   ) extends Parameter {
 
-    override val in = Some("query")
+    override val in: Some[String] = Some("query")
 
     import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
@@ -650,7 +649,7 @@ object models {
     private class QueryRefParameter extends jm.parameters.QueryParameter {
       protected var $ref: String = _
 
-      def $ref($ref: String) = {
+      def $ref($ref: String): QueryRefParameter = {
         this.set$ref($ref)
         this
       }
@@ -678,7 +677,7 @@ object models {
     }
   }
 
-  case class RefParameter(
+  final case class RefParameter(
       ref: String,
       name: Option[String] = None,
       description: Option[String] = None,
@@ -711,7 +710,7 @@ object models {
     def toJModel: jm.properties.Property
   }
 
-  case class AbstractProperty(
+  final case class AbstractProperty(
       `type`: String = null,
       $ref: Option[String] = None,
       required: Boolean = false,
@@ -723,7 +722,7 @@ object models {
     class RefProperty extends jm.properties.AbstractProperty {
       protected var $ref: String = _
 
-      def $ref($ref: String) = {
+      def $ref($ref: String): RefProperty = {
         this.set$ref($ref)
         this
       }
@@ -747,7 +746,7 @@ object models {
     }
   }
 
-  case class ObjectProperty(
+  final case class ObjectProperty(
       required: Boolean = false,
       title: Option[String] = None,
       description: Option[String] = None,
@@ -772,7 +771,7 @@ object models {
     }
   }
 
-  case class MapProperty(
+  final case class MapProperty(
       additionalProperties: Property,
       required: Boolean = false,
       title: Option[String] = None,
@@ -797,7 +796,7 @@ object models {
     }
   }
 
-  case class ArrayProperty(
+  final case class ArrayProperty(
       items: Property,
       uniqueItems: Boolean = false,
       required: Boolean = true,
@@ -823,7 +822,7 @@ object models {
     }
   }
 
-  case class RefProperty(
+  final case class RefProperty(
       ref: String,
       required: Boolean = false,
       title: Option[String] = None,
@@ -846,7 +845,7 @@ object models {
     }
   }
 
-  case class StringProperty(
+  final case class StringProperty(
       title: Option[String] = None,
       description: Option[String] = None,
       format: Option[String] = None,
@@ -877,7 +876,7 @@ object models {
     }
   }
 
-  case class Tag(
+  final case class Tag(
       name: String,
       description: Option[String] = None,
       externalDocs: Option[ExternalDocs] = None,
@@ -894,7 +893,7 @@ object models {
     }
   }
 
-  case class ExternalDocs(
+  final case class ExternalDocs(
       description: String,
       url: String
   ) {

@@ -18,11 +18,15 @@ package org.http4s
 package rho
 
 import cats.Monad
-import cats.data.{Kleisli, OptionT}
-import shapeless.{::, HNil}
-import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
+import cats.data.Kleisli
+import cats.data.OptionT
 import cats.effect._
+import org.http4s.rho.bits.FailureResponseOps
+import org.http4s.rho.bits.SuccessResponse
+import org.http4s.rho.bits.TypedHeader
 import org.typelevel.vault.Key
+import shapeless.::
+import shapeless.HNil
 
 /** The [[AuthedContext]] provides a convenient way to define a RhoRoutes which works with http4s
   * authentication middleware. Please note that `AuthMiddleware`-wrapping is mandatory, otherwise

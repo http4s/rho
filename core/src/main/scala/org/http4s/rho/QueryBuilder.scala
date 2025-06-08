@@ -18,11 +18,16 @@ package org.http4s
 package rho
 
 import cats.Functor
+import org.http4s.rho.bits.HeaderAppendable
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.RequestAST.{AndRule, EmptyRule, RequestRule}
-import org.http4s.rho.bits.{HeaderAppendable, TypedHeader, TypedQuery}
+import org.http4s.rho.bits.RequestAST.AndRule
+import org.http4s.rho.bits.RequestAST.EmptyRule
+import org.http4s.rho.bits.RequestAST.RequestRule
+import org.http4s.rho.bits.TypedHeader
+import org.http4s.rho.bits.TypedQuery
+import shapeless.HList
+import shapeless.HNil
 import shapeless.ops.hlist.Prepend
-import shapeless.{HList, HNil}
 
 import scala.reflect.runtime.universe
 
@@ -40,7 +45,10 @@ import scala.reflect.runtime.universe
   * @tparam T
   *   The HList representation of the types the route expects to extract from a `Request`.
   */
-case class QueryBuilder[F[_], T <: HList](method: Method, path: PathRule, rules: RequestRule[F])
+final case class QueryBuilder[F[_], T <: HList](
+    method: Method,
+    path: PathRule,
+    rules: RequestRule[F])
     extends RouteExecutable[F, T]
     with Decodable[F, T, Nothing]
     with HeaderAppendable[F, T]

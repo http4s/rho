@@ -17,23 +17,24 @@
 package org.http4s
 package rho
 
-import java.util.UUID
-
-import cats.data.{Kleisli, OptionT}
+import cats.data.Kleisli
+import cats.data.OptionT
 import cats.effect.IO
 import munit.CatsEffectSuite
 import org.http4s.server.AuthMiddleware
+
+import java.util.UUID
 
 case class User(name: String, id: UUID)
 
 object Auth {
   type O[A] = OptionT[IO, A]
 
-  val authUser = Kleisli[O, Request[IO], User] { _ =>
+  val authUser: Kleisli[O, Request[IO], User] = Kleisli[O, Request[IO], User] { _ =>
     OptionT.some[IO](User("Test User", UUID.randomUUID()))
   }
 
-  val authenticated = AuthMiddleware(authUser)
+  val authenticated: AuthMiddleware[IO[A], User] = AuthMiddleware(authUser)
 }
 
 object MyAuth extends AuthedContext[IO, User]
@@ -60,7 +61,8 @@ object MyRoutes extends RhoRoutes[IO] {
 }
 
 class AuthedContextSuite extends CatsEffectSuite {
-  val routes = Auth.authenticated(MyAuth.toService(MyRoutes.toRoutes()))
+  val routes: Kleisli[OptionT[IO[A], β$1$], Request[IO[A]], Response[IO[A]]] =
+    Auth.authenticated(MyAuth.toService(MyRoutes.toRoutes()))
 
   test("An AuthedContext execution should be able to have access to authInfo") {
     val request = Request[IO](Method.GET, uri"/")

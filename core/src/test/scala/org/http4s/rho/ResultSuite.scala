@@ -18,8 +18,8 @@ package org.http4s.rho
 
 import cats.effect._
 import munit.CatsEffectSuite
-import org.http4s.headers._
 import org.http4s.HttpDate
+import org.http4s.headers._
 import org.http4s.rho.io._
 import org.typelevel.vault._
 

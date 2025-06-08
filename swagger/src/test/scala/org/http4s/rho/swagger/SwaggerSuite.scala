@@ -16,12 +16,13 @@
 
 package org.http4s.rho.swagger
 
-import Arbitraries._
 import munit.ScalaCheckSuite
 import org.http4s.rho.swagger.models.Swagger
 import org.scalacheck.Prop._
 
 import scala.jdk.CollectionConverters._
+
+import Arbitraries._
 
 class SwaggerSuite extends ScalaCheckSuite {
   property(

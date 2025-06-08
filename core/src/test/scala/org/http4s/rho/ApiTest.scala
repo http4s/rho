@@ -18,17 +18,20 @@ package org.http4s
 package rho
 
 import cats.data.OptionT
-import cats.effect.{IO, Sync}
+import cats.effect.IO
+import cats.effect.Sync
 import cats.syntax.parallel._
 import munit.CatsEffectSuite
 import org.http4s.Uri.Path.Segment
 import org.http4s.headers.Accept
-import org.http4s.headers.{ETag, `Content-Length`}
-import org.http4s.rho.bits._
+import org.http4s.headers.ETag
+import org.http4s.headers.`Content-Length`
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.bits.RequestAST.AndRule
+import org.http4s.rho.bits._
 import org.http4s.rho.io._
-import shapeless.{HList, HNil}
+import shapeless.HList
+import shapeless.HNil
 
 import scala.util.control.NoStackTrace
 
@@ -538,7 +541,7 @@ class ApiTest extends CatsEffectSuite {
       )
   }
 
-  val req = Request[IO](uri = uri"/foo/bar")
+  val req: Request[IO] = Request[IO](uri = uri"/foo/bar")
   val respMsg = "Result"
 
   test("Path prepending should work for a PathBuilder") {

@@ -17,10 +17,14 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.PathAST.{PathAnd, PathRule, TypedPath}
-import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
+import org.http4s.rho.bits.PathAST.PathAnd
+import org.http4s.rho.bits.PathAST.PathRule
+import org.http4s.rho.bits.PathAST.TypedPath
+import org.http4s.rho.bits.RequestAST.AndRule
+import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits.TypedQuery
-import shapeless.{HList, HNil}
+import shapeless.HList
+import shapeless.HNil
 import shapeless.ops.hlist.Prepend
 
 /** DSL construct for building query rules without a known `Method`

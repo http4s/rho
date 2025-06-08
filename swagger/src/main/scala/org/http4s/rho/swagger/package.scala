@@ -18,21 +18,25 @@ package org.http4s.rho
 
 import fs2.Stream
 import org.http4s.Method
-import org.http4s.rho.bits.{Metadata, PathAST, SecurityScopesMetaData, TextMetaData}
+import org.http4s.rho.bits.Metadata
+import org.http4s.rho.bits.PathAST
+import org.http4s.rho.bits.SecurityScopesMetaData
+import org.http4s.rho.bits.TextMetaData
 import org.http4s.rho.swagger.models.Model
-import shapeless.{HList, HNil}
+import shapeless.HList
+import shapeless.HNil
 
 import scala.reflect.runtime.universe._
 
 package swagger {
 
   /** Metadata carrier for specific routes */
-  case class RouteDesc(msg: String) extends TextMetaData
+  final case class RouteDesc(msg: String) extends TextMetaData
 
-  case class RouteTags(tags: List[String]) extends Metadata
+  final case class RouteTags(tags: List[String]) extends Metadata
 
   /** Scopes carrier for specific routes */
-  case class RouteSecurityScope(definitions: Map[String, List[String]])
+  final case class RouteSecurityScope(definitions: Map[String, List[String]])
       extends SecurityScopesMetaData
 
   trait ShowType {

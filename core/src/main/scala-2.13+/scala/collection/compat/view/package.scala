@@ -16,7 +16,8 @@
 
 package scala.collection.compat
 
-import scala.collection.{IterableOps, View}
+import scala.collection.IterableOps
+import scala.collection.View
 
 package object view {
   type IterableView[A, _] = IterableOps[A, View, View[A]]

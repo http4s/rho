@@ -17,9 +17,9 @@
 package org.http4s.rho.swagger
 
 import cats.effect.IO
-
 import cats.syntax.all._
 import munit.FunSuite
+
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 

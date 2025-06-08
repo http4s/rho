@@ -24,12 +24,12 @@ import org.http4s.rho.bits.PathAST._
 import org.http4s.rho.bits.RequestAST._
 import org.http4s.rho.bits._
 import org.log4s.getLogger
+import org.typelevel.ci.CIString
 
 import scala.collection.immutable.ListMap
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
-import org.typelevel.ci.CIString
 
 private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(implicit
     st: ShowType,
@@ -498,7 +498,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
   def getType(m: Type): String =
     TypeBuilder.DataType(m).name
 
-  case class LinearRoute(
+  final case class LinearRoute(
       method: Method,
       path: List[PathOperation],
       rules: RequestRule[F],

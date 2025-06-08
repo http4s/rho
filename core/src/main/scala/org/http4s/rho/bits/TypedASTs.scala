@@ -19,9 +19,13 @@ package rho.bits
 
 import org.http4s.rho.UriConvertible
 import org.http4s.rho.bits.RequestAST._
+import shapeless.HList
+import shapeless.HNil
 import shapeless.ops.function.FnToProduct
-import shapeless.{HList, HNil}
-import shapeless.ops.hlist.{Prepend, Reverse}
+import shapeless.ops.hlist.Prepend
+import shapeless.ops.hlist.Reverse
+
+import scala.util.Try
 
 /** Typed shell for the Header operations of the DSL */
 final case class TypedHeader[F[_], T <: HList](rule: RequestRule[F]) {
@@ -162,7 +166,7 @@ final case class TypedQuery[F[_], T <: HList](rule: RequestRule[F]) extends UriC
     for (q <- UriConverter.createQuery(rule))
       yield UriTemplate(query = q)
 
-  override def asUriTemplate(request: Request[F]) =
+  override def asUriTemplate(request: Request[F]): Try[UriTemplate] =
     UriConvertible.respectPathInfo(uriTemplate, request)
 }
 

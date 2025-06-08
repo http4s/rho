@@ -17,9 +17,11 @@
 package org.http4s.rho
 package bits
 
-import cats.{Applicative, Monad}
+import cats.Applicative
+import cats.Monad
 import org.http4s._
-import org.http4s.headers.{Location, `Content-Length`}
+import org.http4s.headers.Location
+import org.http4s.headers.`Content-Length`
 
 /** Helpers to aid in the construction of a response function
   *
@@ -34,7 +36,7 @@ sealed trait ResponseGenerator {
   def status: Status
 }
 
-abstract class EmptyResponseGenerator[F[_]](val status: Status) extends ResponseGenerator {
+sealed abstract class EmptyResponseGenerator[F[_]](val status: Status) extends ResponseGenerator {
   type T <: Result.BaseResult[F]
   private def pureResult(implicit F: Applicative[F]): F[Response[F]] = F.pure(Response[F](status))
   private def result(implicit F: Applicative[F]): F[T] =
@@ -47,7 +49,7 @@ abstract class EmptyResponseGenerator[F[_]](val status: Status) extends Response
   def pure(implicit F: Applicative[F]): F[Response[F]] = pureResult
 }
 
-abstract class EntityResponseGenerator[F[_]](val status: Status) extends ResponseGenerator {
+sealed abstract class EntityResponseGenerator[F[_]](val status: Status) extends ResponseGenerator {
   type T[_] <: Result.BaseResult[F]
 
   /** Generate a [[Result]] that carries the type information */
@@ -84,7 +86,8 @@ abstract class EntityResponseGenerator[F[_]](val status: Status) extends Respons
 
 }
 
-abstract class LocationResponseGenerator[F[_]](val status: Status) extends ResponseGenerator {
+sealed abstract class LocationResponseGenerator[F[_]](val status: Status)
+    extends ResponseGenerator {
   type T[_] <: Result.BaseResult[F]
 
   def apply(location: Uri)(implicit F: Applicative[F]): F[T[Unit]] =

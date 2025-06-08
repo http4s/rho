@@ -16,13 +16,14 @@
 
 package org.http4s.rho.bits
 
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.util.{Date, UUID}
-
 import cats.effect.IO
 import munit.FunSuite
 import org.http4s.rho.bits.StringParserSuite.UserId
+
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.util.Date
+import java.util.UUID
 
 class StringParserSuite extends FunSuite {
   test("A StringParser should parse true") {
@@ -145,7 +146,7 @@ class StringParserSuite extends FunSuite {
     }
   }
 
-  val mappedParser = new LongParser[IO].map(UserId)
+  val mappedParser: StringParser[IO, UserId] = new LongParser[IO].map(UserId)
 
   test("A mapped StringParser should succeed when base parser has succeeded") {
     assertEquals(mappedParser.parse("123"), SuccessResponse[IO, UserId](UserId(123L)))
@@ -158,7 +159,7 @@ class StringParserSuite extends FunSuite {
     }
   }
 
-  val rmappedParser = new IntParser[IO].rmap(i =>
+  val rmappedParser: StringParser[IO, Int] = new IntParser[IO].rmap(i =>
     if (i >= 0) SuccessResponse(i)
     else FailureResponseOps[IO].badRequest("Only non-negative integers are accepted.")
   )

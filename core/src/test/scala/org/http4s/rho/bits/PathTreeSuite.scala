@@ -18,12 +18,12 @@ package org.http4s
 package rho
 package bits
 
-import java.nio.charset.StandardCharsets
-
 import cats.effect.IO
 import munit.CatsEffectSuite
-import org.http4s.server.middleware.TranslateUri
 import org.http4s.server.Router
+import org.http4s.server.middleware.TranslateUri
+
+import java.nio.charset.StandardCharsets
 
 class PathTreeSuite extends CatsEffectSuite {
   object pathTree extends PathTreeOps[IO]

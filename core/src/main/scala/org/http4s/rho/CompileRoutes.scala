@@ -17,11 +17,12 @@
 package org.http4s
 package rho
 
-import scala.collection.immutable.Seq
 import cats._
-import shapeless.HList
 import org.http4s.rho.RhoRoute.Tpe
 import org.http4s.rho.bits.PathTree
+import shapeless.HList
+
+import scala.collection.immutable.Seq
 
 /** Transforms a [[RhoRoute]] into an `RouteType`.
   *

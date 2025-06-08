@@ -36,7 +36,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
       headers = Headers(h: _*)
     )
 
-  val routes1 = new RhoRoutes[IO] {
+  val routes1: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test1" +? param[String]("param1") |>> { param1: String => Ok("test1:" + param1) }
   }.toRoutes()
 
@@ -62,7 +62,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     )
   }
 
-  val routes2 = new RhoRoutes[IO] {
+  val routes2: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test2" +? param[String]("param1", "default1") |>> { param1: String =>
       Ok("test2:" + param1)
     }
@@ -86,7 +86,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes2, requestGet("/test2?param1")), default2)
   }
 
-  val routes3 = new RhoRoutes[IO] {
+  val routes3: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test3" +? param[Int]("param1", 1) |>> { param1: Int => Ok("test3:" + param1) }
   }.toRoutes()
 
@@ -118,7 +118,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes3, requestGet("/test3?param1")), default3)
   }
 
-  val routes4 = new RhoRoutes[IO] {
+  val routes4: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test4" +? param[Option[String]]("param1") |>> { os: Option[String] =>
       Ok("test4:" + os.getOrElse(""))
     }
@@ -142,7 +142,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes4, requestGet("/test4?param1")), "test4:")
   }
 
-  val routes5 = new RhoRoutes[IO] {
+  val routes5: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test5" +? param[Option[Int]]("param1", Some(100)) |>> { os: Option[Int] =>
       Ok("test5:" + os.getOrElse(""))
     }
@@ -176,7 +176,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes5, requestGet("/test5?param1")), default5)
   }
 
-  val routes6 = new RhoRoutes[IO] {
+  val routes6: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test6" +? param[Option[String]]("param1", Some("default1")) |>> { os: Option[String] =>
       Ok("test6:" + os.getOrElse(""))
     }
@@ -200,7 +200,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes6, requestGet("/test6?param1")), default6)
   }
 
-  val routes7 = new RhoRoutes[IO] {
+  val routes7: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test7" +? param[Seq[String]]("param1", Seq("a", "b")) |>> { os: Seq[String] =>
       Ok("test7:" + os.mkString(","))
     }
@@ -234,7 +234,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes7, requestGet("/test7?param1")), default7)
   }
 
-  val routes8 = new RhoRoutes[IO] {
+  val routes8: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test8" +? param[Seq[Int]]("param1", Seq(3, 5, 8)) |>> { os: Seq[Int] =>
       Ok("test8:" + os.mkString(","))
     }
@@ -282,7 +282,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes8, requestGet("/test8?param1")), default8)
   }
 
-  val routes9 = new RhoRoutes[IO] {
+  val routes9: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test9" +? param("param1", "default1", (p: String) => !p.isEmpty && p != "fail") |>> {
       param1: String => Ok("test9:" + param1)
     }
@@ -322,7 +322,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes9, requestGet("/test9?param1")), default9)
   }
 
-  val routes10 = new RhoRoutes[IO] {
+  val routes10: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test10" +? param[Int]("param1", 1, (p: Int) => p >= 0) |>> { param1: Int =>
       Ok("test10:" + param1)
     }
@@ -366,7 +366,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes10, requestGet("/test10?param1")), default10)
   }
 
-  val routes11 = new RhoRoutes[IO] {
+  val routes11: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test11" +? param[Option[Int]](
       "param1",
       Some(100),
@@ -414,7 +414,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes11, requestGet("/test11?param1")), default11)
   }
 
-  val routes12 = new RhoRoutes[IO] {
+  val routes12: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test12" +? param[Option[String]](
       "param1",
       Some("default1"),
@@ -458,7 +458,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes12, requestGet("/test12?param1")), default12)
   }
 
-  val routes13 = new RhoRoutes[IO] {
+  val routes13: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test13" +? param[Seq[String]](
       "param1",
       Seq("a", "b"),
@@ -518,7 +518,7 @@ class ParamDefaultValueSuite extends CatsEffectSuite {
     assertIO(body(routes13, requestGet("/test13?param1")), default13)
   }
 
-  val routes14 = new RhoRoutes[IO] {
+  val routes14: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET / "test14" +? param[Seq[Int]](
       "param1",
       Seq(3, 5, 8),

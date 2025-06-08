@@ -18,11 +18,13 @@ package org.http4s.rho.bits
 
 import org.http4s.UriTemplate.Path
 import org.http4s.UriTemplate.Query
-
-import PathAST.PathRule
 import org.http4s.rho.bits.RequestAST._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import PathAST.PathRule
 
 /** Helps to convert different parts of a route into an `UriTemplate` */
 object UriConverter {

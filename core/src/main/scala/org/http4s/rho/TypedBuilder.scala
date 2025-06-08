@@ -20,8 +20,9 @@ package rho
 import org.http4s.rho.bits.PathAST.PathRule
 import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits.UriConverter
-
 import shapeless.HList
+
+import scala.util.Try
 
 /** A typed shell which represents the requirements of the route
   * @tparam T
@@ -41,6 +42,6 @@ trait TypedBuilder[F[_], T <: HList] extends UriConvertible[F] {
       q <- UriConverter.createQuery(rules)
     } yield UriTemplate(path = p, query = q)
 
-  final override def asUriTemplate(request: Request[F]) =
+  final override def asUriTemplate(request: Request[F]): Try[UriTemplate] =
     UriConvertible.respectPathInfo(uriTemplate, request)
 }

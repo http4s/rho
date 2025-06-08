@@ -17,11 +17,13 @@
 package org.http4s
 package rho
 
-import scala.collection.immutable.Seq
 import cats._
 import org.http4s.rho.bits.PathAST.TypedPath
 import org.log4s.getLogger
-import shapeless.{HList, HNil}
+import shapeless.HList
+import shapeless.HNil
+
+import scala.collection.immutable.Seq
 
 /** Constructor class for defining routes
   *

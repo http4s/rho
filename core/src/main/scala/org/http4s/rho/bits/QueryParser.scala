@@ -21,8 +21,8 @@ import cats.Monad
 import org.http4s.rho.bits.QueryParser.Params
 
 import scala.annotation.tailrec
-import scala.collection.immutable.Seq
 import scala.collection.compat._
+import scala.collection.immutable.Seq
 
 /** Extract a value from the `Request` `Query`
   *

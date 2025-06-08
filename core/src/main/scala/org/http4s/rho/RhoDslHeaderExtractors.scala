@@ -23,8 +23,10 @@ import org.http4s._
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.RequestAST.CaptureRule
 import org.http4s.rho.bits._
-import org.log4s.{Logger, getLogger}
-import shapeless.{::, HNil}
+import org.log4s.Logger
+import org.log4s.getLogger
+import shapeless.::
+import shapeless.HNil
 
 import scala.util.control.NonFatal
 

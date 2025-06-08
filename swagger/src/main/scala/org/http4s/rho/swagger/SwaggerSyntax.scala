@@ -17,7 +17,8 @@
 package org.http4s.rho.swagger
 
 import org.http4s.Method
-import org.http4s.rho.{PathBuilder, PathEmpty}
+import org.http4s.rho.PathBuilder
+import org.http4s.rho.PathEmpty
 import org.http4s.rho.bits.PathAST
 import shapeless.HNil
 

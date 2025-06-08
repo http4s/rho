@@ -16,18 +16,18 @@
 
 package org.http4s
 
-import scala.collection.immutable.Seq
-import org.http4s.rho.{
-  PathBuilder,
-  PathEmpty,
-  ResultSyntaxInstances,
-  RhoDslHeaderExtractors,
-  RhoDslPathExtractors,
-  RhoDslQueryParamExtractors
-}
-import org.http4s.rho.bits._
+import org.http4s.rho.PathBuilder
+import org.http4s.rho.PathEmpty
+import org.http4s.rho.ResultSyntaxInstances
+import org.http4s.rho.RhoDslHeaderExtractors
+import org.http4s.rho.RhoDslPathExtractors
+import org.http4s.rho.RhoDslQueryParamExtractors
 import org.http4s.rho.bits.PathAST._
-import shapeless.{HList, HNil}
+import org.http4s.rho.bits._
+import shapeless.HList
+import shapeless.HNil
+
+import scala.collection.immutable.Seq
 
 package object rho extends org.http4s.syntax.AllSyntax {
   type RhoMiddleware[F[_]] = Seq[RhoRoute[F, _ <: HList]] => Seq[RhoRoute[F, _ <: HList]]

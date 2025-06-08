@@ -20,10 +20,11 @@ package rho
 import cats.effect.IO
 import munit.FunSuite
 import org.typelevel.vault._
-import UriTemplate._
 
-import scala.util.Success
 import scala.util.Failure
+import scala.util.Success
+
+import UriTemplate._
 
 class UriConvertibleSuite extends FunSuite {
   test("An UriConvertible.respectPathInfo should respect if URI template is available") {

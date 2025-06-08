@@ -17,8 +17,8 @@
 package org.http4s.rho
 
 import cats.effect.IO
-import org.http4s._
 import org.http4s.HttpRoutes
+import org.http4s._
 
 /** Helper for collecting a the body from a `RhoRoutes` */
 trait RequestRunner {

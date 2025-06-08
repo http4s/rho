@@ -17,19 +17,21 @@
 package org.http4s
 package rho
 
-import java.util.concurrent.atomic.AtomicInteger
 import cats.effect.IO
 import fs2.Stream
 import munit.CatsEffectSuite
-import org.http4s.headers.{`Content-Length`, `Content-Type`}
-import org.http4s.rho.io._
 import org.http4s.Uri.Path
 import org.http4s.Uri.Path.Segment
+import org.http4s.headers.`Content-Length`
+import org.http4s.headers.`Content-Type`
+import org.http4s.rho.io._
 import org.typelevel.ci.CIString
 
+import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.util.control.NoStackTrace
+import org.http4s.syntax.literals._
 
 class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
   private def construct(method: Method, s: String, h: Header.ToRaw*): Request[IO] =
@@ -38,7 +40,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
   private def Get(s: String, h: Header.ToRaw*): Request[IO] = construct(Method.GET, s, h: _*)
   private def Put(s: String, h: Header.ToRaw*): Request[IO] = construct(Method.PUT, s, h: _*)
 
-  val httpRoutes = new RhoRoutes[IO] {
+  val httpRoutes: HttpRoutes[IO] = new RhoRoutes[IO] {
     GET +? param("foo", "bar") |>> { foo: String => Ok(s"just root with parameter 'foo=$foo'") }
 
     GET / "" +? param("foo", "bar") |>> { _: String =>
@@ -157,8 +159,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "" / "foo" |>> Ok("bar")
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("//foo")))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo"))
+    val req2 = Request[IO](Method.GET, Uri(path = path"//foo"))
 
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
@@ -304,13 +306,13 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
   }
 
   test("A RhoRoutes execution should execute a directly provided Task every invocation") {
-    val req = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("directTask")))
+    val req = Request[IO](Method.GET, Uri(path = path"directTask"))
     assertIO(checkOk(req), "0") *> assertIO(checkOk(req), "1")
   }
 
   test("A RhoRoutes execution should interpret uris ending in '/' differently than those without") {
-    val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("terminal/")))
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("terminal")))
+    val req1 = Request[IO](Method.GET, Uri(path = path"terminal/"))
+    val req2 = Request[IO](Method.GET, Uri(path = path"terminal"))
 
     assertIO(checkOk(req1), "terminal/") *>
       assertIO(checkOk(req2), "terminal")
@@ -324,9 +326,9 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "foo" |>> Ok("none")
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "0"))
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
-    val req3 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "0"))
+    val req2 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "s"))
+    val req3 = Request[IO](Method.GET, Uri(path = path"/foo"))
 
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
@@ -350,8 +352,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "0"))
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "0"))
+    val req2 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "s"))
 
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
@@ -372,8 +374,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "foo" |>> Ok(s"failure")
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")).+?("bar", "s"))
-    val req2 = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/foo")))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "s"))
+    val req2 = Request[IO](Method.GET, Uri(path = path"/foo"))
 
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
@@ -414,7 +416,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
         throw new Error("an error") with NoStackTrace; Ok("Wont get here...")
       }
     }.toRoutes()
-    val req = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/error")))
+    val req = Request[IO](Method.GET, Uri(path = path"/error"))
 
     assertIO(
       service(req).value.map(_.getOrElse(Response.notFound).status),
@@ -424,7 +426,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
 
   test("A RhoRoutes execution should give a None for missing route") {
     val service = new RhoRoutes[IO] {}.toRoutes()
-    val req = Request[IO](Method.GET, Uri(path = Path.unsafeFromString("/missing")))
+    val req = Request[IO](Method.GET, Uri(path = path"/missing"))
     assertIO(
       service(req).value.map(_.getOrElse(Response.notFound).status),
       Status.NotFound
@@ -463,7 +465,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
 
     val routes2: HttpRoutes[IO] = ("foo" /: routes1).toRoutes()
 
-    val req1 = Request[IO](uri = Uri(path = Path.unsafeFromString("/foo/bar")))
+    val req1 = Request[IO](uri = Uri(path = path"/foo/bar"))
     assertIO(
       routes2(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
       "bar"

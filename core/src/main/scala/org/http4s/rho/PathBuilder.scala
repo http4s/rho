@@ -20,10 +20,13 @@ package rho
 import cats.Functor
 import org.http4s.Uri.Path.Segment
 import org.http4s.rho.bits.PathAST._
-import org.http4s.rho.bits.RequestAST.{EmptyRule, RequestRule}
+import org.http4s.rho.bits.RequestAST.EmptyRule
+import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits._
+import shapeless.::
+import shapeless.HList
+import shapeless.HNil
 import shapeless.ops.hlist.Prepend
-import shapeless.{::, HList, HNil}
 
 import scala.reflect.runtime.universe.TypeTag
 

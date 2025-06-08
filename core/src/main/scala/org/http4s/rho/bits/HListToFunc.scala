@@ -82,6 +82,7 @@ trait MatchersHListToFunc[F[_]] {
   private trait MatcherHListToFunc[T <: HList, -FU] extends HListToFunc[F, T, FU] {
     protected def matcher: ResultMatcher[F, _]
     protected def conv(f: FU): (Request[F], T) => F[Response[F]]
-    final override def toAction(f: FU) = Action(matcher.resultInfo, matcher.encodings, conv(f))
+    final override def toAction(f: FU): Action[F, T] =
+      Action(matcher.resultInfo, matcher.encodings, conv(f))
   }
 }

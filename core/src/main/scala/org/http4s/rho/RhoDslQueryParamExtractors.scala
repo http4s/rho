@@ -16,13 +16,16 @@
 
 package org.http4s.rho
 
+import cats.FlatMap
+import cats.Functor
+import cats.Monad
 import cats.syntax.functor._
-import cats.{FlatMap, Functor, Monad}
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
 import org.http4s.rho.bits.RequestAST.CaptureRule
 import org.http4s.rho.bits._
-import shapeless.{::, HNil}
+import shapeless.::
+import shapeless.HNil
 
 import scala.reflect.runtime.universe.TypeTag
 

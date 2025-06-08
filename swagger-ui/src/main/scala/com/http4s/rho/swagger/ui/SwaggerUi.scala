@@ -17,17 +17,18 @@
 package com.http4s.rho.swagger.ui
 
 import cats.effect.Sync
-import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
+import org.http4s.rho.RhoMiddleware
+import org.http4s.rho.RhoRoute
+import org.http4s.rho.bits.PathAST.PathMatch
+import org.http4s.rho.bits.PathAST.TypedPath
+import org.http4s.rho.swagger
+import org.http4s.rho.swagger.DefaultShowType
+import org.http4s.rho.swagger.ShowType
+import org.http4s.rho.swagger.SwaggerFormats
+import org.http4s.rho.swagger.SwaggerMetadata
+import org.http4s.rho.swagger.SwaggerSupport
+import org.http4s.rho.swagger.SwaggerSyntax
 import org.http4s.rho.swagger.models._
-import org.http4s.rho.swagger.{
-  DefaultShowType,
-  ShowType,
-  SwaggerFormats,
-  SwaggerMetadata,
-  SwaggerSupport,
-  SwaggerSyntax
-}
-import org.http4s.rho.{RhoMiddleware, RhoRoute, swagger}
 import shapeless.HList
 
 import scala.collection.immutable.Seq

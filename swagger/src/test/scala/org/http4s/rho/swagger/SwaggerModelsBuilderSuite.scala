@@ -17,18 +17,20 @@
 package org.http4s.rho
 package swagger
 
+import _root_.io.circe._
+import _root_.io.circe.generic.auto._
+import _root_.io.circe.parser._
+import cats._
 import cats.effect.IO
 import cats.syntax.all._
-import cats._
-import _root_.io.circe._
-import _root_.io.circe.parser._
-import _root_.io.circe.generic.auto._
-import fs2.{Chunk, Stream}
+import fs2.Chunk
+import fs2.Stream
 import munit.FunSuite
 import org.http4s.Method._
 import org.http4s._
 import org.http4s.headers._
-import org.http4s.rho.bits.PathAST.{PathAnd, PathCapture}
+import org.http4s.rho.bits.PathAST.PathAnd
+import org.http4s.rho.bits.PathAST.PathCapture
 import org.http4s.rho.bits._
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
@@ -36,6 +38,7 @@ import org.http4s.rho.swagger.syntax.io._
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
+import shapeless.HNil
 
 object SwaggerModelsBuilderSuite {
   case class Foo(a: String, b: Int)
@@ -72,8 +75,8 @@ class SwaggerModelsBuilderSuite extends FunSuite {
     DefaultShowType,
     implicitly[WeakTypeTag[IO[_]]]
   )
-  val fooPath = GET / "foo"
-  val barPath = GET / "bar"
+  val fooPath: PathBuilder[IO, HNil] = GET / "foo"
+  val barPath: PathBuilder[IO, HNil] = GET / "bar"
   type OpSeq = Option[Seq[String]]
 
   test("SwaggerModelsBuilder.collectQueryParams should handle head request") {

@@ -21,13 +21,20 @@ import cats.effect._
 import cats.implicits._
 import com.http4s.rho.swagger.demo.MyRoutes._
 import fs2.Stream
+import org.http4s.EntityDecoder
+import org.http4s.Headers
+import org.http4s.HttpDate
+import org.http4s.Request
+import org.http4s.ResponseCookie
+import org.http4s.circe.CirceEntityEncoder
+import org.http4s.headers
+import org.http4s.implicits._
+import org.http4s.rho.PathBuilder
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits._
-import org.http4s.rho.swagger.{SwaggerFileResponse, SwaggerSyntax}
-import org.http4s.{EntityDecoder, Headers, HttpDate, Request, ResponseCookie, headers}
+import org.http4s.rho.swagger.SwaggerFileResponse
+import org.http4s.rho.swagger.SwaggerSyntax
 import shapeless.HNil
-import org.http4s.circe.CirceEntityEncoder
-import org.http4s.implicits._
 
 class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F])
     extends RhoRoutes[F]
@@ -48,7 +55,7 @@ class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F])
     GET |>> TemporaryRedirect(uri"/swagger-ui")
 
   // We want to define this chunk of the service as abstract for reuse below
-  val hello = "hello" @@ GET / "hello"
+  val hello: PathBuilder[F, HNil] = "hello" @@ GET / "hello"
 
   "Simple hello world route" **
     hello |>> Ok("Hello world!")
@@ -147,7 +154,7 @@ class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F])
 
 object MyRoutes {
 
-  case class Foo(key: String, value: String)
+  final case class Foo(key: String, value: String)
 
   implicit def fooParser[F[_]: Monad]: StringParser[F, Foo] = {
     val fooRegex = """([^_]+)_([^_]+)""".r
@@ -161,11 +168,11 @@ object MyRoutes {
     }
   }
 
-  case class Bar(i: Int) extends AnyVal
+  final case class Bar(i: Int) extends AnyVal
 
   implicit def barParser[F[_]]: StringParser[F, Bar] =
     StringParser.intParser[F].map(Bar)
 
-  case class JsonResult(name: String, number: Int)
+  final case class JsonResult(name: String, number: Int)
   implicit val jsonResultCodec: io.circe.Codec[JsonResult] = io.circe.generic.semiauto.deriveCodec
 }

@@ -19,11 +19,11 @@ package com.http4s.rho.swagger.ui
 import cats.effect.Sync
 import cats.implicits._
 import org.http4s.Uri.Path.Segment
+import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits.PathAST.CaptureTail
 import org.http4s.rho.swagger.ui.BuildInfo
-import org.http4s._
 
 class SwaggerUiRoutes[F[_]: Sync](
     swaggerUiPath: String,

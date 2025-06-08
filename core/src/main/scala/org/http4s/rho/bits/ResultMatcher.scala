@@ -17,10 +17,15 @@
 package org.http4s.rho.bits
 
 import cats.Monad
+import org.http4s.EntityEncoder
+import org.http4s.MediaType
+import org.http4s.Request
+import org.http4s.Response
+import org.http4s.Status
 import org.http4s.rho.Result
-import org.http4s.{EntityEncoder, MediaType, Request, Response, Status}
 
-import scala.reflect.runtime.universe.{Type, WeakTypeTag}
+import scala.reflect.runtime.universe.Type
+import scala.reflect.runtime.universe.WeakTypeTag
 
 trait ResultMatcher[F[_], -R] {
   def encodings: Set[MediaType]

@@ -17,17 +17,20 @@
 package org.http4s
 package rho.bits
 
-import org.http4s.rho.{RequestLineBuilder, UriConvertible}
+import org.http4s.rho.RequestLineBuilder
+import org.http4s.rho.UriConvertible
+import shapeless.::
+import shapeless.HList
 import shapeless.ops.hlist.Prepend
-import shapeless.{::, HList}
 
 import scala.reflect.runtime.universe.TypeTag
+import scala.util.Try
 
 /** Actual elements which build up the AST */
 object PathAST {
 
   /** Typed shell for the Path operations of the DSL */
-  case class TypedPath[F[_], T <: HList](rule: PathRule) extends UriConvertible[F] {
+  final case class TypedPath[F[_], T <: HList](rule: PathRule) extends UriConvertible[F] {
 
     /** Match this rule and then `next` rule
       *
@@ -117,7 +120,7 @@ object PathAST {
       for (p <- UriConverter.createPath(rule))
         yield UriTemplate(path = p)
 
-    override def asUriTemplate(request: Request[F]) =
+    override def asUriTemplate(request: Request[F]): Try[UriTemplate] =
       UriConvertible.respectPathInfo(uriTemplate, request)
   }
 
@@ -128,17 +131,17 @@ object PathAST {
 
   sealed trait PathOperation extends PathRule
 
-  case class PathAnd(p1: PathRule, p2: PathRule) extends PathRoute
+  final case class PathAnd(p1: PathRule, p2: PathRule) extends PathRoute
 
-  case class PathOr(p1: PathRule, p2: PathRule) extends PathRoute
+  final case class PathOr(p1: PathRule, p2: PathRule) extends PathRoute
 
-  case class PathMatch(s: Uri.Path.Segment) extends PathOperation
+  final case class PathMatch(s: Uri.Path.Segment) extends PathOperation
   object PathMatch {
     def apply(s: String): PathMatch = PathMatch(Uri.Path.Segment(s))
     val empty: PathMatch = PathMatch(Uri.Path.Segment.empty)
   }
 
-  case class PathCapture[F[_]](
+  final case class PathCapture[F[_]](
       name: String,
       description: Option[String],
       parser: StringParser[F, _],
@@ -147,6 +150,6 @@ object PathAST {
 
   case object CaptureTail extends PathOperation
 
-  case class MetaCons(path: PathRule, meta: Metadata) extends PathOperation
+  final case class MetaCons(path: PathRule, meta: Metadata) extends PathOperation
 
 }

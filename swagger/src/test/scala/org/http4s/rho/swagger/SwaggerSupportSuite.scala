@@ -18,41 +18,42 @@ package org.http4s
 package rho
 package swagger
 
+import _root_.io.circe._
+import _root_.io.circe.parser._
+import _root_.io.circe.syntax._
 import cats.data._
 import cats.effect.IO
 import cats.syntax.applicative._
-import _root_.io.circe.parser._
-import _root_.io.circe._
-import _root_.io.circe.syntax._
 import munit.CatsEffectSuite
 import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.syntax.io._
+import org.http4s.syntax.literals._
 
 class SwaggerSupportSuite extends CatsEffectSuite {
 
-  val baseRoutes = new RhoRoutes[IO] {
+  val baseRoutes: RhoRoutes[IO] = new RhoRoutes[IO] {
     GET / "hello" |>> { () => Ok("hello world") }
     GET / "hello" / pathVar[String] |>> { world: String => Ok("hello " + world) }
   }
 
-  val moarRoutes = new RhoRoutes[IO] {
+  val moarRoutes: RhoRoutes[IO] = new RhoRoutes[IO] {
     GET / "goodbye" |>> { () => Ok("goodbye world") }
     GET / "goodbye" / pathVar[String] |>> { world: String => Ok("goodbye " + world) }
   }
 
-  val trailingSlashRoutes = new RhoRoutes[IO] {
+  val trailingSlashRoutes: RhoRoutes[IO] = new RhoRoutes[IO] {
     GET / "foo" / "" |>> { () => Ok("hello world") }
   }
 
-  val mixedTrailingSlashesRoutes = new RhoRoutes[IO] {
+  val mixedTrailingSlashesRoutes: RhoRoutes[IO] = new RhoRoutes[IO] {
     GET / "foo" / "" |>> { () => Ok("hello world") }
     GET / "foo" |>> { () => Ok("hello world") }
     GET / "bar" |>> { () => Ok("hello world") }
   }
 
-  val metaDataRoutes = new RhoRoutes[IO] {
+  val metaDataRoutes: RhoRoutes[IO] = new RhoRoutes[IO] {
     "Hello" ** GET / "hello" |>> { () => Ok("hello world") }
     Map("hello" -> List("bye")) ^^ "Bye" ** GET / "bye" |>> { () => Ok("bye world") }
     Map("bye" -> List("hello")) ^^ GET / "goodbye" |>> { () => Ok("goodbye world") }
@@ -66,7 +67,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
   test("SwaggerSupport should expose an API listing") {
     val service = baseRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
 
     val swaggerRoot =
       RRunner(service)
@@ -91,7 +92,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
   test("SwaggerSupport should support prefixed routes") {
     val service =
       ("foo" /: baseRoutes).toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
 
     val swaggerRoot =
       RRunner(service)
@@ -124,7 +125,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
     val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
     val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
 
     val swaggerRoot = RRunner(httpRoutes.toRoutes())
       .checkOk(r)
@@ -147,7 +148,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
 
   test("SwaggerSupport should support endpoints which end in a slash") {
     val service = trailingSlashRoutes.toRoutes(createRhoMiddleware())
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
 
     val swaggerRoot = RRunner(service)
       .checkOk(r)
@@ -164,7 +165,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
     "SwaggerSupport should support endpoints which end in a slash being mixed with normal endpoints"
   ) {
     val service = mixedTrailingSlashesRoutes.toRoutes(createRhoMiddleware())
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
     val swaggerRoot = RRunner(service)
       .checkOk(r)
       .map(decode[SwaggerRoot])
@@ -185,7 +186,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
     val swaggerRoutes = createSwaggerRoute(aggregateSwagger)
     val httpRoutes = NonEmptyList.of(baseRoutes, moarRoutes, swaggerRoutes).reduceLeft(_ and _)
 
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
 
     val swaggerRoot = RRunner(httpRoutes.toRoutes())
       .checkOk(r)
@@ -212,7 +213,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
   test("SwaggerSupport should check metadata in API listing") {
     val service = metaDataRoutes.toRoutes(createRhoMiddleware(swaggerRoutesInSwagger = true))
 
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger.json"))
 
     val jsonF = RRunner(service)
       .checkOk(r)
@@ -294,7 +295,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
       )
     )
 
-    val r = Request[IO](GET, Uri(path = Uri.Path.unsafeFromString("/swagger-test.json")))
+    val r = Request[IO](GET, Uri(path = path"/swagger-test.json"))
     val jsonF = RRunner(service)
       .checkOk(r)
       .map(parse)

@@ -16,18 +16,23 @@
 
 package org.http4s.rho.swagger
 
-import java.sql.Timestamp
-import java.util.Date
 import cats.effect.IO
 import cats.syntax.all._
 import fs2.Stream
 import munit.FunSuite
 import org.http4s.rho.swagger.TypeBuilder.DataType
-import org.http4s.rho.swagger.models.{AbstractProperty, Model, StringProperty}
-import shapeless.{:+:, CNil}
+import org.http4s.rho.swagger.models.AbstractProperty
+import org.http4s.rho.swagger.models.Model
+import org.http4s.rho.swagger.models.StringProperty
+import shapeless.:+:
+import shapeless.CNil
 
-import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
+import java.sql.Timestamp
+import java.util.Date
 import scala.collection.immutable.Seq
+import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.universe.typeOf
+import scala.reflect.runtime.universe.typeTag
 
 package object model {
   case class Foo(a: Int, b: String)

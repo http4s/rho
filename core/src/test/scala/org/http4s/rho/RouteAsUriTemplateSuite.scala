@@ -19,13 +19,15 @@ package rho
 
 import cats.effect.IO
 import munit.FunSuite
+import org.http4s.UriTemplate.ParamExp
+import org.http4s.UriTemplate.PathElm
+import org.http4s.UriTemplate.PathExp
 import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
-import org.http4s.UriTemplate.{ParamExp, PathElm, PathExp}
 import shapeless.HList
 
 class RouteAsUriTemplateSuite extends FunSuite {
-  val request = Request[IO]()
+  val request: Request[IO] = Request[IO]()
 
   test("A PathBuilder.asUriTemplate should convert to /hello") {
     val route: PathBuilder[IO, _ <: HList] = GET / "hello"

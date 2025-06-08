@@ -17,7 +17,8 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.{FuncParamsMatch, HListToFunc}
+import org.http4s.rho.bits.FuncParamsMatch
+import org.http4s.rho.bits.HListToFunc
 import shapeless.HList
 
 /** Object which can be compiled into a complete route The [[RouteExecutable]] is a complete set of

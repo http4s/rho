@@ -18,7 +18,7 @@ package org.http4s.rho.swagger
 
 import org.http4s.rho.swagger.models._
 
-case class SwaggerMetadata(
+final case class SwaggerMetadata(
     apiInfo: Info = Info(title = "My API", version = "1.0.0"),
     host: Option[String] = None,
     basePath: Option[String] = None,

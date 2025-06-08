@@ -17,10 +17,13 @@
 package com.http4s.rho.swagger.demo
 
 import cats.effect.IO
+import org.http4s.HttpRoutes
+import org.http4s.Request
+import org.http4s.Response
+import org.http4s.StaticFile
 import org.http4s.Uri.Path.Segment
 import org.http4s.dsl.io._
 import org.http4s.rho.RhoRoutes
-import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 
 object StaticContentService {
   private val swaggerUiDir = "/swagger-ui"

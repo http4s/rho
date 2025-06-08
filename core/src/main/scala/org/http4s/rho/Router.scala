@@ -17,14 +17,20 @@
 package org.http4s
 package rho
 
-import bits.PathAST._
 import cats.Functor
-import org.http4s.rho.bits.{HeaderAppendable, TypedHeader}
-import org.http4s.rho.bits.RequestAST.{AndRule, RequestRule}
-
-import scala.reflect.runtime.universe.{Type, TypeTag}
-import shapeless.{::, HList, HNil}
+import org.http4s.rho.bits.HeaderAppendable
+import org.http4s.rho.bits.RequestAST.AndRule
+import org.http4s.rho.bits.RequestAST.RequestRule
+import org.http4s.rho.bits.TypedHeader
+import shapeless.::
+import shapeless.HList
+import shapeless.HNil
 import shapeless.ops.hlist.Prepend
+
+import scala.reflect.runtime.universe.Type
+import scala.reflect.runtime.universe.TypeTag
+
+import bits.PathAST._
 
 sealed trait RoutingEntity[F[_], T <: HList] {
   type Self <: RoutingEntity[F, T]
@@ -48,7 +54,7 @@ sealed trait RoutingEntity[F[_], T <: HList] {
   * @tparam T
   *   cumulative type of the required method for executing the router
   */
-case class Router[F[_], T <: HList](method: Method, path: PathRule, rules: RequestRule[F])
+final case class Router[F[_], T <: HList](method: Method, path: PathRule, rules: RequestRule[F])
     extends RouteExecutable[F, T]
     with HeaderAppendable[F, T]
     with RoutingEntity[F, T]
@@ -75,8 +81,9 @@ case class Router[F[_], T <: HList](method: Method, path: PathRule, rules: Reque
     copy(method = other)
 }
 
-case class CodecRouter[F[_], T <: HList, R](router: Router[F, T], decoder: EntityDecoder[F, R])(
-    implicit t: TypeTag[R])
+final case class CodecRouter[F[_], T <: HList, R](
+    router: Router[F, T],
+    decoder: EntityDecoder[F, R])(implicit t: TypeTag[R])
     extends HeaderAppendable[F, T]
     with RouteExecutable[F, R :: T]
     with RoutingEntity[F, R :: T]

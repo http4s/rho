@@ -17,10 +17,13 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.RequestAST, RequestAST._
-import org.http4s.rho.bits.{ResultResponse, SuccessResponse}
+import org.http4s.rho.bits.RequestAST
+import org.http4s.rho.bits.ResultResponse
+import org.http4s.rho.bits.SuccessResponse
+import shapeless.HList
+import shapeless.HNil
 
-import shapeless.{HList, HNil}
+import RequestAST._
 
 private[rho] trait RuleExecutor[F[_]] {
   //////////////////////// Stuff for executing the route //////////////////////////////////////

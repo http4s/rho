@@ -16,8 +16,10 @@
 
 package org.http4s.rho.bits
 
+import cats.Applicative
+import cats.Functor
+import cats.Monad
 import cats.data.OptionT
-import cats.{Applicative, Functor, Monad}
 import cats.implicits._
 import org.http4s._
 import org.http4s.rho.Result.BaseResult
@@ -45,7 +47,7 @@ sealed trait RouteResult[F[_], +T] {
 }
 
 /** Failure to match a route */
-case class NoMatch[F[_]]() extends RouteResult[F, Nothing]
+final case class NoMatch[F[_]]() extends RouteResult[F, Nothing]
 
 /** Node in the ADT that represents a result, either success or failure */
 sealed trait ResultResponse[F[_], +T] extends RouteResult[F, T] {

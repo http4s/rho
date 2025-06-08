@@ -18,15 +18,17 @@ package org.http4s
 package rho
 package swagger
 
-import _root_.io.swagger.util.{Json, Yaml}
+import _root_.io.swagger.util.Json
+import _root_.io.swagger.util.Yaml
 import cats._
 import org.http4s.headers.`Content-Type`
-import org.http4s.rho.bits.PathAST.{PathMatch, TypedPath}
+import org.http4s.rho.bits.PathAST.PathMatch
+import org.http4s.rho.bits.PathAST.TypedPath
 import org.http4s.rho.swagger.models._
 import shapeless._
 
-import scala.reflect.runtime.universe._
 import scala.collection.immutable.Seq
+import scala.reflect.runtime.universe._
 
 object SwaggerSupport {
   def apply[F[_]: Monad](implicit etag: WeakTypeTag[F[_]]): SwaggerSupport[F] =

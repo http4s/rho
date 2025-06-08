@@ -17,11 +17,12 @@
 package org.http4s
 package rho
 
-import org.http4s.rho.bits.PathAST.{PathRule, TypedPath}
+import org.http4s.rho.bits.PathAST.PathRule
+import org.http4s.rho.bits.PathAST.TypedPath
 import org.http4s.rho.bits.RequestAST.RequestRule
 import org.http4s.rho.bits.ResultInfo
-
-import shapeless.{HList, HNil}
+import shapeless.HList
+import shapeless.HNil
 
 /** A type to bundle everything needed to define a route */
 final case class RhoRoute[F[_], T <: HList](router: RoutingEntity[F, T], action: Action[F, T])

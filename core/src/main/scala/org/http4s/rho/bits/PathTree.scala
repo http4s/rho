@@ -18,11 +18,13 @@ package org.http4s
 package rho
 package bits
 
-import cats.{Applicative, Monad}
+import cats.Applicative
+import cats.Monad
 import cats.implicits._
 import org.http4s.rho.bits.PathAST._
 import org.log4s.getLogger
-import shapeless.{HList, HNil}
+import shapeless.HList
+import shapeless.HNil
 
 import scala.annotation.tailrec
 import scala.util.control.NonFatal
@@ -295,7 +297,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
-  case class MatchNode(
+  final case class MatchNode(
       name: Uri.Path.Segment,
       matches: Map[Uri.Path.Segment, MatchNode] = Map.empty[Uri.Path.Segment, MatchNode],
       captures: List[CaptureNode] = Nil,
@@ -325,7 +327,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
-  case class CaptureNode(
+  final case class CaptureNode(
       parser: StringParser[F, _],
       matches: Map[Uri.Path.Segment, MatchNode] = Map.empty[Uri.Path.Segment, MatchNode],
       captures: List[CaptureNode] = List.empty[CaptureNode],

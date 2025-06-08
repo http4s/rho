@@ -18,9 +18,10 @@ package org.http4s.rho
 
 import cats.effect.IO
 import munit.CatsEffectSuite
+import org.http4s.Method
+import org.http4s.Request
 import org.http4s.rho.bits.MethodAliases._
 import org.http4s.rho.io._
-import org.http4s.{Method, Request}
 
 class CompileRoutesSuite extends CatsEffectSuite {
   private def getFoo(implicit c: CompileRoutes[IO, _]) =

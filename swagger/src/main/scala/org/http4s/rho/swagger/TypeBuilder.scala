@@ -16,18 +16,16 @@
 
 package org.http4s.rho.swagger
 
-import java.util.Date
-import java.time.Instant
-
+import cats.syntax.all._
 import org.log4s.getLogger
 
+import java.time.Instant
+import java.util.Date
+import scala.collection.immutable.ListSet
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
-import cats.syntax.all._
 
-import scala.collection.immutable.ListSet
-
-case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
+final case class DiscriminatorField(field: String) extends scala.annotation.StaticAnnotation
 
 object TypeBuilder {
   import models._
@@ -271,28 +269,29 @@ object TypeBuilder {
 
   object DataType {
 
-    case class ValueDataType(
+    final case class ValueDataType(
         name: String,
         format: Option[String] = None,
         qualifiedName: Option[String] = None)
         extends DataType
-    case class ContainerDataType(
+    final case class ContainerDataType(
         name: String,
         typeArg: Option[DataType] = None,
         uniqueItems: Boolean = false)
         extends DataType
-    case class ComplexDataType(name: String, qualifiedName: Option[String] = None) extends DataType
-    case class EnumDataType(enums: Set[String]) extends DataType { val name = "string" }
+    final case class ComplexDataType(name: String, qualifiedName: Option[String] = None)
+        extends DataType
+    final case class EnumDataType(enums: Set[String]) extends DataType { val name = "string" }
 
-    val String = DataType("string")
-    val Byte = DataType("string", Some("byte"))
-    val Int = DataType("integer", Some("int32"))
-    val Long = DataType("integer", Some("int64"))
-    val Float = DataType("number", Some("float"))
-    val Double = DataType("number", Some("double"))
-    val Boolean = DataType("boolean")
-    val Date = DataType("string", Some("date"))
-    val DateTime = DataType("string", Some("date-time"))
+    val String: ValueDataType = DataType("string")
+    val Byte: ValueDataType = DataType("string", Some("byte"))
+    val Int: ValueDataType = DataType("integer", Some("int32"))
+    val Long: ValueDataType = DataType("integer", Some("int64"))
+    val Float: ValueDataType = DataType("number", Some("float"))
+    val Double: ValueDataType = DataType("number", Some("double"))
+    val Boolean: ValueDataType = DataType("boolean")
+    val Date: ValueDataType = DataType("string", Some("date"))
+    val DateTime: ValueDataType = DataType("string", Some("date-time"))
 
     object GenList {
       def apply(): DataType = ContainerDataType("List")
