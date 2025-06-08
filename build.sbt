@@ -112,7 +112,6 @@ lazy val buildSettings = publishing ++
     scalaVersion := scala_213,
     crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions --= disabledCompilerFlags,
-    resolvers += Resolver.sonatypeRepo("snapshots"),
     (run / fork) := true,
     (ThisBuild / organization) := "org.http4s",
     (ThisBuild / homepage) := Some(url(homepageUrl)),
