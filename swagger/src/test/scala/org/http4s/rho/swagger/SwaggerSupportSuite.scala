@@ -29,7 +29,6 @@ import org.http4s.rho.bits.MethodAliases.GET
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.syntax.io._
-import org.http4s.syntax.literals._
 
 class SwaggerSupportSuite extends CatsEffectSuite {
 

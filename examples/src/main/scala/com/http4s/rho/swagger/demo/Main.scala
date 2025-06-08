@@ -28,8 +28,6 @@ import org.http4s.rho.swagger.models.Tag
 import org.http4s.rho.swagger.syntax.{io => ioSwagger}
 import org.log4s.getLogger
 
-import scala.concurrent.ExecutionContext.global
-
 object Main extends IOApp {
   private val logger = getLogger
 
@@ -49,7 +47,7 @@ object Main extends IOApp {
       SwaggerUi[IO].createRhoMiddleware(swaggerMetadata = metadata)
     val myRoutes = new MyRoutes[IO](ioSwagger).toRoutes(swaggerUiRhoMiddleware)
 
-    BlazeServerBuilder[IO](global)
+    BlazeServerBuilder[IO]
       .withHttpApp(myRoutes.orNotFound)
       .bindLocal(port)
       .serve

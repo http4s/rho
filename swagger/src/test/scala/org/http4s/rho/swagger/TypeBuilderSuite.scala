@@ -29,12 +29,13 @@ import shapeless.CNil
 
 import java.sql.Timestamp
 import java.util.Date
+import scala.annotation.nowarn
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe.TypeTag
 import scala.reflect.runtime.universe.typeOf
 import scala.reflect.runtime.universe.typeTag
 
-package object model {
+object model {
   case class Foo(a: Int, b: String)
   case class FooWithOption(a: Int, b: Option[String])
   type Bar = Foo
@@ -97,6 +98,7 @@ package object model {
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 }
 
+@nowarn // TODO this is awfully blunt
 class TypeBuilderSuite extends FunSuite {
   import model._
   import models.{ArrayProperty, Model, RefProperty}

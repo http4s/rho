@@ -24,7 +24,7 @@ import org.http4s.headers.ETag
 import org.http4s.headers.`Content-Length`
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.bits.TypedQuery
-import org.http4s.server.websocket.WebSocketBuilder
+import org.http4s.server.websocket.WebSocketBuilder2
 
 import java.time.Instant
 import java.util.Date
@@ -172,7 +172,7 @@ class ApiExamples extends FunSuite {
       /* We can use a standard http4s.Response, but we don't get any metadata
          with it. Useful for things like Websocket support. */
       GET / "websockets" |>> { () =>
-        WebSocketBuilder[IO].build(???, ???)
+        WebSocketBuilder2[IO].flatMap(_.build(???, ???))
       }
     }
     /// end_src_inlined

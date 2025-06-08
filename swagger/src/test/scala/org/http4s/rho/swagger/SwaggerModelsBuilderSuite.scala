@@ -34,11 +34,11 @@ import org.http4s.rho.bits.PathAST.PathCapture
 import org.http4s.rho.bits._
 import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
+import shapeless.HNil
 
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
-import shapeless.HNil
 
 object SwaggerModelsBuilderSuite {
   case class Foo(a: String, b: Int)

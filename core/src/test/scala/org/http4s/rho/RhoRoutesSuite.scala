@@ -20,7 +20,6 @@ package rho
 import cats.effect.IO
 import fs2.Stream
 import munit.CatsEffectSuite
-import org.http4s.Uri.Path
 import org.http4s.Uri.Path.Segment
 import org.http4s.headers.`Content-Length`
 import org.http4s.headers.`Content-Type`
@@ -31,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.util.control.NoStackTrace
-import org.http4s.syntax.literals._
 
 class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
   private def construct(method: Method, s: String, h: Header.ToRaw*): Request[IO] =
@@ -326,8 +324,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "foo" |>> Ok("none")
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "0"))
-    val req2 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "s"))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?(("bar", "0")))
+    val req2 = Request[IO](Method.GET, Uri(path = path"/foo").+?(("bar", "s")))
     val req3 = Request[IO](Method.GET, Uri(path = path"/foo"))
 
     assertIO(
@@ -352,8 +350,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "foo" +? param[Int]("bar") |>> { i: Int => Ok(s"Int: $i") }
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "0"))
-    val req2 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "s"))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?(("bar", "0")))
+    val req2 = Request[IO](Method.GET, Uri(path = path"/foo").+?(("bar", "s")))
 
     assertIO(
       service(req1).value.map(_.getOrElse(Response.notFound).body).flatMap(getBody),
@@ -374,7 +372,7 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
       GET / "foo" |>> Ok(s"failure")
     }.toRoutes()
 
-    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?("bar", "s"))
+    val req1 = Request[IO](Method.GET, Uri(path = path"/foo").+?(("bar", "s")))
     val req2 = Request[IO](Method.GET, Uri(path = path"/foo"))
 
     assertIO(
