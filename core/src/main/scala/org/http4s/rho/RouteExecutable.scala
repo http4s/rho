@@ -2,7 +2,6 @@ package org.http4s
 package rho
 
 import org.http4s.rho.bits.{FuncParamsMatch, HListToFunc}
-import org.typelevel.scalaccompat.annotation._
 import shapeless.HList
 
 /** Object which can be compiled into a complete route
@@ -21,7 +20,7 @@ trait RouteExecutable[F[_], T <: HList] extends TypedBuilder[F, T] { exec =>
 
   /** Compiles a HTTP request definition into an action */
   final def |>>[U, R](f: U)(implicit
-      @nowarn212("cat=unused") fpm: FuncParamsMatch[F, T, U],
+      fpm: FuncParamsMatch[F, T, U],
       hltf: HListToFunc[F, T, U],
       srvc: CompileRoutes[F, R]): R =
     srvc.compile(makeRoute(hltf.toAction(f)))

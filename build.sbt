@@ -4,6 +4,8 @@ import Keys._
 import Dependencies._
 
 ThisBuild / tlBaseVersion := "0.23"
+ThisBuild / scalaVersion := scala_213
+ThisBuild / crossScalaVersions := Seq(scala_213)
 
 lazy val rho = project
   .in(file("."))
@@ -83,8 +85,6 @@ lazy val license = (ThisBuild / licenses) := Seq(
 
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := scala_213,
-    crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions --= disabledCompilerFlags,
     (run / fork) := true,
     description := "A self documenting DSL build upon the http4s framework",
@@ -92,7 +92,6 @@ lazy val buildSettings = publishing ++
     libraryDependencies ++= Seq(
       http4sServer % "provided",
       logbackClassic % "test",
-      "org.typelevel" %% "scalac-compat-annotation" % "0.1.4"
     ),
     libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
                                Seq(
