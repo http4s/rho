@@ -119,14 +119,12 @@ lazy val buildSettings = publishing ++
     license,
     libraryDependencies ++= Seq(
       http4sServer % "provided",
-      logbackClassic % "test"
+      logbackClassic % "test",
+      "org.typelevel" %% "scalac-compat-annotation" % "0.1.4"
     ),
     libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
                                Seq(
                                  shapeless,
-                                 silencerPlugin,
-                                 silencerLib,
-                                 kindProjector,
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),
