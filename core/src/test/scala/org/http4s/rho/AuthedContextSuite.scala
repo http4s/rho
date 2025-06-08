@@ -34,7 +34,7 @@ object Auth {
     OptionT.some[IO](User("Test User", UUID.randomUUID()))
   }
 
-  val authenticated: AuthMiddleware[IO[A], User] = AuthMiddleware(authUser)
+  def authenticated: AuthMiddleware[IO, User] = AuthMiddleware(authUser)
 }
 
 object MyAuth extends AuthedContext[IO, User]
@@ -61,7 +61,7 @@ object MyRoutes extends RhoRoutes[IO] {
 }
 
 class AuthedContextSuite extends CatsEffectSuite {
-  val routes: Kleisli[OptionT[IO[A], β$1$], Request[IO[A]], Response[IO[A]]] =
+  val routes: Kleisli[OptionT[IO, *], Request[IO], Response[IO]] =
     Auth.authenticated(MyAuth.toService(MyRoutes.toRoutes()))
 
   test("An AuthedContext execution should be able to have access to authInfo") {
