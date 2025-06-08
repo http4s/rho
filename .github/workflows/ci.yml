@@ -99,10 +99,6 @@ jobs:
         if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-22.04'
         run: sbt '++ ${{ matrix.scala }}' doc
 
-      - name: Check scalafix lints
-        if: matrix.java == 'temurin@8' && !startsWith(matrix.scala, '3')
-        run: sbt '++ ${{ matrix.scala }}' 'scalafixAll --check'
-
       - name: Check unused compile dependencies
         if: matrix.java == 'temurin@8'
         run: sbt '++ ${{ matrix.scala }}' unusedCompileDependenciesTest

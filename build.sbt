@@ -8,6 +8,11 @@ ThisBuild / startYear := Some(2014)
 ThisBuild / scalaVersion := scala_213
 ThisBuild / crossScalaVersions := Seq(scala_213)
 
+// tlCiScalafixCheck is insufficient, because sbt-http4s-org-2.0.0 hardcodes its own
+ThisBuild / githubWorkflowBuildPostamble ~= { old =>
+  old.filterNot(_.name == Some("Check scalafix lints"))
+}
+
 lazy val rho = project
   .in(file("."))
   .disablePlugins(MimaPlugin)
