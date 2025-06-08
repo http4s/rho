@@ -80,7 +80,8 @@ class RhoRoutesSuite extends CatsEffectSuite with RequestRunner {
     }
 
     GET / "variadic" / * |>> { tail: List[Segment] =>
-      Ok("route8_" + tail.map(_.encoded).mkString("/")) }
+      Ok("route8_" + tail.map(_.encoded).mkString("/"))
+    }
 
     val or = "or1" || "or2"
     GET / or |>> { () => Ok("route9") }

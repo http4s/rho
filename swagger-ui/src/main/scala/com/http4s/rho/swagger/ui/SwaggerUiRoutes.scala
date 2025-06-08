@@ -16,7 +16,7 @@
 
 package com.http4s.rho.swagger.ui
 
-import cats.effect.{Sync}
+import cats.effect.Sync
 import cats.implicits._
 import org.http4s.Uri.Path.Segment
 import org.http4s.headers.`Content-Type`

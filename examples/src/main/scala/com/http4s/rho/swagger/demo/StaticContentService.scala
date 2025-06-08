@@ -16,7 +16,7 @@
 
 package com.http4s.rho.swagger.demo
 
-import cats.effect.{IO}
+import cats.effect.IO
 import org.http4s.Uri.Path.Segment
 import org.http4s.dsl.io._
 import org.http4s.rho.RhoRoutes
@@ -25,8 +25,8 @@ import org.http4s.{HttpRoutes, Request, Response, StaticFile}
 object StaticContentService {
   private val swaggerUiDir = "/swagger-ui"
 
-  /** Routes for getting static resources. These might be served more efficiently by apache2 or nginx,
-    * but its nice to keep it self contained.
+  /** Routes for getting static resources. These might be served more efficiently by apache2 or
+    * nginx, but its nice to keep it self contained.
     */
   def routes: HttpRoutes[IO] = new RhoRoutes[IO] {
     // Swagger User Interface

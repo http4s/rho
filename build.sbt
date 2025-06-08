@@ -53,7 +53,7 @@ lazy val docs = project
   .settings(
     dontPublish,
     description := "Api Documentation",
-    autoAPIMappings := true,
+    autoAPIMappings := true
   )
   .dependsOn(`rho-core`, `rho-swagger`)
 
@@ -82,13 +82,15 @@ lazy val dontPublish = packagedArtifacts := Map.empty
 lazy val buildSettings = publishing ++
   Seq(
     scalacOptions --= disabledCompilerFlags,
-    scalacOptions ++= Seq("-Xlint:_,-unused,-byname-implicit,-adapted-args,-package-object-classes"),
+    scalacOptions ++= Seq(
+      "-Xlint:_,-unused,-byname-implicit,-adapted-args,-package-object-classes"
+    ),
     (run / fork) := true,
     description := "A self documenting DSL build upon the http4s framework",
     (ThisBuild / licenses) := Seq(License.Apache2),
     libraryDependencies ++= Seq(
       http4sServer % "provided",
-      logbackClassic % "test",
+      logbackClassic % "test"
     ),
     libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
                                Seq(

@@ -26,7 +26,8 @@ import scala.collection.compat._
 
 /** Extract a value from the `Request` `Query`
   *
-  * @tparam A Type of value produced by the parser.
+  * @tparam A
+  *   Type of value produced by the parser.
   */
 trait QueryParser[F[_], A] {
 
@@ -40,7 +41,9 @@ object QueryParser {
 trait QueryParsers[F[_]] extends FailureResponseOps[F] {
 
   /** Optionally extract the value from the `Query` */
-  implicit def optionParse[A](implicit F: Monad[F], p: StringParser[F, A]): QueryParser[F, Option[A]] =
+  implicit def optionParse[A](implicit
+      F: Monad[F],
+      p: StringParser[F, A]): QueryParser[F, Option[A]] =
     new QueryParser[F, Option[A]] {
       override def collect(
           name: String,
@@ -90,7 +93,9 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
   }
 
   /** Extract an element from the `Query` using a [[org.http4s.rho.bits.StringParser]] */
-  implicit def standardCollector[A](implicit F: Monad[F], p: StringParser[F, A]): QueryParser[F, A] =
+  implicit def standardCollector[A](implicit
+      F: Monad[F],
+      p: StringParser[F, A]): QueryParser[F, A] =
     new QueryParser[F, A] {
       override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] =
         params.get(name) match {
