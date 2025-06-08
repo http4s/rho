@@ -26,6 +26,7 @@ import org.log4s.getLogger
 import shapeless.HList
 import shapeless.HNil
 
+import scala.annotation.nowarn
 import scala.annotation.tailrec
 import scala.util.control.NonFatal
 
@@ -297,6 +298,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
+  @nowarn
   final case class MatchNode(
       name: Uri.Path.Segment,
       matches: Map[Uri.Path.Segment, MatchNode] = Map.empty[Uri.Path.Segment, MatchNode],
@@ -327,6 +329,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
     }
   }
 
+  @nowarn
   final case class CaptureNode(
       parser: StringParser[F, _],
       matches: Map[Uri.Path.Segment, MatchNode] = Map.empty[Uri.Path.Segment, MatchNode],

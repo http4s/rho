@@ -26,6 +26,7 @@ import org.http4s.rho.bits._
 import org.log4s.getLogger
 import org.typelevel.ci.CIString
 
+import scala.annotation.nowarn
 import scala.collection.immutable.ListMap
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
@@ -498,6 +499,7 @@ private[swagger] class SwaggerModelsBuilder[F[_]](formats: SwaggerFormats)(impli
   def getType(m: Type): String =
     TypeBuilder.DataType(m).name
 
+  @nowarn
   final case class LinearRoute(
       method: Method,
       path: List[PathOperation],
