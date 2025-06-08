@@ -183,7 +183,7 @@ class ApiTest extends CatsEffectSuite {
   }
 
   test("A RhoDsl bits should map simple header params into a complex type") {
-    case class Foo(age: Long, s: HttpDate)
+    final case class Foo(age: Long, s: HttpDate)
     val paramFoo =
       (H[`Content-Length`].captureMap(_.length) && H[headers.Date].captureMap(_.date))
         .map(Foo.apply _)
@@ -438,7 +438,7 @@ class ApiTest extends CatsEffectSuite {
   }
 
   test("A query validators should map simple query rules into a complex type") {
-    case class Foo(i: Int, f: Double, s: String)
+    final case class Foo(i: Int, f: Double, s: String)
     val paramFoo = (param[Int]("i") & param[Double]("f") & param[String]("s")).map(Foo.apply _)
 
     val path = GET / "hello" +? paramFoo

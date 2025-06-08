@@ -25,7 +25,7 @@ import org.http4s.server.AuthMiddleware
 
 import java.util.UUID
 
-case class User(name: String, id: UUID)
+final case class User(name: String, id: UUID)
 
 object Auth {
   type O[A] = OptionT[IO, A]

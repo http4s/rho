@@ -186,5 +186,5 @@ class StringParserSuite extends FunSuite {
 }
 
 object StringParserSuite {
-  case class UserId(id: Long)
+  final case class UserId(id: Long)
 }

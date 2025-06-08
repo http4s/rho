@@ -134,8 +134,8 @@ class ResultMatcherSuite extends FunSuite {
   }
 
   test("A ResponseGenerator should match results with locally defined types") {
-    case class ModelA(name: String, color: Int)
-    case class ModelB(name: String, id: Long)
+    final case class ModelA(name: String, color: Int)
+    final case class ModelB(name: String, id: Long)
 
     implicit def w1[F[_]]: EntityEncoder[F, ModelA] =
       EntityEncoder.simple[F, ModelA]()(_ => Chunk.array("A".getBytes))
@@ -177,8 +177,8 @@ class ResultMatcherSuite extends FunSuite {
 }
 
 object Foo {
-  case class FooA(name: String, color: Int)
-  case class FooB(name: String, id: Long)
+  final case class FooA(name: String, color: Int)
+  final case class FooB(name: String, id: Long)
 
   implicit def w1[F[_]]: EntityEncoder[F, FooA] =
     EntityEncoder.simple[F, FooA]()(_ => Chunk.array("A".getBytes))

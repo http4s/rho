@@ -36,14 +36,15 @@ import org.http4s.rho.io._
 import org.http4s.rho.swagger.syntax.io._
 import shapeless.HNil
 
+import scala.annotation.nowarn
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 
 object SwaggerModelsBuilderSuite {
-  case class Foo(a: String, b: Int)
-  case class Bar(c: Long, d: List[Foo])
-  case class FooVal(str: String) extends AnyVal
+  final case class Foo(a: String, b: Int)
+  final case class Bar(c: Long, d: List[Foo])
+  final case class FooVal(str: String) extends AnyVal
 
   implicit def jsonParser[A: Decoder: TypeTag]: StringParser[IO, A] = new StringParser[IO, A]
     with FailureResponseOps[IO] {
@@ -66,10 +67,10 @@ class SwaggerModelsBuilderSuite extends FunSuite {
     CompileRoutes.identityCompiler
 
   trait Renderable
-  case class ModelA(name: String, color: Int) extends Renderable
-  case class ModelB(name: String, id: Long) extends Renderable
-  case class ModelC(name: String, shape: String) extends Renderable
-  case class ModelMap(bar: String, baz: Map[String, Int]) extends Renderable
+  @nowarn final case class ModelA(name: String, color: Int) extends Renderable
+  @nowarn final case class ModelB(name: String, id: Long) extends Renderable
+  @nowarn final case class ModelC(name: String, shape: String) extends Renderable
+  @nowarn final case class ModelMap(bar: String, baz: Map[String, Int]) extends Renderable
 
   val sb = new SwaggerModelsBuilder[IO](DefaultSwaggerFormats)(
     DefaultShowType,
@@ -759,7 +760,7 @@ class SwaggerModelsBuilderSuite extends FunSuite {
   }
 
   test(
-    "SwaggerModelsBuilder.collectDefinitions should collect response of case class containing a map of primitive types"
+    "SwaggerModelsBuilder.collectDefinitions should collect response of final case class containing a map of primitive types"
   ) {
     val ra = GET / "test" |>> { () => Ok(ModelMap("asdf", Map("foo" -> 1))) }
 
@@ -1099,7 +1100,7 @@ class SwaggerModelsBuilderSuite extends FunSuite {
   implicit def mapEntityEncoder[F[_], A, B]: EntityEncoder[F, Map[A, B]] =
     EntityEncoder.simple[F, Map[A, B]]()(_ => Chunk.array("A".getBytes))
 
-  case class CsvFile()
+  @nowarn final case class CsvFile()
 
   object CsvFile {
     implicit def entityEncoderCsvFile: EntityEncoder[IO, CsvFile] =

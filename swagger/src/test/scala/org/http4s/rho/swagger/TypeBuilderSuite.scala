@@ -36,55 +36,55 @@ import scala.reflect.runtime.universe.typeOf
 import scala.reflect.runtime.universe.typeTag
 
 object model {
-  case class Foo(a: Int, b: String)
-  case class FooWithOption(a: Int, b: Option[String])
+  final case class Foo(a: Int, b: String)
+  final case class FooWithOption(a: Int, b: Option[String])
   type Bar = Foo
-  case class FooDefault(a: Int = 0)
-  case class FooGeneric[+A](a: A)
-  case class FooDoubleGeneric[+A, +B](a: A, b: B)
+  final case class FooDefault(a: Int = 0)
+  final case class FooGeneric[+A](a: A)
+  final case class FooDoubleGeneric[+A, +B](a: A, b: B)
   type Foos = Seq[Foo]
-  case class FooComposite(single: Foo, many: Seq[Foo])
-  case class FooCompositeWithAlias(single: Bar, many: Seq[Bar], manyAlias: Foos)
-  case class FooWithListOfLists(values: Seq[Seq[Int]])
-  case class FooWithList(l: List[Int])
-  case class FooWithMap(l: Map[String, Int])
-  case class FooVal(foo: Foo) extends AnyVal
-  case class BarWithFooVal(fooVal: FooVal)
-  case class AnyValClass(anyVal: AnyVal)
+  final case class FooComposite(single: Foo, many: Seq[Foo])
+  final case class FooCompositeWithAlias(single: Bar, many: Seq[Bar], manyAlias: Foos)
+  final case class FooWithListOfLists(values: Seq[Seq[Int]])
+  final case class FooWithList(l: List[Int])
+  final case class FooWithMap(l: Map[String, Int])
+  final case class FooVal(foo: Foo) extends AnyVal
+  final case class BarWithFooVal(fooVal: FooVal)
+  final case class AnyValClass(anyVal: AnyVal)
   type AnyValType = AnyVal
-  case class ClassWithAnyValType(anyVal: AnyValType)
+  final case class ClassWithAnyValType(anyVal: AnyValType)
   @DiscriminatorField("foobar")
   sealed trait Sealed {
     def foo: String
   }
-  case class FooSealed(a: Int, foo: String, foo2: Foo) extends Sealed
-  case class BarSealed(str: String, foo: String) extends Sealed
+  final case class FooSealed(a: Int, foo: String, foo2: Foo) extends Sealed
+  final case class BarSealed(str: String, foo: String) extends Sealed
   sealed trait SealedEnum
   case object FooEnum extends SealedEnum
   case object BarEnum extends SealedEnum
 
-  case class SealedEnumContainer(e: SealedEnum)
+  final case class SealedEnumContainer(e: SealedEnum)
 
   sealed trait BTree
-  case class Branch(left: BTree, right: BTree) extends BTree
-  case class Leaf(value: String) extends BTree
+  final case class Branch(left: BTree, right: BTree) extends BTree
+  final case class Leaf(value: String) extends BTree
 
-  case class BarList(tail: Option[BarList])
+  final case class BarList(tail: Option[BarList])
 
-  case class FooEither(stringOrFoo: Either[String, FooEither])
+  final case class FooEither(stringOrFoo: Either[String, FooEither])
 
   sealed trait TopLevelSealedTrait
-  case class Value1() extends TopLevelSealedTrait
+  final case class Value1() extends TopLevelSealedTrait
   sealed trait LowerLevelSealedTrait extends TopLevelSealedTrait
-  case class Value2() extends LowerLevelSealedTrait
-  case class Value3() extends LowerLevelSealedTrait
+  final case class Value2() extends LowerLevelSealedTrait
+  final case class Value3() extends LowerLevelSealedTrait
 
   sealed trait MixedSealed
-  case class CaseClass() extends MixedSealed
+  final case class CaseClass() extends MixedSealed
   case object CaseObject extends MixedSealed
 
   trait Outer[T] {
-    case class Inner(t: T)
+    @nowarn final case class Inner(t: T)
   }
   object OuterInt extends Outer[Int]
 
@@ -473,7 +473,7 @@ class TypeBuilderSuite extends FunSuite {
   }
 
   test(
-    "A TypeBuilder should build identical model for case objects and empty case classes belonging to a sealed trait"
+    "A TypeBuilder should build identical model for case objects and empty final case classes belonging to a sealed trait"
   ) {
     val ms = modelOf[MixedSealed]
     assertEquals(ms.size, 3)
@@ -491,7 +491,7 @@ class TypeBuilderSuite extends FunSuite {
     assertEquals(caseClassInnerModel.properties, caseObjectInnerModel.properties)
   }
 
-  test("A TypeBuilder should build a model for a case class containing a sealed enum") {
+  test("A TypeBuilder should build a model for a final case class containing a sealed enum") {
     val ms = modelOf[SealedEnumContainer]
     assertEquals(ms.size, 1)
     val sealedEnumContainerModel = ms.head
@@ -566,9 +566,9 @@ class TypeBuilderSuite extends FunSuite {
   }
 }
 
-case class StringAnyVal(value: String) extends AnyVal
-case class IntAnyVal(value: Int) extends AnyVal
-case class DoubleAnyVal(value: Double) extends AnyVal
-case class EntityAnyVal(value: Entity) extends AnyVal
+final case class StringAnyVal(value: String) extends AnyVal
+final case class IntAnyVal(value: Int) extends AnyVal
+final case class DoubleAnyVal(value: Double) extends AnyVal
+final case class EntityAnyVal(value: Entity) extends AnyVal
 
-case class Entity(name: String)
+final case class Entity(name: String)

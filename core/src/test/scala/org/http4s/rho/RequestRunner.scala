@@ -44,4 +44,4 @@ object RequestRunner {
     b.compile.toVector.map(_.foldLeft(Array[Byte]())(_ :+ _)).map(new String(_))
 }
 
-case class RRunner(httpRoutes: HttpRoutes[IO]) extends RequestRunner
+final case class RRunner(httpRoutes: HttpRoutes[IO]) extends RequestRunner

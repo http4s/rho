@@ -20,6 +20,7 @@ import cats.effect.IO
 import cats.syntax.all._
 import munit.FunSuite
 
+import scala.annotation.nowarn
 import scala.collection.immutable.Seq
 import scala.reflect.runtime.universe._
 
@@ -30,7 +31,7 @@ class SwaggerFormatsSuite extends FunSuite {
     case object Apple extends Fruit
     case object Pear extends Fruit
     case object Cherry extends Fruit
-    case class FruitBox(fruits: Seq[Fruit])
+    @nowarn final case class FruitBox(fruits: Seq[Fruit])
   }
 
   import model._

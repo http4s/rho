@@ -30,6 +30,7 @@ import java.time.Instant
 import java.util.Date
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import scala.annotation.nowarn
 
 class ApiExamples extends FunSuite {
   test("A mock API should make it ease to compose routes") {
@@ -205,7 +206,7 @@ class ApiExamples extends FunSuite {
 
     new RhoRoutes[IO] {
       import shapeless.{::, HNil}
-      case class Foo(i: Int, v: String, a: Double)
+      @nowarn final case class Foo(i: Int, v: String, a: Double)
 
       val rawFoo = param[Int]("i") & param[String]("v") & param[Double]("a")
 

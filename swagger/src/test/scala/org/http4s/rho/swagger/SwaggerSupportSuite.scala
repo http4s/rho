@@ -30,6 +30,8 @@ import org.http4s.rho.io._
 import org.http4s.rho.swagger.models._
 import org.http4s.rho.swagger.syntax.io._
 
+import scala.annotation.nowarn
+
 class SwaggerSupportSuite extends CatsEffectSuite {
 
   val baseRoutes: RhoRoutes[IO] = new RhoRoutes[IO] {
@@ -58,7 +60,7 @@ class SwaggerSupportSuite extends CatsEffectSuite {
     Map("bye" -> List("hello")) ^^ GET / "goodbye" |>> { () => Ok("goodbye world") }
   }
 
-  case class SwaggerRoot(paths: Map[String, Json] = Map.empty)
+  @nowarn final case class SwaggerRoot(paths: Map[String, Json] = Map.empty)
 
   implicit lazy val swaggerRootDecoder: Decoder[SwaggerRoot] =
     _root_.io.circe.generic.semiauto.deriveDecoder
