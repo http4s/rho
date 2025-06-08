@@ -1,10 +1,9 @@
 import sbt._
 import Keys._
-import spray.revolver.RevolverPlugin._
 
-import com.typesafe.sbt.SbtGit.git
+import Dependencies._
 
-import Dependencies._, RhoPlugin._
+ThisBuild / tlBaseVersion := "0.23"
 
 lazy val rho = project
   .in(file("."))
@@ -14,7 +13,6 @@ lazy val rho = project
 
 lazy val `rho-core` = project
   .in(file("core"))
-  .settings(mimaConfiguration)
   .settings(buildSettings)
   .settings(
     Compile / unmanagedSourceDirectories ++= {
@@ -33,13 +31,11 @@ lazy val `rho-core` = project
 lazy val `rho-swagger` = project
   .in(file("swagger"))
   .settings(buildSettings :+ swaggerDeps: _*)
-  .settings(mimaConfiguration)
   .dependsOn(`rho-core` % "compile->compile;test->test")
 
 lazy val `rho-swagger-ui` = project
   .in(file("swagger-ui"))
   .settings(buildSettings :+ swaggerUiDeps: _*)
-  .settings(mimaConfiguration)
   .enablePlugins(BuildInfoPlugin)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey]("swaggerUiVersion" -> Dependencies.swaggerUi.revision),
@@ -50,32 +46,11 @@ lazy val `rho-swagger-ui` = project
 lazy val docs = project
   .in(file("docs"))
   .settings(buildSettings)
-  .disablePlugins(MimaPlugin)
-  .enablePlugins(ScalaUnidocPlugin)
-  .enablePlugins(SiteScaladocPlugin)
-  .enablePlugins(GhpagesPlugin)
+  .enablePlugins(Http4sOrgSitePlugin)
   .settings(
     dontPublish,
     description := "Api Documentation",
     autoAPIMappings := true,
-    (Compile / scalacOptions) := scaladocOptions(
-      (ThisBuild / baseDirectory).value,
-      version.value,
-      apiVersion.value
-    ),
-    (ScalaUnidoc / unidoc / unidocProjectFilter) := inProjects(
-      `rho-core`,
-      `rho-swagger`
-    ),
-    git.remoteRepo := "git@github.com:http4s/rho.git",
-    ghpagesCleanSite := VersionedGhPages.cleanSite0.value,
-    ghpagesSynchLocal := VersionedGhPages.synchLocal0.value,
-    (makeSite / mappings) := {
-      val (major, minor) = apiVersion.value
-      for {
-        (f, d) <- (ScalaUnidoc / packageDoc / mappings).value
-      } yield (f, s"api/$major.$minor/$d")
-    }
   )
   .dependsOn(`rho-core`, `rho-swagger`)
 
@@ -83,7 +58,6 @@ lazy val `rho-examples` = project
   .in(file("examples"))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings)
-  .settings(Revolver.settings)
   .settings(
     exampleDeps,
     dontPublish
@@ -113,8 +87,6 @@ lazy val buildSettings = publishing ++
     crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions --= disabledCompilerFlags,
     (run / fork) := true,
-    (ThisBuild / organization) := "org.http4s",
-    (ThisBuild / homepage) := Some(url(homepageUrl)),
     description := "A self documenting DSL build upon the http4s framework",
     license,
     libraryDependencies ++= Seq(
