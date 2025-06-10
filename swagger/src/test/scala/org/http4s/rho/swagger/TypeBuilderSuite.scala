@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s.rho.swagger
 
 import java.sql.Timestamp
@@ -10,6 +26,7 @@ import org.http4s.rho.swagger.TypeBuilder.DataType
 import org.http4s.rho.swagger.models.{AbstractProperty, Model, StringProperty}
 import shapeless.{:+:, CNil}
 
+import scala.annotation.nowarn
 import scala.reflect.runtime.universe.{TypeTag, typeOf, typeTag}
 import scala.collection.immutable.Seq
 
@@ -76,6 +93,7 @@ package object model {
     TypeBuilder.collectModels(t.tpe, Set.empty, formats, typeOf[IO[_]])
 }
 
+@nowarn("msg=not.*?exhaustive")
 class TypeBuilderSuite extends FunSuite {
   import model._
   import models.{ArrayProperty, Model, RefProperty}
@@ -290,9 +308,9 @@ class TypeBuilderSuite extends FunSuite {
   }
 
   test("A TypeBuilder should build a model from an Option with overridden formats") {
-    val formats = DefaultSwaggerFormats.withFieldSerializers({
+    val formats = DefaultSwaggerFormats.withFieldSerializers {
       case x if x =:= typeOf[String] => AbstractProperty(`type` = "a_string")
-    })
+    }
 
     val ms = modelOfWithFormats[FooWithOption](formats)
     assertEquals(ms.size, 1)

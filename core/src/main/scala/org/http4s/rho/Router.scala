@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s
 package rho
 
@@ -23,10 +39,14 @@ sealed trait RoutingEntity[F[_], T <: HList] {
 
 /** Provides the operations for generating a router
   *
-  * @param method request methods to match
-  * @param path path matching stack
-  * @param rules header validation stack
-  * @tparam T cumulative type of the required method for executing the router
+  * @param method
+  *   request methods to match
+  * @param path
+  *   path matching stack
+  * @param rules
+  *   header validation stack
+  * @tparam T
+  *   cumulative type of the required method for executing the router
   */
 case class Router[F[_], T <: HList](method: Method, path: PathRule, rules: RequestRule[F])
     extends RouteExecutable[F, T]

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s
 package rho
 
@@ -11,7 +27,8 @@ import shapeless.ops.hlist.Prepend
   *
   * The [[RequestLineBuilder]] doesn't know about header rules or the method.
   *
-  * @tparam T The `HList` representation of the values to be extracted from the `Request`.
+  * @tparam T
+  *   The `HList` representation of the values to be extracted from the `Request`.
   */
 final case class RequestLineBuilder[F[_], T <: HList](path: PathRule, rules: RequestRule[F])
     extends TypedBuilder[F, T]
@@ -20,17 +37,22 @@ final case class RequestLineBuilder[F[_], T <: HList](path: PathRule, rules: Req
 
   /** Prepend the prefix to the path rules
     *
-    * @param prefix The non-capturing prefix to prepend.
-    * @return A [[RequestLineBuilder]] with the prefix prepended to the path rules.
+    * @param prefix
+    *   The non-capturing prefix to prepend.
+    * @return
+    *   A [[RequestLineBuilder]] with the prefix prepended to the path rules.
     */
   override def /:(prefix: TypedPath[F, HNil]): RequestLineBuilder[F, T] =
     copy(path = PathAnd(prefix.rule, path))
 
   /** Capture a query rule
     *
-    * @param query Query capture rule.
-    * @tparam T1 The types of elements captured by query.
-    * @return A [[QueryBuilder]] with which to continue building the route.
+    * @param query
+    *   Query capture rule.
+    * @tparam T1
+    *   The types of elements captured by query.
+    * @return
+    *   A [[QueryBuilder]] with which to continue building the route.
     */
   def &[T1 <: HList](query: TypedQuery[F, T1])(implicit
       prep: Prepend[T1, T]): RequestLineBuilder[F, prep.Out] =

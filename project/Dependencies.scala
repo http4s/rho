@@ -6,13 +6,13 @@ object Dependencies {
   val http4sVersion = "0.23.1"
   val circeVersion = "0.14.1"
 
-  val scala_213 = "2.13.6"
-  val scala_212 = "2.12.14"
+  val scala_213 = "2.13.16"
 
 
   lazy val circeCore           = "io.circe"                   %% "circe-core"            % circeVersion
   lazy val circeGeneric        = "io.circe"                   %% "circe-generic"         % circeVersion
   lazy val circeParser         = "io.circe"                   %% "circe-parser"          % circeVersion
+  lazy val http4sCore          = "org.http4s"                 %% "http4s-core"           % http4sVersion
   lazy val http4sServer        = "org.http4s"                 %% "http4s-server"         % http4sVersion
   lazy val http4sDSL           = "org.http4s"                 %% "http4s-dsl"            % http4sVersion
   lazy val http4sBlaze         = "org.http4s"                 %% "http4s-blaze-server"   % http4sVersion
@@ -31,11 +31,6 @@ object Dependencies {
 
   lazy val `scala-reflect`     = "org.scala-lang"              % "scala-reflect"
 
-  val silencerVersion = "1.7.9"
-  lazy val silencerPlugin = compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full)
-  lazy val silencerLib = "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-  lazy val kindProjector = compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
-
   lazy val halDeps = libraryDependencies ++= Seq(http4sCirce)
 
   lazy val swaggerDeps = libraryDependencies ++= Seq(
@@ -48,17 +43,15 @@ object Dependencies {
     circeGeneric % "test"
   )
 
-  lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi)
+  lazy val swaggerUiDeps = libraryDependencies ++= Seq(swaggerUi % Runtime)
 
   lazy val exampleDeps = libraryDependencies ++= Seq(
     circeCore,
     circeGeneric,
-    circeParser,
     http4sBlaze,
     http4sDSL,
     http4sCirce,
-    http4sXmlInstances,
-    logbackClassic, 
-    uadetector
+    logbackClassic % Runtime,
+    uadetector % Runtime,
   )
 }

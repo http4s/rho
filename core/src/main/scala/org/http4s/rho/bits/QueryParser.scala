@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s
 package rho.bits
 
@@ -10,7 +26,8 @@ import scala.collection.compat._
 
 /** Extract a value from the `Request` `Query`
   *
-  * @tparam A Type of value produced by the parser.
+  * @tparam A
+  *   Type of value produced by the parser.
   */
 trait QueryParser[F[_], A] {
 
@@ -24,7 +41,9 @@ object QueryParser {
 trait QueryParsers[F[_]] extends FailureResponseOps[F] {
 
   /** Optionally extract the value from the `Query` */
-  implicit def optionParse[A](implicit F: Monad[F], p: StringParser[F, A]) =
+  implicit def optionParse[A](implicit
+      F: Monad[F],
+      p: StringParser[F, A]): QueryParser[F, Option[A]] =
     new QueryParser[F, Option[A]] {
       override def collect(
           name: String,
@@ -47,7 +66,7 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
   implicit def multipleParse[A, B[_]](implicit
       F: Monad[F],
       p: StringParser[F, A],
-      cbf: Factory[A, B[A]]) = new QueryParser[F, B[A]] {
+      cbf: Factory[A, B[A]]): QueryParser[F, B[A]] = new QueryParser[F, B[A]] {
     override def collect(
         name: String,
         params: Params,
@@ -74,7 +93,9 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
   }
 
   /** Extract an element from the `Query` using a [[org.http4s.rho.bits.StringParser]] */
-  implicit def standardCollector[A](implicit F: Monad[F], p: StringParser[F, A]) =
+  implicit def standardCollector[A](implicit
+      F: Monad[F],
+      p: StringParser[F, A]): QueryParser[F, A] =
     new QueryParser[F, A] {
       override def collect(name: String, params: Params, default: Option[A]): ResultResponse[F, A] =
         params.get(name) match {

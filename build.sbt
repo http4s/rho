@@ -1,20 +1,27 @@
 import sbt._
 import Keys._
-import spray.revolver.RevolverPlugin._
 
-import com.typesafe.sbt.SbtGit.git
+import Dependencies._
 
-import Dependencies._, RhoPlugin._
+ThisBuild / tlBaseVersion := "0.23"
+ThisBuild / startYear := Some(2014)
+ThisBuild / scalaVersion := scala_213
+ThisBuild / crossScalaVersions := Seq(scala_213)
+
+// tlCiScalafixCheck is insufficient, because sbt-http4s-org-2.0.0 hardcodes its own
+ThisBuild / githubWorkflowBuildPostamble ~= { old =>
+  old.filterNot(_.name == Some("Check scalafix lints"))
+}
 
 lazy val rho = project
   .in(file("."))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings: _*)
+  .settings(libraryDependencies := Seq.empty)
   .aggregate(`rho-core`, `rho-swagger`, `rho-swagger-ui`, `rho-examples`)
 
 lazy val `rho-core` = project
   .in(file("core"))
-  .settings(mimaConfiguration)
   .settings(buildSettings)
   .settings(
     Compile / unmanagedSourceDirectories ++= {
@@ -27,19 +34,21 @@ lazy val `rho-core` = project
         case _ => Nil
       }
     },
-    libraryDependencies ++= Seq("org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1")
+    libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1",
+      http4sCore,
+      http4sServer % Test
+    )
   )
 
 lazy val `rho-swagger` = project
   .in(file("swagger"))
   .settings(buildSettings :+ swaggerDeps: _*)
-  .settings(mimaConfiguration)
   .dependsOn(`rho-core` % "compile->compile;test->test")
 
 lazy val `rho-swagger-ui` = project
   .in(file("swagger-ui"))
   .settings(buildSettings :+ swaggerUiDeps: _*)
-  .settings(mimaConfiguration)
   .enablePlugins(BuildInfoPlugin)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey]("swaggerUiVersion" -> Dependencies.swaggerUi.revision),
@@ -47,35 +56,15 @@ lazy val `rho-swagger-ui` = project
   )
   .dependsOn(`rho-swagger`)
 
+// TODO no site is published as of 2025-06-07
 lazy val docs = project
   .in(file("docs"))
   .settings(buildSettings)
-  .disablePlugins(MimaPlugin)
-  .enablePlugins(ScalaUnidocPlugin)
-  .enablePlugins(SiteScaladocPlugin)
-  .enablePlugins(GhpagesPlugin)
+  // .enablePlugins(Http4sOrgSitePlugin)
   .settings(
     dontPublish,
     description := "Api Documentation",
-    autoAPIMappings := true,
-    (Compile / scalacOptions) := scaladocOptions(
-      (ThisBuild / baseDirectory).value,
-      version.value,
-      apiVersion.value
-    ),
-    (ScalaUnidoc / unidoc / unidocProjectFilter) := inProjects(
-      `rho-core`,
-      `rho-swagger`
-    ),
-    git.remoteRepo := "git@github.com:http4s/rho.git",
-    ghpagesCleanSite := VersionedGhPages.cleanSite0.value,
-    ghpagesSynchLocal := VersionedGhPages.synchLocal0.value,
-    (makeSite / mappings) := {
-      val (major, minor) = apiVersion.value
-      for {
-        (f, d) <- (ScalaUnidoc / packageDoc / mappings).value
-      } yield (f, s"api/$major.$minor/$d")
-    }
+    autoAPIMappings := true
   )
   .dependsOn(`rho-core`, `rho-swagger`)
 
@@ -83,18 +72,17 @@ lazy val `rho-examples` = project
   .in(file("examples"))
   .disablePlugins(MimaPlugin)
   .settings(buildSettings)
-  .settings(Revolver.settings)
   .settings(
     exampleDeps,
-    dontPublish
+    dontPublish,
+    unusedCompileDependenciesFilter -= moduleFilter("org.typelevel", "scalac-compat-annotation")
   )
   .dependsOn(`rho-swagger`, `rho-swagger-ui`)
 
 lazy val disabledCompilerFlags = Seq( // TODO: Fix code and re-enable these.
-  "-Xlint:package-object-classes",
+  "-Xlint:_,-implicit-recursion,-recurse-with-default,-unused,-byname-implicit",
   "-Ywarn-numeric-widen",
   "-Wnumeric-widen",
-  "-Xlint:adapted-args",
   "-Yno-adapted-args",
   "-Wdead-code",
   "-Ywarn-dead-code"
@@ -103,31 +91,21 @@ lazy val disabledCompilerFlags = Seq( // TODO: Fix code and re-enable these.
 /* Don't publish setting */
 lazy val dontPublish = packagedArtifacts := Map.empty
 
-lazy val license = (ThisBuild / licenses) := Seq(
-  "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")
-)
-
 lazy val buildSettings = publishing ++
   Seq(
-    scalaVersion := scala_213,
-    crossScalaVersions := Seq(scala_213, scala_212),
     scalacOptions --= disabledCompilerFlags,
-    resolvers += Resolver.sonatypeRepo("snapshots"),
+    scalacOptions ++= Seq(
+      "-Xlint:_,-unused,-byname-implicit,-adapted-args,-package-object-classes"
+    ),
     (run / fork) := true,
-    (ThisBuild / organization) := "org.http4s",
-    (ThisBuild / homepage) := Some(url(homepageUrl)),
     description := "A self documenting DSL build upon the http4s framework",
-    license,
+    (ThisBuild / licenses) := Seq(License.Apache2),
     libraryDependencies ++= Seq(
-      http4sServer % "provided",
       logbackClassic % "test"
     ),
     libraryDependencies ++= (if (scalaVersion.value.startsWith("2"))
                                Seq(
                                  shapeless,
-                                 silencerPlugin,
-                                 silencerLib,
-                                 kindProjector,
                                  `scala-reflect` % scalaVersion.value
                                )
                              else Seq.empty),

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s
 package rho
 
@@ -8,10 +24,9 @@ import org.http4s.rho.bits.{FailureResponseOps, SuccessResponse, TypedHeader}
 import cats.effect._
 import org.typelevel.vault.Key
 
-/** The [[AuthedContext]] provides a convenient way to define a RhoRoutes
-  * which works with http4s authentication middleware.
-  * Please note that `AuthMiddleware`-wrapping is mandatory, otherwise context
-  * doesn't take effect.
+/** The [[AuthedContext]] provides a convenient way to define a RhoRoutes which works with http4s
+  * authentication middleware. Please note that `AuthMiddleware`-wrapping is mandatory, otherwise
+  * context doesn't take effect.
   * {{{
   *     case class User(name: String, id: UUID)
   *
@@ -34,7 +49,8 @@ import org.typelevel.vault.Key
   *     val service = middleware.apply(Auth.toService(BobRoutes.toRoutes()))
   * }}}
   *
-  * @tparam U authInfo type for this service.
+  * @tparam U
+  *   authInfo type for this service.
   */
 class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
 
@@ -43,8 +59,10 @@ class AuthedContext[F[_]: Monad, U] extends FailureResponseOps[F] {
 
   /** Turn the [[HttpRoutes]] into an `AuthedRoutes`
     *
-    * @param routes [[HttpRoutes]] to convert
-    * @return An `AuthedRoutes` which can be mounted by http4s servers.
+    * @param routes
+    *   [[HttpRoutes]] to convert
+    * @return
+    *   An `AuthedRoutes` which can be mounted by http4s servers.
     */
   def toService(routes: HttpRoutes[F]): AuthedRoutes[U, F] = {
     type O[A] = OptionT[F, A]

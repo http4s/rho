@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s
 package rho
 package bits
@@ -33,8 +49,8 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
   /** Data structure for route execution
     *
-    * A [[PathTree]] contains a map of the known route paths. The values of the
-    * tree are [[RhoRoute]]'s that can generate a reply to a `Request`.
+    * A [[PathTree]] contains a map of the known route paths. The values of the tree are
+    * [[RhoRoute]]'s that can generate a reply to a `Request`.
     */
   final class PathTree(private val paths: MatchNode) {
 
@@ -42,9 +58,12 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
 
     /** Create a new [[PathTree]] with the [[RhoRoute]] appended
       *
-      * @param route [[RhoRoute]] to append to the new tree.
-      * @tparam T Result type of the [[RhoRoute]].
-      * @return A new [[PathTree]] containing the provided route.
+      * @param route
+      *   [[RhoRoute]] to append to the new tree.
+      * @tparam T
+      *   Result type of the [[RhoRoute]].
+      * @return
+      *   A new [[PathTree]] containing the provided route.
       */
     def appendRoute[T <: HList](route: RhoRoute[F, T])(implicit F: Monad[F]): PathTree = {
       val m = route.method
@@ -198,9 +217,9 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
           clone(matches, captures, variadic, e)
       }
 
-    /** This function traverses the tree, matching paths in order of priority, provided they path the matches function:
-      * 1: exact matches are given priority to wild cards node at a time
-      *     This means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
+    /** This function traverses the tree, matching paths in order of priority, provided they path
+      * the matches function: 1: exact matches are given priority to wild cards node at a time This
+      * means /"foo"/wild has priority over /wild/"bar" for the route "/foo/bar"
       */
     final def walkTree(method: Method, req: Request[F])(implicit
         F: Monad[F]): RouteResult[F, F[Response[F]]] = {
@@ -234,7 +253,7 @@ private[rho] trait PathTreeOps[F[_]] extends RuleExecutor[F] {
             error: RouteResult[F, F[Response[F]]]): RouteResult[F, F[Response[F]]] =
           children match {
             case (c @ CaptureNode(p, _, _, _, _)) :: ns =>
-              p.parse(h.decoded()) match { //TODO: Figure out how to inject char sets etc...
+              p.parse(h.decoded()) match { // TODO: Figure out how to inject char sets etc...
                 case SuccessResponse(r) =>
                   val n = c.walk(method, req, t, r :: stack)
                   if (n.isSuccess) n

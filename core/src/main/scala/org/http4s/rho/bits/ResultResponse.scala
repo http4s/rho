@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s.rho.bits
 
 import cats.data.OptionT
@@ -59,7 +75,8 @@ final case class SuccessResponse[F[_], +T](result: T) extends ResultResponse[F, 
 
 /** Response that signifies an error
   *
-  * @param reason The reason for failure which can be turned into a `F[Response[F]]`.
+  * @param reason
+  *   The reason for failure which can be turned into a `F[Response[F]]`.
   */
 final case class FailureResponse[F[_]](reason: ResponseReason[F])
     extends ResultResponse[F, Nothing] {
@@ -83,14 +100,16 @@ trait FailureResponseOps[F[_]] extends ResponseGeneratorInstances[F] {
 
   /** Construct a `400 BadRequest` FailureResponse
     *
-    * @param reason Description of the failure
+    * @param reason
+    *   Description of the failure
     */
   def badRequest[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
     FailureResponse[F](new ResponseReason(BadRequest.pure(reason)))
 
   /** Construct a `500 InternalServerError` FailureResponse
     *
-    * @param reason Description of the failure
+    * @param reason
+    *   Description of the failure
     */
   def error[T](reason: T)(implicit F: Monad[F], w: EntityEncoder[F, T]): FailureResponse[F] =
     FailureResponse[F](new ResponseReason(InternalServerError.pure(reason)))

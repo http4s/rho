@@ -1,15 +1,30 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s
 package rho
 
-import scala.annotation.nowarn
 import org.http4s.rho.bits.{FuncParamsMatch, HListToFunc}
 import shapeless.HList
 
-/** Object which can be compiled into a complete route
-  * The [[RouteExecutable]] is a complete set of HTTP method, path, query, and headers
-  * needed for a compiler to generate a complete route description.
-  * @tparam T The `HList` representation of the types the route expects to extract
-  *           from a `Request`.
+/** Object which can be compiled into a complete route The [[RouteExecutable]] is a complete set of
+  * HTTP method, path, query, and headers needed for a compiler to generate a complete route
+  * description.
+  * @tparam T
+  *   The `HList` representation of the types the route expects to extract from a `Request`.
   */
 trait RouteExecutable[F[_], T <: HList] extends TypedBuilder[F, T] { exec =>
 
@@ -21,7 +36,7 @@ trait RouteExecutable[F[_], T <: HList] extends TypedBuilder[F, T] { exec =>
 
   /** Compiles a HTTP request definition into an action */
   final def |>>[U, R](f: U)(implicit
-      @nowarn("cat=unused") fpm: FuncParamsMatch[F, T, U],
+      fpm: FuncParamsMatch[F, T, U],
       hltf: HListToFunc[F, T, U],
       srvc: CompileRoutes[F, R]): R =
     srvc.compile(makeRoute(hltf.toAction(f)))

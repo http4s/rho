@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 http4s.org
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.http4s.rho
 
 import cats.syntax.functor._
@@ -33,7 +49,8 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Defines a parameter in query string that should be bound to a route definition.
     *
-    * @param name name of the parameter in query
+    * @param name
+    *   name of the parameter in query
     */
   def param[T](name: String)(implicit
       F: FlatMap[F],
@@ -43,8 +60,10 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Defines a parameter in query string that should be bound to a route definition.
     *
-    * @param name        name of the parameter in query
-    * @param description description of the parameter
+    * @param name
+    *   name of the parameter in query
+    * @param description
+    *   description of the parameter
     */
   def paramD[T](name: String, description: String)(implicit
       F: FlatMap[F],
@@ -139,7 +158,9 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     _paramR(name, None, None, validate)
 
-  /** Defines a parameter in query string with description that should be bound to a route definition. */
+  /** Defines a parameter in query string with description that should be bound to a route
+    * definition.
+    */
   def paramRDescr[T](name: String, description: String, validate: T => Option[F[BaseResult[F]]])(
       implicit
       F: FlatMap[F],
@@ -154,7 +175,9 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
       m: TypeTag[T]): TypedQuery[F, T :: HNil] =
     _paramR(name, None, Some(default), validate)
 
-  /** Defines a parameter in query string with description that should be bound to a route definition. */
+  /** Defines a parameter in query string with description that should be bound to a route
+    * definition.
+    */
   def paramR[T](
       name: String,
       description: String,
@@ -167,17 +190,19 @@ trait RhoDslQueryParamExtractors[F[_]] extends FailureResponseOps[F] {
 
   /** Create a query capture rule using the `Request`'s `Uri`
     *
-    * @param f function generating the result or failure
+    * @param f
+    *   function generating the result or failure
     */
   def genericQueryCapture[R](f: Query => ResultResponse[F, R]): TypedQuery[F, R :: HNil] =
     genericRequestQueryCapture[R](req => f(req.uri.query))
 
   /** Create a query capture rule using the `Request`
     *
-    * In general, this function should be avoided for most cases because it has access to the entire `Request`
-    * which allows it to modify the `Request` body which should be avoided.
+    * In general, this function should be avoided for most cases because it has access to the entire
+    * `Request` which allows it to modify the `Request` body which should be avoided.
     *
-    * @param f function generating the result or failure
+    * @param f
+    *   function generating the result or failure
     */
   def genericRequestQueryCapture[R](
       f: Request[F] => ResultResponse[F, R]): TypedQuery[F, R :: HNil] =
