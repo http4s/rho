@@ -35,7 +35,7 @@ lazy val `rho-core` = project
       }
     },
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1",
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.13.0",
       http4sCore,
       http4sServer % Test
     )
