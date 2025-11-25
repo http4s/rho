@@ -87,7 +87,8 @@ trait QueryParsers[F[_]] extends FailureResponseOps[F] {
 
                 case other => other.asInstanceOf[ResultResponse[F, B[A]]]
               }
-            } else SuccessResponse(b.result()); go()
+            } else SuccessResponse(b.result());
+          go()
       }
     }
   }
