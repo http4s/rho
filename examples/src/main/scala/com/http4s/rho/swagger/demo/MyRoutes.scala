@@ -87,15 +87,13 @@ class MyRoutes[F[+_]: Async](swaggerSyntax: SwaggerSyntax[F])
 
   "Adds the cookie Foo=bar to the client" **
     "cookies" @@
-    GET / "addcookie" |>> {
-      Ok("You now have a good cookie!").map(_.addCookie("Foo", "bar"))
-    }
+    GET / "addcookie" |>>
+    Ok("You now have a good cookie!").map(_.addCookie("Foo", "bar"))
 
   "Sets the cookie Foo=barr to the client" **
     "cookies" @@
-    GET / "addbadcookie" |>> {
-      Ok("You now have an evil cookie!").map(_.addCookie("Foo", "barr"))
-    }
+    GET / "addbadcookie" |>>
+    Ok("You now have an evil cookie!").map(_.addCookie("Foo", "barr"))
 
   "Checks the Foo cookie to make sure its 'bar'" **
     "cookies" @@
