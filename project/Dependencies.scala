@@ -24,7 +24,7 @@ object Dependencies {
   lazy val shapeless           = "com.chuusai"                %% "shapeless"             % "2.3.9"
   lazy val scalaXml            = "org.scala-lang.modules"     %% "scala-xml"             % "2.1.0"
   lazy val swaggerUi           = "org.webjars"                 % "swagger-ui"            % "3.52.5"
-  lazy val munit               = "org.scalameta"              %% "munit"                 % "0.7.29"         % "test"
+  lazy val munit               = "org.scalameta"              %% "munit"                 % "1.3.2"         % "test"
   lazy val munitCatsEffect     = "org.typelevel"              %% "munit-cats-effect-3"   % "1.0.7"          % "test"
   lazy val scalacheckMunit     = "org.scalameta"              %% "munit-scalacheck"      % munit.revision   % "test"
 
